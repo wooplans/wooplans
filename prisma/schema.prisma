@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Plan {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  name                String
+  category            String
+  description         String
+  surface             Int
+  bedrooms            Int
+  bathrooms           Int
+  floors              Int
+  rooms               String
+  images              String
+  thumbnail           String
+  estimatedCost       Int      @default(0)
+  estimatedCostImage  String   @default("")
+  distributionPlans   String   @default("[]")
+  distributionPlanUrl String   @default("")
+  featured            Boolean  @default(false)
+  published           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+  @@index([published])
+}
+
+model Subscriber {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  chariowCustomerId String?
+  chariowLicenseKey String?
+  premiumCode       String?
+  isActive          Boolean   @default(false)
+  expiresAt         DateTime?
+  createdAt         DateTime  @default(now())
+
+  @@index([email])
+  @@index([isActive])
+}
+
+model Admin {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+}

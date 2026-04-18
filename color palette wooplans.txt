@@ -1,0 +1,9 @@
+Primary (#0F5B59) - Main brand color for headers, titles, and key visuals.
+Accent (#F08A2E) - Used for CTAs and interactive elements.
+Secondary (#C75B3A) - Used sparingly for alerts or limited offers.
+Highlight (#E7C36C) - Used for premium elements and decorative accents.
+Neutral Dark (#1E2933) - Used for main text and important content.
+Neutral Light (#FFFFFF) - Used for text on dark backgrounds.
+Background (#F5F7F9) - Main page background.
+Small (#6B7280) - Secondary text, subtitles, and labels.
+
