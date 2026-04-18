@@ -31,6 +31,11 @@ yarn-error.log*
 *.db
 prisma/*.db
 
+# API keys and secrets
+*turso*
+*api key*
+*secret*
+
 # vercel
 .vercel
 
