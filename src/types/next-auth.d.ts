@@ -23,3 +23,11 @@ declare module "next-auth/jwt" {
     expiresAt?: Date;
   }
 }
+
+declare global {
+  interface Window {
+    chariow?: {
+      open: (productId: string) => void;
+    };
+  }
+}

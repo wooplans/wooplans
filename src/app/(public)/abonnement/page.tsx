@@ -1,16 +1,6 @@
-import { Metadata } from "next";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Abonnement Premium — WooPlans",
-  description:
-    "Débloquez l'accès complet aux plans de distribution, devis estimatifs et échanges avec nos architectes. Abonnez-vous à WooPlans Premium.",
-  openGraph: {
-    title: "Abonnement Premium — WooPlans",
-    description:
-      "Débloquez l'accès complet aux plans de distribution, devis estimatifs et échanges avec nos architectes.",
-  },
-};
+import Link from "next/link";
 
 const features = [
   {
