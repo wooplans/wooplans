@@ -63,7 +63,7 @@ export default async function PlanDetailPage({ params }: Props) {
         <div className="bg-surface border-2 border-outline p-6">
           <h4 className="font-bold text-foreground mb-4">Détails des pièces</h4>
           <div className="grid grid-cols-2 gap-0 border-2 border-outline">
-            {JSON.parse(plan.rooms).map((room: {name: string, area: number}, index: number) => (
+            {plan.rooms.map((room: {name: string, area: number}, index: number) => (
               <div key={index} className={`bg-white p-4 ${index % 2 !== 0 ? 'border-l-2 border-outline' : ''} ${index >= 2 ? 'border-t-2 border-outline' : ''}`}>
                 <p className="font-bold text-foreground">{room.name}</p>
                 <p className="text-sm text-foreground/60">{room.area} m²</p>

@@ -1,10 +1,48 @@
 import { prisma } from "@/lib/prisma";
 
+type RawPlan = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  surface: number;
+  bedrooms: number;
+  bathrooms: number;
+  floors: number;
+  rooms: string;
+  images: string;
+  thumbnail: string;
+  estimatedCost: number;
+  estimatedCostImage: string;
+  distributionPlans: string;
+  distributionPlanUrl: string;
+  featured: boolean;
+  published: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Plan = Omit<RawPlan, "rooms" | "images" | "distributionPlans"> & {
+  rooms: { name: string; area: number }[];
+  images: string[];
+  distributionPlans: string[];
+};
+
 type PlanFilters = {
   featured?: boolean;
   published?: boolean;
   category?: string;
 };
+
+function parsePlan(p: RawPlan): Plan {
+  return {
+    ...p,
+    rooms: JSON.parse(p.rooms),
+    images: JSON.parse(p.images),
+    distributionPlans: JSON.parse(p.distributionPlans),
+  };
+}
 
 export async function listPlans(filters?: PlanFilters) {
   const where: Record<string, unknown> = {};
@@ -13,34 +51,24 @@ export async function listPlans(filters?: PlanFilters) {
   if (filters?.published !== undefined) where.published = filters.published;
   if (filters?.category) where.category = filters.category;
 
-  const plans = await prisma.plan.findMany({
+  const plans: RawPlan[] = await prisma.plan.findMany({
     where,
     orderBy: { createdAt: "desc" },
   });
 
-  return plans.map((p) => ({
-    ...p,
-    rooms: JSON.parse(p.rooms),
-    images: JSON.parse(p.images),
-    distributionPlans: JSON.parse(p.distributionPlans),
-  }));
+  return plans.map(parsePlan);
 }
 
 export async function getPlanBySlug(slug: string) {
-  const plan = await prisma.plan.findUnique({ where: { slug } });
+  const plan: RawPlan | null = await prisma.plan.findUnique({ where: { slug } });
 
   if (!plan) return null;
 
-  return {
-    ...plan,
-    rooms: JSON.parse(plan.rooms),
-    images: JSON.parse(plan.images),
-    distributionPlans: JSON.parse(plan.distributionPlans),
-  };
+  return parsePlan(plan);
 }
 
 export async function getSimilarPlans(category: string, excludeSlug: string) {
-  const plans = await prisma.plan.findMany({
+  const plans: RawPlan[] = await prisma.plan.findMany({
     where: {
       published: true,
       category,
@@ -50,10 +78,5 @@ export async function getSimilarPlans(category: string, excludeSlug: string) {
     take: 3,
   });
 
-  return plans.map((p) => ({
-    ...p,
-    rooms: JSON.parse(p.rooms),
-    images: JSON.parse(p.images),
-    distributionPlans: JSON.parse(p.distributionPlans),
-  }));
+  return plans.map(parsePlan);
 }

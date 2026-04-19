@@ -1,6 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
+type RecentPlan = {
+  id: string;
+  name: string;
+  category: string;
+  surface: number;
+  bedrooms: number;
+  bathrooms: number;
+  floors: number;
+  thumbnail: string;
+  published: boolean;
+  featured: boolean;
+  estimatedCost: number;
+  updatedAt: Date;
+};
+
 export default async function AdminDashboardPage() {
   const [totalPlans, publishedPlans, featuredPlans, totalSubscribers] =
     await Promise.all([
@@ -14,7 +29,7 @@ export default async function AdminDashboardPage() {
     where: { isActive: true },
   });
 
-  const recentPlans = await prisma.plan.findMany({
+  const recentPlans: RecentPlan[] = await prisma.plan.findMany({
     orderBy: { updatedAt: "desc" },
     take: 8,
     select: {
