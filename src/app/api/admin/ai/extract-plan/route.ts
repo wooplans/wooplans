@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -30,7 +29,7 @@ Règles :
 - La description doit être professionnelle, mettre en valeur les atouts du plan`;
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await requireRole(request, "admin");
   if (!session) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-
-export const runtime = "nodejs";
-import crypto from "crypto";
+import { requireRole } from "@/lib/auth";
+import { randomObjectKey, uploadR2Object } from "@/lib/r2";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
@@ -15,9 +10,10 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+export const runtime = "edge";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await requireRole(request, "admin");
   if (!session) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
@@ -33,9 +29,6 @@ export async function POST(request: Request) {
     if (files.length > 20) {
       return NextResponse.json({ error: "Maximum 20 fichiers par envoi" }, { status: 400 });
     }
-
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
 
     const results: { url: string; filename: string; originalName: string }[] = [];
 
@@ -56,16 +49,17 @@ export async function POST(request: Request) {
         );
       }
 
-      const ext = path.extname(file.name) || ".jpg";
-      const uniqueId = crypto.randomBytes(12).toString("hex");
-      const filename = `${Date.now()}-${uniqueId}${ext}`;
-      const filepath = path.join(uploadDir, filename);
-
       const bytes = await file.arrayBuffer();
-      await writeFile(filepath, Buffer.from(bytes));
+      const ext = file.name.includes(".") ? `.${file.name.split(".").pop()}` : ".jpg";
+      const filename = randomObjectKey(ext);
+      await uploadR2Object({
+        key: filename,
+        contentType: file.type,
+        body: new Uint8Array(bytes),
+      });
 
       results.push({
-        url: `/uploads/${filename}`,
+        url: `/api/uploads/${encodeURIComponent(filename)}`,
         filename,
         originalName: file.name,
       });

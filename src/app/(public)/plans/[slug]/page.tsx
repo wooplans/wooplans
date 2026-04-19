@@ -8,11 +8,10 @@ import { RoomTable } from "@/components/RoomTable";
 import { PremiumTeaser } from "@/components/PremiumTeaser";
 import { ConversionAnchor } from "@/components/ConversionAnchor";
 import { SimilarPlans } from "@/components/SimilarPlans";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 type Props = {
   params: { slug: string };
@@ -37,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PlanDetailPage({ params }: Props) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   const plan = await getPlanBySlug(params.slug);
 

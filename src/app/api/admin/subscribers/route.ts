@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-export async function GET() {
-  const session = await getServerSession(authOptions);
+export const runtime = "edge";
+export async function GET(request: Request) {
+  const session = await requireRole(request, "admin");
 
-  if (!session || session.user.role !== "admin") {
+  if (!session) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 

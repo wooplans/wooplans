@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const navItems = [
@@ -25,6 +24,7 @@ const navItems = [
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <>
@@ -88,7 +88,11 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
             Voir le site
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              router.push("/admin/login");
+              router.refresh();
+            }}
             className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/60 hover:text-red-300 hover:bg-white/5 w-full transition-colors font-semibold"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

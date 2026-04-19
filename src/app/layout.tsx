@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +30,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://js.chariowcdn.com/v1/widget.min.css" />
       </head>
       <body className="bg-background text-foreground min-h-screen flex flex-col antialiased">
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );

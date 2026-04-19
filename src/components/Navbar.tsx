@@ -2,16 +2,22 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import type { SessionUser } from "@/lib/auth";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { data: session } = useSession();
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
+    fetch("/api/auth/session")
+      .then((response) => response.json())
+      .then((data: { session?: { user?: SessionUser } | null }) => {
+        setSessionUser(data.session?.user ?? null);
+      })
+      .catch(() => undefined);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -77,7 +83,7 @@ export function Navbar() {
               Abonnement
             </Link>
           </li>
-          {session?.user?.role === "subscriber" ? (
+          {sessionUser?.role === "subscriber" ? (
             <li>
               <Link
                 href="/connexion"
@@ -117,7 +123,7 @@ export function Navbar() {
                 Abonnement
               </Link>
             </li>
-            {session?.user?.role === "subscriber" ? (
+            {sessionUser?.role === "subscriber" ? (
               <li>
                 <Link href="/connexion" onClick={() => setMenuOpen(false)} className="text-primary font-semibold">
                   Mon Compte

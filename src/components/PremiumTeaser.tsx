@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth-server";
 
 type PremiumTeaserProps = {
   type: "floorplan" | "cost";
@@ -11,7 +10,7 @@ type PremiumTeaserProps = {
 };
 
 export async function PremiumTeaser({ type, title, subtitle, realContent, backgroundImage }: PremiumTeaserProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
 

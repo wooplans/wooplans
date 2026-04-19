@@ -1,27 +1,82 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export const runtime = "edge";
-
-export const metadata: Metadata = {
-  title: "Abonnés — WooPlans",
-  description: "Gestion des abonnés Premium",
+type Subscriber = {
+  id: string;
+  email: string;
+  isActive: boolean;
+  expiresAt: string | null;
+  chariowCustomerId: string | null;
+  premiumCode: string | null;
 };
 
-async function getSubscribers() {
-  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/subscribers`, {
-    cache: "no-store",
-  });
+export default function SubscribersPage() {
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!response.ok) {
-    return [];
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSubscribers() {
+      try {
+        const response = await fetch("/api/admin/subscribers", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("load_failed");
+        }
+
+        const data = (await response.json()) as Subscriber[];
+        if (isMounted) {
+          setSubscribers(data);
+          setError("");
+        }
+      } catch {
+        if (isMounted) {
+          setError("Erreur lors du chargement des abonnés");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadSubscribers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function toggleSubscriberStatus(id: string, currentStatus: boolean) {
+    try {
+      const response = await fetch(`/api/admin/subscribers/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isActive: !currentStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("update_failed");
+      }
+
+      const updated = (await response.json()) as Subscriber;
+      setSubscribers((current) =>
+        current.map((subscriber) => (subscriber.id === updated.id ? updated : subscriber)),
+      );
+    } catch {
+      alert("Erreur lors de la mise à jour du statut");
+    }
   }
-
-  return response.json();
-}
-
-export default async function SubscribersPage() {
-  const subscribers = await getSubscribers();
 
   return (
     <div className="space-y-6">
@@ -66,7 +121,19 @@ export default async function SubscribersPage() {
               </tr>
             </thead>
             <tbody>
-              {subscribers.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
+                    <p className="text-sm">Chargement des abonnés...</p>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-red-700">
+                    <p className="text-sm font-semibold">{error}</p>
+                  </td>
+                </tr>
+              ) : subscribers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
                     <p className="text-sm">Aucun abonné trouvé</p>
@@ -79,11 +146,16 @@ export default async function SubscribersPage() {
                   </td>
                 </tr>
               ) : (
-                subscribers.map((subscriber: {id: string, email: string, isActive: boolean, expiresAt: string | null, chariowCustomerId: string | null, premiumCode: string | null}, index: number) => (
-                  <tr key={subscriber.id} className={`hover:bg-surface/50 ${index > 0 ? 'border-t-2 border-outline' : ''}`}>
+                subscribers.map((subscriber, index) => (
+                  <tr
+                    key={subscriber.id}
+                    className={`hover:bg-surface/50 ${index > 0 ? "border-t-2 border-outline" : ""}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="text-sm font-semibold text-foreground">{subscriber.email}</div>
-                      <div className="text-xs text-foreground/40 font-mono">{subscriber.chariowCustomerId || "-"}</div>
+                      <div className="text-xs text-foreground/40 font-mono">
+                        {subscriber.chariowCustomerId || "-"}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -133,22 +205,4 @@ export default async function SubscribersPage() {
       </div>
     </div>
   );
-}
-
-async function toggleSubscriberStatus(id: string, currentStatus: boolean) {
-  const response = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/subscribers/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      isActive: !currentStatus,
-    }),
-  });
-
-  if (!response.ok) {
-    alert("Erreur lors de la mise à jour du statut");
-  }
-
-  window.location.reload();
 }

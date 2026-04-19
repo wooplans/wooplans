@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -18,17 +17,26 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mode: "admin",
+        email,
+        password,
+        callbackUrl,
+      }),
     });
 
-    if (result?.error) {
+    const data = (await response.json()) as { error?: string; redirectTo?: string };
+
+    if (!response.ok) {
       setError("Email ou mot de passe incorrect");
       setLoading(false);
     } else {
-      router.push(callbackUrl);
+      router.push(data.redirectTo || callbackUrl);
       router.refresh();
     }
   }
