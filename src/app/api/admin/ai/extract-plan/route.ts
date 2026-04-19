@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 

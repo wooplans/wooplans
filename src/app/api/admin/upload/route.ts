@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-export const runtime = "edge";import crypto from "crypto";
+export const runtime = "nodejs";
+import crypto from "crypto";
 
 const ALLOWED_TYPES = new Set([
   "image/jpeg",
