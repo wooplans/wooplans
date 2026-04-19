@@ -9,9 +9,15 @@ export default async function EditPlanPage({
 }: {
   params: { id: string };
 }) {
-  const plan = await prisma.plan.findUnique({
-    where: { id: params.id },
-  });
+  let plan = null;
+
+  try {
+    plan = await prisma.plan.findUnique({
+      where: { id: params.id },
+    });
+  } catch (error) {
+    console.error("Failed to load plan for editing:", error);
+  }
 
   if (!plan) {
     notFound();

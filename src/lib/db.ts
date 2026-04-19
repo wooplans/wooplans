@@ -45,38 +45,53 @@ function parsePlan(p: RawPlan): Plan {
 }
 
 export async function listPlans(filters?: PlanFilters) {
-  const where: Record<string, unknown> = {};
+  try {
+    const where: Record<string, unknown> = {};
 
-  if (filters?.featured !== undefined) where.featured = filters.featured;
-  if (filters?.published !== undefined) where.published = filters.published;
-  if (filters?.category) where.category = filters.category;
+    if (filters?.featured !== undefined) where.featured = filters.featured;
+    if (filters?.published !== undefined) where.published = filters.published;
+    if (filters?.category) where.category = filters.category;
 
-  const plans: RawPlan[] = await prisma.plan.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-  });
+    const plans: RawPlan[] = await prisma.plan.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
 
-  return plans.map(parsePlan);
+    return plans.map(parsePlan);
+  } catch (error) {
+    console.error("Failed to list plans:", error);
+    return [];
+  }
 }
 
 export async function getPlanBySlug(slug: string) {
-  const plan: RawPlan | null = await prisma.plan.findUnique({ where: { slug } });
+  try {
+    const plan: RawPlan | null = await prisma.plan.findUnique({ where: { slug } });
 
-  if (!plan) return null;
+    if (!plan) return null;
 
-  return parsePlan(plan);
+    return parsePlan(plan);
+  } catch (error) {
+    console.error("Failed to load plan:", error);
+    return null;
+  }
 }
 
 export async function getSimilarPlans(category: string, excludeSlug: string) {
-  const plans: RawPlan[] = await prisma.plan.findMany({
-    where: {
-      published: true,
-      category,
-      slug: { not: excludeSlug },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 3,
-  });
+  try {
+    const plans: RawPlan[] = await prisma.plan.findMany({
+      where: {
+        published: true,
+        category,
+        slug: { not: excludeSlug },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    });
 
-  return plans.map(parsePlan);
+    return plans.map(parsePlan);
+  } catch (error) {
+    console.error("Failed to load similar plans:", error);
+    return [];
+  }
 }

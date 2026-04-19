@@ -20,36 +20,46 @@ type RecentPlan = {
 };
 
 export default async function AdminDashboardPage() {
-  const [totalPlans, publishedPlans, featuredPlans, totalSubscribers] =
-    await Promise.all([
+  let totalPlans = 0;
+  let publishedPlans = 0;
+  let featuredPlans = 0;
+  let totalSubscribers = 0;
+  let activeSubscribers = 0;
+  let recentPlans: RecentPlan[] = [];
+
+  try {
+    [totalPlans, publishedPlans, featuredPlans, totalSubscribers] = await Promise.all([
       prisma.plan.count(),
       prisma.plan.count({ where: { published: true } }),
       prisma.plan.count({ where: { featured: true } }),
       prisma.subscriber.count(),
     ]);
 
-  const activeSubscribers = await prisma.subscriber.count({
-    where: { isActive: true },
-  });
+    activeSubscribers = await prisma.subscriber.count({
+      where: { isActive: true },
+    });
 
-  const recentPlans: RecentPlan[] = await prisma.plan.findMany({
-    orderBy: { updatedAt: "desc" },
-    take: 8,
-    select: {
-      id: true,
-      name: true,
-      category: true,
-      surface: true,
-      bedrooms: true,
-      bathrooms: true,
-      floors: true,
-      thumbnail: true,
-      published: true,
-      featured: true,
-      estimatedCost: true,
-      updatedAt: true,
-    },
-  });
+    recentPlans = await prisma.plan.findMany({
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        surface: true,
+        bedrooms: true,
+        bathrooms: true,
+        floors: true,
+        thumbnail: true,
+        published: true,
+        featured: true,
+        estimatedCost: true,
+        updatedAt: true,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load admin dashboard:", error);
+  }
 
   const stats = [
     { label: "Plans total", value: totalPlans, borderColor: "border-blue-600", textColor: "text-blue-700" },
