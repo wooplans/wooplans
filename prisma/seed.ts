@@ -196,19 +196,7 @@ const plans = [
 ];
 
 async function main() {
-  const email = "admin@wooplans.com";
-  const plainPassword = "admin123";
-
-  const existingAdmin = await prisma.admin.findUnique({ where: { email } });
-
-  if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash(plainPassword, 12);
-    await prisma.admin.create({ data: { email, passwordHash } });
-    console.log(`Admin créé : ${email} / ${plainPassword}`);
-  } else {
-    console.log("Admin existe déjà, ignoré.");
-  }
-
+  // TODO: Remettre le mot de passe admin plus tard
   for (const plan of plans) {
     const existing = await prisma.plan.findUnique({ where: { slug: plan.slug } });
     if (existing) {
