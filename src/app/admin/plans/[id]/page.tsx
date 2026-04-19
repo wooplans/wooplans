@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { PlanForm } from "../plan-form";
 
+export const runtime = "edge";
+
 export default async function EditPlanPage({
   params,
 }: {

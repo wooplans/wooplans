@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "edge";
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
