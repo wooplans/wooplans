@@ -1,7 +1,7 @@
 import { listPlans } from "@/lib/db";
 import { CatalogueClient } from "@/components/CatalogueClient";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function PlansPage() {
   const plans = await listPlans({ published: true });

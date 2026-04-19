@@ -2,7 +2,7 @@ import Link from "next/link";
 import { listPlans } from "@/lib/db";
 import { PlanGrid } from "@/components/PlanGrid";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const featuredPlans = await listPlans({ featured: true, published: true });

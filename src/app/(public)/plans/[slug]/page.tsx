@@ -11,7 +11,7 @@ import { SimilarPlans } from "@/components/SimilarPlans";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: { slug: string };
