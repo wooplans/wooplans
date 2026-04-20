@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
+import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
 
 export const runtime = "edge";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_TEXT_CHARS = 24000;
+
+type AnthropicEnv = {
+  ANTHROPIC_API_KEY?: string;
+  ANTHROPIC_KEY?: string;
+};
 
 const EXTRACTION_PROMPT = `Tu es un expert en architecture et en analyse de plans de maisons. Analyse ce document PDF qui contient un plan de maison et extrais les informations suivantes.
 
@@ -34,10 +41,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const requestContext = getOptionalRequestContext();
+  const cloudflareEnv = requestContext?.env as AnthropicEnv | undefined;
+  const apiKey =
+    cloudflareEnv?.ANTHROPIC_API_KEY ||
+    cloudflareEnv?.ANTHROPIC_KEY ||
+    process.env.ANTHROPIC_API_KEY ||
+    process.env.ANTHROPIC_KEY;
+
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Clé API Anthropic non configurée" },
+      {
+        error:
+          "Clé API Anthropic non configurée. Ajoute ANTHROPIC_API_KEY dans les variables d'environnement Cloudflare Pages.",
+      },
       { status: 500 },
     );
   }
@@ -72,6 +89,8 @@ export async function POST(request: Request) {
 
     const anthropic = new Anthropic({ apiKey });
 
+    const pdfText = `Document PDF fourni par l'utilisateur: ${file.name}. Analyse le plan à partir du document joint.`;
+
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 2048,
@@ -89,7 +108,7 @@ export async function POST(request: Request) {
             },
             {
               type: "text",
-              text: EXTRACTION_PROMPT,
+              text: `${EXTRACTION_PROMPT}\n\nContexte du fichier: ${pdfText.slice(0, MAX_TEXT_CHARS)}`,
             },
           ],
         },
