@@ -8,10 +8,22 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  if (process.env.DATABASE_URL && process.env.DATABASE_AUTH_TOKEN) {
+  const databaseUrl = process.env.DATABASE_URL;
+  const usesLibsql = Boolean(databaseUrl && databaseUrl.startsWith("libsql://"));
+
+  if (usesLibsql) {
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL is required for libSQL/Turso connections");
+    }
+
+    const databaseAuthToken = process.env.DATABASE_AUTH_TOKEN;
+    if (!databaseAuthToken) {
+      throw new Error("DATABASE_AUTH_TOKEN is required for libSQL/Turso connections");
+    }
+
     const adapter = new PrismaLibSql({
-      url: process.env.DATABASE_URL,
-      authToken: process.env.DATABASE_AUTH_TOKEN,
+      url: databaseUrl,
+      authToken: databaseAuthToken,
     });
 
     return globalForPrisma.prisma ?? new PrismaClient({ adapter });

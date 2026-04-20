@@ -52,10 +52,21 @@ cp .env.example .env
 
 ```env
 DATABASE_URL="file:./dev.db"
-NEXTAUTH_SECRET="votre-secret-unique-ici"
-NEXTAUTH_URL="http://localhost:3000"
+AUTH_SECRET="votre-secret-unique-ici"
 FLUTTERWAVE_SECRET_KEY="votre-flutterwave-secret-key"
 FLUTTERWAVE_WEBHOOK_SECRET="votre-webhook-secret"
+```
+
+En production Cloudflare Pages + Turso, utilisez plutôt :
+
+```env
+DATABASE_URL="libsql://wooplanspremiumdb-wooplans.aws-us-east-2.turso.io"
+DATABASE_AUTH_TOKEN="votre-turso-auth-token"
+AUTH_SECRET="votre-secret-unique-ici"
+R2_ACCOUNT_ID="votre-r2-account-id"
+R2_BUCKET_NAME="votre-r2-bucket-name"
+R2_ACCESS_KEY_ID="votre-r2-access-key-id"
+R2_SECRET_ACCESS_KEY="votre-r2-secret-access-key"
 ```
 
 ### Obtention des clés Flutterwave
@@ -70,9 +81,17 @@ FLUTTERWAVE_WEBHOOK_SECRET="votre-webhook-secret"
 npx prisma migrate dev --name init
 ```
 
-5. **Créer un compte admin**
+5. **Créer un compte admin et remplir les plans de démonstration**
 ```bash
 npx prisma db seed
+```
+
+Pour viser la base Turso de production depuis un terminal PowerShell :
+
+```powershell
+$env:DATABASE_URL="libsql://wooplanspremiumdb-wooplans.aws-us-east-2.turso.io"
+$env:DATABASE_AUTH_TOKEN="votre-turso-auth-token"
+npm run db:seed
 ```
 
 6. **Lancer le serveur de développement**
@@ -151,7 +170,7 @@ npx prisma db seed          # Données de test
 
 - Tous les paiements sont sécurisés via Flutterwave
 - Les mots de passe sont hashés avec bcrypt
-- Les sessions sont gérées par NextAuth
+- Les sessions sont gérées par des cookies signés compatibles Edge
 - Middleware protège les routes admin
 
 ## 🚢 Déploiement
@@ -160,22 +179,41 @@ npx prisma db seed          # Données de test
 
 1. **Variables d'environnement**
 ```env
-DATABASE_URL="postgresql://user:password@host:5432/wooplans"
-NEXTAUTH_SECRET="votre-secret-unique-généré"
-NEXTAUTH_URL="https://www.votre-domaine.com"
+DATABASE_URL="libsql://wooplanspremiumdb-wooplans.aws-us-east-2.turso.io"
+DATABASE_AUTH_TOKEN="votre-turso-auth-token"
+AUTH_SECRET="votre-secret-unique-généré"
 FLUTTERWAVE_SECRET_KEY="FLWSECK-..."
 FLUTTERWAVE_WEBHOOK_SECRET="webhook-secret-..."
+R2_ACCOUNT_ID="..."
+R2_BUCKET_NAME="..."
+R2_ACCESS_KEY_ID="..."
+R2_SECRET_ACCESS_KEY="..."
 ```
 
-2. **Build**
+2. **Cloudflare Pages**
+- Activez `nodejs_compat` dans les Compatibility Flags
+- Ajoutez les secrets ci-dessus dans `Settings > Variables and Secrets`
+- Utilisez `npm run build` ou la commande `npx @cloudflare/next-on-pages@1`
+
+3. **Build**
 ```bash
 npm run build
 ```
 
-3. **Lancer en production**
+4. **Lancer en production**
 ```bash
 npm start
 ```
+
+### Seed de production
+
+Pour injecter les plans de démonstration dans la base Turso connectée à la prod :
+
+```bash
+npm run db:seed
+```
+
+La commande utilise `DATABASE_URL`, `DATABASE_AUTH_TOKEN` et un client Prisma libSQL. Elle est idempotente: relancer le seed ne crée pas de doublons.
 
 ### Configuration Flutterwave Webhook
 
