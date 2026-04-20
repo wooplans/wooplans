@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import {
+  filterDemoPlans,
+  getDemoPlanBySlug,
+  getDemoPlansByCategory,
+} from "@/lib/demo-plans";
 
 type RawPlan = {
   id: string;
@@ -57,10 +62,11 @@ export async function listPlans(filters?: PlanFilters) {
       orderBy: { createdAt: "desc" },
     });
 
-    return plans.map(parsePlan);
+    const parsedPlans = plans.map(parsePlan);
+    return parsedPlans.length > 0 ? parsedPlans : filterDemoPlans(filters);
   } catch (error) {
     console.error("Failed to list plans:", error);
-    return [];
+    return filterDemoPlans(filters);
   }
 }
 
@@ -68,12 +74,12 @@ export async function getPlanBySlug(slug: string) {
   try {
     const plan: RawPlan | null = await prisma.plan.findUnique({ where: { slug } });
 
-    if (!plan) return null;
+    if (!plan) return getDemoPlanBySlug(slug);
 
     return parsePlan(plan);
   } catch (error) {
     console.error("Failed to load plan:", error);
-    return null;
+    return getDemoPlanBySlug(slug);
   }
 }
 
@@ -89,9 +95,12 @@ export async function getSimilarPlans(category: string, excludeSlug: string) {
       take: 3,
     });
 
-    return plans.map(parsePlan);
+    const parsedPlans = plans.map(parsePlan);
+    return parsedPlans.length > 0
+      ? parsedPlans
+      : getDemoPlansByCategory(category, excludeSlug).slice(0, 3);
   } catch (error) {
     console.error("Failed to load similar plans:", error);
-    return [];
+    return getDemoPlansByCategory(category, excludeSlug).slice(0, 3);
   }
 }

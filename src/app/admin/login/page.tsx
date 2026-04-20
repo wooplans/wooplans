@@ -8,7 +8,6 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +24,6 @@ function LoginForm() {
       body: JSON.stringify({
         mode: "admin",
         email,
-        password,
         callbackUrl,
       }),
     });
@@ -33,7 +31,7 @@ function LoginForm() {
     const data = (await response.json()) as { error?: string; redirectTo?: string };
 
     if (!response.ok) {
-      setError("Email ou mot de passe incorrect");
+      setError(data.error || "Impossible d'accéder au dashboard");
       setLoading(false);
     } else {
       router.push(data.redirectTo || callbackUrl);
@@ -47,6 +45,9 @@ function LoginForm() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground tracking-tight">WooPlans</h1>
           <p className="text-foreground/60 mt-1 text-sm">Panneau d&apos;administration</p>
+          <p className="text-foreground/50 mt-2 text-xs">
+            Accès temporaire sans mot de passe pendant la phase privée du site
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -72,28 +73,12 @@ function LoginForm() {
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-bold text-foreground/70 mb-1.5 uppercase tracking-wider">
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="w-full px-4 py-2.5 border-2 border-outline focus:border-primary outline-none transition-all text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 border-2 border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {loading ? "Connexion..." : "Se connecter"}
+            {loading ? "Connexion..." : "Accéder au dashboard"}
           </button>
         </form>
 
