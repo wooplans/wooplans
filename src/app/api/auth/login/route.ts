@@ -22,15 +22,19 @@ export async function POST(request: Request) {
     const body = (await request.json()) as LoginBody;
     const mode = body.mode;
     const email = body.email?.trim().toLowerCase();
+    const adminEmail = (process.env.ADMIN_EMAIL || "admin@wooplans.com").trim().toLowerCase();
 
     if (!mode || !email) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
     if (mode === "admin") {
-      const admin = await prisma.admin.findUnique({ where: { email } });
+      if (email !== adminEmail) {
+        return NextResponse.json({ error: "Accès refusé" }, { status: 401 });
+      }
+
       const user: SessionUser = {
-        id: admin?.id || email,
+        id: email,
         email,
         role: "admin",
       };
