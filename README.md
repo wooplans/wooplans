@@ -94,6 +94,14 @@ $env:DATABASE_AUTH_TOKEN="votre-turso-auth-token"
 npm run db:seed
 ```
 
+Si la base Turso est encore vide, applique d'abord les migrations puis lance le seed :
+
+```powershell
+$env:DATABASE_URL="libsql://wooplanspremiumdb-wooplans.aws-us-east-2.turso.io"
+$env:DATABASE_AUTH_TOKEN="votre-turso-auth-token"
+npm run db:bootstrap:prod
+```
+
 6. **Lancer le serveur de développement**
 ```bash
 npm run dev
@@ -214,6 +222,12 @@ npm run db:seed
 ```
 
 La commande utilise `DATABASE_URL`, `DATABASE_AUTH_TOKEN` et un client Prisma libSQL. Elle est idempotente: relancer le seed ne crée pas de doublons.
+
+Si la base n'a pas encore le schéma, lance d'abord :
+
+```bash
+npm run db:migrate:prod
+```
 
 ### Configuration Flutterwave Webhook
 
