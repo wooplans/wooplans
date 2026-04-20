@@ -1,10 +1,48 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const prisma = new PrismaClient();
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-const plans = [
+function createPrismaClient() {
+  if (process.env.DATABASE_URL && process.env.DATABASE_AUTH_TOKEN) {
+    const adapter = new PrismaLibSql({
+      url: process.env.DATABASE_URL,
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    });
+
+    return globalForPrisma.prisma ?? new PrismaClient({ adapter });
+  }
+
+  return globalForPrisma.prisma ?? new PrismaClient();
+}
+
+const prisma = createPrismaClient();
+
+type SeedPlan = {
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  surface: number;
+  bedrooms: number;
+  bathrooms: number;
+  floors: number;
+  rooms: { name: string; area: number }[];
+  images: string[];
+  thumbnail: string;
+  estimatedCost: number;
+  estimatedCostImage: string;
+  distributionPlans: string[];
+  distributionPlanUrl: string;
+  featured: boolean;
+  published: boolean;
+};
+
+const plans: SeedPlan[] = [
   {
     slug: "villa-familiale-v101",
     name: "Villa Familiale",
@@ -15,7 +53,7 @@ const plans = [
     bedrooms: 4,
     bathrooms: 3,
     floors: 1,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Séjour", area: 40 },
       { name: "Cuisine", area: 16 },
       { name: "Suite parentale", area: 22 },
@@ -25,14 +63,15 @@ const plans = [
       { name: "Salle de bain 1", area: 8 },
       { name: "Salle de bain 2", area: 6 },
       { name: "Terrasse", area: 20 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600",
-    estimatedCost: 25_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600",
+    estimatedCost: 25000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/villa-familiale-v101.pdf",
     featured: true,
     published: true,
@@ -47,7 +86,7 @@ const plans = [
     bedrooms: 3,
     bathrooms: 2,
     floors: 1,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Séjour", area: 30 },
       { name: "Cuisine", area: 12 },
       { name: "Chambre principale", area: 16 },
@@ -55,14 +94,15 @@ const plans = [
       { name: "Chambre 3", area: 12 },
       { name: "Salle de bain", area: 6 },
       { name: "WC", area: 3 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600",
-    estimatedCost: 15_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600",
+    estimatedCost: 15000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/villa-economique-v112.pdf",
     featured: false,
     published: true,
@@ -77,7 +117,7 @@ const plans = [
     bedrooms: 5,
     bathrooms: 4,
     floors: 2,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Grand séjour", area: 50 },
       { name: "Salon", area: 30 },
       { name: "Cuisine", area: 20 },
@@ -88,14 +128,15 @@ const plans = [
       { name: "Chambre 5", area: 14 },
       { name: "Bureau", area: 12 },
       { name: "Terrasse + Piscine", area: 60 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
       "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600",
-    estimatedCost: 45_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600",
+    estimatedCost: 45000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/villa-premium-v205.pdf",
     featured: true,
     published: true,
@@ -110,7 +151,7 @@ const plans = [
     bedrooms: 5,
     bathrooms: 3,
     floors: 2,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Séjour RDC", area: 35 },
       { name: "Cuisine RDC", area: 14 },
       { name: "Chambre 1 RDC", area: 16 },
@@ -121,14 +162,15 @@ const plans = [
       { name: "Chambre 4 Étage", area: 14 },
       { name: "Chambre 5 Étage", area: 12 },
       { name: "Terrasse commune", area: 25 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800",
       "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600",
-    estimatedCost: 30_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600",
+    estimatedCost: 30000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-familial-d208.pdf",
     featured: false,
     published: true,
@@ -143,7 +185,7 @@ const plans = [
     bedrooms: 4,
     bathrooms: 3,
     floors: 2,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Séjour double hauteur", area: 45 },
       { name: "Cuisine ouverte", area: 18 },
       { name: "Suite parentale RDC", area: 24 },
@@ -151,14 +193,15 @@ const plans = [
       { name: "Chambre 3 Étage", area: 14 },
       { name: "Chambre 4 Étage", area: 14 },
       { name: "Terrasse bois", area: 35 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800",
       "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600",
-    estimatedCost: 35_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600",
+    estimatedCost: 35000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-terrasse-d301.pdf",
     featured: false,
     published: true,
@@ -173,7 +216,7 @@ const plans = [
     bedrooms: 3,
     bathrooms: 2,
     floors: 2,
-    rooms: JSON.stringify([
+    rooms: [
       { name: "Séjour", area: 28 },
       { name: "Cuisine", area: 12 },
       { name: "Chambre 1 RDC", area: 14 },
@@ -181,14 +224,15 @@ const plans = [
       { name: "Chambre 3 Étage", area: 12 },
       { name: "Salle de bain", area: 6 },
       { name: "Dressing", area: 5 },
-    ]),
-    images: JSON.stringify([
+    ],
+    images: [
       "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=800",
       "https://images.unsplash.com/photo-1600622498055-7e55b4098a9d?w=800",
-    ]),
-    thumbnail:
-      "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=600",
-    estimatedCost: 20_000_000,
+    ],
+    thumbnail: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=600",
+    estimatedCost: 20000000,
+    estimatedCostImage: "",
+    distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-compact-d415.pdf",
     featured: false,
     published: true,
@@ -215,7 +259,16 @@ async function main() {
       console.log(`Plan "${plan.name}" existe déjà, ignoré.`);
       continue;
     }
-    await prisma.plan.create({ data: plan });
+
+    await prisma.plan.create({
+      data: {
+        ...plan,
+        rooms: JSON.stringify(plan.rooms),
+        images: JSON.stringify(plan.images),
+        distributionPlans: JSON.stringify(plan.distributionPlans),
+      },
+    });
+
     console.log(`Plan créé : ${plan.name} (${plan.slug})`);
   }
 
@@ -223,8 +276,8 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {
