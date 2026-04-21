@@ -1,9 +1,18 @@
+import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
+
 const encoder = new TextEncoder();
 
 export type R2ObjectUpload = {
   key: string;
   contentType: string;
   body: Uint8Array;
+};
+
+type R2Env = {
+  R2_ACCOUNT_ID?: string;
+  R2_BUCKET_NAME?: string;
+  R2_ACCESS_KEY_ID?: string;
+  R2_SECRET_ACCESS_KEY?: string;
 };
 
 function hex(bytes: Uint8Array) {
@@ -51,11 +60,21 @@ async function deriveSigningKey(secretAccessKey: string, dateStamp: string) {
   return hmac(kService, "aws4_request");
 }
 
+function pickFirstNonEmpty(...values: Array<string | undefined>) {
+  return values.find((value) => typeof value === "string" && value.length > 0);
+}
+
 function getR2Config() {
-  const accountId = process.env.R2_ACCOUNT_ID;
-  const bucketName = process.env.R2_BUCKET_NAME;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const requestContext = getOptionalRequestContext();
+  const env = requestContext?.env as R2Env | undefined;
+
+  const accountId = pickFirstNonEmpty(env?.R2_ACCOUNT_ID, process.env.R2_ACCOUNT_ID);
+  const bucketName = pickFirstNonEmpty(env?.R2_BUCKET_NAME, process.env.R2_BUCKET_NAME);
+  const accessKeyId = pickFirstNonEmpty(env?.R2_ACCESS_KEY_ID, process.env.R2_ACCESS_KEY_ID);
+  const secretAccessKey = pickFirstNonEmpty(
+    env?.R2_SECRET_ACCESS_KEY,
+    process.env.R2_SECRET_ACCESS_KEY,
+  );
 
   if (!accountId || !bucketName || !accessKeyId || !secretAccessKey) {
     return null;

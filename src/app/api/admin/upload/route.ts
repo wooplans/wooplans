@@ -66,7 +66,17 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ files: results }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Erreur lors de l'upload" }, { status: 500 });
+  } catch (error) {
+    console.error("Upload error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de l'upload",
+      },
+      { status: 500 },
+    );
   }
 }
