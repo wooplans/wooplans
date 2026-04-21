@@ -13,36 +13,47 @@ type AnthropicEnv = {
   ANTHROPIC_KEY?: string;
 };
 
+function getApiKeyLookupState(env?: AnthropicEnv) {
+  return {
+    hasRequestContext: Boolean(env),
+    hasCloudflareAnthropicApiKey: Boolean(env?.ANTHROPIC_API_KEY),
+    hasCloudflareAnthropicKey: Boolean(env?.ANTHROPIC_KEY),
+    hasProcessAnthropicApiKey: Boolean(process.env.ANTHROPIC_API_KEY),
+    hasProcessAnthropicKey: Boolean(process.env.ANTHROPIC_KEY),
+  };
+}
+
 const EXTRACTION_PROMPT = `Tu es un expert en architecture et en analyse de plans de maisons. Analyse ce document PDF qui contient un plan de maison et extrais les informations suivantes.
 
 Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans commentaires) avec cette structure exacte :
 {
   "name": "Nom du plan (ex: Villa Amira, Duplex Prestige)",
   "category": "villa" ou "duplex",
-  "description": "Description professionnelle et vendeuse du plan en 2-3 phrases en français",
-  "surface": nombre entier en m²,
+  "description": "Description professionnelle et vendeuse du plan en 2-3 phrases en francais",
+  "surface": nombre entier en m2,
   "bedrooms": nombre entier de chambres,
   "bathrooms": nombre entier de salles de bain,
   "floors": nombre entier de niveaux,
-  "rooms": [{ "name": "Nom de la pièce en français", "area": surface en m² (nombre) }],
-  "estimatedCost": coût estimé en FCFA (nombre entier) ou 0 si non mentionné
+  "rooms": [{ "name": "Nom de la piece en francais", "area": surface en m2 (nombre) }],
+  "estimatedCost": cout estime en FCFA (nombre entier) ou 0 si non mentionne
 }
 
-Règles :
-- Les noms de pièces doivent être en français (Séjour, Chambre, Cuisine, Salle de bain, Terrasse, etc.)
-- Si une information n'est pas trouvée, mets la valeur par défaut (0 pour les nombres, "villa" pour category, chaîne vide pour name/description)
-- Le champ rooms doit lister CHAQUE pièce individuelle avec sa surface. Si le plan montre "Chambre 1: 12m²" et "Chambre 2: 14m²", mets deux entrées séparées.
-- Inclus les pièces comme Séjour, Cuisine, Chambres, Salles de bain, Terrasse, Couloir, Escalier, Garage, etc.
-- La description doit être professionnelle, mettre en valeur les atouts du plan`;
+Regles :
+- Les noms de pieces doivent etre en francais (Sejour, Chambre, Cuisine, Salle de bain, Terrasse, etc.)
+- Si une information n'est pas trouvee, mets la valeur par defaut (0 pour les nombres, "villa" pour category, chaine vide pour name/description)
+- Le champ rooms doit lister CHAQUE piece individuelle avec sa surface. Si le plan montre "Chambre 1: 12m2" et "Chambre 2: 14m2", mets deux entrees separees.
+- Inclus les pieces comme Sejour, Cuisine, Chambres, Salles de bain, Terrasse, Couloir, Escalier, Garage, etc.
+- La description doit etre professionnelle, mettre en valeur les atouts du plan`;
 
 export async function POST(request: Request) {
   const session = await requireRole(request, "admin");
   if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorise" }, { status: 401 });
   }
 
   const requestContext = getOptionalRequestContext();
   const cloudflareEnv = requestContext?.env as AnthropicEnv | undefined;
+  const apiKeyState = getApiKeyLookupState(cloudflareEnv);
   const apiKey =
     cloudflareEnv?.ANTHROPIC_API_KEY ||
     cloudflareEnv?.ANTHROPIC_KEY ||
@@ -52,8 +63,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return NextResponse.json(
       {
-        error:
-          "Clé API Anthropic non configurée. Ajoute ANTHROPIC_API_KEY dans les variables d'environnement Cloudflare Pages.",
+        error: `Cle API Anthropic non configuree. Ajoute ANTHROPIC_API_KEY dans les variables d'environnement Cloudflare Pages. Diagnostic: ${JSON.stringify(apiKeyState)}`,
       },
       { status: 500 },
     );
@@ -72,7 +82,7 @@ export async function POST(request: Request) {
 
     if (file.type !== "application/pdf") {
       return NextResponse.json(
-        { error: "Le fichier doit être un PDF" },
+        { error: "Le fichier doit etre un PDF" },
         { status: 400 },
       );
     }
@@ -88,8 +98,7 @@ export async function POST(request: Request) {
     const base64 = Buffer.from(bytes).toString("base64");
 
     const anthropic = new Anthropic({ apiKey });
-
-    const pdfText = `Document PDF fourni par l'utilisateur: ${file.name}. Analyse le plan à partir du document joint.`;
+    const pdfText = `Document PDF fourni par l'utilisateur: ${file.name}. Analyse le plan a partir du document joint.`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -121,7 +130,7 @@ export async function POST(request: Request) {
 
     if (!textBlock) {
       return NextResponse.json(
-        { error: "Aucune réponse textuelle de l'IA" },
+        { error: "Aucune reponse textuelle de l'IA" },
         { status: 500 },
       );
     }
@@ -159,6 +168,23 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("AI extraction error:", err);
+
+    if (
+      err instanceof Error &&
+      (err.message.toLowerCase().includes("authentication") ||
+        err.message.toLowerCase().includes("api key") ||
+        err.message.toLowerCase().includes("unauthorized") ||
+        err.message.toLowerCase().includes("invalid x-api-key"))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "La cle Anthropic est detectee par l'application, mais Anthropic la refuse. Verifie que la valeur enregistree dans Cloudflare Pages est valide, active et complete.",
+        },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json(
       {
         error:
