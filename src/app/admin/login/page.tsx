@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginForm() {
@@ -16,26 +16,36 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        mode: "admin",
-        email,
-        callbackUrl,
-      }),
-    });
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mode: "admin",
+          email,
+          callbackUrl,
+        }),
+      });
 
-    const data = (await response.json()) as { error?: string; redirectTo?: string };
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        redirectTo?: string;
+      };
 
-    if (!response.ok) {
-      setError(data.error || "Impossible d'accéder au dashboard");
-      setLoading(false);
-    } else {
+      if (!response.ok) {
+        setError(data.error || "Impossible d'acceder au dashboard");
+        return;
+      }
+
       router.push(data.redirectTo || callbackUrl);
       router.refresh();
+    } catch (error) {
+      console.error("Admin login failed:", error);
+      setError("Erreur reseau lors de la connexion.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -46,7 +56,7 @@ function LoginForm() {
           <h1 className="text-3xl font-black text-foreground tracking-tight">WooPlans</h1>
           <p className="text-foreground/60 mt-1 text-sm">Panneau d&apos;administration</p>
           <p className="text-foreground/50 mt-2 text-xs">
-            Accès temporaire sans mot de passe pendant la phase privée du site
+            Acces temporaire sans mot de passe pendant la phase privee du site
           </p>
         </div>
 
@@ -58,7 +68,10 @@ function LoginForm() {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-bold text-foreground/70 mb-1.5 uppercase tracking-wider">
+            <label
+              htmlFor="email"
+              className="block text-sm font-bold text-foreground/70 mb-1.5 uppercase tracking-wider"
+            >
               Email
             </label>
             <input
@@ -78,7 +91,7 @@ function LoginForm() {
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 border-2 border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {loading ? "Connexion..." : "Accéder au dashboard"}
+            {loading ? "Connexion..." : "Acceder au dashboard"}
           </button>
         </form>
 

@@ -89,9 +89,14 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
           </Link>
           <button
             onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" });
-              router.push("/admin/login");
-              router.refresh();
+              try {
+                await fetch("/api/auth/logout", { method: "POST" });
+              } catch (error) {
+                console.error("Admin logout failed:", error);
+              } finally {
+                router.push("/admin/login");
+                router.refresh();
+              }
             }}
             className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/60 hover:text-red-300 hover:bg-white/5 w-full transition-colors font-semibold"
           >

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Subscriber = {
@@ -16,28 +15,28 @@ export default function SubscribersPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadSubscribers() {
       try {
-        const response = await fetch("/api/admin/subscribers", {
-          cache: "no-store",
-        });
+        const response = await fetch("/api/admin/subscribers", { cache: "no-store" });
+        const data = (await response.json().catch(() => ({}))) as Subscriber[] | { error?: string };
 
-        if (!response.ok) {
-          throw new Error("load_failed");
+        if (!response.ok || !Array.isArray(data)) {
+          throw new Error(Array.isArray(data) ? "load_failed" : (data.error ?? "load_failed"));
         }
 
-        const data = (await response.json()) as Subscriber[];
         if (isMounted) {
           setSubscribers(data);
           setError("");
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to load subscribers:", error);
         if (isMounted) {
-          setError("Erreur lors du chargement des abonnés");
+          setError("Erreur lors du chargement des abonnes");
         }
       } finally {
         if (isMounted) {
@@ -54,6 +53,8 @@ export default function SubscribersPage() {
   }, []);
 
   async function toggleSubscriberStatus(id: string, currentStatus: boolean) {
+    setUpdatingId(id);
+
     try {
       const response = await fetch(`/api/admin/subscribers/${id}`, {
         method: "PUT",
@@ -65,16 +66,21 @@ export default function SubscribersPage() {
         }),
       });
 
+      const updated = (await response.json().catch(() => ({}))) as Subscriber & { error?: string };
+
       if (!response.ok) {
-        throw new Error("update_failed");
+        throw new Error(updated.error || "update_failed");
       }
 
-      const updated = (await response.json()) as Subscriber;
       setSubscribers((current) =>
         current.map((subscriber) => (subscriber.id === updated.id ? updated : subscriber)),
       );
-    } catch {
-      alert("Erreur lors de la mise à jour du statut");
+      setError("");
+    } catch (error) {
+      console.error("Failed to update subscriber:", error);
+      alert("Erreur lors de la mise a jour du statut");
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -82,20 +88,14 @@ export default function SubscribersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Abonnés Premium</h1>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Abonnes Premium</h1>
           <p className="text-sm text-foreground/60 mt-1">
-            Gérez tous les abonnés et leur statut
+            Gere tous les abonnes et leur statut
           </p>
         </div>
-        <Link
-          href="/admin/subscribers/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Ajouter un abonné
-        </Link>
+        <div className="text-xs text-foreground/50 text-right max-w-xs">
+          Les abonnes sont crees automatiquement depuis les achats premium.
+        </div>
       </div>
 
       <div className="bg-white border-2 border-outline overflow-hidden">
@@ -124,7 +124,7 @@ export default function SubscribersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
-                    <p className="text-sm">Chargement des abonnés...</p>
+                    <p className="text-sm">Chargement des abonnes...</p>
                   </td>
                 </tr>
               ) : error ? (
@@ -136,13 +136,10 @@ export default function SubscribersPage() {
               ) : subscribers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
-                    <p className="text-sm">Aucun abonné trouvé</p>
-                    <Link
-                      href="/admin/subscribers/new"
-                      className="text-primary hover:underline text-sm mt-2 inline-block font-bold"
-                    >
-                      Créer le premier abonné
-                    </Link>
+                    <p className="text-sm">Aucun abonne trouve</p>
+                    <p className="text-primary text-sm mt-2 inline-block font-bold">
+                      Les achats premium ajouteront automatiquement des abonnes ici
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -186,13 +183,18 @@ export default function SubscribersPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => toggleSubscriberStatus(subscriber.id, subscriber.isActive)}
-                          className={`px-3 py-1.5 text-xs font-bold transition-colors ${
+                          disabled={updatingId === subscriber.id}
+                          className={`px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
                             subscriber.isActive
                               ? "bg-yellow-50 text-yellow-700 border-2 border-yellow-700 hover:bg-yellow-700 hover:text-white"
                               : "bg-green-50 text-green-700 border-2 border-green-700 hover:bg-green-700 hover:text-white"
                           }`}
                         >
-                          {subscriber.isActive ? "Désactiver" : "Activer"}
+                          {updatingId === subscriber.id
+                            ? "..."
+                            : subscriber.isActive
+                              ? "Desactiver"
+                              : "Activer"}
                         </button>
                       </div>
                     </td>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { parseRooms, parseStringArray } from "@/lib/plan-serialization";
 import { notFound } from "next/navigation";
 import { PlanForm } from "../plan-form";
 
@@ -25,9 +26,9 @@ export default async function EditPlanPage({
 
   const initialData = {
     ...plan,
-    rooms: JSON.parse(plan.rooms) as { name: string; area: number }[],
-    images: JSON.parse(plan.images) as string[],
-    distributionPlans: JSON.parse(plan.distributionPlans) as string[],
+    rooms: parseRooms(plan.rooms),
+    images: parseStringArray(plan.images),
+    distributionPlans: parseStringArray(plan.distributionPlans),
   };
 
   return (

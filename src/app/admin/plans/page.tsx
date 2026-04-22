@@ -20,58 +20,89 @@ export default function AdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/plans")
       .then((r) => r.json())
       .then((data) => {
-        setPlans(data);
+        if (Array.isArray(data)) {
+          setPlans(data);
+          setError("");
+        } else {
+          setError("Erreur lors du chargement des plans");
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("Erreur lors du chargement des plans");
+        setLoading(false);
+      });
   }, []);
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Supprimer le plan "${name}" ? Cette action est irréversible.`)) return;
 
     setDeleting(id);
-    const res = await fetch(`/api/admin/plans/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/admin/plans/${id}`, { method: "DELETE" });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
 
-    if (res.ok) {
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-    } else {
-      alert("Erreur lors de la suppression");
+      if (res.ok) {
+        setPlans((prev) => prev.filter((p) => p.id !== id));
+        setError("");
+      } else {
+        setError(data.error || "Erreur lors de la suppression");
+      }
+    } catch {
+      setError("Erreur reseau lors de la suppression");
     }
     setDeleting(null);
   }
 
   async function togglePublished(plan: Plan) {
-    const res = await fetch(`/api/admin/plans/${plan.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ published: !plan.published }),
-    });
+    try {
+      const res = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ published: !plan.published }),
+      });
 
-    if (res.ok) {
-      const updated = await res.json();
-      setPlans((prev) =>
-        prev.map((p) => (p.id === plan.id ? { ...p, published: updated.published } : p))
-      );
+      if (res.ok) {
+        const updated = await res.json();
+        setPlans((prev) =>
+          prev.map((p) => (p.id === plan.id ? { ...p, published: updated.published } : p))
+        );
+        setError("");
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(data.error || "Erreur lors de la mise a jour du statut");
+      }
+    } catch {
+      setError("Erreur reseau lors de la mise a jour du statut");
     }
   }
 
   async function toggleFeatured(plan: Plan) {
-    const res = await fetch(`/api/admin/plans/${plan.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featured: !plan.featured }),
-    });
+    try {
+      const res = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featured: !plan.featured }),
+      });
 
-    if (res.ok) {
-      const updated = await res.json();
-      setPlans((prev) =>
-        prev.map((p) => (p.id === plan.id ? { ...p, featured: updated.featured } : p))
-      );
+      if (res.ok) {
+        const updated = await res.json();
+        setPlans((prev) =>
+          prev.map((p) => (p.id === plan.id ? { ...p, featured: updated.featured } : p))
+        );
+        setError("");
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(data.error || "Erreur lors de la mise en avant");
+      }
+    } catch {
+      setError("Erreur reseau lors de la mise en avant");
     }
   }
 
@@ -89,6 +120,10 @@ export default function AdminPlansPage() {
 
       {loading ? (
         <div className="text-center py-12 text-foreground/40">Chargement...</div>
+      ) : error ? (
+        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+          {error}
+        </div>
       ) : plans.length === 0 ? (
         <div className="bg-white border-2 border-outline p-12 text-center">
           <p className="text-foreground/50 mb-4">Aucun plan créé</p>

@@ -4,6 +4,7 @@ import {
   getDemoPlanBySlug,
   getDemoPlansByCategory,
 } from "@/lib/demo-plans";
+import { parseRooms, parseStringArray } from "@/lib/plan-serialization";
 
 type RawPlan = {
   id: string;
@@ -43,9 +44,9 @@ type PlanFilters = {
 function parsePlan(p: RawPlan): Plan {
   return {
     ...p,
-    rooms: JSON.parse(p.rooms),
-    images: JSON.parse(p.images),
-    distributionPlans: JSON.parse(p.distributionPlans),
+    rooms: parseRooms(p.rooms),
+    images: parseStringArray(p.images),
+    distributionPlans: parseStringArray(p.distributionPlans),
   };
 }
 

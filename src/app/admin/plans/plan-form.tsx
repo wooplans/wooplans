@@ -204,40 +204,68 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
     setError("");
     setLoading(true);
 
-    const validRooms = rooms.filter((r) => r.name.trim());
-    const validImages = images.filter((i) => i.trim());
-    const validDistPlans = distributionPlans.filter((i) => i.trim());
+    try {
+      const validRooms = rooms.filter((r) => r.name.trim());
+      const validImages = images.filter((i) => i.trim());
+      const validDistPlans = distributionPlans.filter((i) => i.trim());
 
-    const payload = {
-      ...form,
-      surface: Number(form.surface),
-      bedrooms: Number(form.bedrooms),
-      bathrooms: Number(form.bathrooms),
-      floors: Number(form.floors),
-      estimatedCost: Number(form.estimatedCost),
-      rooms: validRooms,
-      images: validImages,
-      distributionPlans: validDistPlans,
-    };
+      if (validRooms.length === 0) {
+        setError("Ajoute au moins une piece au plan.");
+        return;
+      }
 
-    const url =
-      mode === "create"
-        ? "/api/admin/plans"
-        : `/api/admin/plans/${planId}`;
-    const method = mode === "create" ? "POST" : "PUT";
+      if (!form.thumbnail.trim()) {
+        setError("Ajoute une vignette avant d'enregistrer le plan.");
+        return;
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      const expectedDistributionPlans = form.category === "duplex" ? 2 : 1;
+      if (validDistPlans.length < expectedDistributionPlans) {
+        setError(
+          form.category === "duplex"
+            ? "Ajoute les 2 plans de distribution requis pour un duplex."
+            : "Ajoute le plan de distribution requis.",
+        );
+        return;
+      }
 
-    if (res.ok) {
+      const payload = {
+        ...form,
+        surface: Number(form.surface),
+        bedrooms: Number(form.bedrooms),
+        bathrooms: Number(form.bathrooms),
+        floors: Number(form.floors),
+        estimatedCost: Number(form.estimatedCost),
+        rooms: validRooms,
+        images: validImages,
+        distributionPlans: validDistPlans,
+      };
+
+      const url =
+        mode === "create"
+          ? "/api/admin/plans"
+          : `/api/admin/plans/${planId}`;
+      const method = mode === "create" ? "POST" : "PUT";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (!res.ok) {
+        setError(data.error || "Erreur lors de l'enregistrement");
+        return;
+      }
+
       router.push("/admin/plans");
       router.refresh();
-    } else {
-      const data = await res.json();
-      setError(data.error || "Erreur lors de l'enregistrement");
+    } catch (error) {
+      console.error("Plan form submission failed:", error);
+      setError("Erreur reseau lors de l'enregistrement du plan.");
+    } finally {
       setLoading(false);
     }
   }
