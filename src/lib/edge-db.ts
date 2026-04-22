@@ -1,4 +1,5 @@
 import { getPrisma } from "@/lib/prisma";
+import { ensureD1Schema } from "@/lib/d1-schema";
 
 export type PlanRecord = {
   id: string;
@@ -45,6 +46,7 @@ function mapPlanRecord(row: PlanRecord): PlanRecord {
 }
 
 export async function listEdgePlans() {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const plans = await prisma.plan.findMany({
     orderBy: { updatedAt: "desc" },
@@ -54,6 +56,7 @@ export async function listEdgePlans() {
 }
 
 export async function listRecentEdgePlans(limit = 8) {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const plans = await prisma.plan.findMany({
     select: {
@@ -86,6 +89,7 @@ export async function listRecentEdgePlans(limit = 8) {
 }
 
 export async function getEdgePlanById(id: string) {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const plan = await prisma.plan.findUnique({
     where: { id },
@@ -95,6 +99,7 @@ export async function getEdgePlanById(id: string) {
 }
 
 export async function getEdgePlanBySlug(slug: string) {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const plan = await prisma.plan.findUnique({
     where: { slug },
@@ -104,6 +109,7 @@ export async function getEdgePlanBySlug(slug: string) {
 }
 
 export async function createEdgePlan(plan: Omit<PlanRecord, "createdAt" | "updatedAt">) {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const created = await prisma.plan.create({
     data: plan,
@@ -116,6 +122,7 @@ export async function updateEdgePlan(
   id: string,
   updates: Partial<Omit<PlanRecord, "id" | "createdAt" | "updatedAt">>,
 ) {
+  await ensureD1Schema();
   const data = Object.fromEntries(
     Object.entries(updates).filter(([, value]) => value !== undefined),
   );
@@ -134,6 +141,7 @@ export async function updateEdgePlan(
 }
 
 export async function deleteEdgePlan(id: string) {
+  await ensureD1Schema();
   const prisma = getPrisma();
   await prisma.plan.delete({
     where: { id },
@@ -141,6 +149,7 @@ export async function deleteEdgePlan(id: string) {
 }
 
 export async function getEdgeDashboardStats(): Promise<DashboardStats> {
+  await ensureD1Schema();
   const prisma = getPrisma();
   const [totalPlans, publishedPlans, featuredPlans, totalSubscribers, activeSubscribers] =
     await Promise.all([

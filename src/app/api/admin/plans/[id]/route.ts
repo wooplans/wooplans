@@ -115,7 +115,15 @@ export async function PUT(
     return NextResponse.json(plan);
   } catch (error) {
     console.error("Failed to update plan:", error);
-    return NextResponse.json({ error: "Erreur lors de la mise a jour du plan" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de la mise a jour du plan",
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -138,6 +146,14 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete plan:", error);
-    return NextResponse.json({ error: "Erreur lors de la suppression du plan" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erreur lors de la suppression du plan",
+      },
+      { status: 500 },
+    );
   }
 }

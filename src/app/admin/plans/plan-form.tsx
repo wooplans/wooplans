@@ -20,7 +20,6 @@ type PlanFormData = {
   thumbnail: string;
   estimatedCost: string;
   estimatedCostImage: string;
-  distributionPlanUrl: string;
   featured: boolean;
   published: boolean;
 };
@@ -40,7 +39,6 @@ type PlanFormProps = {
     thumbnail?: string;
     estimatedCost?: number | string;
     estimatedCostImage?: string;
-    distributionPlanUrl?: string;
     distributionPlans?: string[];
     featured?: boolean;
     published?: boolean;
@@ -61,7 +59,6 @@ const defaultForm: PlanFormData = {
   thumbnail: "",
   estimatedCost: "",
   estimatedCostImage: "",
-  distributionPlanUrl: "",
   featured: false,
   published: false,
 };
@@ -79,7 +76,6 @@ function toFormState(d: NonNullable<PlanFormProps["initialData"]>): PlanFormData
     thumbnail: d.thumbnail ?? "",
     estimatedCost: String(d.estimatedCost ?? ""),
     estimatedCostImage: d.estimatedCostImage ?? "",
-    distributionPlanUrl: d.distributionPlanUrl ?? "",
     featured: d.featured ?? false,
     published: d.published ?? false,
   };
@@ -550,19 +546,6 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
           maxFiles={form.category === "duplex" ? 2 : 1}
           label="Plans de distribution"
         />
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            URL plan de distribution (PDF)
-          </label>
-          <input
-            type="text"
-            value={form.distributionPlanUrl}
-            onChange={(e) => updateForm("distributionPlanUrl", e.target.value)}
-            className={inputClass}
-            placeholder="/plans/mon-plan.pdf"
-          />
-        </div>
       </div>
 
       <div className="flex gap-3">
