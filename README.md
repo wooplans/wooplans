@@ -60,12 +60,12 @@ R2_SECRET_ACCESS_KEY="your-r2-secret-access-key"
 
 ## Configuration D1
 
-La production attend un binding Cloudflare D1 nomme `DB`.
+La production attend un binding Cloudflare D1 nomme `DB`, declare dans [`wrangler.toml`](/C:/Users/BATIBOO%20SARL/Documents/New%20folder/wooplans-repo/wrangler.toml).
 
-Dans Cloudflare Pages :
+Dans [`wrangler.toml`](/C:/Users/BATIBOO%20SARL/Documents/New%20folder/wooplans-repo/wrangler.toml) :
 
 1. Cree une base D1
-2. Ajoute le binding `DB` au projet Pages
+2. Remplace `REPLACE_WITH_YOUR_D1_DATABASE_ID` par l'identifiant reel de la base
 3. Redeploie l'application
 
 En local, le projet continue de fonctionner sur SQLite tant que le binding D1 n'est pas present.
@@ -112,7 +112,7 @@ npm run build
 - `compatibility_flags = ["nodejs_compat"]`
 - build command : `npx @cloudflare/next-on-pages@1`
 - output directory : `.vercel/output/static`
-- binding D1 requis : `DB`
+- binding D1 requis : `DB` via [`wrangler.toml`](/C:/Users/BATIBOO%20SARL/Documents/New%20folder/wooplans-repo/wrangler.toml)
 
 ## Scripts utiles
 
