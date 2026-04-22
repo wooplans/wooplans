@@ -38,7 +38,7 @@ async function addColumnIfMissing(
     return;
   }
 
-  await db.exec(`ALTER TABLE "${tableName}" ADD COLUMN ${definition}`);
+  await db.exec(`ALTER TABLE "${tableName}" ADD COLUMN ${definition};`);
 }
 
 export async function ensureD1Schema() {
@@ -50,8 +50,8 @@ export async function ensureD1Schema() {
       }
 
       if (!(await hasTable(db, "Plan"))) {
-        await db.exec(`
-          CREATE TABLE "Plan" (
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS "Plan" (
             "id" TEXT NOT NULL PRIMARY KEY,
             "slug" TEXT NOT NULL UNIQUE,
             "name" TEXT NOT NULL,
@@ -72,13 +72,13 @@ export async function ensureD1Schema() {
             "published" INTEGER NOT NULL DEFAULT 0,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             "updatedAt" DATETIME NOT NULL
-          )
-        `);
+          );`,
+        );
       }
 
       if (!(await hasTable(db, "Subscriber"))) {
-        await db.exec(`
-          CREATE TABLE "Subscriber" (
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS "Subscriber" (
             "id" TEXT NOT NULL PRIMARY KEY,
             "email" TEXT NOT NULL UNIQUE,
             "chariowCustomerId" TEXT,
@@ -87,27 +87,25 @@ export async function ensureD1Schema() {
             "isActive" INTEGER NOT NULL DEFAULT 0,
             "expiresAt" DATETIME,
             "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          )
-        `);
+          );`,
+        );
       }
 
       if (!(await hasTable(db, "Admin"))) {
-        await db.exec(`
-          CREATE TABLE "Admin" (
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS "Admin" (
             "id" TEXT NOT NULL PRIMARY KEY,
             "email" TEXT NOT NULL UNIQUE,
             "passwordHash" TEXT NOT NULL
-          )
-        `);
+          );`,
+        );
       }
 
-      await db.exec(`
-        CREATE INDEX IF NOT EXISTS "Plan_category_idx" ON "Plan"("category");
-        CREATE INDEX IF NOT EXISTS "Plan_featured_idx" ON "Plan"("featured");
-        CREATE INDEX IF NOT EXISTS "Plan_published_idx" ON "Plan"("published");
-        CREATE INDEX IF NOT EXISTS "Subscriber_email_idx" ON "Subscriber"("email");
-        CREATE INDEX IF NOT EXISTS "Subscriber_isActive_idx" ON "Subscriber"("isActive");
-      `);
+      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_category_idx" ON "Plan"("category");`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_featured_idx" ON "Plan"("featured");`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_published_idx" ON "Plan"("published");`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS "Subscriber_email_idx" ON "Subscriber"("email");`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS "Subscriber_isActive_idx" ON "Subscriber"("isActive");`);
 
       await addColumnIfMissing(db, "Plan", "estimatedCostImage", `"estimatedCostImage" TEXT NOT NULL DEFAULT ''`);
       await addColumnIfMissing(db, "Plan", "distributionPlans", `"distributionPlans" TEXT NOT NULL DEFAULT '[]'`);
