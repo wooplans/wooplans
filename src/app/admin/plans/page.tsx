@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 type Plan = {
   id: string;
@@ -158,9 +159,12 @@ export default function AdminPlansPage() {
                 <tr key={plan.id} className="hover:bg-surface/50 border-b-2 border-outline last:border-b-0">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
-                      <img
+                      <Image
                         src={plan.thumbnail}
                         alt={plan.name}
+                        width={36}
+                        height={36}
+                        unoptimized
                         className="w-9 h-9 object-cover bg-surface flex-shrink-0 border border-outline"
                       />
                       <div>

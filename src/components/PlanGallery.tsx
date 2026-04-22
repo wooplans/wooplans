@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 type PlanGalleryProps = {
@@ -39,14 +40,17 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
               onClick={() => openLightbox(i)}
               className="relative overflow-hidden bg-surface group cursor-pointer border border-outline/10 rounded-2xl"
             >
-              <img
-                src={img}
-                alt={`${name} — vue ${i + 1}`}
-                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-                  i === 0 && images.length > 2 ? "aspect-[16/9]" : "aspect-[4/3]"
-                }`}
-                loading={i === 0 ? "eager" : "lazy"}
-              />
+              <div className={i === 0 && images.length > 2 ? "aspect-[16/9]" : "aspect-[4/3]"}>
+                <Image
+                  src={img}
+                  alt={`${name} — vue ${i + 1}`}
+                  width={1200}
+                  height={900}
+                  unoptimized
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  priority={i === 0}
+                />
+              </div>
               {i === 3 && images.length > 4 && (
                 <div className="absolute inset-0 bg-foreground/60 flex items-center justify-center">
                   <span className="text-white text-lg font-semibold">
@@ -72,27 +76,40 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
           </button>
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl"
-            onClick={(e) => { e.stopPropagation(); goTo(lightboxIndex - 1); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              goTo(lightboxIndex - 1);
+            }}
           >
             &#8249;
           </button>
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl"
-            onClick={(e) => { e.stopPropagation(); goTo(lightboxIndex + 1); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              goTo(lightboxIndex + 1);
+            }}
           >
             &#8250;
           </button>
-          <img
-            src={images[lightboxIndex]}
-            alt={`${name} — vue ${lightboxIndex + 1}`}
-            className="max-w-[90vw] max-h-[85vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="relative w-[90vw] h-[85vh] max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={images[lightboxIndex]}
+              alt={`${name} — vue ${lightboxIndex + 1}`}
+              fill
+              unoptimized
+              sizes="90vw"
+              className="object-contain"
+            />
+          </div>
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
             {images.map((_, i) => (
               <button
                 key={i}
-                onClick={(e) => { e.stopPropagation(); goTo(i); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goTo(i);
+                }}
                 className={`w-3 h-3 transition-colors ${
                   i === lightboxIndex ? "bg-primary" : "bg-white/30"
                 }`}

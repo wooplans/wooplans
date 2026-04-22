@@ -20,7 +20,10 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const files = formData.getAll("files");
+    const files = [
+      ...formData.getAll("files"),
+      ...formData.getAll("file"),
+    ];
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 });

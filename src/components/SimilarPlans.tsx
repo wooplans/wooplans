@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type SimilarPlansProps = {
@@ -41,11 +42,13 @@ export function SimilarPlans({ plans, currentSlug }: SimilarPlansProps) {
           <Link key={plan.slug} href={`/plans/${plan.slug}`} className={`group block ${i > 0 ? "border-l-2 border-outline" : ""}`}>
             <div className="bg-white overflow-hidden transition-all duration-200 group-hover:bg-outline">
               <div className="aspect-[4/3] overflow-hidden bg-surface border-b-2 border-outline">
-                <img
+                <Image
                   src={plan.thumbnail}
                   alt={plan.name}
+                  width={800}
+                  height={600}
+                  unoptimized
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
                 />
               </div>
               <div className="p-4">

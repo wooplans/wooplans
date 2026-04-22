@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getEdgeDashboardStats, listRecentEdgePlans } from "@/lib/edge-db";
 import Link from "next/link";
 
@@ -94,11 +95,14 @@ export default async function AdminDashboardPage() {
                 href={`/admin/plans/${plan.id}`}
                 className="bg-white overflow-hidden hover:bg-surface transition-colors group border-outline border-b-2 border-r-2 last:border-r-0"
               >
-                <div className="aspect-[4/3] bg-surface relative overflow-hidden border-b-2 border-outline">
+                  <div className="aspect-[4/3] bg-surface relative overflow-hidden border-b-2 border-outline">
                   {plan.thumbnail ? (
-                    <img
+                    <Image
                       src={plan.thumbnail}
                       alt={plan.name}
+                      width={800}
+                      height={600}
+                      unoptimized
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (

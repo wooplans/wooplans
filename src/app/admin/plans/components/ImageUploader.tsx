@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useCallback } from "react";
 
 type UploadedFile = {
@@ -19,6 +20,7 @@ type UploadErrorResponse = {
 type UploadingFile = {
   file: File;
   progress: number;
+  previewUrl: string;
   error?: string;
 };
 
@@ -53,6 +55,7 @@ export function ImageUploader({
       const newUploading: UploadingFile[] = toUpload.map((file) => ({
         file,
         progress: 0,
+        previewUrl: URL.createObjectURL(file),
       }));
 
       setUploading((prev) => [...prev, ...newUploading]);
@@ -98,7 +101,10 @@ export function ImageUploader({
       }
 
       setTimeout(() => {
-        setUploading((prev) => prev.filter((u) => u.progress !== 100 && u.progress !== -1));
+        setUploading((prev) => {
+          prev.forEach((u) => URL.revokeObjectURL(u.previewUrl));
+          return prev.filter((u) => u.progress !== 100 && u.progress !== -1);
+        });
       }, 1000);
     },
     [value, onChange, maxFiles],
@@ -134,7 +140,13 @@ export function ImageUploader({
   }
 
   function removeUploading(file: File) {
-    setUploading((prev) => prev.filter((u) => u.file !== file));
+    setUploading((prev) => {
+      const target = prev.find((u) => u.file === file);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((u) => u.file !== file);
+    });
   }
 
   function moveImage(fromIndex: number, direction: -1 | 1) {
@@ -160,9 +172,12 @@ export function ImageUploader({
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
           {value.map((url, i) => (
             <div key={url} className="group relative aspect-square overflow-hidden border-2 border-outline bg-surface">
-              <img
+              <Image
                 src={url}
                 alt={`Image ${i + 1}`}
+                width={320}
+                height={320}
+                unoptimized
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] font-bold">
@@ -209,9 +224,12 @@ export function ImageUploader({
               className="relative aspect-square overflow-hidden border-2 border-outline bg-surface"
             >
               {u.file.type.startsWith("image/") && (
-                <img
-                  src={URL.createObjectURL(u.file)}
+                <Image
+                  src={u.previewUrl}
                   alt=""
+                  width={320}
+                  height={320}
+                  unoptimized
                   className="w-full h-full object-cover opacity-40"
                 />
               )}
@@ -346,9 +364,12 @@ export function ThumbnailUploader({
       <div className="flex gap-4 items-start">
         {value && (
           <div className="relative w-32 h-24 overflow-hidden border-2 border-outline bg-surface shrink-0 group">
-            <img
+            <Image
               src={value}
               alt="Vignette"
+              width={128}
+              height={96}
+              unoptimized
               className="w-full h-full object-cover"
             />
             <button

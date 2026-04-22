@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getCurrentSession } from "@/lib/auth-server";
 
@@ -9,7 +10,13 @@ type PremiumTeaserProps = {
   backgroundImage?: string;
 };
 
-export async function PremiumTeaser({ type, title, subtitle, realContent, backgroundImage }: PremiumTeaserProps) {
+export async function PremiumTeaser({
+  type,
+  title,
+  subtitle,
+  realContent,
+  backgroundImage,
+}: PremiumTeaserProps) {
   const session = await getCurrentSession();
 
   const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
@@ -26,9 +33,12 @@ export async function PremiumTeaser({ type, title, subtitle, realContent, backgr
     <div className="group relative overflow-hidden border border-outline/10 bg-surface rounded-2xl">
       <div className="blur-[3px] opacity-90 select-none pointer-events-none">
         {backgroundImage ? (
-          <img
+          <Image
             src={backgroundImage}
             alt={title}
+            width={1200}
+            height={800}
+            unoptimized
             className="w-full h-auto object-cover"
           />
         ) : (

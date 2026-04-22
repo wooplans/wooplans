@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type PlanCardProps = {
@@ -23,11 +24,13 @@ export function PlanCard({
     <Link href={`/plans/${slug}`} className="group block">
       <div className="bg-surface overflow-hidden border border-outline/10 rounded-2xl transition-all duration-200 hover:shadow-sm hover:-translate-y-1">
         <div className="aspect-[4/3] overflow-hidden bg-background">
-          <img
+          <Image
             src={thumbnail}
             alt={name}
+            width={800}
+            height={600}
+            unoptimized
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
           />
         </div>
         <div className="p-5 border-t border-outline/10">

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getPlanBySlug, getSimilarPlans } from "@/lib/db";
@@ -79,9 +80,12 @@ export default async function PlanDetailPage({ params }: Props) {
       <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Devis estimatif détaillé</h3>
       {plan.estimatedCostImage ? (
         <div className="aspect-[16/9] overflow-hidden bg-surface mb-6 border-2 border-outline">
-          <img
+          <Image
             src={plan.estimatedCostImage}
             alt="Devis estimatif"
+            width={1600}
+            height={900}
+            unoptimized
             className="w-full h-full object-contain"
           />
         </div>
@@ -129,9 +133,12 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
 
         <div className="aspect-[16/10] overflow-hidden bg-surface mb-10 border border-outline/10 rounded-2xl">
-          <img
+          <Image
             src={plan.thumbnail}
             alt={plan.name}
+            width={1600}
+            height={1000}
+            unoptimized
             className="w-full h-full object-cover"
           />
         </div>
