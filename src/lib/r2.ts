@@ -1,6 +1,5 @@
 import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
-
-const encoder = new TextEncoder();
+import { AwsClient } from "aws4fetch";
 
 export type R2ObjectUpload = {
   key: string;
@@ -22,49 +21,10 @@ type R2Config = {
   secretAccessKey: string;
 };
 
-function hex(bytes: Uint8Array) {
-  let result = "";
-  for (let i = 0; i < bytes.length; i++) {
-    result += bytes[i].toString(16).padStart(2, "0");
-  }
-  return result;
-}
-
 function encodeUriPathSegment(value: string) {
   return encodeURIComponent(value).replace(/[!'()*]/g, (char) =>
     `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
   );
-}
-
-async function sha256(data: ArrayBuffer | Uint8Array | string) {
-  const bytes =
-    typeof data === "string"
-      ? encoder.encode(data)
-      : data instanceof Uint8Array
-        ? data
-        : new Uint8Array(data);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return new Uint8Array(digest);
-}
-
-async function hmac(key: Uint8Array, data: string) {
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    key,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-
-  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
-  return new Uint8Array(signature);
-}
-
-async function deriveSigningKey(secretAccessKey: string, dateStamp: string) {
-  const kDate = await hmac(encoder.encode(`AWS4${secretAccessKey}`), dateStamp);
-  const kRegion = await hmac(kDate, "auto");
-  const kService = await hmac(kRegion, "s3");
-  return hmac(kService, "aws4_request");
 }
 
 function pickFirstNonEmpty(...values: Array<string | undefined>) {
@@ -94,6 +54,15 @@ function getR2Config(): R2Config | null {
   return { accountId, bucketName, accessKeyId, secretAccessKey };
 }
 
+function createR2AwsClient(config: R2Config) {
+  return new AwsClient({
+    accessKeyId: config.accessKeyId,
+    secretAccessKey: config.secretAccessKey,
+    service: "s3",
+    region: "auto",
+  });
+}
+
 function maskKeyId(value: string | undefined) {
   if (!value) return null;
   if (value.length <= 8) return value;
@@ -120,113 +89,17 @@ export function getR2ConfigState() {
   };
 }
 
-function buildAuthorizationHeader(params: {
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucketName: string;
-  accountId: string;
-  key: string;
-  method: "GET" | "PUT";
-  contentType?: string;
-  bodyHash: string;
-  amzDate: string;
-  dateStamp: string;
-}) {
-  const host = `${params.accountId}.r2.cloudflarestorage.com`;
-  const canonicalUri = `/${encodeUriPathSegment(params.bucketName)}/${encodeUriPathSegment(params.key)}`;
-  const canonicalHeaders = [
-    `host:${host}`,
-    `x-amz-content-sha256:${params.bodyHash}`,
-    `x-amz-date:${params.amzDate}`,
-  ];
-
-  if (params.contentType) {
-    canonicalHeaders.splice(1, 0, `content-type:${params.contentType}`);
-  }
-
-  const signedHeaders = params.contentType
-    ? "content-type;host;x-amz-content-sha256;x-amz-date"
-    : "host;x-amz-content-sha256;x-amz-date";
-
-  const canonicalRequest = [
-    params.method,
-    canonicalUri,
-    "",
-    canonicalHeaders.join("\n") + "\n",
-    signedHeaders,
-    params.bodyHash,
-  ].join("\n");
-
-  return { canonicalRequest, signedHeaders, host, canonicalUri };
-}
-
-async function signRequest(params: {
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucketName: string;
-  accountId: string;
-  key: string;
-  method: "GET" | "PUT";
-  contentType?: string;
-  bodyHash: string;
-  amzDate: string;
-  dateStamp: string;
-}) {
-  const { canonicalRequest, signedHeaders, host, canonicalUri } = buildAuthorizationHeader(params);
-  const canonicalRequestHash = hex(await sha256(canonicalRequest));
-  const scope = `${params.dateStamp}/auto/s3/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    params.amzDate,
-    scope,
-    canonicalRequestHash,
-  ].join("\n");
-
-  const signingKey = await deriveSigningKey(params.secretAccessKey, params.dateStamp);
-  const signature = hex(await hmac(signingKey, stringToSign));
-
-  return {
-    authorization: `AWS4-HMAC-SHA256 Credential=${params.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
-    host,
-    canonicalUri,
-  };
-}
-
-function formatAmzDate(now = new Date()) {
-  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
-  const amzDate = now
-    .toISOString()
-    .replace(/[:-]|\.\d{3}/g, "");
-  return { dateStamp, amzDate };
-}
-
 export async function uploadR2Object(upload: R2ObjectUpload) {
   const config = getR2Config();
   if (!config) {
     throw new Error("R2 storage is not configured");
   }
-
-  const { dateStamp, amzDate } = formatAmzDate();
-  const bodyHash = hex(await sha256(upload.body));
-  const signed = await signRequest({
-    ...config,
-    method: "PUT",
-    key: upload.key,
-    contentType: upload.contentType,
-    bodyHash,
-    amzDate,
-    dateStamp,
-  });
-
+  const aws = createR2AwsClient(config);
   const endpoint = `https://${config.accountId}.r2.cloudflarestorage.com/${encodeUriPathSegment(config.bucketName)}/${encodeUriPathSegment(upload.key)}`;
-  const response = await fetch(endpoint, {
+  const response = await aws.fetch(endpoint, {
     method: "PUT",
     headers: {
-      Authorization: signed.authorization,
-      Host: signed.host,
       "Content-Type": upload.contentType,
-      "x-amz-content-sha256": bodyHash,
-      "x-amz-date": amzDate,
     },
     body: upload.body,
   });
@@ -250,27 +123,10 @@ export async function downloadR2Object(key: string) {
   if (!config) {
     throw new Error("R2 storage is not configured");
   }
-
-  const { dateStamp, amzDate } = formatAmzDate();
-  const bodyHash = hex(await sha256(new Uint8Array()));
-  const signed = await signRequest({
-    ...config,
-    method: "GET",
-    key,
-    bodyHash,
-    amzDate,
-    dateStamp,
-  });
-
+  const aws = createR2AwsClient(config);
   const endpoint = `https://${config.accountId}.r2.cloudflarestorage.com/${encodeUriPathSegment(config.bucketName)}/${encodeUriPathSegment(key)}`;
-  const response = await fetch(endpoint, {
+  const response = await aws.fetch(endpoint, {
     method: "GET",
-    headers: {
-      Authorization: signed.authorization,
-      Host: signed.host,
-      "x-amz-content-sha256": bodyHash,
-      "x-amz-date": amzDate,
-    },
   });
 
   if (!response.ok) {
