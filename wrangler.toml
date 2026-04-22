@@ -9,4 +9,4 @@ NODE_ENV = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "wooplans"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "56170a78-267f-480d-b68a-e1471d5fe3e4"
