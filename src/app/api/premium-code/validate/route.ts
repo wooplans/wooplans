@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
 export async function POST(request: Request) {
-  const { premiumCode, email } = await request.json();
+  const { premiumCode, email } = (await request.json()) as {
+    premiumCode?: string;
+    email?: string;
+  };
 
   if (!premiumCode || !email) {
     return NextResponse.json(
@@ -12,18 +16,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const subscriber = await import("@/lib/prisma").then((m) =>
-      m.prisma.subscriber.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          email: true,
-          premiumCode: true,
-          isActive: true,
-          expiresAt: true,
-        },
-      })
-    );
+    const prisma = getPrisma();
+    const subscriber = await prisma.subscriber.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        premiumCode: true,
+        isActive: true,
+        expiresAt: true,
+      },
+    });
 
     if (!subscriber || !subscriber.premiumCode) {
       return NextResponse.json({ valid: false, error: "Code premium invalide" });

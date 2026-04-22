@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
 export async function GET(request: Request) {
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   }
 
   try {
+    const prisma = getPrisma();
     const subscribers = await prisma.subscriber.findMany({
       orderBy: { createdAt: "desc" },
     });

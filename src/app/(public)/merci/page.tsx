@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+type PremiumCodeLookupResponse = {
+  premiumCode?: string | null;
+};
+
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -18,7 +22,7 @@ function ThankYouContent() {
 
     const poll = setInterval(() => {
       fetch(`/api/premium-code/lookup?email=${encodeURIComponent(email!)}`)
-        .then((res) => res.json())
+        .then((res) => res.json() as Promise<PremiumCodeLookupResponse>)
         .then((data) => {
           if (data.premiumCode) {
             setPremiumCode(data.premiumCode);

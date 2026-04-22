@@ -16,6 +16,12 @@ type Plan = {
   thumbnail: string;
 };
 
+type PlanMutationResponse = {
+  error?: string;
+  published?: boolean;
+  featured?: boolean;
+};
+
 export default function AdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,9 +75,9 @@ export default function AdminPlansPage() {
       });
 
       if (res.ok) {
-        const updated = await res.json();
+        const updated = (await res.json()) as PlanMutationResponse;
         setPlans((prev) =>
-          prev.map((p) => (p.id === plan.id ? { ...p, published: updated.published } : p))
+          prev.map((p) => (p.id === plan.id ? { ...p, published: Boolean(updated.published) } : p))
         );
         setError("");
       } else {
@@ -92,9 +98,9 @@ export default function AdminPlansPage() {
       });
 
       if (res.ok) {
-        const updated = await res.json();
+        const updated = (await res.json()) as PlanMutationResponse;
         setPlans((prev) =>
-          prev.map((p) => (p.id === plan.id ? { ...p, featured: updated.featured } : p))
+          prev.map((p) => (p.id === plan.id ? { ...p, featured: Boolean(updated.featured) } : p))
         );
         setError("");
       } else {

@@ -8,6 +8,14 @@ type UploadedFile = {
   originalName: string;
 };
 
+type UploadFilesResponse = {
+  files: UploadedFile[];
+};
+
+type UploadErrorResponse = {
+  error?: string;
+};
+
 type UploadingFile = {
   file: File;
   progress: number;
@@ -63,11 +71,11 @@ export function ImageUploader({
           });
 
           if (!res.ok) {
-            const data = await res.json();
+            const data = (await res.json()) as UploadErrorResponse;
             throw new Error(data.error || "Upload failed");
           }
 
-          const data: { files: UploadedFile[] } = await res.json();
+          const data = (await res.json()) as UploadFilesResponse;
 
           setUploading((prev) =>
             prev.map((u) =>
@@ -302,10 +310,10 @@ export function ThumbnailUploader({
           body: formData,
         });
         if (!res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as UploadErrorResponse;
           throw new Error(data.error || "Upload failed");
         }
-        const data: { files: UploadedFile[] } = await res.json();
+        const data = (await res.json()) as UploadFilesResponse;
         onChange(data.files[0].url);
       } catch (err) {
         alert(err instanceof Error ? err.message : "Erreur lors de l'upload");

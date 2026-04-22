@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
 export async function PUT(
@@ -13,7 +13,7 @@ export async function PUT(
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const body = await request.json();
+  const body = (await request.json()) as { isActive?: unknown };
   const { isActive } = body;
 
   if (typeof isActive !== "boolean") {
@@ -21,6 +21,7 @@ export async function PUT(
   }
 
   try {
+    const prisma = getPrisma();
     const subscriber = await prisma.subscriber.update({
       where: { id: params.id },
       data: {

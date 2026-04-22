@@ -1,36 +1,38 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql/web";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { getOptionalRequestContext } from "@cloudflare/next-on-pages";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-let prisma: PrismaClient;
-const databaseUrl = process.env.DATABASE_URL;
-const usesLibsql = Boolean(databaseUrl && databaseUrl.startsWith("libsql://"));
+type D1Binding = ConstructorParameters<typeof PrismaD1>[0];
 
-if (usesLibsql) {
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required for libSQL/Turso connections");
-  }
+type CloudflareEnv = {
+  DB?: D1Binding;
+};
 
-  const databaseAuthToken = process.env.DATABASE_AUTH_TOKEN;
-  if (!databaseAuthToken) {
-    throw new Error("DATABASE_AUTH_TOKEN is required for libSQL/Turso connections");
-  }
-
-  const adapter = new PrismaLibSql({
-    url: databaseUrl,
-    authToken: databaseAuthToken,
-  });
-  prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
-} else {
-  prisma = globalForPrisma.prisma ?? new PrismaClient();
+function getD1Binding() {
+  const requestContext = getOptionalRequestContext();
+  const env = requestContext?.env as CloudflareEnv | undefined;
+  return env?.DB;
 }
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function getLocalPrismaClient() {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = new PrismaClient();
+  }
+
+  return globalForPrisma.prisma;
 }
 
-export const prismaClient = prisma;
-export { prisma };
+export function getPrisma() {
+  const d1 = getD1Binding();
+
+  if (d1) {
+    const adapter = new PrismaD1(d1);
+    return new PrismaClient({ adapter });
+  }
+
+  return getLocalPrismaClient();
+}

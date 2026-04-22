@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
 export async function GET(request: Request) {
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
+    const prisma = getPrisma();
     const subscriber = await prisma.subscriber.findUnique({
       where: { email },
       select: { premiumCode: true, isActive: true },

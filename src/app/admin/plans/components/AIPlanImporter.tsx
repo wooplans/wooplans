@@ -16,6 +16,10 @@ type ExtractedData = {
   estimatedCost: number;
 };
 
+type ExtractPlanErrorResponse = {
+  error?: string;
+};
+
 type AIPlanImporterProps = {
   onExtracted: (data: ExtractedData) => void;
 };
@@ -43,11 +47,11 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
         });
 
         if (!res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as ExtractPlanErrorResponse;
           throw new Error(data.error || "Erreur lors de l'extraction");
         }
 
-        const data: ExtractedData = await res.json();
+        const data = (await res.json()) as ExtractedData;
         onExtracted(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");

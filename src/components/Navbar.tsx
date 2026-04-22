@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import type { SessionUser } from "@/lib/auth";
 
+type SessionResponse = {
+  session?: { user?: SessionUser } | null;
+};
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,8 +17,8 @@ export function Navbar() {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
     fetch("/api/auth/session")
-      .then((response) => response.json())
-      .then((data: { session?: { user?: SessionUser } | null }) => {
+      .then((response) => response.json() as Promise<SessionResponse>)
+      .then((data) => {
         setSessionUser(data.session?.user ?? null);
       })
       .catch(() => undefined);

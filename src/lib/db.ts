@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import {
   filterDemoPlans,
   getDemoPlanBySlug,
@@ -52,6 +52,7 @@ function parsePlan(p: RawPlan): Plan {
 
 export async function listPlans(filters?: PlanFilters) {
   try {
+    const prisma = getPrisma();
     const where: Record<string, unknown> = {};
 
     if (filters?.featured !== undefined) where.featured = filters.featured;
@@ -73,6 +74,7 @@ export async function listPlans(filters?: PlanFilters) {
 
 export async function getPlanBySlug(slug: string) {
   try {
+    const prisma = getPrisma();
     const plan: RawPlan | null = await prisma.plan.findUnique({ where: { slug } });
 
     if (!plan) return getDemoPlanBySlug(slug);
@@ -86,6 +88,7 @@ export async function getPlanBySlug(slug: string) {
 
 export async function getSimilarPlans(category: string, excludeSlug: string) {
   try {
+    const prisma = getPrisma();
     const plans: RawPlan[] = await prisma.plan.findMany({
       where: {
         published: true,

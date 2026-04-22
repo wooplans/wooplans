@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import {
   applySessionCookie,
   createSessionToken,
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Code premium requis" }, { status: 400 });
       }
 
+      const prisma = getPrisma();
       const subscriber = await prisma.subscriber.findUnique({
         where: { email },
         select: {

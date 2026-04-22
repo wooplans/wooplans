@@ -5,3 +5,9 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NODE_ENV = "production"
+
+# Add a D1 binding named `DB` in Cloudflare Pages or here with your real IDs.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "wooplans"
+# database_id = "your-d1-database-id"

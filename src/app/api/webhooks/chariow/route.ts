@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
+
+type ChariowWebhookPayload = {
+  event?: string;
+  sale?: { id?: string | null } | null;
+  customer?: { email?: string | null } | null;
+  license?: { key?: string | null } | null;
+};
+
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    const prisma = getPrisma();
+    const payload = (await request.json()) as ChariowWebhookPayload;
     const event = payload.event;
 
     if (event !== "successful.sale") {

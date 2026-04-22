@@ -11,8 +11,6 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:migrate": "prisma migrate dev",
-    "db:migrate:prod": "tsx scripts/bootstrap-prod-db.ts",
-    "db:bootstrap:prod": "tsx scripts/bootstrap-prod-db.ts && npm run db:seed",
     "db:seed": "npx tsx prisma/seed.ts"
   },
   "prisma": {
@@ -20,13 +18,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
-    "@libsql/client": "^0.17.2",
-    "@prisma/adapter-libsql": "^7.7.0",
+    "@prisma/adapter-d1": "^7.7.0",
     "@prisma/client": "^6.0.0",
     "anthropic": "^0.0.0",
     "aws4fetch": "^1.0.20",
     "bcryptjs": "^3.0.3",
-    "cross-fetch": "file:vendor/cross-fetch",
     "next": "^14.2.35",
     "next-auth": "^4.24.14",
     "react": "^18",
