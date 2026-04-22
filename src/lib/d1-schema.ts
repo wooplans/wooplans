@@ -38,7 +38,7 @@ async function addColumnIfMissing(
     return;
   }
 
-  await db.exec(`ALTER TABLE "${tableName}" ADD COLUMN ${definition};`);
+  await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${definition};`);
 }
 
 export async function ensureD1Schema() {
@@ -51,61 +51,27 @@ export async function ensureD1Schema() {
 
       if (!(await hasTable(db, "Plan"))) {
         await db.exec(
-          `CREATE TABLE IF NOT EXISTS "Plan" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "slug" TEXT NOT NULL UNIQUE,
-            "name" TEXT NOT NULL,
-            "category" TEXT NOT NULL,
-            "description" TEXT NOT NULL,
-            "surface" INTEGER NOT NULL,
-            "bedrooms" INTEGER NOT NULL,
-            "bathrooms" INTEGER NOT NULL,
-            "floors" INTEGER NOT NULL,
-            "rooms" TEXT NOT NULL,
-            "images" TEXT NOT NULL,
-            "thumbnail" TEXT NOT NULL,
-            "estimatedCost" INTEGER NOT NULL DEFAULT 0,
-            "estimatedCostImage" TEXT NOT NULL DEFAULT '',
-            "distributionPlans" TEXT NOT NULL DEFAULT '[]',
-            "distributionPlanUrl" TEXT NOT NULL DEFAULT '',
-            "featured" INTEGER NOT NULL DEFAULT 0,
-            "published" INTEGER NOT NULL DEFAULT 0,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL
-          );`,
+          `CREATE TABLE IF NOT EXISTS Plan (id TEXT NOT NULL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, surface INTEGER NOT NULL, bedrooms INTEGER NOT NULL, bathrooms INTEGER NOT NULL, floors INTEGER NOT NULL, rooms TEXT NOT NULL, images TEXT NOT NULL, thumbnail TEXT NOT NULL, estimatedCost INTEGER NOT NULL DEFAULT 0, estimatedCostImage TEXT NOT NULL DEFAULT '', distributionPlans TEXT NOT NULL DEFAULT '[]', distributionPlanUrl TEXT NOT NULL DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,
         );
       }
 
       if (!(await hasTable(db, "Subscriber"))) {
         await db.exec(
-          `CREATE TABLE IF NOT EXISTS "Subscriber" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "email" TEXT NOT NULL UNIQUE,
-            "chariowCustomerId" TEXT,
-            "chariowLicenseKey" TEXT,
-            "premiumCode" TEXT,
-            "isActive" INTEGER NOT NULL DEFAULT 0,
-            "expiresAt" DATETIME,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          );`,
+          `CREATE TABLE IF NOT EXISTS Subscriber (id TEXT NOT NULL PRIMARY KEY, email TEXT NOT NULL UNIQUE, chariowCustomerId TEXT, chariowLicenseKey TEXT, premiumCode TEXT, isActive INTEGER NOT NULL DEFAULT 0, expiresAt DATETIME, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);`,
         );
       }
 
       if (!(await hasTable(db, "Admin"))) {
         await db.exec(
-          `CREATE TABLE IF NOT EXISTS "Admin" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "email" TEXT NOT NULL UNIQUE,
-            "passwordHash" TEXT NOT NULL
-          );`,
+          `CREATE TABLE IF NOT EXISTS Admin (id TEXT NOT NULL PRIMARY KEY, email TEXT NOT NULL UNIQUE, passwordHash TEXT NOT NULL);`,
         );
       }
 
-      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_category_idx" ON "Plan"("category");`);
-      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_featured_idx" ON "Plan"("featured");`);
-      await db.exec(`CREATE INDEX IF NOT EXISTS "Plan_published_idx" ON "Plan"("published");`);
-      await db.exec(`CREATE INDEX IF NOT EXISTS "Subscriber_email_idx" ON "Subscriber"("email");`);
-      await db.exec(`CREATE INDEX IF NOT EXISTS "Subscriber_isActive_idx" ON "Subscriber"("isActive");`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Plan_category_idx ON Plan(category);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Plan_featured_idx ON Plan(featured);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Plan_published_idx ON Plan(published);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Subscriber_email_idx ON Subscriber(email);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Subscriber_isActive_idx ON Subscriber(isActive);`);
 
       await addColumnIfMissing(db, "Plan", "estimatedCostImage", `"estimatedCostImage" TEXT NOT NULL DEFAULT ''`);
       await addColumnIfMissing(db, "Plan", "distributionPlans", `"distributionPlans" TEXT NOT NULL DEFAULT '[]'`);
