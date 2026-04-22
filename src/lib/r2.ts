@@ -15,6 +15,13 @@ type R2Env = {
   R2_SECRET_ACCESS_KEY?: string;
 };
 
+type R2Config = {
+  accountId: string;
+  bucketName: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+};
+
 function hex(bytes: Uint8Array) {
   let result = "";
   for (let i = 0; i < bytes.length; i++) {
@@ -64,9 +71,13 @@ function pickFirstNonEmpty(...values: Array<string | undefined>) {
   return values.find((value) => typeof value === "string" && value.length > 0);
 }
 
-function getR2Config() {
+function getR2Env() {
   const requestContext = getOptionalRequestContext();
-  const env = requestContext?.env as R2Env | undefined;
+  return requestContext?.env as R2Env | undefined;
+}
+
+function getR2Config(): R2Config | null {
+  const env = getR2Env();
 
   const accountId = pickFirstNonEmpty(env?.R2_ACCOUNT_ID, process.env.R2_ACCOUNT_ID);
   const bucketName = pickFirstNonEmpty(env?.R2_BUCKET_NAME, process.env.R2_BUCKET_NAME);
@@ -81,6 +92,32 @@ function getR2Config() {
   }
 
   return { accountId, bucketName, accessKeyId, secretAccessKey };
+}
+
+function maskKeyId(value: string | undefined) {
+  if (!value) return null;
+  if (value.length <= 8) return value;
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+export function getR2ConfigState() {
+  const env = getR2Env();
+  const config = getR2Config();
+
+  return {
+    hasRequestContext: Boolean(env),
+    hasCloudflareAccountId: Boolean(env?.R2_ACCOUNT_ID),
+    hasCloudflareBucketName: Boolean(env?.R2_BUCKET_NAME),
+    hasCloudflareAccessKeyId: Boolean(env?.R2_ACCESS_KEY_ID),
+    hasCloudflareSecretAccessKey: Boolean(env?.R2_SECRET_ACCESS_KEY),
+    hasProcessAccountId: Boolean(process.env.R2_ACCOUNT_ID),
+    hasProcessBucketName: Boolean(process.env.R2_BUCKET_NAME),
+    hasProcessAccessKeyId: Boolean(process.env.R2_ACCESS_KEY_ID),
+    hasProcessSecretAccessKey: Boolean(process.env.R2_SECRET_ACCESS_KEY),
+    resolvedAccountId: config?.accountId ?? null,
+    resolvedBucketName: config?.bucketName ?? null,
+    resolvedAccessKeyId: maskKeyId(config?.accessKeyId),
+  };
 }
 
 function buildAuthorizationHeader(params: {
@@ -195,7 +232,14 @@ export async function uploadR2Object(upload: R2ObjectUpload) {
   });
 
   if (!response.ok) {
-    throw new Error(`R2 upload failed (${response.status})`);
+    const responseText = await response.text();
+    const state = getR2ConfigState();
+    throw new Error(
+      `R2 upload failed (${response.status}). Diagnostic: ${JSON.stringify({
+        ...state,
+        responseText: responseText.slice(0, 500),
+      })}`,
+    );
   }
 
   return { key: upload.key };
