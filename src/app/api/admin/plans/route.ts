@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { createEdgePlan, getEdgePlanBySlug, listEdgePlans } from "@/lib/edge-db";
 import { stringifyRooms, stringifyStringArray } from "@/lib/plan-serialization";
 
 export const runtime = "edge";
@@ -75,11 +75,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const plans = await prisma.plan.findMany({
-      orderBy: { updatedAt: "desc" },
-    });
-
-    return NextResponse.json(plans);
+    return NextResponse.json(await listEdgePlans());
   } catch (error) {
     console.error("Failed to list admin plans:", error);
     return NextResponse.json({ error: "Erreur lors du chargement des plans" }, { status: 500 });
@@ -100,13 +96,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validated.error }, { status: 400 });
     }
 
-    const existing = await prisma.plan.findUnique({ where: { slug: validated.data.slug } });
+    const existing = await getEdgePlanBySlug(validated.data.slug);
     if (existing) {
       return NextResponse.json({ error: "Un plan avec ce slug existe deja" }, { status: 409 });
     }
 
-    const plan = await prisma.plan.create({
-      data: validated.data,
+    const plan = await createEdgePlan({
+      id: crypto.randomUUID(),
+      ...validated.data,
     });
 
     return NextResponse.json(plan, { status: 201 });

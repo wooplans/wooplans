@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getEdgeDashboardStats, listRecentEdgePlans } from "@/lib/edge-db";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -28,35 +28,13 @@ export default async function AdminDashboardPage() {
   let recentPlans: RecentPlan[] = [];
 
   try {
-    [totalPlans, publishedPlans, featuredPlans, totalSubscribers] = await Promise.all([
-      prisma.plan.count(),
-      prisma.plan.count({ where: { published: true } }),
-      prisma.plan.count({ where: { featured: true } }),
-      prisma.subscriber.count(),
-    ]);
-
-    activeSubscribers = await prisma.subscriber.count({
-      where: { isActive: true },
-    });
-
-    recentPlans = await prisma.plan.findMany({
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        name: true,
-        category: true,
-        surface: true,
-        bedrooms: true,
-        bathrooms: true,
-        floors: true,
-        thumbnail: true,
-        published: true,
-        featured: true,
-        estimatedCost: true,
-        updatedAt: true,
-      },
-    });
+    const stats = await getEdgeDashboardStats();
+    totalPlans = stats.totalPlans;
+    publishedPlans = stats.publishedPlans;
+    featuredPlans = stats.featuredPlans;
+    totalSubscribers = stats.totalSubscribers;
+    activeSubscribers = stats.activeSubscribers;
+    recentPlans = await listRecentEdgePlans();
   } catch (error) {
     console.error("Failed to load admin dashboard:", error);
   }

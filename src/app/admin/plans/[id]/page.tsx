@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getEdgePlanById } from "@/lib/edge-db";
 import { parseRooms, parseStringArray } from "@/lib/plan-serialization";
 import { notFound } from "next/navigation";
 import { PlanForm } from "../plan-form";
@@ -13,9 +13,7 @@ export default async function EditPlanPage({
   let plan = null;
 
   try {
-    plan = await prisma.plan.findUnique({
-      where: { id: params.id },
-    });
+    plan = await getEdgePlanById(params.id);
   } catch (error) {
     console.error("Failed to load plan for editing:", error);
   }

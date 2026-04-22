@@ -1,0 +1,12 @@
+{
+  "name": "cross-fetch",
+  "version": "4.1.0",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./dist/browser-ponyfill.js": "./dist/browser-ponyfill.js",
+    "./dist/browser-polyfill.js": "./dist/browser-polyfill.js",
+    "./dist/cross-fetch.js": "./dist/cross-fetch.js"
+  }
+}
