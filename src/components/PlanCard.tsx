@@ -29,7 +29,8 @@ export function PlanCard({
             alt={name}
             width={800}
             height={600}
-            unoptimized
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            quality={55}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>

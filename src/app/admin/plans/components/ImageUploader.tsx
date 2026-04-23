@@ -31,6 +31,70 @@ type ImageUploaderProps = {
   label?: string;
 };
 
+type CompressionSettings = {
+  maxWidth: number;
+  maxHeight: number;
+  quality: number;
+};
+
+function getBaseName(filename: string) {
+  const dotIndex = filename.lastIndexOf(".");
+  return dotIndex > 0 ? filename.slice(0, dotIndex) : filename;
+}
+
+function loadImage(url: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Impossible de lire l'image"));
+    img.src = url;
+  });
+}
+
+async function compressImageForUpload(file: File, settings: CompressionSettings) {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    return file;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImage(objectUrl);
+    const ratio = Math.min(
+      1,
+      settings.maxWidth / image.naturalWidth,
+      settings.maxHeight / image.naturalHeight,
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+    const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+
+    context.drawImage(image, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", settings.quality);
+    });
+
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    return new File([blob], `${getBaseName(file.name)}.webp`, {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export function ImageUploader({
   value,
   onChange,
@@ -42,9 +106,12 @@ export function ImageUploader({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const totalFiles = value.length + uploading.length;
-
   const uploadFiles = useCallback(
     async (files: File[]) => {
+      const compressionSettings =
+        label.toLowerCase().includes("distribution")
+          ? { maxWidth: 1800, maxHeight: 1800, quality: 0.78 }
+          : { maxWidth: 1400, maxHeight: 1100, quality: 0.72 };
       const remaining = maxFiles - value.length;
       const toUpload = files.slice(0, remaining);
 
@@ -64,8 +131,9 @@ export function ImageUploader({
 
       for (let i = 0; i < toUpload.length; i++) {
         const file = toUpload[i];
+        const optimizedFile = await compressImageForUpload(file, compressionSettings);
         const formData = new FormData();
-        formData.append("files", file);
+        formData.append("files", optimizedFile);
 
         try {
           const res = await fetch("/api/admin/upload", {
@@ -107,7 +175,7 @@ export function ImageUploader({
         });
       }, 1000);
     },
-    [value, onChange, maxFiles],
+    [value, onChange, maxFiles, label],
   );
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -177,7 +245,8 @@ export function ImageUploader({
                 alt={`Image ${i + 1}`}
                 width={320}
                 height={320}
-                unoptimized
+                sizes="(min-width: 768px) 20vw, 33vw"
+                quality={45}
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] font-bold">
@@ -319,8 +388,13 @@ export function ThumbnailUploader({
   const uploadFile = useCallback(
     async (file: File) => {
       setUploading(true);
+      const optimizedFile = await compressImageForUpload(file, {
+        maxWidth: 960,
+        maxHeight: 720,
+        quality: 0.68,
+      });
       const formData = new FormData();
-      formData.append("files", file);
+      formData.append("files", optimizedFile);
 
       try {
         const res = await fetch("/api/admin/upload", {
@@ -369,7 +443,8 @@ export function ThumbnailUploader({
               alt="Vignette"
               width={128}
               height={96}
-              unoptimized
+              sizes="128px"
+              quality={45}
               className="w-full h-full object-cover"
             />
             <button

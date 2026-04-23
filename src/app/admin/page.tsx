@@ -88,21 +88,22 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-0 border-2 border-outline">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {recentPlans.map((plan) => (
               <Link
                 key={plan.id}
                 href={`/admin/plans/${plan.id}`}
-                className="bg-white overflow-hidden hover:bg-surface transition-colors group border-outline border-b-2 border-r-2 last:border-r-0"
+                className="group block bg-surface overflow-hidden border border-outline/10 rounded-2xl transition-all duration-200 hover:shadow-sm hover:-translate-y-1"
               >
-                  <div className="aspect-[4/3] bg-surface relative overflow-hidden border-b-2 border-outline">
+                <div className="aspect-[4/3] bg-background relative overflow-hidden">
                   {plan.thumbnail ? (
                     <Image
                       src={plan.thumbnail}
                       alt={plan.name}
                       width={800}
                       height={600}
-                      unoptimized
+                      sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                      quality={50}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
@@ -113,35 +114,40 @@ export default async function AdminDashboardPage() {
                     </div>
                   )}
                   <div className="absolute top-2 left-2 flex gap-1">
-                    <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border-2 ${
+                    <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border rounded-full ${
                       plan.published
-                        ? "bg-green-600 text-white border-green-600"
-                        : "bg-gray-500 text-white border-gray-500"
+                        ? "bg-green-50 text-green-700 border-green-600/30"
+                        : "bg-white/90 text-foreground/50 border-outline/20"
                     }`}>
                       {plan.published ? "Publié" : "Brouillon"}
                     </span>
                     {plan.featured && (
-                      <span className="px-2 py-0.5 text-[10px] font-black border-2 bg-primary text-white border-primary uppercase tracking-wide">
+                      <span className="px-2 py-0.5 text-[10px] font-black border border-primary/30 bg-primary/10 text-primary rounded-full uppercase tracking-wide">
                         Vedette
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <h3 className="font-bold text-foreground text-sm truncate group-hover:text-primary transition-colors">
+                <div className="p-5 border-t border-outline/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 border border-primary/20 text-primary uppercase tracking-[0.15em]">
+                      {plan.category}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-foreground text-base truncate transition-colors">
                     {plan.name}
                   </h3>
-                  <p className="text-xs text-foreground/40 mt-0.5 capitalize">{plan.category}</p>
-
-                  <div className="flex items-center gap-3 mt-3 text-xs text-foreground/50">
+                  <div className="flex items-center gap-3 mt-2 text-sm text-foreground/60">
                     <span>{plan.surface} m²</span>
                     <span>·</span>
-                    <span>{plan.bedrooms}ch / {plan.bathrooms}sb</span>
+                    <span>{plan.bedrooms} ch.</span>
+                    <span className="text-foreground/30">/</span>
+                    <span>{plan.bathrooms} SdB</span>
                   </div>
 
                   {plan.estimatedCost > 0 && (
-                    <p className="text-xs text-foreground/40 mt-2">
+                    <p className="text-xs text-foreground/40 mt-3">
                       {plan.estimatedCost.toLocaleString("fr-FR")} FCFA
                     </p>
                   )}

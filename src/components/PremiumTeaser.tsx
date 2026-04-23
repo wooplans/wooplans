@@ -1,6 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { getCurrentSession } from "@/lib/auth-server";
+import { useEffect, useState } from "react";
+
+const PREMIUM_TEST_STORAGE_KEY = "wooplans-premium-test-unlocked";
+const PREMIUM_TEST_EVENT = "wooplans-premium-test-changed";
 
 type PremiumTeaserProps = {
   type: "floorplan" | "cost";
@@ -8,20 +13,37 @@ type PremiumTeaserProps = {
   subtitle: string;
   realContent?: React.ReactNode;
   backgroundImage?: string;
+  initialUnlocked?: boolean;
 };
 
-export async function PremiumTeaser({
+export function PremiumTeaser({
   type,
   title,
   subtitle,
   realContent,
   backgroundImage,
+  initialUnlocked = false,
 }: PremiumTeaserProps) {
-  const session = await getCurrentSession();
+  const [isUnlocked, setIsUnlocked] = useState(initialUnlocked);
 
-  const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
+  useEffect(() => {
+    const syncUnlockState = () => {
+      const savedState = window.localStorage.getItem(PREMIUM_TEST_STORAGE_KEY);
 
-  if (isPremium && realContent) {
+      setIsUnlocked(savedState === null ? initialUnlocked : savedState === "true");
+    };
+
+    syncUnlockState();
+    window.addEventListener(PREMIUM_TEST_EVENT, syncUnlockState);
+    window.addEventListener("storage", syncUnlockState);
+
+    return () => {
+      window.removeEventListener(PREMIUM_TEST_EVENT, syncUnlockState);
+      window.removeEventListener("storage", syncUnlockState);
+    };
+  }, [initialUnlocked]);
+
+  if (isUnlocked && realContent) {
     return (
       <div className="group relative overflow-hidden border border-outline/10 bg-surface rounded-2xl">
         {realContent}
@@ -38,7 +60,8 @@ export async function PremiumTeaser({
             alt={title}
             width={1200}
             height={800}
-            unoptimized
+            sizes="(min-width: 768px) 896px, 100vw"
+            quality={45}
             className="w-full h-auto object-cover"
           />
         ) : (
@@ -94,7 +117,7 @@ export async function PremiumTeaser({
           <p className="text-xs text-foreground/50 mb-4 max-w-xs mx-auto">
             {subtitle}
           </p>
-          {!isPremium ? (
+          {!isUnlocked ? (
             <Link
               href="/abonnement"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-full border border-primary hover:bg-primary-dark transition-colors"

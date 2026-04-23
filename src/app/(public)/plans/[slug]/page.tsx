@@ -7,6 +7,7 @@ import { PlanGallery } from "@/components/PlanGallery";
 import { PlanStats } from "@/components/PlanStats";
 import { RoomTable } from "@/components/RoomTable";
 import { PremiumTeaser } from "@/components/PremiumTeaser";
+import { PremiumTestToggle } from "@/components/PremiumTestToggle";
 import { ConversionAnchor } from "@/components/ConversionAnchor";
 import { SimilarPlans } from "@/components/SimilarPlans";
 import { getCurrentSession } from "@/lib/auth-server";
@@ -49,7 +50,7 @@ export default async function PlanDetailPage({ params }: Props) {
 
   const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
 
-  const premiumContent = isPremium ? (
+  const premiumContent = (
     <>
       <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Plan de distribution complet</h3>
       {plan.distributionPlanUrl && (
@@ -73,9 +74,9 @@ export default async function PlanDetailPage({ params }: Props) {
           </div>
         </div>
     </>
-  ) : null;
+  );
 
-  const costContent = isPremium ? (
+  const costContent = (
     <>
       <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Devis estimatif détaillé</h3>
       {plan.estimatedCostImage ? (
@@ -85,7 +86,8 @@ export default async function PlanDetailPage({ params }: Props) {
             alt="Devis estimatif"
             width={1600}
             height={900}
-            unoptimized
+            sizes="(min-width: 768px) 896px, 100vw"
+            quality={60}
             className="w-full h-full object-contain"
           />
         </div>
@@ -95,7 +97,7 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
       )}
     </>
-  ) : null;
+  );
 
   return (
     <>
@@ -138,7 +140,9 @@ export default async function PlanDetailPage({ params }: Props) {
             alt={plan.name}
             width={1600}
             height={1000}
-            unoptimized
+            sizes="(min-width: 768px) 896px, 100vw"
+            quality={60}
+            priority
             className="w-full h-full object-cover"
           />
         </div>
@@ -168,12 +172,17 @@ export default async function PlanDetailPage({ params }: Props) {
       </div>
 
       <section className="max-w-4xl mx-auto px-4 pb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-2 tracking-tight">
+        <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-2 tracking-tight">
           Contenu Premium
-        </h2>
-        <p className="text-xs text-foreground/50 uppercase tracking-[0.2em] font-semibold">
+            </h2>
+            <p className="text-xs text-foreground/50 uppercase tracking-[0.2em] font-semibold">
           Débloquez l&apos;accès complet pour voir les détails
-        </p>
+            </p>
+          </div>
+          <PremiumTestToggle initialUnlocked={isPremium} />
+        </div>
       </section>
 
       <section className="max-w-4xl mx-auto px-4 pb-8">
@@ -193,6 +202,7 @@ export default async function PlanDetailPage({ params }: Props) {
               subtitle="Agencement complet avec cotations et dimensions de chaque pièce."
               realContent={premiumContent}
               backgroundImage={plan.distributionPlans?.[0] || plan.distributionPlanUrl || undefined}
+              initialUnlocked={isPremium}
             />
           </div>
         </div>
@@ -219,6 +229,7 @@ export default async function PlanDetailPage({ params }: Props) {
               subtitle="Budget prévisionnel détaillé par poste de construction."
               realContent={costContent}
               backgroundImage={plan.estimatedCostImage || undefined}
+              initialUnlocked={isPremium}
             />
           </div>
         </div>

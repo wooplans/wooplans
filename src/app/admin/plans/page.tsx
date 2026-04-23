@@ -164,7 +164,8 @@ export default function AdminPlansPage() {
                         alt={plan.name}
                         width={36}
                         height={36}
-                        unoptimized
+                        sizes="36px"
+                        quality={40}
                         className="w-9 h-9 object-cover bg-surface flex-shrink-0 border border-outline"
                       />
                       <div>

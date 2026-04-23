@@ -46,7 +46,8 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
                   alt={`${name} — vue ${i + 1}`}
                   width={1200}
                   height={900}
-                  unoptimized
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  quality={55}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   priority={i === 0}
                 />
@@ -97,8 +98,8 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
               src={images[lightboxIndex]}
               alt={`${name} — vue ${lightboxIndex + 1}`}
               fill
-              unoptimized
               sizes="90vw"
+              quality={70}
               className="object-contain"
             />
           </div>
