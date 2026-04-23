@@ -228,7 +228,12 @@ export default async function PlanDetailPage({ params }: Props) {
       </section>
 
       <section className="max-w-4xl mx-auto px-4 pb-20">
-        <ConversionAnchor />
+        <ConversionAnchor
+          category={plan.category}
+          name={plan.name}
+          slug={plan.slug}
+          initialPremium={isPremium}
+        />
       </section>
 
       <div className="max-w-4xl mx-auto px-4 pb-6">
