@@ -53,3 +53,16 @@ model Admin {
   email        String @unique
   passwordHash String
 }
+
+model CostRate {
+  id                    String   @id @default(cuid())
+  category              String
+  region                String   @default("default")
+  amountPerSquareMeter  Int
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([category, region])
+  @@index([category])
+  @@index([region])
+}

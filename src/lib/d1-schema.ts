@@ -67,11 +67,23 @@ export async function ensureD1Schema() {
         );
       }
 
+      if (!(await hasTable(db, "CostRate"))) {
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS CostRate (id TEXT NOT NULL PRIMARY KEY, category TEXT NOT NULL, region TEXT NOT NULL DEFAULT 'default', amountPerSquareMeter INTEGER NOT NULL, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,
+        );
+      }
+
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_category_idx ON Plan(category);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_featured_idx ON Plan(featured);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_published_idx ON Plan(published);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Subscriber_email_idx ON Subscriber(email);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Subscriber_isActive_idx ON Subscriber(isActive);`);
+      await db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS CostRate_category_region_key ON CostRate(category, region);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS CostRate_category_idx ON CostRate(category);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS CostRate_region_idx ON CostRate(region);`);
+      await db.exec(
+        `INSERT OR IGNORE INTO CostRate (id, category, region, amountPerSquareMeter, createdAt, updatedAt) VALUES ('default-villa', 'villa', 'default', 150000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), ('default-duplex', 'duplex', 'default', 180000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`,
+      );
 
       await addColumnIfMissing(db, "Plan", "estimatedCostImage", `"estimatedCostImage" TEXT NOT NULL DEFAULT ''`);
       await addColumnIfMissing(db, "Plan", "distributionPlans", `"distributionPlans" TEXT NOT NULL DEFAULT '[]'`);

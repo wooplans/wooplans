@@ -11,6 +11,8 @@ import { PremiumTestToggle } from "@/components/PremiumTestToggle";
 import { ConversionAnchor } from "@/components/ConversionAnchor";
 import { SimilarPlans } from "@/components/SimilarPlans";
 import { ZoomablePremiumImage } from "@/components/ZoomablePremiumImage";
+import { CostEstimateTable } from "@/components/CostEstimateTable";
+import { getDefaultCostRate } from "@/lib/cost-rates";
 import { getCurrentSession } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +50,7 @@ export default async function PlanDetailPage({ params }: Props) {
   }
 
   const similar = await getSimilarPlans(plan.category, plan.slug);
+  const costRate = await getDefaultCostRate(plan.category);
 
   const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
 
@@ -80,18 +83,12 @@ export default async function PlanDetailPage({ params }: Props) {
   );
 
   const costContent = (
-    <>
-      {plan.estimatedCostImage ? (
-        <ZoomablePremiumImage
-          src={plan.estimatedCostImage}
-          alt={`${plan.name} - devis estimatif`}
-        />
-      ) : (
-        <div className="bg-surface p-6">
-          <p className="text-foreground/60">Aucun devis disponible pour ce plan.</p>
-        </div>
-      )}
-    </>
+    <CostEstimateTable
+      planName={plan.name}
+      category={plan.category}
+      surface={plan.surface}
+      amountPerSquareMeter={costRate?.amountPerSquareMeter ?? null}
+    />
   );
 
   return (
@@ -223,7 +220,6 @@ export default async function PlanDetailPage({ params }: Props) {
               title="Devis estimatif"
               subtitle="Budget prévisionnel détaillé par poste de construction."
               realContent={costContent}
-              backgroundImage={plan.estimatedCostImage || undefined}
               initialUnlocked={isPremium}
             />
           </div>

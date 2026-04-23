@@ -485,48 +485,31 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-outline p-6 space-y-5">
+      <div className="bg-white border-2 border-outline p-6 space-y-3">
         <h2 className="font-semibold text-gray-900">Devis estimatif</h2>
-        <p className="text-xs text-gray-400 -mt-3">Image du devis estimatif du projet</p>
+        <p className="text-sm text-gray-500">
+          Le tableau est genere automatiquement avec la surface du plan et le prix au m2 defini dans les reglages.
+        </p>
 
-        <ThumbnailUploader
-          value={form.estimatedCostImage}
-          onChange={(url) => updateForm("estimatedCostImage", url)}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Coût estimé (FCFA)
-            </label>
+        <div className="flex items-end gap-4 pt-2">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
-              type="number"
-              value={form.estimatedCost}
-              onChange={(e) => updateForm("estimatedCost", e.target.value)}
-              min={0}
-              className={inputClass}
+              type="checkbox"
+              checked={form.featured}
+              onChange={(e) => updateForm("featured", e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
             />
-          </div>
-          <div className="flex items-end gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.featured}
-                onChange={(e) => updateForm("featured", e.target.checked)}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span className="text-sm text-gray-700">Mis en avant</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.published}
-                onChange={(e) => updateForm("published", e.target.checked)}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span className="text-sm text-gray-700">Publié</span>
-            </label>
-          </div>
+            <span className="text-sm text-gray-700">Mis en avant</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.published}
+              onChange={(e) => updateForm("published", e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-gray-700">Publie</span>
+          </label>
         </div>
       </div>
 
