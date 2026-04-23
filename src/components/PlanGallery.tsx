@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type PlanGalleryProps = {
   images: string[];
@@ -11,6 +11,7 @@ type PlanGalleryProps = {
 export function PlanGallery({ images, name }: PlanGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   if (images.length === 0) {
     return null;
@@ -26,6 +27,27 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
   const goTo = (index: number) => {
     setLightboxIndex((index + images.length) % images.length);
   };
+
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+
+    if (!start || images.length < 2) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const isHorizontalSwipe = Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5;
+
+    if (!isHorizontalSwipe) return;
+
+    goTo(deltaX < 0 ? lightboxIndex + 1 : lightboxIndex - 1);
+  }
 
   return (
     <>
@@ -70,30 +92,41 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
           onClick={closeLightbox}
         >
           <button
+            type="button"
             className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl leading-none"
             onClick={closeLightbox}
+            aria-label="Fermer"
           >
             &times;
           </button>
           <button
+            type="button"
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl"
             onClick={(e) => {
               e.stopPropagation();
               goTo(lightboxIndex - 1);
             }}
+            aria-label="Image precedente"
           >
             &#8249;
           </button>
           <button
+            type="button"
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-4xl"
             onClick={(e) => {
               e.stopPropagation();
               goTo(lightboxIndex + 1);
             }}
+            aria-label="Image suivante"
           >
             &#8250;
           </button>
-          <div className="relative w-[90vw] h-[85vh] max-w-5xl" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative w-[90vw] h-[85vh] max-w-5xl touch-pan-y"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <Image
               src={images[lightboxIndex]}
               alt={`${name} — vue ${lightboxIndex + 1}`}
@@ -106,11 +139,13 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
             {images.map((_, i) => (
               <button
+                type="button"
                 key={i}
                 onClick={(e) => {
                   e.stopPropagation();
                   goTo(i);
                 }}
+                aria-label={`Voir l'image ${i + 1}`}
                 className={`w-3 h-3 transition-colors ${
                   i === lightboxIndex ? "bg-primary" : "bg-white/30"
                 }`}
