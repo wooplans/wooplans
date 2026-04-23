@@ -10,6 +10,7 @@ import { PremiumTeaser } from "@/components/PremiumTeaser";
 import { PremiumTestToggle } from "@/components/PremiumTestToggle";
 import { ConversionAnchor } from "@/components/ConversionAnchor";
 import { SimilarPlans } from "@/components/SimilarPlans";
+import { ZoomablePremiumImage } from "@/components/ZoomablePremiumImage";
 import { getCurrentSession } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
@@ -52,28 +53,18 @@ export default async function PlanDetailPage({ params }: Props) {
 
   const premiumContent = (
     <>
-      <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Plan de distribution complet</h3>
       {plan.distributionPlans.length > 0 ? (
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6">
           {plan.distributionPlans.map((imageUrl, index) => (
-            <div
+            <ZoomablePremiumImage
               key={imageUrl}
-              className="aspect-[16/9] overflow-hidden bg-surface border-2 border-outline"
-            >
-              <Image
-                src={imageUrl}
-                alt={`${plan.name} - plan de distribution ${index + 1}`}
-                width={1600}
-                height={900}
-                sizes="(min-width: 768px) 896px, 100vw"
-                quality={70}
-                className="w-full h-full object-contain"
-              />
-            </div>
+              src={imageUrl}
+              alt={`${plan.name} - plan de distribution ${index + 1}`}
+            />
           ))}
         </div>
       ) : plan.distributionPlanUrl ? (
-        <div className="aspect-[16/9] overflow-hidden bg-surface mb-6 border-2 border-outline">
+        <div className="aspect-[16/9] overflow-hidden bg-surface">
           <iframe
             src={plan.distributionPlanUrl}
             className="w-full h-full border-0"
@@ -81,41 +72,22 @@ export default async function PlanDetailPage({ params }: Props) {
           />
         </div>
       ) : (
-        <div className="bg-surface border-2 border-outline p-6 mb-6">
+        <div className="bg-surface p-6">
           <p className="text-foreground/60">Aucun plan de distribution disponible pour ce plan.</p>
         </div>
       )}
-        <div className="bg-surface border-2 border-outline p-6">
-          <h4 className="font-bold text-foreground mb-4">Détails des pièces</h4>
-          <div className="grid grid-cols-2 gap-0 border-2 border-outline">
-            {plan.rooms.map((room: {name: string, area: number}, index: number) => (
-              <div key={index} className={`bg-white p-4 ${index % 2 !== 0 ? 'border-l-2 border-outline' : ''} ${index >= 2 ? 'border-t-2 border-outline' : ''}`}>
-                <p className="font-bold text-foreground">{room.name}</p>
-                <p className="text-sm text-foreground/60">{room.area} m²</p>
-              </div>
-            ))}
-          </div>
-        </div>
     </>
   );
 
   const costContent = (
     <>
-      <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Devis estimatif détaillé</h3>
       {plan.estimatedCostImage ? (
-        <div className="aspect-[16/9] overflow-hidden bg-surface mb-6 border-2 border-outline">
-          <Image
-            src={plan.estimatedCostImage}
-            alt="Devis estimatif"
-            width={1600}
-            height={900}
-            sizes="(min-width: 768px) 896px, 100vw"
-            quality={60}
-            className="w-full h-full object-contain"
-          />
-        </div>
+        <ZoomablePremiumImage
+          src={plan.estimatedCostImage}
+          alt={`${plan.name} - devis estimatif`}
+        />
       ) : (
-        <div className="bg-surface border-2 border-outline p-6">
+        <div className="bg-surface p-6">
           <p className="text-foreground/60">Aucun devis disponible pour ce plan.</p>
         </div>
       )}

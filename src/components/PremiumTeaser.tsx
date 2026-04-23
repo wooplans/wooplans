@@ -45,7 +45,7 @@ export function PremiumTeaser({
 
   if (isUnlocked && realContent) {
     return (
-      <div className="group relative overflow-hidden border border-outline/10 bg-surface rounded-2xl">
+      <div className="relative">
         {realContent}
       </div>
     );
