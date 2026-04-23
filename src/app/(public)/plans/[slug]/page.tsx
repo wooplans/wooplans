@@ -53,13 +53,36 @@ export default async function PlanDetailPage({ params }: Props) {
   const premiumContent = (
     <>
       <h3 className="text-xl font-black text-foreground mb-4 tracking-tight">Plan de distribution complet</h3>
-      {plan.distributionPlanUrl && (
+      {plan.distributionPlans.length > 0 ? (
+        <div className="space-y-4 mb-6">
+          {plan.distributionPlans.map((imageUrl, index) => (
+            <div
+              key={imageUrl}
+              className="aspect-[16/9] overflow-hidden bg-surface border-2 border-outline"
+            >
+              <Image
+                src={imageUrl}
+                alt={`${plan.name} - plan de distribution ${index + 1}`}
+                width={1600}
+                height={900}
+                sizes="(min-width: 768px) 896px, 100vw"
+                quality={70}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          ))}
+        </div>
+      ) : plan.distributionPlanUrl ? (
         <div className="aspect-[16/9] overflow-hidden bg-surface mb-6 border-2 border-outline">
           <iframe
             src={plan.distributionPlanUrl}
             className="w-full h-full border-0"
             title={`Plan de distribution - ${plan.name}`}
           />
+        </div>
+      ) : (
+        <div className="bg-surface border-2 border-outline p-6 mb-6">
+          <p className="text-foreground/60">Aucun plan de distribution disponible pour ce plan.</p>
         </div>
       )}
         <div className="bg-surface border-2 border-outline p-6">
@@ -201,7 +224,7 @@ export default async function PlanDetailPage({ params }: Props) {
               title="Plan de distribution"
               subtitle="Agencement complet avec cotations et dimensions de chaque pièce."
               realContent={premiumContent}
-              backgroundImage={plan.distributionPlans?.[0] || plan.distributionPlanUrl || undefined}
+              backgroundImage={plan.distributionPlans[0] || undefined}
               initialUnlocked={isPremium}
             />
           </div>

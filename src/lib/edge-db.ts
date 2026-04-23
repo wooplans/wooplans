@@ -52,7 +52,7 @@ export async function listEdgePlans() {
     orderBy: { updatedAt: "desc" },
   });
 
-  return plans.map((plan) => mapPlanRecord(plan as PlanRecord));
+  return plans.map((plan: unknown) => mapPlanRecord(plan as PlanRecord));
 }
 
 export async function listRecentEdgePlans(limit = 8) {
@@ -77,7 +77,20 @@ export async function listRecentEdgePlans(limit = 8) {
     take: limit,
   });
 
-  return plans.map((plan) => ({
+  return plans.map((plan: {
+    id: string;
+    name: string;
+    category: string;
+    surface: number;
+    bedrooms: number;
+    bathrooms: number;
+    floors: number;
+    thumbnail: string;
+    published: boolean;
+    featured: boolean;
+    estimatedCost: number;
+    updatedAt: Date;
+  }) => ({
     ...plan,
     surface: Number(plan.surface) || 0,
     bedrooms: Number(plan.bedrooms) || 0,
