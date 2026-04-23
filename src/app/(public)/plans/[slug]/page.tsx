@@ -220,6 +220,7 @@ export default async function PlanDetailPage({ params }: Props) {
               title="Devis estimatif"
               subtitle="Budget prévisionnel détaillé par poste de construction."
               realContent={costContent}
+              previewContent={costContent}
               initialUnlocked={isPremium}
             />
           </div>

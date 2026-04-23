@@ -12,6 +12,7 @@ type PremiumTeaserProps = {
   title: string;
   subtitle: string;
   realContent?: React.ReactNode;
+  previewContent?: React.ReactNode;
   backgroundImage?: string;
   initialUnlocked?: boolean;
 };
@@ -21,6 +22,7 @@ export function PremiumTeaser({
   title,
   subtitle,
   realContent,
+  previewContent,
   backgroundImage,
   initialUnlocked = false,
 }: PremiumTeaserProps) {
@@ -54,7 +56,9 @@ export function PremiumTeaser({
   return (
     <div className="group relative overflow-hidden border border-outline/10 bg-surface rounded-2xl">
       <div className="blur-[3px] opacity-90 select-none pointer-events-none">
-        {backgroundImage ? (
+        {previewContent ? (
+          previewContent
+        ) : backgroundImage ? (
           <Image
             src={backgroundImage}
             alt={title}
