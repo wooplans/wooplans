@@ -9,9 +9,9 @@ type RoomTableProps = {
 
 function cleanRoomName(name: string): string {
   return name
-    .replace(/\s*RDC\s*/gi, ' ')
-    .replace(/\s*ETAGE\s*/gi, ' ')
-    .replace(/\s*\d+\s*/g, ' ')
+    .replace(/\s*RDC\s*/gi, " ")
+    .replace(/\s*ETAGE\s*/gi, " ")
+    .replace(/\s*\d+\s*/g, " ")
     .trim();
 }
 
@@ -22,12 +22,12 @@ function processRooms(rooms: Room[]): string[] {
     const cleanedName = cleanRoomName(room.name);
     const normalizedName = cleanedName.toLowerCase();
 
-    if (normalizedName.includes('chambre')) {
-      const key = 'Chambres';
+    if (normalizedName.includes("chambre")) {
+      const key = "Chambres";
       if (!cleaned.has(key)) cleaned.set(key, new Set());
       cleaned.get(key)!.add(cleanedName);
-    } else if (normalizedName.includes('salle de bain') || normalizedName.includes('sdb')) {
-      const key = 'Salles de bain';
+    } else if (normalizedName.includes("salle de bain") || normalizedName.includes("sdb")) {
+      const key = "Salles de bain";
       if (!cleaned.has(key)) cleaned.set(key, new Set());
       cleaned.get(key)!.add(cleanedName);
     } else {
@@ -38,11 +38,7 @@ function processRooms(rooms: Room[]): string[] {
 
   const result: string[] = [];
   for (const [name, items] of Array.from(cleaned.entries())) {
-    if (items.size > 1) {
-      result.push(`${name} (${items.size})`);
-    } else {
-      result.push(name);
-    }
+    result.push(items.size > 1 ? `${name} (${items.size})` : name);
   }
 
   return result;
@@ -56,13 +52,13 @@ export function RoomTable({ rooms }: RoomTableProps) {
   const processedRooms = processRooms(rooms);
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-foreground mb-4 tracking-tight">
+    <div className="rounded-[2rem] border border-outline/10 bg-surface p-6 shadow-[0_18px_60px_rgba(38,33,29,0.05)]">
+      <h2 className="font-display text-3xl text-foreground">
         Composition des pièces
       </h2>
-      <ul className="space-y-2 list-disc list-inside">
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2">
         {processedRooms.map((room, i) => (
-          <li key={i} className="text-foreground/70">
+          <li key={i} className="rounded-full bg-background px-4 py-3 text-sm font-semibold text-foreground/75">
             {room}
           </li>
         ))}

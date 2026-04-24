@@ -26,14 +26,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const plan = await getPlanBySlug(params.slug);
 
   if (!plan || !plan.published) {
-    return { title: "Plan introuvable — WooPlans" };
+    return { title: "Plan introuvable - WooPlans" };
   }
 
   return {
-    title: `${plan.name} — WooPlans`,
+    title: `${plan.name} - WooPlans`,
     description: plan.description,
     openGraph: {
-      title: `${plan.name} — WooPlans`,
+      title: `${plan.name} - WooPlans`,
       description: plan.description,
       images: plan.thumbnail ? [{ url: plan.thumbnail }] : undefined,
     },
@@ -42,7 +42,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PlanDetailPage({ params }: Props) {
   const session = await getCurrentSession();
-
   const plan = await getPlanBySlug(params.slug);
 
   if (!plan || !plan.published) {
@@ -51,10 +50,9 @@ export default async function PlanDetailPage({ params }: Props) {
 
   const similar = await getSimilarPlans(plan.category, plan.slug);
   const costRate = await getDefaultCostRate(plan.category);
-
   const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive;
 
-  const premiumContent = (
+  const distributionContent = (
     <>
       {plan.distributionPlans.length > 0 ? (
         <div className="space-y-6">
@@ -93,8 +91,8 @@ export default async function PlanDetailPage({ params }: Props) {
 
   return (
     <>
-      <nav className="max-w-4xl mx-auto px-4 pt-6 pb-2">
-        <div className="flex items-center gap-2 text-xs text-foreground/40 font-medium">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
+        <div className="flex items-center gap-2 text-xs text-foreground/45 font-bold">
           <Link href="/" className="hover:text-primary transition-colors">
             Accueil
           </Link>
@@ -107,46 +105,73 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
       </nav>
 
-      <section className="max-w-4xl mx-auto px-4 pt-6 pb-16">
-        <span className="text-[11px] font-semibold px-2.5 py-1 border border-primary/30 text-primary uppercase tracking-[0.2em]">
-          {plan.category}
-        </span>
+      <section className="relative overflow-hidden bg-secondary text-surface">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(184,106,60,0.3),transparent_35%)]" />
+        <div className="relative max-w-7xl mx-auto grid gap-10 px-4 sm:px-6 py-10 md:grid-cols-[0.9fr_1.1fr] md:items-center md:py-16">
+          <div className="order-2 md:order-1">
+            <span className="inline-flex rounded-full border border-primary/45 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-primary">
+              {plan.category}
+            </span>
+            <h1 className="mt-6 font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">
+              Découvrez {plan.name}, du rendu 3D au budget estimatif.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-surface/68 md:text-lg">
+              Parcourez les vues, les pièces, le plan de distribution et le devis pour décider si ce modèle correspond à votre projet de construction.
+            </p>
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                [`${plan.surface} m²`, "Surface"],
+                [`${plan.bedrooms}`, "Chambres"],
+                [`${plan.bathrooms}`, "Salles d'eau"],
+                [`${plan.floors}`, "Niveaux"],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-[1.25rem] border border-surface/10 bg-surface/8 p-4 backdrop-blur">
+                  <p className="font-display text-3xl">{value}</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-surface/45">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <a href="#devis" className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3 text-sm font-black text-white hover:bg-primary-dark">
+                Voir le devis
+              </a>
+              <a href="#distribution" className="inline-flex items-center justify-center rounded-full border border-surface/25 px-7 py-3 text-sm font-black text-surface hover:border-primary hover:text-primary">
+                Explorer le plan
+              </a>
+            </div>
+          </div>
 
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground leading-tight mt-4 mb-6 max-w-2xl tracking-tight">
-          {plan.name}
-        </h1>
-
-        <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/50 font-medium mb-8">
-          <span>{plan.surface} m²</span>
-          <span className="w-1.5 h-1.5 bg-foreground/30" />
-          <span>{plan.bedrooms} chambres</span>
-          <span className="w-1.5 h-1.5 bg-foreground/30" />
-          <span>{plan.bathrooms} salles de bain</span>
-          <span className="w-1.5 h-1.5 bg-foreground/30" />
-          <span>{plan.floors} niveau{plan.floors > 1 ? "x" : ""}</span>
+          <div className="order-1 md:order-2">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[2.5rem] bg-surface/10 md:aspect-[5/6]">
+              <Image
+                src={plan.thumbnail}
+                alt={plan.name}
+                width={1600}
+                height={1000}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                quality={64}
+                priority
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 ring-1 ring-inset ring-surface/10" />
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="aspect-[16/10] overflow-hidden bg-surface mb-10 border border-outline/10 rounded-2xl">
-          <Image
-            src={plan.thumbnail}
-            alt={plan.name}
-            width={1600}
-            height={1000}
-            sizes="(min-width: 768px) 896px, 100vw"
-            quality={60}
-            priority
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        <p className="text-foreground/60 leading-relaxed max-w-2xl mb-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <p className="max-w-3xl text-lg leading-relaxed text-muted">
           {plan.description}
         </p>
       </section>
 
       <PlanGallery images={plan.images} name={plan.name} />
 
-      <section className="max-w-4xl mx-auto px-4 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="mb-6">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Fiche modèle</p>
+          <h2 className="mt-3 font-display text-4xl text-foreground">Les repères essentiels</h2>
+        </div>
         <PlanStats
           surface={plan.surface}
           bedrooms={plan.bedrooms}
@@ -155,35 +180,32 @@ export default async function PlanDetailPage({ params }: Props) {
         />
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 pb-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
         <RoomTable rooms={plan.rooms} />
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 pb-4">
-        <div className="h-px bg-outline/10" />
-      </div>
-
-      <section className="max-w-4xl mx-auto px-4 pb-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+        <div className="flex flex-col gap-4 rounded-[2rem] border border-primary/20 bg-primary/10 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground mb-2 tracking-tight">
-          Contenu Premium
+            <h2 className="font-display text-3xl text-foreground">
+              Contenu Premium
             </h2>
-            <p className="text-xs text-foreground/50 uppercase tracking-[0.2em] font-semibold">
-          Débloquez l&apos;accès complet pour voir les détails
+            <p className="mt-1 text-xs font-black uppercase tracking-[0.2em] text-muted">
+              Débloquez les détails techniques et le budget
             </p>
           </div>
           <PremiumTestToggle initialUnlocked={isPremium} />
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 pb-8">
-        <div className="bg-surface border border-outline/10 rounded-2xl overflow-hidden">
+      <section id="distribution" className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 scroll-mt-24">
+        <div className="rounded-[2rem] border border-outline/10 bg-surface shadow-[0_20px_70px_rgba(38,33,29,0.06)]">
           <div className="px-6 pt-6 pb-4">
-            <h2 className="text-xl font-black text-foreground tracking-tight">
-              Plans de distribution
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Distribution</p>
+            <h2 className="mt-2 font-display text-4xl text-foreground">
+              Plan complet et cotations
             </h2>
-            <p className="text-sm text-foreground/50 mt-1">
+            <p className="text-sm text-muted mt-2">
               Agencement complet avec cotations et dimensions de chaque pièce.
             </p>
           </div>
@@ -192,7 +214,7 @@ export default async function PlanDetailPage({ params }: Props) {
               type="floorplan"
               title="Plan de distribution"
               subtitle="Agencement complet avec cotations et dimensions de chaque pièce."
-              realContent={premiumContent}
+              realContent={distributionContent}
               backgroundImage={plan.distributionPlans[0] || undefined}
               initialUnlocked={isPremium}
             />
@@ -200,17 +222,14 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 pb-4">
-        <div className="h-px bg-outline/10" />
-      </div>
-
-      <section className="max-w-4xl mx-auto px-4 pb-16">
-        <div className="bg-surface border border-outline/10 rounded-2xl overflow-hidden">
+      <section id="devis" className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 scroll-mt-24">
+        <div className="rounded-[2rem] border border-outline/10 bg-surface shadow-[0_20px_70px_rgba(38,33,29,0.06)]">
           <div className="px-6 pt-6 pb-4">
-            <h2 className="text-xl font-black text-foreground tracking-tight">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">Budget</p>
+            <h2 className="mt-2 font-display text-4xl text-foreground">
               Devis estimatif
             </h2>
-            <p className="text-sm text-foreground/50 mt-1">
+            <p className="text-sm text-muted mt-2">
               Budget prévisionnel détaillé par poste de construction.
             </p>
           </div>
@@ -227,21 +246,16 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <ConversionAnchor
           category={plan.category}
           name={plan.name}
           slug={plan.slug}
-          thumbnail={plan.thumbnail}
           initialPremium={isPremium}
         />
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 pb-6">
-        <div className="h-px bg-outline/10" />
-      </div>
-
-      <section className="max-w-4xl mx-auto px-4 pb-20">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
         <SimilarPlans plans={similar} currentSlug={plan.slug} />
       </section>
     </>

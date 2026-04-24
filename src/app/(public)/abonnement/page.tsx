@@ -4,223 +4,123 @@ import Link from "next/link";
 
 const features = [
   {
-    title: "Plans de distribution détaillés",
+    title: "Plans complets",
     description:
-      "Visualisez le plan architectural complet de chaque modèle avec cotations et dimensions précises de chaque pièce.",
+      "Consultez les plans de distribution détaillés, les surfaces par pièce et les informations techniques de chaque modèle.",
   },
   {
-    title: "Devis estimatifs complets",
+    title: "Devis estimatif",
     description:
-      "Accédez au budget prévisionnel ventilé par poste : fondation, gros œuvre, finitions, toiture et plus.",
+      "Accédez au tableau de coût généré automatiquement pour mieux préparer le budget de construction.",
   },
   {
-    title: "Échanges avec nos architectes",
+    title: "Décision plus rapide",
     description:
-      "Discutez directement avec nos architectes sur WhatsApp pour personnaliser le plan choisi selon vos besoins.",
+      "Comparez les villas et duplex avec les mêmes repères : surface, pièces, budget, vues 3D et potentiel du terrain.",
   },
   {
-    title: "Vues 3D haute définition",
+    title: "Commande accompagnée",
     description:
-      "Explorez chaque plan sous tous les angles avec nos visualisations 3D détaillées pour mieux projeter votre futur logement.",
-  },
-  {
-    title: "Accès illimité pendant 12 mois",
-    description:
-      "Consultez tous les plans du catalogue sans restriction pendant une année entière, y compris les nouveaux modèles ajoutés.",
-  },
-  {
-    title: "Paiement unique et sécurisé",
-    description:
-      "Un seul paiement via Chariow, pas d'abonnement récurrent. Votre accès est activé immédiatement après la transaction.",
+      "Une fois votre modèle choisi, vous pouvez commander le dossier complet directement auprès de l'équipe WooPlans.",
   },
 ];
 
 const steps = [
-  {
-    number: "01",
-    title: "Activez votre accès Premium",
-    description:
-      "Effectuez le paiement sécurisé via Chariow. Votre accès est activé instantanément.",
-  },
-  {
-    number: "02",
-    title: "Recevez votre code premium",
-    description:
-      "Après le paiement, vous recevez un code premium à 4 chiffres pour vous connecter.",
-  },
-  {
-    number: "03",
-    title: "Explorez le catalogue en entier",
-    description:
-      "Parcourez tous les plans avec les distributions, cotations et estimations budgétaires débloqués.",
-  },
+  "Activez votre accès Premium en une seule fois.",
+  "Explorez les informations débloquées sur chaque fiche plan.",
+  "Commandez le dossier complet du modèle qui correspond à votre projet.",
+];
+
+const included = [
+  "Plans de distribution détaillés",
+  "Devis estimatifs par rubrique",
+  "Vues 3D haute définition",
+  "Catalogue complet pendant 12 mois",
+  "Nouveaux modèles ajoutés inclus",
+  "Lien direct WhatsApp pour commander",
 ];
 
 const faqs = [
   {
-    question: "Que contient exactement l'abonnement Premium ?",
+    question: "Que débloque Premium ?",
     answer:
-      "L'abonnement Premium vous donne accès aux plans de distribution détaillés avec cotations, aux devis estimatifs complets ventilés par poste de dépenses, aux vues 3D haute définition et à la possibilité d'échanger avec nos architectes sur WhatsApp pour personnaliser votre plan.",
+      "Premium débloque les sections réservées des fiches plans : distribution, devis estimatif, vues complémentaires et informations utiles pour comparer les modèles.",
   },
   {
-    question: "Combien de temps dure l'accès Premium ?",
+    question: "Le paiement est-il récurrent ?",
     answer:
-      "L'accès Premium est valable 12 mois à compter de la date d'activation. Pendant cette période, vous consultez tous les plans du catalogue sans restriction, y compris les nouveaux modèles ajoutés.",
+      "Non. Il s'agit d'un paiement unique pour 12 mois d'accès. Il n'y a pas de renouvellement automatique.",
   },
   {
-    question: "Est-ce un abonnement mensuel ou un paiement unique ?",
+    question: "Puis-je commander un dossier complet après l'abonnement ?",
     answer:
-      "C'est un paiement unique. Il n'y a pas de renouvellement automatique. Vous payez une seule fois et profitez de l'accès complet pendant 12 mois.",
-  },
-  {
-    question: "Comment fonctionne le paiement avec Chariow ?",
-    answer:
-      "Chariow est une solution de paiement sécurisée adaptée au marché africain. Vous recevez un code premium à 4 chiffres après le paiement qui active immédiatement votre accès Premium.",
-  },
-  {
-    question: "Puis-je obtenir un remboursement ?",
-    answer:
-      "Si vous n'êtes pas satisfait dans les 7 premiers jours suivant votre achat, vous pouvez nous contacter pour demander un remboursement intégral.",
-  },
-  {
-    question: "Comment contacter un architecte après mon abonnement ?",
-    answer:
-      "Une fois Premium, un bouton WhatsApp apparaît sur chaque fiche plan vous permettant de démarrer une conversation directe avec notre équipe d'architectes.",
+      "Oui. Sur chaque modèle débloqué, le bouton de commande ouvre WhatsApp avec le nom du plan et le lien de la fiche.",
   },
 ];
 
 export default function AbonnementPage() {
   return (
     <>
-      <nav className="max-w-6xl mx-auto px-4 pt-6">
-        <div className="flex items-center gap-2 text-sm text-foreground/50 font-medium">
-          <Link href="/" className="hover:text-primary transition-colors">
-            Accueil
-          </Link>
-          <span>/</span>
-          <span className="text-foreground">Abonnement Premium</span>
-        </div>
-      </nav>
-
-      <section className="max-w-6xl mx-auto px-4 pt-10 pb-16 text-center">
-        <span className="inline-flex items-center text-xs font-semibold px-3 py-1 border border-primary/30 text-primary uppercase tracking-[0.2em] mb-4">
-          Premium
-        </span>
-        <h1 className="text-3xl md:text-5xl font-semibold text-foreground leading-tight mb-5 tracking-tight">
-          Passez à WooPlans Premium
-        </h1>
-        <p className="text-lg text-foreground/60 max-w-2xl mx-auto leading-relaxed">
-          Débloquez l&apos;accès complet à tous les plans de distribution, devis
-          estimatifs et échanges personnalisés avec nos architectes.
-        </p>
-      </section>
-
-      <section className="border-y border-outline/10 bg-surface">
-        <div className="max-w-6xl mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-12 tracking-tight">
-            Tout ce que vous obtenez avec Premium
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className="bg-background p-6 border border-outline/10 rounded-2xl"
-              >
-                <div className="w-10 h-10 border border-primary/40 text-primary flex items-center justify-center mb-4 text-base font-semibold rounded-full">
-                  {i + 1}
-                </div>
-                <h3 className="font-semibold text-foreground text-base mb-2 tracking-tight">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-foreground/60 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+      <section className="bg-secondary text-surface">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_420px] lg:items-end lg:py-20">
+          <div>
+            <div className="mb-8 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-surface/55">
+              <Link href="/" className="hover:text-surface">
+                Accueil
+              </Link>
+              <span>/</span>
+              <span className="text-highlight">Premium</span>
+            </div>
+            <span className="inline-flex rounded-full border border-surface/20 px-4 py-2 text-xs font-black uppercase tracking-[0.26em] text-highlight">
+              Accès WooPlans
+            </span>
+            <h1 className="mt-6 max-w-4xl font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+              Débloquez les plans avant de choisir votre modèle.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-surface/70">
+              Premium transforme le catalogue en outil de décision : plans de
+              distribution, devis estimatifs, vues 3D et accès aux informations
+              qui permettent de comparer sérieusement chaque maison.
+            </p>
           </div>
-        </div>
-      </section>
 
-       <section className="max-w-6xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-4 tracking-tight">
-          Tarification
-        </h2>
-        <p className="text-foreground/60 text-center mb-12 max-w-xl mx-auto">
-          Un seul paiement, pas d&apos;engagement. Accédez immédiatement à tout le catalogue.
-        </p>
-        <div className="max-w-md mx-auto">
-          <div className="relative bg-background border border-outline/10 rounded-2xl overflow-hidden shadow-sm">
-            <div className="absolute top-4 right-4 bg-primary text-white text-[11px] font-semibold px-3 py-1 rounded-full">
-              POPULAIRE
+          <div id="offres" className="rounded-[2rem] bg-surface p-6 text-foreground shadow-[0_30px_80px_rgba(0,0,0,0.22)]">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
+              Offre Premium
+            </p>
+            <div className="mt-5 flex items-end gap-2">
+              <span className="font-display text-5xl leading-none">29 900</span>
+              <span className="pb-1 text-lg font-black text-muted">FCFA</span>
             </div>
-            <div className="p-8 text-center">
-              <h3 className="text-xl font-semibold text-foreground mb-1 tracking-tight">
-                Accès Premium
-              </h3>
-              <p className="text-sm text-foreground/50 mb-6">
-                12 mois d&apos;accès complet
-              </p>
-              <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-5xl font-semibold text-foreground">
-                  29 900
-                </span>
-                <span className="text-xl font-bold text-foreground/60">
-                  FCFA
-                </span>
-              </div>
-              <p className="text-sm text-foreground/40 mb-8">
-                Paiement unique &middot; Pas de renouvellement automatique
-              </p>
+            <p className="mt-3 text-sm leading-6 text-muted">
+              Paiement unique, 12 mois d&apos;accès au catalogue complet.
+            </p>
+            <button
+              onClick={() => window.chariow?.open("prd_9cbatg")}
+              className="mt-7 w-full rounded-full bg-primary px-6 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_36px_rgba(184,106,60,0.28)] transition-colors hover:bg-primary-dark"
+            >
+              Passer à Premium
+            </button>
 
-              <button
-                onClick={() => window.chariow?.open('prd_9cbatg')}
-                className="w-full py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors mb-4"
-              >
-                Passer à Premium — 29 900 FCFA
-              </button>
+            <div
+              id="chariow-widget"
+              data-product-id="prd_9cbatg"
+              data-store-domain="wooplans.mychariow.shop"
+              data-style="frame"
+              data-border-style="rounded"
+              data-cta-width="xs"
+              data-cta-animation="pulse_glow"
+              data-locale="fr"
+              data-primary-color="#B86A3C"
+              data-background-color="#FFFDF8"
+            />
 
-              <div id="chariow-widget"
-                data-product-id="prd_9cbatg"
-                data-store-domain="wooplans.mychariow.shop"
-                data-style="frame"
-                data-border-style="sharp"
-                data-cta-width="xs"
-                data-cta-animation="pulse_glow"
-                data-locale="fr"
-                data-primary-color="#0F5B59"
-                data-background-color="#FFFFFF">
-              </div>
-
-              <p className="text-xs text-foreground/40 mt-4">
-                Paiement sécurisé via Chariow
-              </p>
-            </div>
-            <div className="border-t border-outline/10 bg-surface/60 px-8 py-6">
+            <div className="mt-7 border-t border-outline/10 pt-6">
               <ul className="space-y-3">
-                {[
-                  "Plans de distribution détaillés",
-                  "Devis estimatifs complets",
-                  "Vues 3D haute définition",
-                  "Échanges architectes sur WhatsApp",
-                  "Tous les plans du catalogue",
-                  "Nouveaux modèles inclus",
-                  "Garantie satisfait ou remboursé 7 jours",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm">
-                    <svg
-                      className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="square"
-                        strokeLinejoin="miter"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-foreground/70">{item}</span>
+                {included.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-foreground/75">
+                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
@@ -229,96 +129,88 @@ export default function AbonnementPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-12 tracking-tight">
-          Comment ça marche
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {steps.map((step, i) => (
-            <div key={i} className="text-center p-8 border border-outline/10 rounded-2xl bg-background">
-              <div className="w-12 h-12 bg-primary text-white text-lg font-semibold flex items-center justify-center mx-auto mb-5 rounded-full">
-                {step.number}
-              </div>
-              <h3 className="font-semibold text-lg text-foreground mb-2 tracking-tight">
-                {step.title}
-              </h3>
-              <p className="text-sm text-foreground/60 leading-relaxed max-w-xs mx-auto">
-                {step.description}
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="text-center mt-10">
-          <Link
-            href="/plans"
-            className="inline-flex items-center justify-center px-8 py-3 border border-primary text-primary font-semibold rounded-full hover:bg-primary hover:text-white transition-colors"
-          >
-            Explorer le catalogue de plans
-          </Link>
+      <section className="bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+          <div className="grid gap-4 md:grid-cols-4">
+            {features.map((feature, index) => (
+              <article
+                key={feature.title}
+                className="rounded-[1.5rem] border border-outline/10 bg-surface p-6 shadow-[0_18px_50px_rgba(30,26,23,0.06)]"
+              >
+                <span className="text-xs font-black uppercase tracking-[0.22em] text-primary">
+                  0{index + 1}
+                </span>
+                <h2 className="mt-5 font-display text-2xl leading-tight text-foreground">
+                  {feature.title}
+                </h2>
+                <p className="mt-4 text-sm leading-6 text-muted">{feature.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="border-t border-outline/10 bg-surface">
-        <div className="max-w-3xl mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-10 tracking-tight">
-            Questions fréquentes
-          </h2>
-          <div className="space-y-0">
-            {faqs.map((faq, i) => (
+      <section className="border-y border-outline/10 bg-surface">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:py-20">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
+              Parcours simple
+            </p>
+            <h2 className="mt-4 font-display text-4xl leading-tight text-foreground sm:text-5xl">
+              De l&apos;inspiration à la commande, sans friction.
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {steps.map((step, index) => (
+              <div key={step} className="flex gap-5 rounded-[1.25rem] bg-background p-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-black text-surface">
+                  {index + 1}
+                </span>
+                <p className="pt-2 text-base font-semibold text-foreground">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-background">
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:py-20">
+          <h2 className="font-display text-4xl text-foreground">Questions fréquentes</h2>
+          <div className="mt-8 space-y-3">
+            {faqs.map((faq) => (
               <details
-                key={i}
-                className="group bg-background border border-outline/10 overflow-hidden rounded-2xl"
+                key={faq.question}
+                className="group rounded-[1.25rem] border border-outline/10 bg-surface"
               >
-                <summary className="flex items-center justify-between cursor-pointer px-6 py-5 font-semibold text-foreground hover:bg-surface/50 transition-colors">
-                  <span className="pr-4">{faq.question}</span>
-                  <svg
-                    className="w-5 h-5 text-foreground/40 shrink-0 group-open:rotate-180 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="square"
-                      strokeLinejoin="miter"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-base font-black text-foreground">
+                  {faq.question}
+                  <span className="text-primary transition-transform group-open:rotate-45">+</span>
                 </summary>
-                <div className="px-6 pb-5 text-sm text-foreground/60 leading-relaxed border-t border-outline/10 pt-4">
+                <p className="border-t border-outline/10 px-6 py-5 text-sm leading-7 text-muted">
                   {faq.answer}
-                </div>
+                </p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-background border-t border-outline/10">
-        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-4 tracking-tight">
-            Prêt à concrétiser votre projet ?
-          </h2>
-          <p className="text-foreground/60 mb-8 max-w-lg mx-auto leading-relaxed">
-            Rejoignez les nombreux propriétaires qui ont déjà fait confiance à
-            WooPlans pour réaliser leur projet de construction en Afrique.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="#offres"
-              className="px-8 py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors"
-            >
-              Devenir Premium — 29 900 FCFA
-            </a>
-            <a
-              href="https://wa.me/?text=Bonjour, je suis intéressé par l'abonnement Premium WooPlans."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 border border-primary/30 text-primary font-semibold rounded-full hover:border-primary transition-colors"
-            >
-              En parler sur WhatsApp
-            </a>
+      <section className="bg-secondary text-surface">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-highlight">
+              Catalogue premium
+            </p>
+            <h2 className="mt-3 font-display text-4xl leading-tight">
+              Comparez les modèles avec les bonnes informations.
+            </h2>
           </div>
+          <Link
+            href="/plans"
+            className="inline-flex rounded-full border border-surface/20 px-7 py-4 text-sm font-black uppercase tracking-[0.16em] text-surface transition-colors hover:bg-surface hover:text-secondary"
+          >
+            Voir le catalogue
+          </Link>
         </div>
       </section>
     </>

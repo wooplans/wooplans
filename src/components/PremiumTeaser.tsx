@@ -54,7 +54,7 @@ export function PremiumTeaser({
   }
 
   return (
-    <div className="group relative overflow-hidden border border-outline/10 bg-surface rounded-2xl">
+    <div className="group relative overflow-hidden rounded-[1.5rem] border border-outline/10 bg-background">
       <div className="blur-[3px] opacity-90 select-none pointer-events-none">
         {previewContent ? (
           previewContent
@@ -113,7 +113,7 @@ export function PremiumTeaser({
         )}
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20 flex flex-col items-center justify-end pb-8 px-6">
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20 flex flex-col items-center justify-end pb-8 px-6">
         <div className="text-center">
           <h3 className="text-base font-semibold text-foreground mb-1">
             {title}
@@ -124,7 +124,7 @@ export function PremiumTeaser({
           {!isUnlocked ? (
             <Link
               href="/abonnement"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-full border border-primary hover:bg-primary-dark transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_35px_rgba(184,106,60,0.25)] transition-colors hover:bg-primary-dark"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -132,7 +132,7 @@ export function PremiumTeaser({
               Débloquer avec Premium
             </Link>
           ) : (
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 border border-green-600/40 bg-green-50 text-green-700 text-sm font-semibold rounded-full">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-5 py-2.5 text-sm font-black text-primary">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

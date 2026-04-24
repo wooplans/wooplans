@@ -27,13 +27,21 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-200 bg-background/90 backdrop-blur ${
-        scrolled ? "border-b border-outline/15 shadow-sm" : "border-b border-transparent"
+      className={`sticky top-0 z-50 transition-all duration-200 bg-surface/85 backdrop-blur-xl ${
+        scrolled ? "border-b border-outline/15 shadow-[0_10px_40px_rgba(30,26,23,0.08)]" : "border-b border-transparent"
       }`}
     >
-      <nav className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-semibold text-foreground tracking-tight">
-          WooPlans
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 min-h-[72px] flex items-center justify-between">
+        <Link href="/" className="group flex items-center gap-3 text-foreground">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-black text-surface">
+            WP
+          </span>
+          <span className="leading-none">
+            <span className="block font-display text-2xl tracking-tight">WooPlans</span>
+            <span className="hidden text-[10px] font-bold uppercase tracking-[0.24em] text-muted sm:block">
+              Architecture catalogue
+            </span>
+          </span>
         </Link>
 
         <button
@@ -65,7 +73,7 @@ export function Navbar() {
           </svg>
         </button>
 
-        <ul className="hidden md:flex items-center gap-8 text-sm font-medium text-foreground/80">
+        <ul className="hidden md:flex items-center gap-8 text-sm font-semibold text-foreground/75">
           <li>
             <Link href="/" className="hover:text-foreground transition-colors">
               Accueil
@@ -82,7 +90,7 @@ export function Navbar() {
           <li>
             <Link
               href="/abonnement"
-              className="px-4 py-2 rounded-full border border-foreground/20 text-foreground hover:border-foreground/60 transition-colors"
+              className="rounded-full bg-primary px-5 py-2.5 text-white shadow-[0_12px_30px_rgba(184,106,60,0.25)] transition-colors hover:bg-primary-dark"
             >
               Abonnement
             </Link>
@@ -91,7 +99,7 @@ export function Navbar() {
             <li>
               <Link
                 href="/connexion"
-                className="text-sm text-primary hover:text-primary-dark font-semibold"
+                className="text-sm text-primary hover:text-primary-dark font-bold"
               >
                 Mon Compte
               </Link>
@@ -100,7 +108,7 @@ export function Navbar() {
             <li>
               <Link
                 href="/connexion"
-                className="text-sm text-primary hover:text-primary-dark font-semibold"
+                className="text-sm text-primary hover:text-primary-dark font-bold"
               >
                 Connexion
               </Link>
@@ -110,8 +118,8 @@ export function Navbar() {
       </nav>
 
       {menuOpen && (
-        <div className="md:hidden bg-background border-t border-outline/10">
-          <ul className="flex flex-col px-4 py-4 gap-4 text-sm font-medium">
+        <div className="md:hidden bg-surface border-t border-outline/10 shadow-xl">
+          <ul className="flex flex-col px-4 py-5 gap-4 text-sm font-semibold">
             <li>
               <Link href="/" onClick={() => setMenuOpen(false)}>
                 Accueil

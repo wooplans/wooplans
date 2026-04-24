@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { listPlans } from "@/lib/db";
 import { PlanGrid } from "@/components/PlanGrid";
@@ -10,73 +11,99 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="bg-background border-b border-outline/10">
-        <div className="max-w-6xl mx-auto px-4 py-20 md:py-28 text-center">
-          <span className="inline-flex items-center text-xs font-semibold px-3 py-1 border border-primary/30 text-primary uppercase tracking-[0.2em] mb-6">
-            Architecture &amp; Construction
-          </span>
-          <h1 className="text-3xl md:text-5xl font-semibold mb-4 leading-tight tracking-tight text-foreground">
-            Trouvez le plan idéal
-            <br />
-            pour votre projet de construction
-          </h1>
-          <p className="text-lg md:text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
-            Catalogue de villas et duplex conçus pour l&apos;Afrique
-          </p>
-          <Link
-            href="/plans"
-            className="inline-flex items-center justify-center bg-primary text-white font-semibold px-8 py-3 rounded-full border border-primary hover:bg-primary-dark transition-colors"
-          >
-            Voir le catalogue
-          </Link>
+      <section className="relative overflow-hidden bg-secondary text-surface">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(184,106,60,0.35),transparent_32%),linear-gradient(135deg,rgba(255,253,248,0.08),transparent_45%)]" />
+        <div className="relative max-w-7xl mx-auto grid gap-12 px-4 sm:px-6 py-20 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-28">
+          <div>
+            <span className="inline-flex items-center rounded-full border border-primary/40 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-primary">
+              Catalogue architectural premium
+            </span>
+            <h1 className="mt-7 max-w-3xl font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">
+              Choisissez un modèle. Étudiez le plan. Construisez avec méthode.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-surface/68 md:text-lg">
+              Villas et duplex prêts à explorer, avec vues 3D, plans de distribution et devis estimatifs pour avancer avec une vision claire.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/plans"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3 text-sm font-black text-white shadow-[0_18px_45px_rgba(184,106,60,0.35)] transition-colors hover:bg-primary-dark"
+              >
+                Explorer le catalogue
+              </Link>
+              <Link
+                href="/abonnement"
+                className="inline-flex items-center justify-center rounded-full border border-surface/25 px-8 py-3 text-sm font-black text-surface transition-colors hover:border-primary hover:text-primary"
+              >
+                Voir Premium
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
+            {featuredPlans.slice(0, 4).map((plan, index) => (
+              <Link
+                key={plan.slug}
+                href={`/plans/${plan.slug}`}
+                className={`group relative overflow-hidden rounded-[2rem] bg-surface/10 ${index === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/5]"}`}
+              >
+                <Image
+                  src={plan.thumbnail}
+                  alt={plan.name}
+                  width={900}
+                  height={650}
+                  sizes="(min-width: 768px) 38vw, 92vw"
+                  quality={58}
+                  className="h-full w-full object-cover opacity-85 transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">{plan.category}</p>
+                  <p className="mt-1 font-semibold text-surface">{plan.name}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
       {featuredPlans.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-8 tracking-tight">
-            Plans populaires
-          </h2>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+          <div className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Sélection</p>
+              <h2 className="mt-3 font-display text-4xl text-foreground md:text-5xl">
+                Modèles les plus consultés
+              </h2>
+            </div>
+            <Link href="/plans" className="text-sm font-black text-primary hover:text-primary-dark">
+              Voir tous les plans
+            </Link>
+          </div>
           <PlanGrid plans={featuredPlans} />
         </section>
       )}
 
       <section className="bg-surface border-y border-outline/10">
-        <div className="max-w-6xl mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-12 text-center tracking-tight">
-            Comment ça marche
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-8 border border-outline/10 bg-background rounded-2xl">
-              <div className="text-3xl font-semibold text-primary mb-3">01</div>
-              <h3 className="font-semibold text-base mb-2 tracking-tight">
-                Consultez les plans et devis
-              </h3>
-              <p className="text-foreground/60 text-sm">
-                Abonnez-vous pour visualiser les plans de distribution et
-                accéder aux devis estimatifs de tous nos modèles.
-              </p>
-            </div>
-            <div className="text-center p-8 border border-outline/10 bg-background rounded-2xl">
-              <div className="text-3xl font-semibold text-primary mb-3">02</div>
-              <h3 className="font-semibold text-base mb-2 tracking-tight">
-                Échangez avec nos architectes
-              </h3>
-              <p className="text-foreground/60 text-sm">
-                Choisissez un modèle de référence et donnez-nous les
-                modifications que vous souhaitez sur WhatsApp.
-              </p>
-            </div>
-            <div className="text-center p-8 border border-outline/10 bg-background rounded-2xl">
-              <div className="text-3xl font-semibold text-primary mb-3">03</div>
-              <h3 className="font-semibold text-base mb-2 tracking-tight">
-                Commandez les plans complets
-              </h3>
-              <p className="text-foreground/60 text-sm">
-                Commandez et obtenez les plans architecturaux complets
-                personnalisés et lancez votre projet de construction.
-              </p>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Méthode</p>
+            <h2 className="mt-3 font-display text-4xl text-foreground md:text-5xl">
+              Du coup d’œil au dossier complet
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              ["01", "Explorez", "Comparez les modèles avec vues 3D, surfaces, pièces et ambiance générale."],
+              ["02", "Débloquez", "Consultez les plans de distribution et le devis estimatif pour cadrer le budget."],
+              ["03", "Commandez", "Demandez le dossier complet du modèle choisi et avancez vers la construction."],
+            ].map(([step, title, text]) => (
+              <div key={step} className="rounded-[2rem] border border-outline/10 bg-background p-8">
+                <div className="text-xs font-black uppercase tracking-[0.24em] text-primary">{step}</div>
+                <h3 className="mt-6 font-display text-3xl text-foreground">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

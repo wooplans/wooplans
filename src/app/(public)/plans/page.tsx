@@ -8,11 +8,21 @@ export default async function PlansPage() {
   const plans = await listPlans({ published: true });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-8 tracking-tight">
-        Catalogue de plans
-      </h1>
-      <CatalogueClient plans={plans} />
-    </div>
+    <>
+      <section className="border-b border-outline/10 bg-secondary text-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-20">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Catalogue</p>
+          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-tight tracking-tight md:text-6xl">
+            Trouvez le modèle qui cadre votre futur chantier.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-surface/65">
+            Filtrez les villas et duplex, comparez les surfaces, puis ouvrez chaque fiche pour explorer les vues 3D, plans et devis.
+          </p>
+        </div>
+      </section>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+        <CatalogueClient plans={plans} />
+      </div>
+    </>
   );
 }

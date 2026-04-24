@@ -10,20 +10,22 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#0F5B59",
-          dark: "#0F5B59",
+          DEFAULT: "#B86A3C",
+          dark: "#8E4B2A",
         },
-        secondary: "#C75B3A",
-        background: "#F5F7F9",
-        surface: "#FFFFFF",
-        foreground: "#1E2933",
-        accent: "#F08A2E",
-        highlight: "#E7C36C",
-        muted: "#6B7280",
-        outline: "#1E2933",
+        secondary: "#26211D",
+        background: "#F3EEE6",
+        surface: "#FFFDF8",
+        foreground: "#1E1A17",
+        accent: "#6E5B47",
+        highlight: "#D7B56D",
+        muted: "#7A7066",
+        outline: "#2B2520",
       },
       fontFamily: {
         sans: [
+          "Inter",
+          "ui-sans-serif",
           "system-ui",
           "-apple-system",
           "Segoe UI",
@@ -31,6 +33,12 @@ const config: Config = {
           "Helvetica Neue",
           "Arial",
           "sans-serif",
+        ],
+        display: [
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "serif",
         ],
       },
       borderRadius: {

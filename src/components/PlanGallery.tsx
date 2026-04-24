@@ -51,16 +51,22 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
 
   return (
     <>
-      <section className="max-w-4xl mx-auto px-4 py-12">
-        <h2 className="text-lg font-semibold text-foreground mb-5 tracking-tight">
-          Vues 3D
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="mb-5">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">Galerie</p>
+          <h2 className="mt-3 font-display text-4xl text-foreground">
+            Explorez le modèle en 3D
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            Projetez-vous dans les volumes, les façades et l&apos;ambiance générale avant d&apos;ouvrir les détails du plan.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {images.slice(0, 4).map((img, i) => (
             <button
               key={i}
               onClick={() => openLightbox(i)}
-              className="relative overflow-hidden bg-surface group cursor-pointer border border-outline/10 rounded-2xl"
+              className={`relative overflow-hidden bg-surface group cursor-pointer border border-outline/10 rounded-[2rem] ${i === 0 ? "md:col-span-2 md:row-span-2" : ""}`}
             >
               <div className={i === 0 && images.length > 2 ? "aspect-[16/9]" : "aspect-[4/3]"}>
                 <Image

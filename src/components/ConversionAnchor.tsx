@@ -15,27 +15,24 @@ type ConversionAnchorProps = {
   category: string;
   name: string;
   slug: string;
-  thumbnail: string;
   initialPremium?: boolean;
 };
 
-function getModelCode(category: string, name: string, slug: string) {
+function getModelCode(name: string, slug: string) {
   const source = `${name} ${slug}`.toUpperCase();
   const explicitCode = source.match(/\b[VD]X?[-\s]?\d{2,4}\b/)?.[0];
 
   if (explicitCode) {
-    const letter = explicitCode.startsWith("D") ? "D" : "V";
-    const digits = explicitCode.match(/\d{2,4}/)?.[0] ?? "XXX";
-    return `${letter}X-${digits}`;
+    return explicitCode.replace(/\s+/g, "-");
   }
 
-  const slugSuffix = slug.toUpperCase().match(/(?:^|[-_\s])([VD])(\d{2,4})(?:$|[-_\s])?/);
+  const slugSuffix = slug.toUpperCase().match(/(?:^|[-_\s])([VD]\d{2,4})(?:$|[-_\s])?/);
 
   if (slugSuffix) {
-    return `${slugSuffix[1]}X-${slugSuffix[2]}`;
+    return slugSuffix[1];
   }
 
-  return category === "duplex" ? "DX-XXX" : "VX-XXX";
+  return "";
 }
 
 function getFullPlanPrice(category: string) {
@@ -46,35 +43,23 @@ function formatPrice(value: number) {
   return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
 }
 
-function resolveImageUrl(thumbnail: string, origin: string) {
-  if (!thumbnail) {
-    return "";
-  }
-
-  if (/^https?:\/\//i.test(thumbnail)) {
-    return thumbnail;
-  }
-
-  return origin ? `${origin}${thumbnail.startsWith("/") ? "" : "/"}${thumbnail}` : thumbnail;
-}
-
 export function ConversionAnchor({
   category,
   name,
   slug,
-  thumbnail,
   initialPremium = false,
 }: ConversionAnchorProps) {
   const [isPremium, setIsPremium] = useState(initialPremium);
   const [origin, setOrigin] = useState("");
-  const modelCode = getModelCode(category, name, slug);
+  const modelCode = getModelCode(name, slug);
+  const modelLabel = modelCode ? `ce modele ${modelCode}` : "ce modele";
   const fullPlanPrice = getFullPlanPrice(category);
-  const imageUrl = resolveImageUrl(thumbnail, origin);
+  const planUrl = origin ? `${origin}/plans/${slug}` : `/plans/${slug}`;
   const whatsappMessage = encodeURIComponent(
     [
-      `Bonjour, je souhaite commander les plans complets du modele ${modelCode} - ${name}.`,
+      `Bonjour, je souhaite commander les plans complets de ${modelLabel} - ${name}.`,
       `Prix affiche : A partir de ${formatPrice(fullPlanPrice)} Fcfa.`,
-      imageUrl ? `Image du modele : ${imageUrl}` : "",
+      `Lien du modele : ${planUrl}`,
     ]
       .filter(Boolean)
       .join("\n"),
@@ -99,24 +84,26 @@ export function ConversionAnchor({
   }, [initialPremium]);
 
   return (
-    <div className="border-2 border-outline bg-surface p-8 md:p-12 text-center">
-      <h2 className="text-xl md:text-2xl font-black text-foreground mb-3 tracking-tight">
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-secondary p-8 text-center text-surface md:p-14">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(184,106,60,0.28),transparent_38%)]" />
+      <div className="relative">
+      <h2 className="mx-auto max-w-3xl font-display text-4xl leading-tight tracking-tight md:text-6xl">
         {isPremium
-          ? `Commander les plans complets de ce modele ${modelCode}`
+          ? `Commander les plans complets de ${modelLabel}`
           : "Lancez votre projet de construction"}
       </h2>
-      <p className="text-sm text-foreground/50 max-w-md mx-auto leading-relaxed mb-8">
+      <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-surface/65 md:text-base">
         {isPremium
           ? `A partir de : ${formatPrice(fullPlanPrice)} Fcfa`
           : "Accedez aux plans de distribution, devis estimatifs et echangez avec nos architectes pour personnaliser votre projet."}
       </p>
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+      <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
         {isPremium ? (
           <a
             href={`https://wa.me/${WHATSAPP_PHONE}?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-7 py-3 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
+            className="rounded-full bg-primary px-8 py-3 text-sm font-black text-white shadow-[0_18px_45px_rgba(184,106,60,0.35)] transition-colors hover:bg-primary-dark"
           >
             Commander sur WhatsApp
           </a>
@@ -124,7 +111,7 @@ export function ConversionAnchor({
           <>
             <Link
               href="/abonnement"
-              className="px-7 py-3 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
+              className="rounded-full bg-primary px-8 py-3 text-sm font-black text-white shadow-[0_18px_45px_rgba(184,106,60,0.35)] transition-colors hover:bg-primary-dark"
             >
               Decouvrir l&apos;abonnement Premium
             </Link>
@@ -132,12 +119,13 @@ export function ConversionAnchor({
               href={`https://wa.me/${WHATSAPP_PHONE}?text=Bonjour%2C%20je%20suis%20interesse%20par%20un%20plan%20de%20construction%20WooPlans.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 border-2 border-outline text-foreground text-sm font-bold hover:bg-outline hover:text-white transition-colors"
+              className="rounded-full border border-surface/25 px-8 py-3 text-sm font-black text-surface transition-colors hover:border-primary hover:text-primary"
             >
               En parler sur WhatsApp
             </a>
           </>
         )}
+      </div>
       </div>
     </div>
   );
