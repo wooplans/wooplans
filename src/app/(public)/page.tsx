@@ -4,7 +4,7 @@ import { listPlans } from "@/lib/db";
 import { PlanGrid } from "@/components/PlanGrid";
 
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export default async function HomePage() {
   const featuredPlans = await listPlans({ featured: true, published: true });

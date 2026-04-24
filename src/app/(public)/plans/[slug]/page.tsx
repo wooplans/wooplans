@@ -16,7 +16,7 @@ import { getDefaultCostRate } from "@/lib/cost-rates";
 import { getCurrentSession } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 type Props = {
   params: { slug: string };
