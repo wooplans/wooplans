@@ -21,7 +21,7 @@ function ThankYouContent() {
     }
 
     const poll = setInterval(() => {
-      fetch(`/api/premium-code/lookup?email=${encodeURIComponent(email!)}`)
+      fetch(`/api/premium-code/lookup?email=${encodeURIComponent(email)}`)
         .then((res) => res.json() as Promise<PremiumCodeLookupResponse>)
         .then((data) => {
           if (data.premiumCode) {
@@ -45,10 +45,10 @@ function ThankYouContent() {
   }, [email]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
-      <div className="max-w-md w-full bg-surface border border-outline/10 p-8 text-center rounded-2xl shadow-sm">
-        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(184,106,60,0.16),transparent_36%),linear-gradient(135deg,#F3EEE6_0%,#FFFDF8_100%)] px-4 py-12">
+      <div className="w-full max-w-lg rounded-[2rem] border border-outline/10 bg-surface p-6 text-center shadow-[0_30px_80px_rgba(30,26,23,0.12)] sm:p-8">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary">
+          <svg className="h-9 w-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="square"
               strokeLinejoin="miter"
@@ -57,44 +57,60 @@ function ThankYouContent() {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">Merci pour votre achat !</h1>
-        <p className="text-foreground/60 mb-6">
-          Votre paiement a été effectué avec succès. Voici votre code d&apos;accès Premium.
+        <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
+          Accès confirmé
+        </p>
+        <h1 className="mt-3 font-display text-4xl leading-tight text-foreground">
+          Merci pour votre achat.
+        </h1>
+        <p className="mb-7 mt-4 leading-7 text-muted">
+          Votre paiement a été effectué avec succès. Voici votre code
+          d&apos;accès Premium.
         </p>
 
         {loading ? (
-          <div className="border border-outline/10 bg-background p-6 mb-6 rounded-2xl">
-            <div className="animate-pulse flex flex-col items-center gap-2">
-              <div className="h-4 w-32 bg-foreground/10" />
-              <div className="h-10 w-28 bg-foreground/10" />
+          <div className="mb-6 rounded-[1.5rem] border border-outline/10 bg-background p-6">
+            <div className="flex animate-pulse flex-col items-center gap-2">
+              <div className="h-4 w-32 rounded-full bg-foreground/10" />
+              <div className="h-10 w-28 rounded-full bg-foreground/10" />
             </div>
-            <p className="text-xs text-foreground/50 mt-3">Génération de votre code en cours...</p>
+            <p className="mt-3 text-xs text-muted">Génération de votre code en cours...</p>
           </div>
         ) : premiumCode ? (
-          <div className="border border-primary/30 bg-background p-6 mb-6 rounded-2xl">
-            <p className="text-[11px] text-foreground/50 mb-2 uppercase tracking-[0.2em] font-semibold">Votre code Premium</p>
-            <p className="text-4xl font-mono font-black text-primary tracking-[0.3em]">{premiumCode}</p>
-            <p className="text-xs text-foreground/40 mt-3">Conservez ce code précieusement. Il vous sera demandé à la connexion.</p>
+          <div className="mb-6 rounded-[1.5rem] border border-primary/30 bg-background p-6">
+            <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+              Votre code Premium
+            </p>
+            <p className="font-mono text-4xl font-black tracking-[0.3em] text-primary">
+              {premiumCode}
+            </p>
+            <p className="mt-3 text-xs text-muted">
+              Conservez ce code précieusement. Il vous sera demandé à la connexion.
+            </p>
           </div>
         ) : (
-          <div className="border border-outline/10 bg-background p-6 mb-6 rounded-2xl">
-            <p className="text-sm text-foreground/60">Votre code premium est en cours d&apos;activation.</p>
-            <p className="text-xs text-foreground/40 mt-2">Vous recevrez votre code par email sous peu.</p>
+          <div className="mb-6 rounded-[1.5rem] border border-outline/10 bg-background p-6">
+            <p className="text-sm text-muted">
+              Votre code premium est en cours d&apos;activation.
+            </p>
+            <p className="mt-2 text-xs text-muted/70">
+              Vous recevrez votre code par email sous peu.
+            </p>
           </div>
         )}
 
         <div className="space-y-3">
           <Link
             href="/connexion"
-            className="block w-full px-6 py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors"
+            className="block w-full rounded-full border border-primary bg-primary px-6 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition-colors hover:bg-primary-dark"
           >
-            Accéder à la page de connexion
+            Accéder à la connexion
           </Link>
           <Link
-            href="/"
-            className="block w-full px-6 py-3 border border-outline/10 text-foreground font-semibold rounded-full hover:border-foreground/30 transition-colors"
+            href="/plans"
+            className="block w-full rounded-full border border-outline/10 px-6 py-3 text-sm font-black text-foreground transition-colors hover:border-primary/40"
           >
-            Retour à l&apos;accueil
+            Explorer le catalogue
           </Link>
         </div>
       </div>
@@ -106,8 +122,8 @@ export default function ThankYouPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="animate-pulse text-foreground/50">Chargement...</div>
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="animate-pulse text-muted">Chargement...</div>
         </div>
       }
     >

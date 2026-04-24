@@ -44,17 +44,29 @@ function LoginForm() {
   }
 
   return (
-    <div className="max-w-md w-full bg-surface border border-outline/10 p-8 rounded-2xl shadow-sm">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">Connexion</h1>
-        <p className="text-foreground/60">
-          Entrez votre email et votre code premium pour accéder à votre compte Premium
+    <div className="w-full max-w-lg rounded-[2rem] border border-outline/10 bg-surface p-6 shadow-[0_30px_80px_rgba(30,26,23,0.12)] sm:p-8">
+      <div className="mb-8">
+        <Link
+          href="/"
+          className="mb-8 inline-flex text-xs font-black uppercase tracking-[0.22em] text-primary"
+        >
+          WooPlans
+        </Link>
+        <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
+          Espace premium
+        </p>
+        <h1 className="mt-3 font-display text-4xl leading-tight text-foreground">
+          Retrouvez vos plans débloqués.
+        </h1>
+        <p className="mt-4 leading-7 text-muted">
+          Entrez votre email et votre code Premium pour accéder aux plans,
+          devis et informations réservées.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {error}
           </div>
         )}
@@ -62,7 +74,7 @@ function LoginForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-xs font-semibold text-foreground/70 mb-2 uppercase tracking-[0.2em]"
+            className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-muted"
           >
             Email
           </label>
@@ -73,7 +85,7 @@ function LoginForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="w-full px-4 py-3 border border-outline/10 bg-background rounded-full focus:outline-none focus:border-primary transition-colors"
+            className="w-full rounded-full border border-outline/10 bg-background px-5 py-4 text-foreground transition-colors placeholder:text-muted/60 focus:border-primary focus:outline-none"
             placeholder="votre@email.com"
           />
         </div>
@@ -81,7 +93,7 @@ function LoginForm() {
         <div>
           <label
             htmlFor="premiumCode"
-            className="block text-xs font-semibold text-foreground/70 mb-2 uppercase tracking-[0.2em]"
+            className="mb-2 block text-xs font-black uppercase tracking-[0.2em] text-muted"
           >
             Code premium
           </label>
@@ -95,7 +107,7 @@ function LoginForm() {
             maxLength={4}
             pattern="[0-9]{4}"
             inputMode="numeric"
-            className="w-full px-4 py-3 border border-outline/10 bg-background rounded-full focus:outline-none focus:border-primary transition-colors text-center text-2xl font-mono tracking-[0.5em] placeholder:text-base placeholder:tracking-normal placeholder:font-normal"
+            className="w-full rounded-full border border-outline/10 bg-background px-5 py-4 text-center font-mono text-2xl tracking-[0.5em] text-foreground transition-colors placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-muted/60 focus:border-primary focus:outline-none"
             placeholder="4 chiffres"
           />
         </div>
@@ -103,42 +115,42 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-6 py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-full border border-primary bg-primary px-6 py-4 text-sm font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_36px_rgba(184,106,60,0.26)] transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Connexion..." : "Se connecter"}
         </button>
       </form>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <Link
           href="/abonnement"
-          className="block w-full px-6 py-3 border border-outline/10 text-foreground font-semibold rounded-full hover:border-foreground/30 transition-colors text-center"
+          className="block rounded-full border border-outline/10 px-5 py-3 text-center text-sm font-black text-foreground transition-colors hover:border-primary/40"
         >
-          Acheter un abonnement
+          Voir Premium
         </Link>
         <Link
-          href="/"
-          className="block w-full px-6 py-3 text-foreground/60 font-medium hover:text-foreground transition-colors text-center"
+          href="/plans"
+          className="block rounded-full px-5 py-3 text-center text-sm font-black text-muted transition-colors hover:text-foreground"
         >
-          Retour à l&apos;accueil
+          Catalogue
         </Link>
       </div>
 
-      <div className="mt-8 p-4 border border-outline/10 bg-background rounded-2xl">
-        <p className="text-[11px] text-foreground/50 text-center mb-2 font-semibold uppercase tracking-[0.2em]">
+      <div className="mt-8 rounded-[1.5rem] border border-outline/10 bg-background p-5">
+        <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
           Comment obtenir mon code premium ?
         </p>
-        <ol className="text-sm text-foreground/70 space-y-2">
+        <ol className="space-y-2 text-sm text-muted">
           <li className="flex items-start gap-2">
-            <span className="font-semibold text-primary">1.</span>
+            <span className="font-black text-primary">1.</span>
             <span>Passez par la page d&apos;abonnement et finalisez votre paiement</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="font-semibold text-primary">2.</span>
+            <span className="font-black text-primary">2.</span>
             <span>Recevez votre code premium à 4 chiffres après le paiement</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="font-semibold text-primary">3.</span>
+            <span className="font-black text-primary">3.</span>
             <span>Utilisez ce code ci-dessus pour vous connecter</span>
           </li>
         </ol>
@@ -149,10 +161,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(184,106,60,0.16),transparent_36%),linear-gradient(135deg,#F3EEE6_0%,#FFFDF8_100%)] px-4 py-12">
       <Suspense
         fallback={
-          <div className="max-w-md w-full bg-surface border border-outline/10 p-8 rounded-2xl shadow-sm" />
+          <div className="h-[560px] w-full max-w-lg animate-pulse rounded-[2rem] bg-surface" />
         }
       >
         <LoginForm />
