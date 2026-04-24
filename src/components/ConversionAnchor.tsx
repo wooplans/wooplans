@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 const PREMIUM_TEST_STORAGE_KEY = "wooplans-premium-test-unlocked";
 const PREMIUM_TEST_EVENT = "wooplans-premium-test-changed";
+const WHATSAPP_PHONE = "237694327885";
 const FULL_PLAN_PRICES = {
   villa: 150000,
   duplex: 250000,
@@ -14,6 +15,7 @@ type ConversionAnchorProps = {
   category: string;
   name: string;
   slug: string;
+  thumbnail: string;
   initialPremium?: boolean;
 };
 
@@ -44,20 +46,43 @@ function formatPrice(value: number) {
   return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
 }
 
+function resolveImageUrl(thumbnail: string, origin: string) {
+  if (!thumbnail) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(thumbnail)) {
+    return thumbnail;
+  }
+
+  return origin ? `${origin}${thumbnail.startsWith("/") ? "" : "/"}${thumbnail}` : thumbnail;
+}
+
 export function ConversionAnchor({
   category,
   name,
   slug,
+  thumbnail,
   initialPremium = false,
 }: ConversionAnchorProps) {
   const [isPremium, setIsPremium] = useState(initialPremium);
+  const [origin, setOrigin] = useState("");
   const modelCode = getModelCode(category, name, slug);
   const fullPlanPrice = getFullPlanPrice(category);
+  const imageUrl = resolveImageUrl(thumbnail, origin);
   const whatsappMessage = encodeURIComponent(
-    `Bonjour, je souhaite commander les plans complets du modele ${modelCode} - ${name}.`,
+    [
+      `Bonjour, je souhaite commander les plans complets du modele ${modelCode} - ${name}.`,
+      `Prix affiche : A partir de ${formatPrice(fullPlanPrice)} Fcfa.`,
+      imageUrl ? `Image du modele : ${imageUrl}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
 
   useEffect(() => {
+    setOrigin(window.location.origin);
+
     const syncPremiumState = () => {
       const savedState = window.localStorage.getItem(PREMIUM_TEST_STORAGE_KEY);
       setIsPremium(savedState === null ? initialPremium : savedState === "true");
@@ -88,7 +113,7 @@ export function ConversionAnchor({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         {isPremium ? (
           <a
-            href={`https://wa.me/?text=${whatsappMessage}`}
+            href={`https://wa.me/${WHATSAPP_PHONE}?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-7 py-3 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
@@ -104,7 +129,7 @@ export function ConversionAnchor({
               Decouvrir l&apos;abonnement Premium
             </Link>
             <a
-              href="https://wa.me/?text=Bonjour, je suis interesse par un plan de construction WooPlans."
+              href={`https://wa.me/${WHATSAPP_PHONE}?text=Bonjour%2C%20je%20suis%20interesse%20par%20un%20plan%20de%20construction%20WooPlans.`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-7 py-3 border-2 border-outline text-foreground text-sm font-bold hover:bg-outline hover:text-white transition-colors"

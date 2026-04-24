@@ -232,6 +232,7 @@ export default async function PlanDetailPage({ params }: Props) {
           category={plan.category}
           name={plan.name}
           slug={plan.slug}
+          thumbnail={plan.thumbnail}
           initialPremium={isPremium}
         />
       </section>
