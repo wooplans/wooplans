@@ -165,7 +165,7 @@ export function CostEstimateTable({
             &times;
           </button>
           <div
-            className="max-h-[90vh] w-[94vw] max-w-5xl cursor-default overflow-auto bg-white p-3 sm:p-6"
+            className="max-h-[90vh] w-[94vw] max-w-5xl cursor-default overflow-auto bg-surface p-3 sm:p-6"
             onClick={(event) => event.stopPropagation()}
           >
             <EstimateTableMarkup estimate={estimate} planName={planName} />

@@ -82,7 +82,7 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
   }
 
   return (
-    <div className="bg-white border-2 border-primary/30 p-6 space-y-4">
+    <div className="bg-surface border-2 border-primary/30 p-6 space-y-4">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-primary/10 flex items-center justify-center">
           <svg
@@ -100,10 +100,10 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
           </svg>
         </div>
         <div>
-          <h2 className="font-semibold text-gray-900">
+          <h2 className="font-semibold text-foreground">
             Import IA — Remplissage automatique
           </h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-foreground/50">
             Importez le PDF du plan et l&apos;IA remplira les champs automatiquement.
             Vous pourrez ensuite réviser et ajuster.
           </p>
@@ -111,7 +111,7 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+        <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
           {error}
         </div>
       )}
@@ -119,7 +119,7 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
       {loading && (
         <div className="flex items-center gap-3 py-2">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-foreground/60">
             Analyse du PDF en cours
             {fileName ? ` (${fileName})` : ""}...
           </span>
@@ -141,7 +141,7 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
           className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
             dragOver
               ? "border-primary bg-primary/5"
-              : "border-gray-200 hover:border-primary/50 hover:bg-primary/5"
+              : "border-outline/20 hover:border-primary/50 hover:bg-primary/5"
           }`}
         >
           <input
@@ -164,13 +164,13 @@ export function AIPlanImporter({ onExtracted }: AIPlanImporterProps) {
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
             />
           </svg>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-foreground/60">
             <span className="font-medium text-primary">
               Cliquer ou glisser un PDF
             </span>{" "}
             pour analyser le plan
           </p>
-          <p className="text-xs text-gray-400 mt-1">PDF — Max 20 Mo</p>
+          <p className="text-xs text-foreground/40 mt-1">PDF — Max 20 Mo</p>
         </div>
       )}
     </div>

@@ -146,7 +146,7 @@ export default function AdminLayout({
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="lg:ml-64">
-        <header className="sticky top-0 z-30 bg-white border-b-2 border-outline h-14 flex items-center px-6">
+        <header className="sticky top-0 z-30 bg-surface border-b border-outline h-14 flex items-center px-6">
           <button
             className="lg:hidden text-foreground mr-4"
             onClick={() => setSidebarOpen(true)}

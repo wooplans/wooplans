@@ -228,9 +228,9 @@ export function ImageUploader({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-foreground/70">
           {label}
-          <span className="text-gray-400 font-normal ml-1">
+          <span className="text-foreground/40 font-normal ml-1">
             ({value.length}/{maxFiles})
           </span>
         </label>
@@ -259,7 +259,7 @@ export function ImageUploader({
                   <button
                     type="button"
                     onClick={() => moveImage(i, -1)}
-                    className="w-5 h-5 bg-white/90 rounded text-gray-600 hover:bg-white flex items-center justify-center text-xs"
+                    className="w-5 h-5 bg-surface/90 rounded text-foreground/60 hover:bg-surface flex items-center justify-center text-xs"
                     title="Déplacer à gauche"
                   >
                     &#8592;
@@ -269,7 +269,7 @@ export function ImageUploader({
                   <button
                     type="button"
                     onClick={() => moveImage(i, 1)}
-                    className="w-5 h-5 bg-white/90 text-gray-600 hover:bg-white flex items-center justify-center text-xs"
+                    className="w-5 h-5 bg-surface/90 text-foreground/60 hover:bg-surface flex items-center justify-center text-xs"
                     title="Déplacer à droite"
                   >
                     &#8594;
@@ -306,7 +306,7 @@ export function ImageUploader({
                 {u.progress >= 0 && u.progress < 100 && (
                   <div className="text-center">
                     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-[10px] text-gray-500 mt-1">{u.progress}%</p>
+                    <p className="text-[10px] text-foreground/50 mt-1">{u.progress}%</p>
                   </div>
                 )}
                 {u.progress === 100 && (
@@ -338,7 +338,7 @@ export function ImageUploader({
           className={`relative border-2 border-dashed p-6 text-center cursor-pointer transition-colors ${
             dragOver
               ? "border-primary bg-primary/5"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+              : "border-outline/20 hover:border-outline/30 hover:bg-foreground/5"
           }`}
         >
           <input
@@ -350,7 +350,7 @@ export function ImageUploader({
             className="hidden"
           />
           <svg
-            className="w-8 h-8 text-gray-300 mx-auto mb-2"
+            className="w-8 h-8 text-foreground/30 mx-auto mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -362,10 +362,10 @@ export function ImageUploader({
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-foreground/50">
             <span className="font-medium text-primary">Cliquer ou glisser</span> pour ajouter des images
           </p>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-foreground/40 mt-1">
             JPG, PNG, WebP, GIF — Max 10 Mo par fichier
           </p>
         </div>
@@ -433,7 +433,7 @@ export function ThumbnailUploader({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">Vignette</label>
+      <label className="block text-sm font-medium text-foreground/70">Vignette</label>
 
       <div className="flex gap-4 items-start">
         {value && (
@@ -466,7 +466,7 @@ export function ThumbnailUploader({
             className={`border-2 border-dashed p-4 text-center cursor-pointer transition-colors ${
               dragOver
                 ? "border-primary bg-primary/5"
-                : "border-gray-200 hover:border-gray-300"
+                : "border-outline/20 hover:border-outline/30"
             }`}
           >
             <input
@@ -479,10 +479,10 @@ export function ThumbnailUploader({
             {uploading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs text-gray-500">Envoi en cours...</span>
+                <span className="text-xs text-foreground/50">Envoi en cours...</span>
               </div>
             ) : (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-foreground/50">
                 <span className="font-medium text-primary">Cliquer ou glisser</span> une image
               </p>
             )}

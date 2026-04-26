@@ -128,11 +128,11 @@ export default function AdminPlansPage() {
       {loading ? (
         <div className="text-center py-12 text-foreground/40">Chargement...</div>
       ) : error ? (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+        <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
           {error}
         </div>
       ) : plans.length === 0 ? (
-        <div className="bg-white border-2 border-outline p-12 text-center">
+        <div className="bg-surface border-2 border-outline p-12 text-center">
           <p className="text-foreground/50 mb-4">Aucun plan créé</p>
           <Link
             href="/admin/plans/new"
@@ -142,7 +142,7 @@ export default function AdminPlansPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white border-2 border-outline overflow-hidden">
+        <div className="bg-surface border-2 border-outline overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-foreground/60 border-b-2 border-outline bg-surface">
@@ -185,8 +185,8 @@ export default function AdminPlansPage() {
                       onClick={() => togglePublished(plan)}
                       className={`text-xs px-2.5 py-1 font-black uppercase tracking-wide transition-colors ${
                         plan.published
-                          ? "bg-green-50 text-green-700 border-2 border-green-700 hover:bg-green-700 hover:text-white"
-                          : "bg-gray-50 text-foreground/50 border-2 border-foreground/20 hover:bg-foreground/10"
+? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-2 border-green-700 dark:border-green-500 hover:bg-green-700 hover:text-white"
+                           : "bg-foreground/5 dark:bg-foreground/10 text-foreground/50 border-2 border-foreground/20 hover:bg-foreground/10"
                       }`}
                     >
                       {plan.published ? "Publié" : "Brouillon"}
@@ -198,7 +198,7 @@ export default function AdminPlansPage() {
                       className={`text-xs px-2.5 py-1 font-black uppercase tracking-wide transition-colors ${
                         plan.featured
                           ? "bg-primary/10 text-primary border-2 border-primary hover:bg-primary hover:text-white"
-                          : "bg-gray-50 text-foreground/40 border-2 border-foreground/20 hover:bg-foreground/10"
+                          : "bg-foreground/5 dark:bg-foreground/10 text-foreground/40 border-2 border-foreground/20 hover:bg-foreground/10"
                       }`}
                     >
                       {plan.featured ? "Vedette" : "—"}

@@ -151,15 +151,15 @@ export default function SubscribersPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border-2 border-red-700 text-red-700 px-4 py-3 text-sm font-semibold">
+        <div className="bg-red-50 dark:bg-red-950 border-2 border-red-700 text-red-700 dark:text-red-300 px-4 py-3 text-sm font-semibold">
           {error}
         </div>
       )}
 
-      <div className="bg-white border-2 border-outline overflow-hidden">
+      <div className="bg-surface border-2 border-outline overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-surface">
+            <thead className="bg-foreground/5 dark:bg-foreground/10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-black text-foreground/60 uppercase tracking-widest">
                   Email
@@ -198,7 +198,7 @@ export default function SubscribersPage() {
                 subscribers.map((subscriber, index) => (
                   <tr
                     key={subscriber.id}
-                    className={`hover:bg-surface/50 ${index > 0 ? "border-t-2 border-outline" : ""}`}
+                    className={`hover:bg-foreground/5 ${index > 0 ? "border-t border-outline" : ""}`}
                   >
                     <td className="px-6 py-4">
                       <div className="text-sm font-semibold text-foreground">{subscriber.email}</div>
@@ -210,8 +210,8 @@ export default function SubscribersPage() {
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-black uppercase tracking-wide ${
                           subscriber.isActive
-                            ? "bg-green-50 text-green-700 border-2 border-green-700"
-                            : "bg-gray-50 text-gray-600 border-2 border-gray-400"
+                            ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-2 border-green-700 dark:border-green-500"
+                            : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-2 border-gray-400 dark:border-gray-500"
                         }`}
                       >
                         {subscriber.isActive ? "Actif" : "Inactif"}
@@ -238,8 +238,8 @@ export default function SubscribersPage() {
                           disabled={updatingId === subscriber.id}
                           className={`px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
                             subscriber.isActive
-                              ? "bg-yellow-50 text-yellow-700 border-2 border-yellow-700 hover:bg-yellow-700 hover:text-white"
-                              : "bg-green-50 text-green-700 border-2 border-green-700 hover:bg-green-700 hover:text-white"
+                              ? "bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 border-2 border-yellow-700 dark:border-yellow-500 hover:bg-yellow-700 hover:text-white"
+                              : "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-2 border-green-700 dark:border-green-500 hover:bg-green-700 hover:text-white"
                           }`}
                         >
                           {updatingId === subscriber.id
@@ -259,7 +259,7 @@ export default function SubscribersPage() {
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
-                              className="px-2 py-1.5 text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors"
+                              className="px-2 py-1.5 text-xs font-bold bg-foreground/10 text-foreground border border-foreground/20 hover:bg-foreground/20 transition-colors"
                             >
                               Annuler
                             </button>
@@ -267,7 +267,7 @@ export default function SubscribersPage() {
                         ) : (
                           <button
                             onClick={() => setConfirmDeleteId(subscriber.id)}
-                            className="px-3 py-1.5 text-xs font-bold bg-red-50 text-red-700 border-2 border-red-700 hover:bg-red-700 hover:text-white transition-colors"
+                            className="px-3 py-1.5 text-xs font-bold bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 border-2 border-red-700 dark:border-red-500 hover:bg-red-700 hover:text-white transition-colors"
                           >
                             Supprimer
                           </button>
@@ -284,13 +284,13 @@ export default function SubscribersPage() {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white border-2 border-outline w-full max-w-md mx-4 p-6">
+          <div className="bg-surface border-2 border-outline w-full max-w-md mx-4 p-6">
             <h2 className="text-lg font-black text-foreground tracking-tight mb-4">
               Ajouter un abonne
             </h2>
 
             {addError && (
-              <div className="bg-red-50 border-2 border-red-700 text-red-700 px-3 py-2 text-sm font-semibold mb-4">
+              <div className="bg-red-50 dark:bg-red-950 border-2 border-red-700 text-red-700 dark:text-red-300 px-3 py-2 text-sm font-semibold mb-4">
                 {addError}
               </div>
             )}
@@ -344,12 +344,12 @@ export default function SubscribersPage() {
                   disabled={addLoading}
                   className="flex-1 py-2.5 bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
                 >
-                  {addLoading ? "Creation..." : "Creer l\'abonne"}
+                  {addLoading ? "Creation..." : "Creer l'abonne"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-2.5 bg-gray-100 text-foreground font-bold text-sm border-2 border-outline hover:bg-gray-200 transition-colors"
+                  className="flex-1 py-2.5 bg-foreground/10 text-foreground font-bold text-sm border-2 border-outline hover:bg-foreground/20 transition-colors"
                 >
                   Annuler
                 </button>

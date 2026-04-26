@@ -95,7 +95,7 @@ export default function AbonnementPage() {
   return (
     <>
       {/* HERO — Plein écran sur mobile, percutant */}
-      <section className="relative bg-foreground text-white min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-24 overflow-hidden">
+      <section className="relative bg-dark-bg text-dark-text min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-24 overflow-hidden">
         {/* Motif subtil en arrière-plan */}
         <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
@@ -117,7 +117,7 @@ export default function AbonnementPage() {
           </h1>
 
           {/* Sous-titre */}
-          <p className="text-lg md:text-xl text-white/60 max-w-xl mx-auto leading-relaxed mb-10">
+          <p className="text-lg md:text-xl text-dark-text/60 max-w-xl mx-auto leading-relaxed mb-10">
             Débloquez les plans de distribution HD, les devis estimatifs complets et discutez avec nos architectes pour personnaliser votre projet.
           </p>
 
@@ -164,14 +164,14 @@ export default function AbonnementPage() {
               href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto px-10 py-5 border-2 border-white/30 text-white font-semibold text-lg rounded-full hover:bg-white hover:text-foreground transition-colors text-center"
+              className="w-full sm:w-auto px-10 py-5 border-2 border-dark-text/30 text-dark-text font-semibold text-lg rounded-full hover:bg-dark-text hover:text-dark-bg transition-colors text-center"
             >
               Une question ? WhatsApp
             </a>
           </div>
 
           {/* Avantages rapides */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-dark-text/50">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -232,12 +232,12 @@ export default function AbonnementPage() {
       </section>
 
       {/* PRICING CARD — Fond sombre pour maximum contraste */}
-      <section className="bg-foreground py-16 md:py-20">
+      <section className="bg-dark-bg py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-semibold text-white text-center mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-semibold text-dark-text text-center mb-4 tracking-tight">
             Tarification
           </h2>
-          <p className="text-white/60 text-center mb-12 max-w-xl mx-auto">
+          <p className="text-dark-text/60 text-center mb-12 max-w-xl mx-auto">
             Un seul paiement, pas d&apos;engagement. Accédez immédiatement à tout le catalogue.
           </p>
           <div className="max-w-md mx-auto">
@@ -425,12 +425,12 @@ export default function AbonnementPage() {
         </div>
       </section>
 
-      <section className="bg-foreground">
+      <section className="bg-dark-bg">
         <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold text-white mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-semibold text-dark-text mb-4 tracking-tight">
             Prêt à concrétiser votre projet ?
           </h2>
-          <p className="text-white/60 mb-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-dark-text/60 mb-8 max-w-lg mx-auto leading-relaxed">
             Rejoignez les nombreux propriétaires qui ont déjà fait confiance à
             WooPlans pour réaliser leur projet de construction en Afrique.
           </p>
@@ -445,7 +445,7 @@ export default function AbonnementPage() {
               href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 border border-white/30 text-white font-semibold rounded-full hover:bg-white hover:text-foreground transition-colors"
+              className="px-8 py-4 border border-dark-text/30 text-dark-text font-semibold rounded-full hover:bg-dark-text hover:text-dark-bg transition-colors"
             >
               En parler sur WhatsApp
             </a>

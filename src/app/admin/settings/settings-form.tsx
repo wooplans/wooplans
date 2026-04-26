@@ -66,27 +66,27 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
       {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+        <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
           {error}
         </div>
       )}
       {message && (
-        <div className="bg-green-50 text-green-700 text-sm px-4 py-3 border-2 border-green-700 font-semibold">
+        <div className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 text-sm px-4 py-3 border-2 border-green-700 dark:border-green-500 font-semibold">
           {message}
         </div>
       )}
 
-      <div className="bg-white border-2 border-outline p-6 space-y-5">
+      <div className="bg-surface border-2 border-outline p-6 space-y-5">
         <div>
-          <h2 className="font-semibold text-gray-900">Prix de construction</h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <h2 className="font-semibold text-foreground">Prix de construction</h2>
+          <p className="text-xs text-foreground/40 mt-1">
             Montants globaux en FCFA par m2. Les regions seront ajoutees plus tard.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Villa (FCFA / m2)
             </label>
             <input
@@ -100,7 +100,7 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Duplex (FCFA / m2)
             </label>
             <input

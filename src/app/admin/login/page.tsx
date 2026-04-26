@@ -51,7 +51,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary px-4">
-      <div className="w-full max-w-md bg-white border-2 border-outline p-8">
+      <div className="w-full max-w-md bg-surface border-2 border-outline p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-foreground tracking-tight">WooPlans</h1>
           <p className="text-foreground/60 mt-1 text-sm">Panneau d&apos;administration</p>
@@ -62,7 +62,7 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+            <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
               {error}
             </div>
           )}

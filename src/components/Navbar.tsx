@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import type { SessionUser } from "@/lib/auth";
+import { useTheme } from "@/hooks/useTheme";
 
 type SessionResponse = {
   session?: { user?: SessionUser } | null;
@@ -15,6 +16,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -44,15 +46,33 @@ export function Navbar() {
           )}
         </Link>
 
-        <button
-          className="md:hidden text-foreground"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Menu"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Activer le mode clair" : "Activer le mode sombre"}
+            className="p-1.5 rounded-full text-foreground/70 hover:text-foreground transition-colors"
+          >
+            {theme === "dark" ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
+
+          <button
+            className="md:hidden text-foreground"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
 
         <ul className="hidden md:flex items-center gap-8 text-sm font-medium text-foreground/80">
           <li>
@@ -64,7 +84,7 @@ export function Navbar() {
           <li>
             <Link
               href="/abonnement"
-              className="px-4 py-2 rounded-full border border-foreground/20 text-foreground hover:border-foreground/60 transition-colors"
+              className="px-4 py-2 rounded-full border border-outline/20 text-foreground hover:border-outline/60 transition-colors"
             >
               Abonnement
             </Link>
@@ -149,6 +169,23 @@ export function Navbar() {
             <Link href="/admin" onClick={close} className="block text-xs text-foreground/40 uppercase tracking-wider hover:text-foreground transition-colors">
               Admin
             </Link>
+          </li>
+          <li>
+            <button
+              onClick={() => { toggleTheme(); }}
+              className="flex items-center gap-3 text-foreground/60 hover:text-foreground transition-colors"
+            >
+              {theme === "dark" ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+              {theme === "dark" ? "Mode clair" : "Mode sombre"}
+            </button>
           </li>
         </ul>
 

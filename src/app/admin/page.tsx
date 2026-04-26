@@ -41,11 +41,11 @@ export default async function AdminDashboardPage() {
   }
 
   const stats = [
-    { label: "Plans total", value: totalPlans, borderColor: "border-blue-600", textColor: "text-blue-700" },
-    { label: "Publiés", value: publishedPlans, borderColor: "border-green-600", textColor: "text-green-700" },
+    { label: "Plans total", value: totalPlans, borderColor: "border-primary", textColor: "text-primary" },
+    { label: "Publiés", value: publishedPlans, borderColor: "border-green-600 dark:border-green-500", textColor: "text-green-700 dark:text-green-300" },
     { label: "Mis en avant", value: featuredPlans, borderColor: "border-primary", textColor: "text-primary" },
-    { label: "Abonnés total", value: totalSubscribers, borderColor: "border-purple-600", textColor: "text-purple-700" },
-    { label: "Abonnés actifs", value: activeSubscribers, borderColor: "border-emerald-600", textColor: "text-emerald-700" },
+    { label: "Abonnés total", value: totalSubscribers, borderColor: "border-secondary", textColor: "text-secondary" },
+    { label: "Abonnés actifs", value: activeSubscribers, borderColor: "border-emerald-600 dark:border-emerald-500", textColor: "text-primary" },
   ];
 
   return (
@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className={`p-5 border-outline ${stat.borderColor} border-l-4 bg-white`}
+            className={`p-5 border-outline ${stat.borderColor} border-l-4 bg-surface`}
           >
             <p className="text-xs font-bold opacity-70 uppercase tracking-wider">{stat.label}</p>
             <p className={`text-3xl font-black mt-1 ${stat.textColor}`}>{stat.value}</p>
@@ -81,7 +81,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         {recentPlans.length === 0 ? (
-          <div className="bg-white border-2 border-outline p-12 text-center">
+          <div className="bg-surface border-2 border-outline p-12 text-center">
             <p className="text-foreground/50 mb-4">Aucun plan. Créez votre premier plan !</p>
             <Link href="/admin/plans/new" className="text-primary hover:text-primary-dark font-bold text-sm">
               Créer un plan &rarr;
@@ -116,8 +116,8 @@ export default async function AdminDashboardPage() {
                   <div className="absolute top-2 left-2 flex gap-1">
                     <span className={`px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border rounded-full ${
                       plan.published
-                        ? "bg-green-50 text-green-700 border-green-600/30"
-                        : "bg-white/90 text-foreground/50 border-outline/20"
+                        ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-600/30 dark:border-green-500/30"
+                        : "bg-surface/90 text-foreground/50 border-outline/20"
                     }`}>
                       {plan.published ? "Publié" : "Brouillon"}
                     </span>

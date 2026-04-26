@@ -274,7 +274,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 border-2 border-red-700 font-semibold">
+        <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
           {error}
         </div>
       )}
@@ -283,12 +283,12 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         <AIPlanImporter onExtracted={handleAIExtracted} />
       )}
 
-      <div className="bg-white border-2 border-outline p-6 space-y-4">
-        <h2 className="font-semibold text-gray-900">Informations générales</h2>
+      <div className="bg-surface border-2 border-outline p-6 space-y-4">
+        <h2 className="font-semibold text-foreground">Informations générales</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Nom du plan
             </label>
             <input
@@ -301,7 +301,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Slug (URL)
             </label>
             <input
@@ -317,7 +317,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Catégorie
             </label>
             <select
@@ -330,7 +330,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Surface (m²)
             </label>
             <input
@@ -345,7 +345,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground/70 mb-1">
             Description
           </label>
           <textarea
@@ -359,7 +359,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Chambres
             </label>
             <input
@@ -372,7 +372,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Salles de bain
             </label>
             <input
@@ -385,7 +385,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground/70 mb-1">
               Niveaux
             </label>
             <input
@@ -400,8 +400,8 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </div>
       </div>
 
-      <div className="bg-white border-2 border-outline p-6 space-y-5">
-        <h2 className="font-semibold text-gray-900">Médias</h2>
+      <div className="bg-surface border-2 border-outline p-6 space-y-5">
+        <h2 className="font-semibold text-foreground">Médias</h2>
 
         <ThumbnailUploader
           value={form.thumbnail}
@@ -416,12 +416,12 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         />
       </div>
 
-      <div className="bg-white border-2 border-outline p-6 space-y-4">
-        <h2 className="font-semibold text-gray-900">Composition des pièces</h2>
+      <div className="bg-surface border-2 border-outline p-6 space-y-4">
+        <h2 className="font-semibold text-foreground">Composition des pièces</h2>
 
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-700">Édition</h3>
+            <h3 className="text-sm font-medium text-foreground/70">Édition</h3>
             {rooms.map((room, i) => (
               <div key={i} className="flex gap-2">
                 <input
@@ -462,7 +462,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-700">Aperçu (Frontend)</h3>
+            <h3 className="text-sm font-medium text-foreground/70">Aperçu (Frontend)</h3>
             <div className="border-2 border-outline/30 rounded-lg p-4 bg-surface/50">
               <h4 className="text-lg font-semibold text-foreground mb-3 tracking-tight">
                 Composition des pièces
@@ -474,20 +474,20 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
                   </li>
                 ))}
                 {previewRooms.length === 0 && (
-                  <li className="text-gray-400 italic">Aucune pièce définie</li>
+                  <li className="text-foreground/40 italic">Aucune pièce définie</li>
                 )}
               </ul>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-foreground/40 mt-2">
               Les pièces sont nettoyées (RDC, ETAGE, chiffres) et groupées (chambres, salles de bain)
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border-2 border-outline p-6 space-y-3">
-        <h2 className="font-semibold text-gray-900">Devis estimatif</h2>
-        <p className="text-sm text-gray-500">
+      <div className="bg-surface border-2 border-outline p-6 space-y-3">
+        <h2 className="font-semibold text-foreground">Devis estimatif</h2>
+        <p className="text-sm text-foreground/50">
           Le tableau est genere automatiquement avec la surface du plan et le prix au m2 defini dans les reglages.
         </p>
 
@@ -497,26 +497,26 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
               type="checkbox"
               checked={form.featured}
               onChange={(e) => updateForm("featured", e.target.checked)}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
+              className="rounded border-outline/30 text-primary focus:ring-primary"
             />
-            <span className="text-sm text-gray-700">Mis en avant</span>
+            <span className="text-sm text-foreground/70">Mis en avant</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={form.published}
               onChange={(e) => updateForm("published", e.target.checked)}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
+              className="rounded border-outline/30 text-primary focus:ring-primary"
             />
-            <span className="text-sm text-gray-700">Publie</span>
+            <span className="text-sm text-foreground/70">Publie</span>
           </label>
         </div>
       </div>
 
-      <div className="bg-white border-2 border-outline p-6 space-y-5">
+      <div className="bg-surface border-2 border-outline p-6 space-y-5">
         <div>
-          <h2 className="font-semibold text-gray-900">Plans de distribution</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h2 className="font-semibold text-foreground">Plans de distribution</h2>
+          <p className="text-xs text-foreground/40 mt-0.5">
             {form.category === "duplex"
               ? "2 images requises (RDC + Étage)"
               : "1 image requise"}
@@ -547,7 +547,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </button>
         <Link
           href="/admin/plans"
-          className="px-6 py-2.5 bg-white text-foreground text-sm font-bold border-2 border-outline hover:bg-surface transition-colors"
+          className="px-6 py-2.5 bg-surface text-foreground text-sm font-bold border-2 border-outline hover:bg-surface transition-colors"
         >
           Annuler
         </Link>

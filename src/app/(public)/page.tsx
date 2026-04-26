@@ -37,7 +37,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO — Full screen on mobile */}
-      <section className="relative bg-foreground text-white min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-28 overflow-hidden">
+      <section className="relative bg-dark-bg text-dark-text min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-28 overflow-hidden">
         {/* Subtle dot pattern background */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
@@ -245,12 +245,12 @@ export default async function HomePage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="bg-foreground">
+      <section className="bg-dark-bg">
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl md:text-4xl font-semibold text-white mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-4xl font-semibold text-dark-text mb-4 tracking-tight">
             Prêt à construire ?
           </h2>
-          <p className="text-white/60 mb-10 max-w-lg mx-auto leading-relaxed text-lg">
+          <p className="text-dark-text/60 mb-10 max-w-lg mx-auto leading-relaxed text-lg">
             Trouvez le plan idéal, débloquez les détails et lancez votre projet de construction dès aujourd&apos;hui.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -264,7 +264,7 @@ export default async function HomePage() {
               href="https://wa.me/237694327885?text=Bonjour%20WooPlans,%20j'aimerais%20avoir%20des%20informations%20sur%20vos%20plans."
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center text-white font-semibold px-8 py-4 rounded-full border border-white/30 hover:bg-white hover:text-foreground transition-colors text-base"
+              className="inline-flex items-center justify-center text-dark-text font-semibold px-8 py-4 rounded-full border border-dark-text/30 hover:bg-dark-text hover:text-dark-bg transition-colors text-base"
             >
               Parler sur WhatsApp
             </a>
