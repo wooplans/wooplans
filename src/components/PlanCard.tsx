@@ -9,7 +9,13 @@ type PlanCardProps = {
   surface: number;
   bedrooms: number;
   bathrooms: number;
+  estimatedTotalPrice: number;
+  featured?: boolean;
 };
+
+function formatPrice(value: number) {
+  return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
+}
 
 export function PlanCard({
   slug,
@@ -19,11 +25,13 @@ export function PlanCard({
   surface,
   bedrooms,
   bathrooms,
+  estimatedTotalPrice,
+  featured,
 }: PlanCardProps) {
   return (
     <Link href={`/plans/${slug}`} className="group block">
       <div className="bg-surface overflow-hidden border border-outline/10 rounded-2xl transition-all duration-200 hover:shadow-sm hover:-translate-y-1">
-        <div className="aspect-[4/3] overflow-hidden bg-background">
+        <div className="aspect-[4/3] overflow-hidden bg-background relative">
           <Image
             src={thumbnail}
             alt={name}
@@ -33,6 +41,11 @@ export function PlanCard({
             quality={55}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          {featured && (
+            <span className="absolute top-3 right-3 bg-highlight text-foreground text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">
+              Populaire
+            </span>
+          )}
         </div>
         <div className="p-5 border-t border-outline/10">
           <div className="flex items-center gap-2 mb-2">
@@ -50,6 +63,14 @@ export function PlanCard({
             <span className="text-foreground/30">·</span>
             <span>{bathrooms} SdB</span>
           </div>
+          {estimatedTotalPrice > 0 && (
+            <p className="mt-3 text-sm font-semibold text-foreground">
+              À partir de{" "}
+              <span className="text-accent">
+                {formatPrice(estimatedTotalPrice)} FCFA
+              </span>
+            </p>
+          )}
         </div>
       </div>
     </Link>

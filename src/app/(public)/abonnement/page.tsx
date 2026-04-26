@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { PricingComparison } from "@/components/PricingComparison";
+import { VideoTestimonials } from "@/components/VideoTestimonials";
 
 const features = [
   {
@@ -92,28 +94,116 @@ const faqs = [
 export default function AbonnementPage() {
   return (
     <>
-      <nav className="max-w-6xl mx-auto px-4 pt-6">
-        <div className="flex items-center gap-2 text-sm text-foreground/50 font-medium">
+      {/* HERO — Plein écran sur mobile, percutant */}
+      <section className="relative bg-foreground text-white min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-24 overflow-hidden">
+        {/* Motif subtil en arrière-plan */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundSize: '32px 32px'
+        }} />
+
+        <div className="relative max-w-3xl mx-auto text-center">
+          {/* Badge offre */}
+          <div className="mb-6">
+            <span className="inline-flex items-center text-xs font-black px-4 py-1.5 bg-secondary text-white uppercase tracking-[0.2em] rounded-full">
+              Offre de lancement
+            </span>
+          </div>
+
+          {/* Titre */}
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.1] mb-6 tracking-tight">
+            Construisez en sachant
+            <span className="text-accent"> exactement</span> où vous allez
+          </h1>
+
+          {/* Sous-titre */}
+          <p className="text-lg md:text-xl text-white/60 max-w-xl mx-auto leading-relaxed mb-10">
+            Débloquez les plans de distribution HD, les devis estimatifs complets et discutez avec nos architectes pour personnaliser votre projet.
+          </p>
+
+          {/* Prix */}
+          <div className="mb-8">
+            <div className="flex items-baseline justify-center gap-3 mb-2">
+              <span className="text-6xl md:text-7xl font-semibold text-white">
+                19 900
+              </span>
+              <span className="text-2xl md:text-3xl font-bold text-white/60">
+                FCFA
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-lg text-secondary line-through">
+                50 000 FCFA
+              </span>
+              <span className="text-sm font-bold text-highlight bg-highlight/20 px-3 py-1 rounded-full">
+                Économisez 60%
+              </span>
+            </div>
+            <p className="text-sm text-white/40 mt-2">
+              Paiement unique · 12 mois d&apos;accès · Pas de renouvellement automatique
+            </p>
+          </div>
+
+          {/* Garantie */}
+          <div className="flex items-center justify-center gap-2 mb-8 text-sm text-white/70">
+            <svg className="w-4 h-4 text-highlight shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Garantie satisfait ou remboursé sous 7 jours
+          </div>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => window.chariow?.open('prd_9cbatg')}
+              className="w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 hover:border-accent/90 transition-colors shadow-lg shadow-accent/25"
+            >
+              Devenir Premium — 19 900 FCFA
+            </button>
+            <a
+              href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-10 py-5 border-2 border-white/30 text-white font-semibold text-lg rounded-full hover:bg-white hover:text-foreground transition-colors text-center"
+            >
+              Une question ? WhatsApp
+            </a>
+          </div>
+
+          {/* Avantages rapides */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Plans HD
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Devis complets
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Architectes disponibles
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Breadcrumb repositionné sous la hero */}
+      <nav className="max-w-6xl mx-auto px-4 py-4">
+        <div className="flex items-center gap-2 text-sm text-foreground/40 font-medium">
           <Link href="/" className="hover:text-primary transition-colors">
             Accueil
           </Link>
           <span>/</span>
-          <span className="text-foreground">Abonnement Premium</span>
+          <span className="text-foreground/60">Abonnement Premium</span>
         </div>
       </nav>
-
-      <section className="max-w-6xl mx-auto px-4 pt-10 pb-16 text-center">
-        <span className="inline-flex items-center text-xs font-semibold px-3 py-1 border border-primary/30 text-primary uppercase tracking-[0.2em] mb-4">
-          Premium
-        </span>
-        <h1 className="text-3xl md:text-5xl font-semibold text-foreground leading-tight mb-5 tracking-tight">
-          Passez à WooPlans Premium
-        </h1>
-        <p className="text-lg text-foreground/60 max-w-2xl mx-auto leading-relaxed">
-          Débloquez l&apos;accès complet à tous les plans de distribution, devis
-          estimatifs et échanges personnalisés avec nos architectes.
-        </p>
-      </section>
 
       <section className="border-y border-outline/10 bg-surface">
         <div className="max-w-6xl mx-auto px-4 py-16">
@@ -141,92 +231,133 @@ export default function AbonnementPage() {
         </div>
       </section>
 
-       <section className="max-w-6xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-4 tracking-tight">
-          Tarification
-        </h2>
-        <p className="text-foreground/60 text-center mb-12 max-w-xl mx-auto">
-          Un seul paiement, pas d&apos;engagement. Accédez immédiatement à tout le catalogue.
-        </p>
-        <div className="max-w-md mx-auto">
-          <div className="relative bg-background border border-outline/10 rounded-2xl overflow-hidden shadow-sm">
-            <div className="absolute top-4 right-4 bg-primary text-white text-[11px] font-semibold px-3 py-1 rounded-full">
-              POPULAIRE
-            </div>
-            <div className="p-8 text-center">
-              <h3 className="text-xl font-semibold text-foreground mb-1 tracking-tight">
-                Accès Premium
-              </h3>
-              <p className="text-sm text-foreground/50 mb-6">
-                12 mois d&apos;accès complet
-              </p>
-              <div className="flex items-baseline justify-center gap-1 mb-1">
-                <span className="text-5xl font-semibold text-foreground">
-                  29 900
-                </span>
-                <span className="text-xl font-bold text-foreground/60">
-                  FCFA
-                </span>
+      {/* PRICING CARD — Fond sombre pour maximum contraste */}
+      <section className="bg-foreground py-16 md:py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-semibold text-white text-center mb-4 tracking-tight">
+            Tarification
+          </h2>
+          <p className="text-white/60 text-center mb-12 max-w-xl mx-auto">
+            Un seul paiement, pas d&apos;engagement. Accédez immédiatement à tout le catalogue.
+          </p>
+          <div className="max-w-md mx-auto">
+            {/* Carte blanche qui contraste fortement sur le fond sombre */}
+            <div className="relative bg-surface border-2 border-accent rounded-2xl overflow-hidden shadow-2xl shadow-accent/20">
+              <div className="absolute top-4 right-4 bg-secondary text-white text-[11px] font-black uppercase tracking-wide px-3 py-1 rounded-full">
+                Offre de lancement
               </div>
-              <p className="text-sm text-foreground/40 mb-8">
-                Paiement unique &middot; Pas de renouvellement automatique
-              </p>
+              <div className="p-8 text-center">
+                <h3 className="text-xl font-semibold text-foreground mb-1 tracking-tight">
+                  Accès Premium
+                </h3>
+                <p className="text-sm text-foreground/50 mb-6">
+                  12 mois d&apos;accès complet
+                </p>
+                <div className="flex items-baseline justify-center gap-2 mb-1">
+                  <span className="text-5xl font-semibold text-foreground">
+                    19 900
+                  </span>
+                  <span className="text-xl font-bold text-foreground/60">
+                    FCFA
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <span className="text-base text-secondary line-through">
+                    50 000 FCFA
+                  </span>
+                  <span className="text-xs font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">
+                    Économisez 60%
+                  </span>
+                </div>
+                <p className="text-sm text-foreground/40 mb-8">
+                  Paiement unique &middot; Pas de renouvellement automatique
+                </p>
 
-              <button
-                onClick={() => window.chariow?.open('prd_9cbatg')}
-                className="w-full py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors mb-4"
-              >
-                Passer à Premium — 29 900 FCFA
-              </button>
+                <div className="flex items-center justify-center gap-2 mb-6 text-sm text-primary bg-primary/5 border border-primary/20 rounded-full px-4 py-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Garantie satisfait ou remboursé sous 7 jours
+                </div>
 
-              <div id="chariow-widget"
-                data-product-id="prd_9cbatg"
-                data-store-domain="wooplans.mychariow.shop"
-                data-style="frame"
-                data-border-style="sharp"
-                data-cta-width="xs"
-                data-cta-animation="pulse_glow"
-                data-locale="fr"
-                data-primary-color="#0F5B59"
-                data-background-color="#FFFFFF">
+                <button
+                  onClick={() => window.chariow?.open('prd_9cbatg')}
+                  className="w-full py-4 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors mb-4 shadow-lg shadow-accent/25"
+                >
+                  Passer à Premium — 19 900 FCFA
+                </button>
+
+                <div id="chariow-widget"
+                  data-product-id="prd_9cbatg"
+                  data-store-domain="wooplans.mychariow.shop"
+                  data-style="frame"
+                  data-border-style="sharp"
+                  data-cta-width="xs"
+                  data-cta-animation="pulse_glow"
+                  data-locale="fr"
+                  data-primary-color="#0F5B59"
+                  data-background-color="#FFFFFF">
+                </div>
+
+                <p className="text-xs text-foreground/40 mt-4">
+                  Paiement sécurisé via Chariow
+                </p>
               </div>
-
-              <p className="text-xs text-foreground/40 mt-4">
-                Paiement sécurisé via Chariow
-              </p>
-            </div>
-            <div className="border-t border-outline/10 bg-surface/60 px-8 py-6">
-              <ul className="space-y-3">
-                {[
-                  "Plans de distribution détaillés",
-                  "Devis estimatifs complets",
-                  "Vues 3D haute définition",
-                  "Échanges architectes sur WhatsApp",
-                  "Tous les plans du catalogue",
-                  "Nouveaux modèles inclus",
-                  "Garantie satisfait ou remboursé 7 jours",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm">
-                    <svg
-                      className="w-5 h-5 text-primary shrink-0 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="square"
-                        strokeLinejoin="miter"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-foreground/70">{item}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="border-t border-outline/10 bg-background px-8 py-6">
+                <ul className="space-y-3">
+                  {[
+                    "Plans de distribution détaillés",
+                    "Devis estimatifs complets",
+                    "Vues 3D haute définition",
+                    "Échanges architectes sur WhatsApp",
+                    "Tous les plans du catalogue",
+                    "Nouveaux modèles inclus",
+                    "Garantie satisfait ou remboursé 7 jours",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm">
+                      <svg
+                        className="w-5 h-5 text-accent shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="square"
+                          strokeLinejoin="miter"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-foreground/70">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="border-y border-outline/10 bg-surface">
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-4 tracking-tight">
+            Gratuit vs Premium
+          </h2>
+          <p className="text-foreground/60 text-center mb-10 max-w-xl mx-auto">
+            Comparez les avantages et choisissez la formule qui vous convient.
+          </p>
+          <PricingComparison />
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-4 tracking-tight">
+          Ils ont construit avec WooPlans
+        </h2>
+        <p className="text-foreground/60 text-center mb-10 max-w-xl mx-auto">
+          Découvrez les témoignages de propriétaires qui ont utilisé nos plans.
+        </p>
+        <VideoTestimonials />
       </section>
 
       <section className="max-w-6xl mx-auto px-4 py-16">
@@ -294,27 +425,27 @@ export default function AbonnementPage() {
         </div>
       </section>
 
-      <section className="bg-background border-t border-outline/10">
+      <section className="bg-foreground">
         <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-4 tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-semibold text-white mb-4 tracking-tight">
             Prêt à concrétiser votre projet ?
           </h2>
-          <p className="text-foreground/60 mb-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-white/60 mb-8 max-w-lg mx-auto leading-relaxed">
             Rejoignez les nombreux propriétaires qui ont déjà fait confiance à
             WooPlans pour réaliser leur projet de construction en Afrique.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="#offres"
-              className="px-8 py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors"
+            <button
+              onClick={() => window.chariow?.open('prd_9cbatg')}
+              className="px-8 py-4 bg-accent text-white font-semibold text-lg rounded-full border border-accent hover:bg-accent/90 transition-colors"
             >
-              Devenir Premium — 29 900 FCFA
-            </a>
+              Devenir Premium — 19 900 FCFA
+            </button>
             <a
-              href="https://wa.me/?text=Bonjour, je suis intéressé par l'abonnement Premium WooPlans."
+              href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-4 border border-primary/30 text-primary font-semibold rounded-full hover:border-primary transition-colors"
+              className="px-8 py-4 border border-white/30 text-white font-semibold rounded-full hover:bg-white hover:text-foreground transition-colors"
             >
               En parler sur WhatsApp
             </a>

@@ -27,7 +27,7 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-200 bg-background/90 backdrop-blur ${
+      className={`sticky top-0 z-50 transition-all duration-200 bg-surface ${
         scrolled ? "border-b border-outline/15 shadow-sm" : "border-b border-transparent"
       }`}
     >
@@ -106,6 +106,14 @@ export function Navbar() {
               </Link>
             </li>
           )}
+          <li>
+            <Link
+              href="/admin"
+              className="text-xs text-foreground/40 hover:text-foreground transition-colors uppercase tracking-wider"
+            >
+              Admin
+            </Link>
+          </li>
         </ul>
       </nav>
 
@@ -140,6 +148,11 @@ export function Navbar() {
                 </Link>
               </li>
             )}
+            <li>
+              <Link href="/admin" onClick={() => setMenuOpen(false)} className="text-xs text-foreground/40 uppercase tracking-wider">
+                Admin
+              </Link>
+            </li>
           </ul>
         </div>
       )}

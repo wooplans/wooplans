@@ -11,14 +11,14 @@ const config: Config = {
       colors: {
         primary: {
           DEFAULT: "#0F5B59",
-          dark: "#0F5B59",
+          dark: "#0A3D3B",
         },
+        accent: "#EA580C",
         secondary: "#C75B3A",
+        highlight: "#E7C36C",
         background: "#F5F7F9",
         surface: "#FFFFFF",
         foreground: "#1E2933",
-        accent: "#F08A2E",
-        highlight: "#E7C36C",
         muted: "#6B7280",
         outline: "#1E2933",
       },

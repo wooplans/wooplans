@@ -31,7 +31,6 @@ export function PremiumTeaser({
   useEffect(() => {
     const syncUnlockState = () => {
       const savedState = window.localStorage.getItem(PREMIUM_TEST_STORAGE_KEY);
-
       setIsUnlocked(savedState === null ? initialUnlocked : savedState === "true");
     };
 
@@ -46,11 +45,7 @@ export function PremiumTeaser({
   }, [initialUnlocked]);
 
   if (isUnlocked && realContent) {
-    return (
-      <div className="relative">
-        {realContent}
-      </div>
-    );
+    return <div className="relative">{realContent}</div>;
   }
 
   return (
@@ -124,7 +119,7 @@ export function PremiumTeaser({
           {!isUnlocked ? (
             <Link
               href="/abonnement"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-full border border-primary hover:bg-primary-dark transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-full border border-accent hover:bg-accent/90 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -132,7 +127,7 @@ export function PremiumTeaser({
               Débloquer avec Premium
             </Link>
           ) : (
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 border border-green-600/40 bg-green-50 text-green-700 text-sm font-semibold rounded-full">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 border border-accent/40 bg-accent/10 text-accent text-sm font-semibold rounded-full">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

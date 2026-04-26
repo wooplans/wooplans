@@ -30,7 +30,6 @@ function getModelCode(category: string, name: string, slug: string) {
   }
 
   const slugSuffix = slug.toUpperCase().match(/(?:^|[-_\s])([VD])(\d{2,4})(?:$|[-_\s])?/);
-
   if (slugSuffix) {
     return `${slugSuffix[1]}X-${slugSuffix[2]}`;
   }
@@ -47,14 +46,8 @@ function formatPrice(value: number) {
 }
 
 function resolveImageUrl(thumbnail: string, origin: string) {
-  if (!thumbnail) {
-    return "";
-  }
-
-  if (/^https?:\/\//i.test(thumbnail)) {
-    return thumbnail;
-  }
-
+  if (!thumbnail) return "";
+  if (/^https?:\/\//i.test(thumbnail)) return thumbnail;
   return origin ? `${origin}${thumbnail.startsWith("/") ? "" : "/"}${thumbnail}` : thumbnail;
 }
 
@@ -82,16 +75,13 @@ export function ConversionAnchor({
 
   useEffect(() => {
     setOrigin(window.location.origin);
-
     const syncPremiumState = () => {
       const savedState = window.localStorage.getItem(PREMIUM_TEST_STORAGE_KEY);
       setIsPremium(savedState === null ? initialPremium : savedState === "true");
     };
-
     syncPremiumState();
     window.addEventListener(PREMIUM_TEST_EVENT, syncPremiumState);
     window.addEventListener("storage", syncPremiumState);
-
     return () => {
       window.removeEventListener(PREMIUM_TEST_EVENT, syncPremiumState);
       window.removeEventListener("storage", syncPremiumState);
@@ -99,16 +89,16 @@ export function ConversionAnchor({
   }, [initialPremium]);
 
   return (
-    <div className="border-2 border-outline bg-surface p-8 md:p-12 text-center">
-      <h2 className="text-xl md:text-2xl font-black text-foreground mb-3 tracking-tight">
+    <div className="bg-foreground text-white rounded-2xl p-8 md:p-12 text-center">
+      <h2 className="text-xl md:text-2xl font-semibold text-white mb-3 tracking-tight">
         {isPremium
-          ? `Commander les plans complets de ce modele ${modelCode}`
-          : "Lancez votre projet de construction"}
+          ? `Commander les plans complets du modèle ${modelCode}`
+          : "Commencez votre projet maintenant"}
       </h2>
-      <p className="text-sm text-foreground/50 max-w-md mx-auto leading-relaxed mb-8">
+      <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed mb-8">
         {isPremium
-          ? `A partir de : ${formatPrice(fullPlanPrice)} Fcfa`
-          : "Accedez aux plans de distribution, devis estimatifs et echangez avec nos architectes pour personnaliser votre projet."}
+          ? `À partir de : ${formatPrice(fullPlanPrice)} FCFA`
+          : "Comparez tous nos plans et devis, et discutez avec un architecte sur WhatsApp."}
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         {isPremium ? (
@@ -116,7 +106,7 @@ export function ConversionAnchor({
             href={`https://wa.me/${WHATSAPP_PHONE}?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-7 py-3 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
+            className="px-7 py-3 bg-accent text-white font-bold text-sm rounded-full hover:bg-accent/90 transition-colors"
           >
             Commander sur WhatsApp
           </a>
@@ -124,15 +114,15 @@ export function ConversionAnchor({
           <>
             <Link
               href="/abonnement"
-              className="px-7 py-3 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-transparent hover:text-primary transition-colors"
+              className="px-7 py-3 bg-accent text-white font-bold text-sm rounded-full hover:bg-accent/90 transition-colors"
             >
-              Decouvrir l&apos;abonnement Premium
+              Découvrir l&apos;abonnement Premium
             </Link>
             <a
               href={`https://wa.me/${WHATSAPP_PHONE}?text=Bonjour%2C%20je%20suis%20interesse%20par%20un%20plan%20de%20construction%20WooPlans.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3 border-2 border-outline text-foreground text-sm font-bold hover:bg-outline hover:text-white transition-colors"
+              className="px-7 py-3 border border-white/30 text-white text-sm font-bold rounded-full hover:bg-white hover:text-foreground transition-colors"
             >
               En parler sur WhatsApp
             </a>

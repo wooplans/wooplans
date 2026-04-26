@@ -12,6 +12,7 @@ export type DemoPlan = {
   images: string[];
   thumbnail: string;
   estimatedCost: number;
+  estimatedTotalPrice: number;
   estimatedCostImage: string;
   distributionPlans: string[];
   distributionPlanUrl: string;
@@ -52,6 +53,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600",
     estimatedCost: 25000000,
+    estimatedTotalPrice: 27000000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/villa-familiale-v101.pdf",
@@ -86,6 +88,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600",
     estimatedCost: 15000000,
+    estimatedTotalPrice: 18000000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/villa-economique-v112.pdf",
@@ -123,6 +126,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=600",
     estimatedCost: 45000000,
+    estimatedTotalPrice: 39000000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/villa-premium-v205.pdf",
@@ -160,6 +164,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=600",
     estimatedCost: 30000000,
+    estimatedTotalPrice: 43200000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-familial-d208.pdf",
@@ -194,6 +199,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=600",
     estimatedCost: 35000000,
+    estimatedTotalPrice: 39600000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-terrasse-d301.pdf",
@@ -228,6 +234,7 @@ export const demoPlans: DemoPlan[] = [
     ],
     thumbnail: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=600",
     estimatedCost: 20000000,
+    estimatedTotalPrice: 28800000,
     estimatedCostImage: "",
     distributionPlans: [],
     distributionPlanUrl: "/plans/duplex-compact-d415.pdf",

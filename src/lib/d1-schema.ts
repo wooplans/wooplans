@@ -9,9 +9,13 @@ const globalForD1 = globalThis as unknown as {
 };
 
 function getD1Database() {
-  const requestContext = getOptionalRequestContext();
-  const env = requestContext?.env as CloudflareEnv | undefined;
-  return env?.DB ?? null;
+  try {
+    const requestContext = getOptionalRequestContext();
+    const env = requestContext?.env as CloudflareEnv | undefined;
+    return env?.DB ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function hasTable(db: D1Database, tableName: string) {

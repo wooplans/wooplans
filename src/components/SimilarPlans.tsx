@@ -1,16 +1,9 @@
 import Link from "next/link";
 import { PlanCard } from "./PlanCard";
+import type { PlanListItem } from "./PlanGrid";
 
 type SimilarPlansProps = {
-  plans: {
-    slug: string;
-    name: string;
-    category: string;
-    thumbnail: string;
-    surface: number;
-    bedrooms: number;
-    bathrooms: number;
-  }[];
+  plans: PlanListItem[];
   currentSlug: string;
 };
 

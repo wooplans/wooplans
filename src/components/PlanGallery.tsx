@@ -6,12 +6,14 @@ import { useRef, useState } from "react";
 type PlanGalleryProps = {
   images: string[];
   name: string;
+  modelCode?: string;
 };
 
-export function PlanGallery({ images, name }: PlanGalleryProps) {
+export function PlanGallery({ images, name, modelCode }: PlanGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const modelLabel = modelCode ? `${name} ${modelCode}` : name;
 
   if (images.length === 0) {
     return null;
@@ -53,7 +55,7 @@ export function PlanGallery({ images, name }: PlanGalleryProps) {
     <>
       <section className="max-w-4xl mx-auto px-4 py-12">
         <h2 className="text-lg font-semibold text-foreground mb-5 tracking-tight">
-          Vues 3D
+          Visualisez le modele {modelLabel} en 3D
         </h2>
         <div className="grid grid-cols-2 gap-4">
           {images.slice(0, 4).map((img, i) => (

@@ -83,7 +83,7 @@ function EstimateTableMarkup({
               </tr>
             );
           })}
-          <tr className="bg-yellow-50">
+          <tr className="bg-primary/5">
             <td colSpan={2} className="border-r-2 border-black px-1.5 py-2 text-center font-black text-black sm:px-3 sm:py-4">
               TOTAL CLE EN MAIN
             </td>
@@ -96,7 +96,7 @@ function EstimateTableMarkup({
       </table>
 
       <div className="mt-4 space-y-1.5 text-[7px] leading-snug text-black sm:mt-8 sm:space-y-3 sm:text-xs sm:leading-relaxed">
-        <p className="font-bold text-red-600">
+        <p className="font-bold text-secondary">
           NB : les couts de construction de votre maison dependent de plusieurs facteurs
         </p>
         <p>

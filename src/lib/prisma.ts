@@ -13,9 +13,13 @@ type CloudflareEnv = {
 };
 
 function getD1Binding() {
-  const requestContext = getOptionalRequestContext();
-  const env = requestContext?.env as CloudflareEnv | undefined;
-  return env?.DB;
+  try {
+    const requestContext = getOptionalRequestContext();
+    const env = requestContext?.env as CloudflareEnv | undefined;
+    return env?.DB;
+  } catch {
+    return undefined;
+  }
 }
 
 function getLocalPrismaClient() {

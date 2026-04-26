@@ -8,6 +8,8 @@ export type PlanListItem = {
   surface: number;
   bedrooms: number;
   bathrooms: number;
+  estimatedTotalPrice: number;
+  featured?: boolean;
 };
 
 type PlanGridProps = {

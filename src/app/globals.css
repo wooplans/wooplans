@@ -6,11 +6,11 @@
   --background: #F5F7F9;
   --foreground: #1E2933;
   --primary: #0F5B59;
-  --primary-dark: #0F5B59;
+  --primary-dark: #0A3D3B;
+  --accent: #EA580C;
   --secondary: #C75B3A;
-  --surface: #FFFFFF;
-  --accent: #F08A2E;
   --highlight: #E7C36C;
+  --surface: #FFFFFF;
   --muted: #6B7280;
   --outline: #1E2933;
 }

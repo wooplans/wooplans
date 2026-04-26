@@ -39,16 +39,22 @@ function mapCostRate(row: {
 }
 
 export async function listDefaultCostRates() {
-  await ensureD1Schema();
-  const prisma = getPrisma();
-  const rows = await prisma.costRate.findMany({
-    where: { region: DEFAULT_REGION },
-    orderBy: { category: "asc" },
-  });
+  let rates: CostRateRecord[] = [];
 
-  const rates = rows
-    .map((row) => mapCostRate(row))
-    .filter((row): row is CostRateRecord => Boolean(row));
+  try {
+    await ensureD1Schema();
+    const prisma = getPrisma();
+    const rows = await prisma.costRate.findMany({
+      where: { region: DEFAULT_REGION },
+      orderBy: { category: "asc" },
+    });
+
+    rates = rows
+      .map((row) => mapCostRate(row))
+      .filter((row): row is CostRateRecord => Boolean(row));
+  } catch (error) {
+    console.error("Failed to load cost rates:", error);
+  }
 
   return (Object.keys(DEFAULT_COST_RATE_VALUES) as PlanCategory[]).map((category) => {
     const existing = rates.find((rate) => rate.category === category);
@@ -73,27 +79,33 @@ export async function getDefaultCostRate(category: string) {
     return null;
   }
 
-  await ensureD1Schema();
-  const prisma = getPrisma();
-  const row = await prisma.costRate.findUnique({
-    where: {
-      category_region: {
-        category,
-        region: DEFAULT_REGION,
+  try {
+    await ensureD1Schema();
+    const prisma = getPrisma();
+    const row = await prisma.costRate.findUnique({
+      where: {
+        category_region: {
+          category,
+          region: DEFAULT_REGION,
+        },
       },
-    },
-  });
+    });
 
-  return row
-    ? mapCostRate(row)
-    : {
-        id: `default-${category}`,
-        category,
-        region: DEFAULT_REGION,
-        amountPerSquareMeter: DEFAULT_COST_RATE_VALUES[category],
-        createdAt: new Date(0),
-        updatedAt: new Date(0),
-      };
+    if (row) {
+      return mapCostRate(row);
+    }
+  } catch (error) {
+    console.error("Failed to load cost rate:", error);
+  }
+
+  return {
+    id: `default-${category}`,
+    category,
+    region: DEFAULT_REGION,
+    amountPerSquareMeter: DEFAULT_COST_RATE_VALUES[category],
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  };
 }
 
 export async function upsertDefaultCostRate(

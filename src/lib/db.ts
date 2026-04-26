@@ -5,6 +5,8 @@ import {
   getDemoPlansByCategory,
 } from "@/lib/demo-plans";
 import { parseRooms, parseStringArray } from "@/lib/plan-serialization";
+import { roundToNearestHundred, isPlanCategory } from "@/lib/cost-estimate";
+import { DEFAULT_COST_RATE_VALUES } from "@/lib/cost-rates";
 
 type RawPlan = {
   id: string;
@@ -33,6 +35,7 @@ export type Plan = Omit<RawPlan, "rooms" | "images" | "distributionPlans"> & {
   rooms: { name: string; area: number }[];
   images: string[];
   distributionPlans: string[];
+  estimatedTotalPrice: number;
 };
 
 type PlanFilters = {
@@ -41,12 +44,19 @@ type PlanFilters = {
   category?: string;
 };
 
+function calculateEstimatedPrice(category: string, surface: number): number {
+  if (!isPlanCategory(category)) return 0;
+  const rate = DEFAULT_COST_RATE_VALUES[category] || 0;
+  return roundToNearestHundred(surface * rate);
+}
+
 function parsePlan(p: RawPlan): Plan {
   return {
     ...p,
     rooms: parseRooms(p.rooms),
     images: parseStringArray(p.images),
     distributionPlans: parseStringArray(p.distributionPlans),
+    estimatedTotalPrice: calculateEstimatedPrice(p.category, p.surface),
   };
 }
 
