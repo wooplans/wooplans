@@ -216,66 +216,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* APERCU DEVIS */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-3 tracking-tight">
-            Devis estimatif clair et détaillé
-          </h2>
-          <p className="text-foreground/60 max-w-xl mx-auto">
-            Chaque plan inclut un budget prévisionnel ventilé par poste de dépenses, de la fondation aux finitions.
-          </p>
-        </div>
-        <div className="relative max-w-2xl mx-auto">
-          <div className="border border-outline/10 rounded-2xl overflow-hidden bg-surface">
-            <div className="bg-gray-100 border-b border-black px-4 py-3 text-center text-sm font-black text-black">
-              Devis Villa Villa Familiale ( en Fcfa )
-            </div>
-            <div className="p-4 space-y-2">
-              <div className="flex gap-4 text-xs text-foreground/70">
-                <span className="w-8">100</span>
-                <span className="flex-1 uppercase">FONDATION</span>
-                <span className="font-bold text-black">3 784 200</span>
-              </div>
-              <div className="flex gap-4 text-xs text-foreground/70">
-                <span className="w-8">200</span>
-                <span className="flex-1 uppercase">ELEVATIONS</span>
-                <span className="font-bold text-black">5 541 150</span>
-              </div>
-              <div className="flex gap-4 text-xs text-foreground/70">
-                <span className="w-8">300</span>
-                <span className="flex-1 uppercase">CHARPENTE ET TOITURE</span>
-                <span className="font-bold text-black">4 189 650</span>
-              </div>
-              <div className="flex gap-4 text-xs text-foreground/70">
-                <span className="w-8">400</span>
-                <span className="flex-1 uppercase">CREPISSAGE ET ANTIVOLS</span>
-                <span className="font-bold text-black">4 197 600</span>
-              </div>
-              <div className="border-t border-black/10 pt-2 flex gap-4 text-xs">
-                <span className="flex-1 font-black text-black">TOTAL CLE EN MAIN</span>
-                <span className="font-black text-black">27 000 000</span>
-              </div>
-            </div>
-          </div>
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent rounded-2xl flex flex-col items-center justify-end pb-10 px-6">
-            <p className="text-sm font-semibold text-foreground mb-2 text-center">
-              Le détail complet est réservé aux membres Premium
-            </p>
-            <Link
-              href="/abonnement"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-full border border-accent hover:bg-accent/90 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              Débloquer avec Premium
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* TEMOIGNAGES VIDEO */}
       <section className="bg-surface border-y border-outline/10">
         <div className="max-w-6xl mx-auto px-4 py-16">
