@@ -5,7 +5,7 @@ import { FAQAccordion } from "@/components/FAQAccordion";
 import { VideoTestimonials } from "@/components/VideoTestimonials";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 const homeFaqs = [
   {
