@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
+
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
@@ -33,5 +34,25 @@ export async function PUT(
   } catch (error) {
     console.error("Error updating subscriber:", error);
     return NextResponse.json({ error: "Erreur lors de la mise à jour" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await requireRole(_request, "admin");
+
+  if (!session) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  try {
+    const prisma = getPrisma();
+    await prisma.subscriber.delete({ where: { id: params.id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting subscriber:", error);
+    return NextResponse.json({ error: "Erreur lors de la suppression" }, { status: 500 });
   }
 }

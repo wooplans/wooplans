@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 type Subscriber = {
   id: string;
@@ -9,6 +9,7 @@ type Subscriber = {
   expiresAt: string | null;
   chariowCustomerId: string | null;
   premiumCode: string | null;
+  createdAt: string;
 };
 
 export default function SubscribersPage() {
@@ -16,73 +17,115 @@ export default function SubscribersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addEmail, setAddEmail] = useState("");
+  const [addActive, setAddActive] = useState(true);
+  const [addExpiresAt, setAddExpiresAt] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const loadSubscribers = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/subscribers", { cache: "no-store" });
+      const data = (await response.json().catch(() => ({}))) as Subscriber[] | { error?: string };
+
+      if (!response.ok || !Array.isArray(data)) {
+        throw new Error(Array.isArray(data) ? "load_failed" : (data.error ?? "load_failed"));
+      }
+
+      setSubscribers(data);
+      setError("");
+    } catch (err) {
+      console.error("Failed to load subscribers:", err);
+      setError("Erreur lors du chargement des abonnes");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-
-    async function loadSubscribers() {
-      try {
-        const response = await fetch("/api/admin/subscribers", { cache: "no-store" });
-        const data = (await response.json().catch(() => ({}))) as Subscriber[] | { error?: string };
-
-        if (!response.ok || !Array.isArray(data)) {
-          throw new Error(Array.isArray(data) ? "load_failed" : (data.error ?? "load_failed"));
-        }
-
-        if (isMounted) {
-          setSubscribers(data);
-          setError("");
-        }
-      } catch (error) {
-        console.error("Failed to load subscribers:", error);
-        if (isMounted) {
-          setError("Erreur lors du chargement des abonnes");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void loadSubscribers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    void loadSubscribers().then(() => { if (!isMounted) return; });
+    return () => { isMounted = false; };
+  }, [loadSubscribers]);
 
   async function toggleSubscriberStatus(id: string, currentStatus: boolean) {
     setUpdatingId(id);
-
     try {
       const response = await fetch(`/api/admin/subscribers/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          isActive: !currentStatus,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentStatus }),
       });
-
       const updated = (await response.json().catch(() => ({}))) as Subscriber & { error?: string };
-
-      if (!response.ok) {
-        throw new Error(updated.error || "update_failed");
-      }
-
-      setSubscribers((current) =>
-        current.map((subscriber) => (subscriber.id === updated.id ? updated : subscriber)),
-      );
+      if (!response.ok) throw new Error(updated.error || "update_failed");
+      setSubscribers((cur) => cur.map((s) => (s.id === updated.id ? updated : s)));
       setError("");
-    } catch (error) {
-      console.error("Failed to update subscriber:", error);
+    } catch (err) {
+      console.error("Failed to update subscriber:", err);
       alert("Erreur lors de la mise a jour du statut");
     } finally {
       setUpdatingId(null);
     }
   }
+
+  async function deleteSubscriber(id: string) {
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/admin/subscribers/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("delete_failed");
+      setSubscribers((cur) => cur.filter((s) => s.id !== id));
+      setConfirmDeleteId(null);
+    } catch (err) {
+      console.error("Failed to delete subscriber:", err);
+      alert("Erreur lors de la suppression");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleAddSubscriber(e: React.FormEvent) {
+    e.preventDefault();
+    setAddLoading(true);
+    setAddError("");
+
+    try {
+      const response = await fetch("/api/admin/subscribers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: addEmail,
+          isActive: addActive,
+          expiresAt: addExpiresAt || null,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as Subscriber & { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "create_failed");
+      }
+
+      setSubscribers((cur) => [data, ...cur]);
+      setShowAddModal(false);
+      setAddEmail("");
+      setAddActive(true);
+      setAddExpiresAt("");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création";
+      setAddError(msg === "create_failed" ? "Erreur lors de la création de l'abonné" : msg);
+    } finally {
+      setAddLoading(false);
+    }
+  }
+
+  const defaultExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 
   return (
     <div className="space-y-6">
@@ -90,13 +133,28 @@ export default function SubscribersPage() {
         <div>
           <h1 className="text-2xl font-black text-foreground tracking-tight">Abonnes Premium</h1>
           <p className="text-sm text-foreground/60 mt-1">
-            Gere tous les abonnes et leur statut
+            Gere les abonnes et leur statut
           </p>
         </div>
-        <div className="text-xs text-foreground/50 text-right max-w-xs">
-          Les abonnes sont crees automatiquement depuis les achats premium.
-        </div>
+        <button
+          onClick={() => {
+            setAddError("");
+            setAddEmail("");
+            setAddActive(true);
+            setAddExpiresAt(defaultExpiry);
+            setShowAddModal(true);
+          }}
+          className="px-4 py-2.5 bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors"
+        >
+          + Ajouter un abonne
+        </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border-2 border-red-700 text-red-700 px-4 py-3 text-sm font-semibold">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white border-2 border-outline overflow-hidden">
         <div className="overflow-x-auto">
@@ -127,18 +185,12 @@ export default function SubscribersPage() {
                     <p className="text-sm">Chargement des abonnes...</p>
                   </td>
                 </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-red-700">
-                    <p className="text-sm font-semibold">{error}</p>
-                  </td>
-                </tr>
               ) : subscribers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
                     <p className="text-sm">Aucun abonne trouve</p>
                     <p className="text-primary text-sm mt-2 inline-block font-bold">
-                      Les achats premium ajouteront automatiquement des abonnes ici
+                      Cliquez sur &quot;Ajouter un abonne&quot; pour en creer un manuellement
                     </p>
                   </td>
                 </tr>
@@ -196,6 +248,30 @@ export default function SubscribersPage() {
                               ? "Desactiver"
                               : "Activer"}
                         </button>
+                        {confirmDeleteId === subscriber.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => deleteSubscriber(subscriber.id)}
+                              disabled={deletingId === subscriber.id}
+                              className="px-2 py-1.5 text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === subscriber.id ? "..." : "Confirmer"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="px-2 py-1.5 text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition-colors"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(subscriber.id)}
+                            className="px-3 py-1.5 text-xs font-bold bg-red-50 text-red-700 border-2 border-red-700 hover:bg-red-700 hover:text-white transition-colors"
+                          >
+                            Supprimer
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -205,6 +281,83 @@ export default function SubscribersPage() {
           </table>
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white border-2 border-outline w-full max-w-md mx-4 p-6">
+            <h2 className="text-lg font-black text-foreground tracking-tight mb-4">
+              Ajouter un abonne
+            </h2>
+
+            {addError && (
+              <div className="bg-red-50 border-2 border-red-700 text-red-700 px-3 py-2 text-sm font-semibold mb-4">
+                {addError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddSubscriber} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-foreground/70 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="exemple@email.com"
+                  className="w-full px-3 py-2 border-2 border-outline bg-surface text-foreground text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-foreground/70 mb-1">
+                  Date d&apos;expiration
+                </label>
+                <input
+                  type="date"
+                  value={addExpiresAt || defaultExpiry}
+                  onChange={(e) => setAddExpiresAt(e.target.value)}
+                  className="w-full px-3 py-2 border-2 border-outline bg-surface text-foreground text-sm focus:outline-none focus:border-primary"
+                />
+                <p className="text-xs text-foreground/40 mt-1">
+                  Par defaut : 1 an a partir d&apos;aujourd&apos;hui
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="add-active"
+                  checked={addActive}
+                  onChange={(e) => setAddActive(e.target.checked)}
+                  className="w-4 h-4 accent-primary"
+                />
+                <label htmlFor="add-active" className="text-sm font-semibold text-foreground">
+                  Activer immediatement
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={addLoading}
+                  className="flex-1 py-2.5 bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+                >
+                  {addLoading ? "Creation..." : "Creer l\'abonne"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-2.5 bg-gray-100 text-foreground font-bold text-sm border-2 border-outline hover:bg-gray-200 transition-colors"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
