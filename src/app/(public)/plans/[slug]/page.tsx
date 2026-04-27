@@ -290,13 +290,7 @@ export default async function PlanDetailPage({ params }: Props) {
       </section>
 
       <section className="max-w-4xl mx-auto px-4 pb-12">
-        <PlanPersonalizationCTA
-          isPremium={isPremium}
-          category={plan.category}
-          name={plan.name}
-          surface={plan.surface}
-          slug={plan.slug}
-        />
+        <PlanPersonalizationCTA isPremium={isPremium} />
       </section>
 
       <div className="max-w-4xl mx-auto px-4 pb-6">

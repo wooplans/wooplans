@@ -1,8 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import { PricingComparison } from "@/components/PricingComparison";
 import { VideoTestimonials } from "@/components/VideoTestimonials";
+import { FAQAccordion } from "@/components/FAQAccordion";
 
 const features = [
   {
@@ -33,7 +32,7 @@ const features = [
   {
     title: "Paiement unique et sécurisé",
     description:
-      "Un seul paiement via Chariow, pas d'abonnement récurrent. Votre accès est activé immédiatement après la transaction.",
+      "Un seul paiement par Mobile Money, pas d'abonnement récurrent. Votre accès est activé immédiatement après la transaction.",
   },
 ];
 
@@ -42,7 +41,7 @@ const steps = [
     number: "01",
     title: "Activez votre accès Premium",
     description:
-      "Effectuez le paiement sécurisé via Chariow. Votre accès est activé instantanément.",
+      "Effectuez le paiement sécurisé par Mobile Money. Votre accès est activé instantanément.",
   },
   {
     number: "02",
@@ -75,9 +74,9 @@ const faqs = [
       "C'est un paiement unique. Il n'y a pas de renouvellement automatique. Vous payez une seule fois et profitez de l'accès complet pendant 12 mois.",
   },
   {
-    question: "Comment fonctionne le paiement avec Chariow ?",
+    question: "Comment fonctionne le paiement par Mobile Money ?",
     answer:
-      "Chariow est une solution de paiement sécurisée adaptée au marché africain. Vous recevez un code premium à 4 chiffres après le paiement qui active immédiatement votre accès Premium.",
+      "Le paiement par Mobile Money est simple et sécurisé. Vous recevez un code premium à 4 chiffres après le paiement qui active immédiatement votre accès Premium.",
   },
   {
     question: "Puis-je obtenir un remboursement ?",
@@ -152,14 +151,14 @@ export default function AbonnementPage() {
             Garantie satisfait ou remboursé sous 7 jours
           </div>
 
-          {/* CTAs */}
+          {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => window.chariow?.open('prd_9cbatg')}
-              className="w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 hover:border-accent/90 transition-colors shadow-lg shadow-accent/25"
+            <Link
+              href="#abonnement"
+              className="w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 hover:border-accent/90 transition-colors shadow-lg shadow-accent/25 text-center"
             >
-              Devenir Premium — 19 900 FCFA
-            </button>
+              Découvrir l&apos;abonnement Premium
+            </Link>
             <a
               href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
               target="_blank"
@@ -232,7 +231,7 @@ export default function AbonnementPage() {
       </section>
 
       {/* PRICING CARD — Fond sombre pour maximum contraste */}
-      <section className="bg-dark-bg py-16 md:py-20">
+      <section id="abonnement" className="bg-dark-bg py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-semibold text-dark-text text-center mb-4 tracking-tight">
             Tarification
@@ -280,27 +279,15 @@ export default function AbonnementPage() {
                   Garantie satisfait ou remboursé sous 7 jours
                 </div>
 
-                <button
-                  onClick={() => window.chariow?.open('prd_9cbatg')}
-                  className="w-full py-4 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors mb-4 shadow-lg shadow-accent/25"
+                <Link
+                  href="#abonnement"
+                  className="block w-full py-4 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors mb-4 shadow-lg shadow-accent/25 text-center"
                 >
-                  Passer à Premium — 19 900 FCFA
-                </button>
-
-                <div id="chariow-widget"
-                  data-product-id="prd_9cbatg"
-                  data-store-domain="wooplans.mychariow.shop"
-                  data-style="frame"
-                  data-border-style="sharp"
-                  data-cta-width="xs"
-                  data-cta-animation="pulse_glow"
-                  data-locale="fr"
-                  data-primary-color="#0F5B59"
-                  data-background-color="#FFFFFF">
-                </div>
+                  Découvrir l&apos;abonnement Premium
+                </Link>
 
                 <p className="text-xs text-foreground/40 mt-4">
-                  Paiement sécurisé via Chariow
+                  Paiement sécurisé par Mobile Money
                 </p>
               </div>
               <div className="border-t border-outline/10 bg-background px-8 py-6">
@@ -389,40 +376,16 @@ export default function AbonnementPage() {
         </div>
       </section>
 
-      <section className="border-t border-outline/10 bg-surface">
-        <div className="max-w-3xl mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-semibold text-foreground text-center mb-10 tracking-tight">
+      <section className="max-w-3xl mx-auto px-4 py-16">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-3 tracking-tight">
             Questions fréquentes
           </h2>
-          <div className="space-y-0">
-            {faqs.map((faq, i) => (
-              <details
-                key={i}
-                className="group bg-background border border-outline/10 overflow-hidden rounded-2xl"
-              >
-                <summary className="flex items-center justify-between cursor-pointer px-6 py-5 font-semibold text-foreground hover:bg-surface/50 transition-colors">
-                  <span className="pr-4">{faq.question}</span>
-                  <svg
-                    className="w-5 h-5 text-foreground/40 shrink-0 group-open:rotate-180 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="square"
-                      strokeLinejoin="miter"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </summary>
-                <div className="px-6 pb-5 text-sm text-foreground/60 leading-relaxed border-t border-outline/10 pt-4">
-                  {faq.answer}
-                </div>
-              </details>
-            ))}
-          </div>
+          <p className="text-foreground/60">
+            Tout ce que vous devez savoir sur l&apos;abonnement Premium.
+          </p>
         </div>
+        <FAQAccordion items={faqs} />
       </section>
 
       <section className="bg-dark-bg">
@@ -435,12 +398,12 @@ export default function AbonnementPage() {
             WooPlans pour réaliser leur projet de construction en Afrique.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => window.chariow?.open('prd_9cbatg')}
+            <Link
+              href="#abonnement"
               className="px-8 py-4 bg-accent text-white font-semibold text-lg rounded-full border border-accent hover:bg-accent/90 transition-colors"
             >
-              Devenir Premium — 19 900 FCFA
-            </button>
+              Découvrir l&apos;abonnement Premium
+            </Link>
             <a
               href="https://wa.me/237694327885?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20l'abonnement%20Premium%20WooPlans."
               target="_blank"

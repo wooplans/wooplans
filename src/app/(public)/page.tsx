@@ -26,7 +26,7 @@ const homeFaqs = [
   {
     question: "Comment ça marche après le paiement ?",
     answer:
-      "Après votre paiement sécurisé via Chariow, vous recevez immédiatement un code premium à 4 chiffres par email. Connectez-vous avec ce code et accédez à l'intégralité du catalogue.",
+      "Après votre paiement sécurisé par Mobile Money, vous recevez immédiatement un code premium à 4 chiffres par email. Connectez-vous avec ce code et accédez à l'intégralité du catalogue.",
   },
 ];
 
