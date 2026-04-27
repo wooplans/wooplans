@@ -133,13 +133,15 @@ export default function AdminLayout({
       ? "Tableau de bord"
       : pathname === "/admin/plans"
         ? "Gestion des plans"
-        : pathname === "/admin/settings"
-          ? "Reglages"
-        : pathname.startsWith("/admin/plans/new")
-          ? "Nouveau plan"
-          : pathname.match(/^\/admin\/plans\/[^/]+$/)
-            ? "Modifier le plan"
-            : "Administration";
+        : pathname === "/admin/subscribers"
+          ? "Abonnes Premium"
+          : pathname === "/admin/settings"
+            ? "Reglages"
+            : pathname.startsWith("/admin/plans/new")
+              ? "Nouveau plan"
+              : pathname.match(/^\/admin\/plans\/[^/]+$/)
+                ? "Modifier le plan"
+                : "Administration";
 
   return (
     <div className="min-h-screen bg-surface">

@@ -13,6 +13,7 @@ type Plan = {
   bedrooms: number;
   published: boolean;
   featured: boolean;
+  cataloguePreview: boolean;
   updatedAt: string;
   thumbnail: string;
 };
@@ -21,6 +22,7 @@ type PlanMutationResponse = {
   error?: string;
   published?: boolean;
   featured?: boolean;
+  cataloguePreview?: boolean;
 };
 
 export default function AdminPlansPage() {
@@ -113,6 +115,31 @@ export default function AdminPlansPage() {
     }
   }
 
+  async function toggleCataloguePreview(plan: Plan) {
+    try {
+      const res = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cataloguePreview: !plan.cataloguePreview }),
+      });
+
+      if (res.ok) {
+        const updated = (await res.json()) as PlanMutationResponse;
+        setPlans((prev) =>
+          prev.map((p) =>
+            p.id === plan.id ? { ...p, cataloguePreview: Boolean(updated.cataloguePreview) } : p,
+          ),
+        );
+        setError("");
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(data.error || "Erreur lors de la mise a jour de l'apercu catalogue");
+      }
+    } catch {
+      setError("Erreur reseau lors de la mise a jour de l'apercu catalogue");
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -151,6 +178,7 @@ export default function AdminPlansPage() {
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Surface</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Statut</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Vedette</th>
+                <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">AperÃ§u</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs text-right">Actions</th>
               </tr>
             </thead>
@@ -202,6 +230,18 @@ export default function AdminPlansPage() {
                       }`}
                     >
                       {plan.featured ? "Vedette" : "—"}
+                    </button>
+                  </td>
+                  <td className="px-5 py-3">
+                    <button
+                      onClick={() => toggleCataloguePreview(plan)}
+                      className={`text-xs px-2.5 py-1 font-black uppercase tracking-wide transition-colors ${
+                        plan.cataloguePreview
+                          ? "bg-accent/10 text-accent border-2 border-accent hover:bg-accent hover:text-white"
+                          : "bg-foreground/5 dark:bg-foreground/10 text-foreground/40 border-2 border-foreground/20 hover:bg-foreground/10"
+                      }`}
+                    >
+                      {plan.cataloguePreview ? "Catalogue" : "—"}
                     </button>
                   </td>
                   <td className="px-5 py-3 text-right">

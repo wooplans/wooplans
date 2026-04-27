@@ -63,6 +63,7 @@ function validatePlanBody(body: Record<string, unknown>) {
       distributionPlanUrl:
         typeof body.distributionPlanUrl === "string" ? body.distributionPlanUrl.trim() : "",
       featured: Boolean(body.featured),
+      cataloguePreview: Boolean(body.cataloguePreview),
       published: Boolean(body.published),
     },
   };

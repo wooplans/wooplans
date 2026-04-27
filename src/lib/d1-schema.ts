@@ -55,7 +55,7 @@ export async function ensureD1Schema() {
 
       if (!(await hasTable(db, "Plan"))) {
         await db.exec(
-          `CREATE TABLE IF NOT EXISTS Plan (id TEXT NOT NULL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, surface INTEGER NOT NULL, bedrooms INTEGER NOT NULL, bathrooms INTEGER NOT NULL, floors INTEGER NOT NULL, rooms TEXT NOT NULL, images TEXT NOT NULL, thumbnail TEXT NOT NULL, estimatedCost INTEGER NOT NULL DEFAULT 0, estimatedCostImage TEXT NOT NULL DEFAULT '', distributionPlans TEXT NOT NULL DEFAULT '[]', distributionPlanUrl TEXT NOT NULL DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,
+          `CREATE TABLE IF NOT EXISTS Plan (id TEXT NOT NULL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, surface INTEGER NOT NULL, bedrooms INTEGER NOT NULL, bathrooms INTEGER NOT NULL, floors INTEGER NOT NULL, rooms TEXT NOT NULL, images TEXT NOT NULL, thumbnail TEXT NOT NULL, estimatedCost INTEGER NOT NULL DEFAULT 0, estimatedCostImage TEXT NOT NULL DEFAULT '', distributionPlans TEXT NOT NULL DEFAULT '[]', distributionPlanUrl TEXT NOT NULL DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, cataloguePreview INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,
         );
       }
 
@@ -91,7 +91,9 @@ export async function ensureD1Schema() {
 
       await addColumnIfMissing(db, "Plan", "estimatedCostImage", `"estimatedCostImage" TEXT NOT NULL DEFAULT ''`);
       await addColumnIfMissing(db, "Plan", "distributionPlans", `"distributionPlans" TEXT NOT NULL DEFAULT '[]'`);
+      await addColumnIfMissing(db, "Plan", "cataloguePreview", `"cataloguePreview" INTEGER NOT NULL DEFAULT 0`);
       await addColumnIfMissing(db, "Subscriber", "premiumCode", `"premiumCode" TEXT`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS Plan_cataloguePreview_idx ON Plan(cataloguePreview);`);
     })();
   }
 

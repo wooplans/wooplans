@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type FAQItem = {
   question: string;
-  answer: string;
+  answer: React.ReactNode;
 };
 
 type FAQAccordionProps = {
@@ -52,9 +52,9 @@ export function FAQAccordion({ items }: FAQAccordionProps) {
                 isOpen ? "pb-5 max-h-96" : "max-h-0"
               }`}
             >
-              <p className="text-sm text-foreground/60 leading-relaxed">
+              <div className="text-sm text-foreground/60 leading-relaxed">
                 {faq.answer}
-              </p>
+              </div>
             </div>
           </div>
         );

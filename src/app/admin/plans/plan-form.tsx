@@ -21,6 +21,7 @@ type PlanFormData = {
   estimatedCost: string;
   estimatedCostImage: string;
   featured: boolean;
+  cataloguePreview: boolean;
   published: boolean;
 };
 
@@ -41,6 +42,7 @@ type PlanFormProps = {
     estimatedCostImage?: string;
     distributionPlans?: string[];
     featured?: boolean;
+    cataloguePreview?: boolean;
     published?: boolean;
     rooms?: Room[];
     images?: string[];
@@ -60,6 +62,7 @@ const defaultForm: PlanFormData = {
   estimatedCost: "",
   estimatedCostImage: "",
   featured: false,
+  cataloguePreview: false,
   published: false,
 };
 
@@ -77,6 +80,7 @@ function toFormState(d: NonNullable<PlanFormProps["initialData"]>): PlanFormData
     estimatedCost: String(d.estimatedCost ?? ""),
     estimatedCostImage: d.estimatedCostImage ?? "",
     featured: d.featured ?? false,
+    cataloguePreview: d.cataloguePreview ?? false,
     published: d.published ?? false,
   };
 }
@@ -423,13 +427,16 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/70">Édition</h3>
             {rooms.map((room, i) => (
-              <div key={i} className="flex gap-2">
+              <div key={i} className="grid grid-cols-[minmax(7rem,10rem)_minmax(0,1fr)_6rem_auto] gap-2 items-center">
+                <div className="px-3 py-2 border-2 border-outline bg-surface/60 text-sm font-medium text-foreground/70 truncate">
+                  {room.name.trim() || `Pièce ${i + 1}`}
+                </div>
                 <input
                   type="text"
                   value={room.name}
                   onChange={(e) => updateRoom(i, "name", e.target.value)}
                   placeholder="Nom de la pièce"
-                  className={`flex-1 ${inputClass}`}
+                  className={inputClass}
                 />
                 <input
                   type="number"
@@ -437,13 +444,13 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
                   onChange={(e) => updateRoom(i, "area", Number(e.target.value))}
                   placeholder="m²"
                   min={0}
-                  className={`w-24 ${inputClass}`}
+                  className={inputClass}
                 />
                 {rooms.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeRoom(i)}
-                    className="text-red-400 hover:text-red-600 px-2"
+                    className="text-red-400 hover:text-red-600 px-2 justify-self-center"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -500,6 +507,15 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
               className="rounded border-outline/30 text-primary focus:ring-primary"
             />
             <span className="text-sm text-foreground/70">Mis en avant</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.cataloguePreview}
+              onChange={(e) => updateForm("cataloguePreview", e.target.checked)}
+              className="rounded border-outline/30 text-primary focus:ring-primary"
+            />
+            <span className="text-sm text-foreground/70">Afficher dans l&apos;aperçu du Catalogue</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input

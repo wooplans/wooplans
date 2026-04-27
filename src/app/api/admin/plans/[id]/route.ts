@@ -109,6 +109,7 @@ export async function PUT(
         distributionPlanUrl: body.distributionPlanUrl.trim(),
       }),
       ...(body.featured !== undefined && { featured: Boolean(body.featured) }),
+      ...(body.cataloguePreview !== undefined && { cataloguePreview: Boolean(body.cataloguePreview) }),
       ...(body.published !== undefined && { published: Boolean(body.published) }),
     });
 

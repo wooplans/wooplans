@@ -25,12 +25,14 @@ model Plan {
   distributionPlans   String   @default("[]")
   distributionPlanUrl String   @default("")
   featured            Boolean  @default(false)
+  cataloguePreview    Boolean  @default(false)
   published           Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   @@index([category])
   @@index([featured])
+  @@index([cataloguePreview])
   @@index([published])
 }
 

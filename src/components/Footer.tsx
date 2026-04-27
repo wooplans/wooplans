@@ -39,6 +39,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/abonnement-facebook-froid" className="hover:text-white transition-colors">
+                  Catalogue Premium
+                </Link>
+              </li>
+              <li>
                 <Link href="/connexion" className="hover:text-white transition-colors">
                   Connexion
                 </Link>
