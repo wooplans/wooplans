@@ -227,8 +227,9 @@ export default function AbonnementFacebookFroidPage() {
 
     fetch("/api/catalogue-preview")
       .then((res) => (res.ok ? res.json() : []))
-      .then((plans: CataloguePreviewPlan[]) => {
-        if (!cancelled && Array.isArray(plans) && plans.length > 0) {
+      .then((value: unknown) => {
+        if (!cancelled && Array.isArray(value) && value.length > 0) {
+          const plans = value as CataloguePreviewPlan[];
           setCatalogPreviewPlans(
             plans.map((plan) => ({
               ...plan,
