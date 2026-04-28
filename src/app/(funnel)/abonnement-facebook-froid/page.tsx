@@ -18,43 +18,43 @@ const trustPoints = [
 
 const problems = [
   {
-    title: "Vous cherchez des idees, mais rien ne vous rassure vraiment",
-    desc: "Vous voyez passer des maisons sur Facebook, TikTok ou WhatsApp, mais difficile de savoir quel modele peut correspondre a votre terrain, votre famille et votre budget.",
+    title: "Vous cherchez des idées, mais rien ne vous rassure vraiment",
+    desc: "Vous voyez passer des maisons sur Facebook, TikTok ou WhatsApp, mais il est difficile de savoir quel modèle peut correspondre à votre terrain, votre famille et votre budget.",
   },
   {
-    title: "Les devis trouves sur les reseaux sociaux ne sont pas fiables",
-    desc: "Un technicien annonce un prix, un autre donne un montant different. Vous avez peur de commencer avec un faux budget et de rester bloque en plein chantier.",
+    title: "Les devis trouvés sur les réseaux sociaux ne sont pas fiables",
+    desc: "Un technicien annonce un prix, un autre donne un montant différent. Vous avez peur de commencer avec un faux budget et de rester bloqué en plein chantier.",
   },
   {
-    title: "Vous sentez la pression avant meme de poser la premiere pierre",
-    desc: "Construire coute cher. Sans plan clair ni estimation credible, chaque decision devient stressante: et si vous choisissiez le mauvais modele ?",
+    title: "Vous sentez la pression avant même de poser la première pierre",
+    desc: "Construire coûte cher. Sans plan clair ni estimation crédible, chaque décision devient stressante : et si vous choisissiez le mauvais modèle ?",
   },
 ];
 
 const benefits = [
   {
-    title: "Plans de distribution detailles",
-    desc: "Consultez les plans avec cotations, surfaces et dimensions pour comprendre chaque piece avant de vous engager.",
+    title: "Plans de distribution détaillés",
+    desc: "Consultez les plans avec cotations, surfaces et dimensions pour comprendre chaque pièce avant de vous engager.",
   },
   {
     title: "Devis estimatifs par poste",
-    desc: "Visualisez les grands postes de depenses: fondation, elevation, toiture, finitions, electricite et plomberie.",
+    desc: "Visualisez les grands postes de dépenses : fondation, élévation, toiture, finitions, électricité et plomberie.",
   },
   {
     title: "Vues 3D pour mieux vous projeter",
-    desc: "Comparez les modeles avec une vision plus concrete de la maison finale, pas seulement une description.",
+    desc: "Comparez les modèles avec une vision plus concrète de la maison finale, pas seulement une description.",
   },
   {
     title: "Nouveaux plans inclus",
-    desc: "Le catalogue evolue avec de nouveaux modeles. Vous pouvez revenir comparer quand votre projet avance.",
+    desc: "Le catalogue évolue avec de nouveaux modèles. Vous pouvez revenir comparer quand votre projet avance.",
   },
   {
     title: "Accompagnement sur WhatsApp",
-    desc: "Si vous hesitez sur un modele, vous pouvez echanger avec l'equipe pour mieux adapter votre choix a votre terrain.",
+    desc: "Si vous hésitez sur un modèle, vous pouvez échanger avec l'équipe pour mieux adapter votre choix à votre terrain.",
   },
   {
-    title: "Acces simple apres paiement",
-    desc: "Apres l'achat, vous recevez les instructions et votre code d'acces pour consulter le catalogue Premium.",
+    title: "Accès simple après paiement",
+    desc: "Après l'achat, vous recevez les instructions et votre code d'accès pour consulter le catalogue Premium.",
   },
 ];
 
@@ -68,7 +68,7 @@ const offerFeatures = [
     value: "50 000 FCFA",
   },
   {
-    label: "Vues 3D des modeles disponibles",
+    label: "Vues 3D des modèles disponibles",
     value: "35 000 FCFA",
   },
   {
@@ -110,7 +110,7 @@ const steps = [
   {
     number: "01",
     title: "Cliquez sur Obtenir Premium",
-    desc: "Vous êtes redirigé vers la page de paiement pour entrez vos informations",
+    desc: "Vous êtes redirigé vers la page de paiement pour entrer vos informations.",
   },
   {
     number: "02",
@@ -119,26 +119,26 @@ const steps = [
   },
   {
     number: "03",
-    title: "Recevez votre Catalogue",
-    desc: "Apres validation, vous recevez immédiatement un code pour acceder aux plans et devis du Catalogue Premium.",
+    title: "Recevez votre catalogue",
+    desc: "Après validation, vous recevez immédiatement un code pour accéder aux plans et devis du Catalogue Premium.",
   },
 ];
 
 const faqs = [
   {
-    question: "Qu'est-ce que je recois avec le Catalogue Premium ?",
+    question: "Qu'est-ce que je reçois avec le Catalogue Premium ?",
     answer:
-      "Vous accedez aux plans de distribution, aux devis estimatifs, aux vues 3D disponibles, aux nouveaux modeles inclus et a l'accompagnement WooPlans sur WhatsApp.",
+      "Vous accédez aux plans de distribution, aux devis estimatifs, aux vues 3D disponibles, aux nouveaux modèles inclus et à l'accompagnement WooPlans sur WhatsApp.",
   },
   {
     question: "Le paiement est-il mensuel ?",
     answer:
-      "Non. L'offre est presentee comme un paiement unique de 29 000 FCFA. Il n'y a pas de renouvellement automatique depuis cette page.",
+      "Non. L'offre est présentée comme un paiement unique de 29 000 FCFA. Il n'y a pas de renouvellement automatique depuis cette page.",
   },
   {
-    question: "Comment vais-je recevoir mon acces ?",
+    question: "Comment vais-je recevoir mon accès ?",
     answer:
-      "Apres le paiement par mobile money, vous recevez les instructions d'acces et le code Premium par WhatsApp et email.",
+      "Après le paiement par Mobile Money, vous recevez les instructions d'accès et le code Premium par WhatsApp et email.",
   },
   {
     question: "Puis-je payer par Mobile Money ?",
@@ -148,7 +148,7 @@ const faqs = [
   {
     question: "Et si je ne suis pas satisfait ?",
     answer:
-      "WooPlans met en avant une garantie satisfait ou rembourse de 7 jours. Si vous avez un souci, contactez rapidement l'equipe sur WhatsApp avec les details de votre achat.",
+      "WooPlans met en avant une garantie satisfait ou remboursé de 7 jours. Si vous avez un souci, contactez rapidement l'équipe sur WhatsApp avec les détails de votre achat.",
   },
   {
     question: "Puis-je poser une question avant d'acheter ?",
@@ -163,7 +163,7 @@ const faqs = [
         >
           Cliquez ici
         </a>{" "}
-        pour nous contectez sur WhatsApp et poser directement votre question.
+        pour nous contacter sur WhatsApp et poser directement votre question.
       </>
     ),
   },
@@ -262,10 +262,10 @@ export default function AbonnementFacebookFroidPage() {
           <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-6 px-4 py-10 text-center md:grid md:min-h-0 md:grid-cols-[1.05fr_0.95fr] md:gap-10 md:py-20 md:text-left">
             <div className="md:order-1">
               <h1 className="mb-4 text-3xl font-semibold leading-[1.05] tracking-tight text-white sm:text-4xl md:mb-6 md:text-6xl">
-                Avant de construire, sachez combien votre maison peut vraiment couter
+                Avant de construire, sachez combien votre maison peut vraiment coûter
               </h1>
               <p className="mx-auto max-w-xl text-base leading-relaxed text-white/65 md:mx-0 md:mb-8 md:text-xl">
-                Obtenez le Catalogue Premium avec + de 50 plans de villa et duplex pour voir les plans de distribution, les devis estimatifs et les vues 3D avant de choisir un modele avec plus de clarte avant de depenser des millions sur le chantier
+                Obtenez le Catalogue Premium avec plus de 50 plans de villas et duplex pour voir les plans de distribution, les devis estimatifs et les vues 3D avant de choisir un modèle avec plus de clarté, avant de dépenser des millions sur le chantier.
               </p>
               <div className="hidden flex-col gap-3 sm:flex-row md:mb-8 md:flex">
                 <CheckoutButton className="w-full sm:w-auto">
@@ -302,7 +302,7 @@ export default function AbonnementFacebookFroidPage() {
                   60 000 FCFA
                 </span>
                 <span className="rounded-full bg-highlight/20 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-highlight">
-                  Offre lancement
+                  Offre de lancement
                 </span>
               </div>
               <CheckoutButton className="w-full">
@@ -324,13 +324,13 @@ export default function AbonnementFacebookFroidPage() {
           <div className="mx-auto max-w-6xl px-4 py-14 md:py-18">
             <div className="mb-10 max-w-2xl">
               <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-                Le probleme
+                Le problème
               </p>
               <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                Vous voulez construire, mais vous ne savez pas encore par ou commencer
+                Vous voulez construire, mais vous ne savez pas encore par où commencer
               </h2>
               <p className="mt-4 text-base leading-relaxed text-foreground/60 md:text-lg">
-                Entre les photos qui donnent envie, les plans incomplets et les devis approximatifs partages sur les reseaux sociaux, il est normal d&apos;hesiter. Vous avez besoin d&apos;inspiration, mais aussi de chiffres et de plans plus serieux pour avancer sans stress.
+                Entre les photos qui donnent envie, les plans incomplets et les devis approximatifs partagés sur les réseaux sociaux, il est normal d&apos;hésiter. Vous avez besoin d&apos;inspiration, mais aussi de chiffres et de plans plus sérieux pour avancer sans stress.
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-3">
@@ -353,7 +353,7 @@ export default function AbonnementFacebookFroidPage() {
               La solution
             </p>
             <h2 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              Un catalogue de plans villa et duplex pour votre inspiration
+              Un catalogue de plans de villas et duplex pour votre inspiration
             </h2>
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -379,14 +379,14 @@ export default function AbonnementFacebookFroidPage() {
             <div className="mb-10 grid gap-6 md:grid-cols-[0.9fr_1.1fr] md:items-end">
               <div>
                 <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-                  Apercu du catalogue
+                  Aperçu du catalogue
                 </p>
                 <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
                   Quelques modèles que vous allez découvrir dans le Catalogue Premium
                 </h2>
               </div>
               <p className="text-foreground/60 md:text-lg">
-                +50 plans modernes de villa et duplex
+                Plus de 50 plans modernes de villas et duplex
               </p>
             </div>
 
@@ -418,16 +418,16 @@ export default function AbonnementFacebookFroidPage() {
                       {plan.name}
                     </h3>
                     <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-foreground/55">
-                      <span>{plan.surface} m2</span>
+                      <span>{plan.surface} m²</span>
                       <span className="text-foreground/25">/</span>
                       <span>{plan.bedrooms} chambres</span>
                       <span className="text-foreground/25">/</span>
                       <span>{plan.bathrooms} SdB</span>
                     </div>
                     <div className="rounded-xl bg-surface px-4 py-3">
-                      <p className="text-xs text-foreground/45">Budget estime du projet</p>
+                      <p className="text-xs text-foreground/45">Budget estimé du projet</p>
                       <p className="text-sm font-bold text-accent">
-                        A partir de {formatPrice(plan.estimatedTotalPrice)} FCFA
+                        À partir de {formatPrice(plan.estimatedTotalPrice)} FCFA
                       </p>
                     </div>
                   </div>
@@ -450,10 +450,10 @@ export default function AbonnementFacebookFroidPage() {
                     +{remainingCatalogPlans}
                   </div>
                   <h3 className="mb-3 text-2xl font-semibold tracking-tight">
-                    autres plans a decouvrir
+                    autres plans à découvrir
                   </h3>
                   <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/60">
-                    Villas, duplex, maisons familiales et nouveaux modeles ajoutes pour comparer plus d&apos;options avant de choisir.
+                    Villas, duplex, maisons familiales et nouveaux modèles ajoutés pour comparer plus d&apos;options avant de choisir.
                   </p>
                   <CheckoutButton className="w-full px-6 py-3 text-sm sm:w-auto">
                     Obtenir le Catalogue
@@ -472,10 +472,10 @@ export default function AbonnementFacebookFroidPage() {
                   Témoignages vidéos
                 </p>
                 <h2 className="mb-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  Ils ont deja decouvert le Catalogue Premium
+                  Ils ont déjà découvert le Catalogue Premium
                 </h2>
                 <p className="mb-6 text-white/60">
-                  Regardez les retours de personnes qui ont utilise WooPlans pour mieux preparer leur projet de construction.
+                  Regardez les retours de personnes qui ont utilisé WooPlans pour mieux préparer leur projet de construction.
                 </p>
               </div>
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
@@ -521,7 +521,7 @@ export default function AbonnementFacebookFroidPage() {
                 Obtenez le Catalogue Premium WooPlans
               </h2>
               <p className="mx-auto mb-8 max-w-xl text-foreground/60">
-                Plans, devis estimatifs, vues 3D et accompagnement pour mieux preparer votre projet avant de commencer les depenses lourdes.
+                Plans, devis estimatifs, vues 3D et accompagnement pour mieux préparer votre projet avant de commencer les dépenses lourdes.
               </p>
 
               <div className="mb-8 overflow-hidden rounded-3xl border border-outline/10 bg-background text-left">
@@ -551,7 +551,7 @@ export default function AbonnementFacebookFroidPage() {
 
                 <div className="border-t border-outline/10 bg-surface p-5 md:p-6">
                   <div className="mb-3 flex items-center justify-between gap-4 text-sm">
-                    <span className="text-foreground/55">Valeur totale estimee</span>
+                    <span className="text-foreground/55">Valeur totale estimée</span>
                     <span className="font-bold text-foreground/70 line-through">
                       200 000 FCFA
                     </span>
@@ -575,7 +575,7 @@ export default function AbonnementFacebookFroidPage() {
                       </span>
                     </div>
                     <span className="mt-2 inline-flex rounded-full bg-secondary/10 px-3 py-1 text-xs font-black text-secondary">
-                      Economisez 31 000 FCFA
+                      Économisez 31 000 FCFA
                     </span>
                   </div>
                 </div>
@@ -585,7 +585,7 @@ export default function AbonnementFacebookFroidPage() {
                 Obtenir mon Catalogue Premium
               </CheckoutButton>
               <p className="mt-4 text-xs text-foreground/45">
-                Vous serez redirige vers la page de paiement par Mobile Money
+                Vous serez redirigé vers la page de paiement par Mobile Money
               </p>
             </div>
           </div>
@@ -594,7 +594,7 @@ export default function AbonnementFacebookFroidPage() {
         <section className="mx-auto max-w-3xl px-4 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-              Questions frequentes
+              Questions fréquentes
             </p>
             <h2 className="text-3xl font-semibold tracking-tight text-foreground">
               Avant de passer au paiement
@@ -606,10 +606,10 @@ export default function AbonnementFacebookFroidPage() {
         <section className="bg-dark-bg">
           <div className="mx-auto max-w-3xl px-4 py-16 text-center md:py-20">
             <h2 className="mb-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-              Donnez a votre projet une base plus claire
+              Donnez à votre projet une base plus claire
             </h2>
             <p className="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-white/60">
-              Pour 29 000 FCFA, vous pouvez comparer les plans, consulter les estimations et avancer avec une vision plus precise de votre future maison.
+              Pour 29 000 FCFA, vous pouvez comparer les plans, consulter les estimations et avancer avec une vision plus précise de votre future maison.
             </p>
             <CheckoutButton className="w-full text-lg sm:w-auto">
               Acheter le Catalogue Premium
