@@ -102,11 +102,6 @@ export function Navbar() {
               </Link>
             </li>
           )}
-          <li>
-            <Link href="/admin" className="text-xs text-foreground/40 hover:text-foreground transition-colors uppercase tracking-wider">
-              Admin
-            </Link>
-          </li>
         </ul>
       </nav>
 
@@ -165,11 +160,6 @@ export function Navbar() {
               </Link>
             </li>
           )}
-          <li>
-            <Link href="/admin" onClick={close} className="block text-xs text-foreground/40 uppercase tracking-wider hover:text-foreground transition-colors">
-              Admin
-            </Link>
-          </li>
           <li>
             <button
               onClick={() => { toggleTheme(); }}
