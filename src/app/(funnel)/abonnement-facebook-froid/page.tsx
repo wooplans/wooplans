@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { VideoTestimonials } from "@/components/VideoTestimonials";
 import { CheckoutLeadForm } from "@/components/CheckoutLeadForm";
 import { demoPlans } from "@/lib/demo-plans";
 import Image from "next/image";
 import Script from "next/script";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 const FACEBOOK_PIXEL_ID = "1651374605332302";
 const HERO_MOCKUP_AVIF = "/images/premium-catalogue-mockup.avif";
@@ -117,12 +119,12 @@ const steps = [
   {
     number: "02",
     title: "Recevez le Catalogue Premium",
-    desc: "Vous recevez immédiatement le lien d'accès et le code pour obtenir votre catalogue premium sur WhatsApp et par Email.",
+    desc: "Vous recevez immédiatement le lien d'accès et le code pour obtenir votre catalogue premium sur WhatsApp et par email.",
   },
   {
     number: "03",
-    title: "Lancer votre projet !",
-    desc: "Comparer et choississez les modèles qui vous intéresse, ensuite écgangé avec nos architectes sur WhatsApp pour personnaliser le plan selon vos besoins.",
+    title: "Lancez votre projet !",
+    desc: "Comparez et choisissez les modèles qui vous intéressent, puis échangez avec nos architectes sur WhatsApp pour personnaliser le plan selon vos besoins.",
   },
 ];
 
@@ -267,33 +269,40 @@ function CheckoutModal({
 function CheckoutButton({
   children,
   ctaId,
-  onClick,
+  href,
   className = "",
 }: {
   children: React.ReactNode;
   ctaId: string;
-  onClick: () => void;
+  href: string;
   className?: string;
 }) {
   return (
-    <button
-      type="button"
+    <Link
+      href={href}
       data-funnel-cta={ctaId}
-      onClick={onClick}
       className={`inline-flex items-center justify-center rounded-full bg-accent px-8 py-4 text-center text-base font-bold text-white shadow-xl shadow-accent/25 transition-colors hover:bg-accent/90 ${className}`}
     >
       {children}
-    </button>
+    </Link>
   );
 }
 
 export default function AbonnementFacebookFroidPage() {
+  const searchParams = useSearchParams();
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [catalogPreviewPlans, setCatalogPreviewPlans] = useState<CataloguePreviewPlan[]>(
     fallbackCatalogPreviewPlans,
   );
   const remainingCatalogPlans = Math.max(50 - catalogPreviewPlans.length, 0);
+
+  useEffect(() => {
+    const shouldOpenCheckout = searchParams.get("checkout");
+    if (shouldOpenCheckout === "1" || shouldOpenCheckout === "open") {
+      setIsCheckoutOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const solutionSection = document.getElementById("solution");
@@ -386,7 +395,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-hero"
                 className="w-full sm:w-auto"
-                onClick={() => setIsCheckoutOpen(true)}
+                href="/abonnement-facebook-froid/checkout"
               >
                 Obtenir le Catalogue - 29 000 FCFA
               </CheckoutButton>
@@ -433,7 +442,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-hero-mobile"
                 className="w-full"
-                onClick={() => setIsCheckoutOpen(true)}
+                href="/abonnement-facebook-froid/checkout"
               >
                 Obtenir le Catalogue - 29 000 FCFA
               </CheckoutButton>
@@ -533,7 +542,7 @@ export default function AbonnementFacebookFroidPage() {
                   <CheckoutButton
                     ctaId="facebook-froid-preview-cta"
                     className="w-full px-6 py-3 text-sm sm:w-auto"
-                    onClick={() => setIsCheckoutOpen(true)}
+                    href="/abonnement-facebook-froid/checkout"
                   >
                     Obtenir le Catalogue
                   </CheckoutButton>
@@ -552,9 +561,6 @@ export default function AbonnementFacebookFroidPage() {
               <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
                 Vous voulez construire, mais vous ne savez pas encore par où commencer
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-foreground/60 md:text-lg">
-                Entre les photos qui donnent envie, les plans incomplets et les devis approximatifs partagés sur les réseaux sociaux, il est normal d&apos;hésiter. Vous avez besoin d&apos;inspiration, mais aussi de chiffres et de plans plus sérieux pour avancer sans stress.
-              </p>
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {problems.map((problem) => (
@@ -717,7 +723,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-offre-cta"
                 className="w-full text-lg md:w-auto"
-                onClick={() => setIsCheckoutOpen(true)}
+                href="/abonnement-facebook-froid/checkout"
               >
                 Obtenir mon Catalogue Premium
               </CheckoutButton>
@@ -751,37 +757,10 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-final-cta"
                 className="w-full text-lg sm:w-auto"
-                onClick={() => setIsCheckoutOpen(true)}
+                href="/abonnement-facebook-froid/checkout"
               >
                 Acheter le Catalogue Premium
               </CheckoutButton>
-          </div>
-        </section>
-        <section id="checkout" className="border-y border-outline/10 bg-surface">
-          <div className="mx-auto max-w-3xl px-4 py-16 md:py-20">
-            <div className="mb-8 text-center">
-              <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-                Checkout en popup
-              </p>
-              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                Finalisez votre demande sans quitter la page
-              </h2>
-              <p className="mt-4 text-foreground/60">
-                Le bouton ouvre le formulaire dans une modale, puis envoie vers Chariow avec la metadata d&apos;attribution.
-              </p>
-            </div>
-            <div className="rounded-3xl border-2 border-outline bg-background p-6 text-center md:p-8">
-              <p className="mx-auto mb-6 max-w-xl text-sm leading-relaxed text-foreground/60">
-                Cliquez pour ouvrir le checkout en popup, renseigner vos informations et continuer vers le paiement Mobile Money sécurisé.
-              </p>
-              <CheckoutButton
-                ctaId="facebook-froid-checkout-form"
-                className="w-full sm:w-auto"
-                onClick={() => setIsCheckoutOpen(true)}
-              >
-                Ouvrir le checkout popup
-              </CheckoutButton>
-            </div>
           </div>
         </section>
       </main>
@@ -796,7 +775,7 @@ export default function AbonnementFacebookFroidPage() {
         <CheckoutButton
           ctaId="facebook-froid-sticky-cta"
           className="w-full py-3 animate-pulse"
-          onClick={() => setIsCheckoutOpen(true)}
+          href="/abonnement-facebook-froid/checkout"
         >
           Obtenir le Catalogue - 29 000 FCFA
         </CheckoutButton>
