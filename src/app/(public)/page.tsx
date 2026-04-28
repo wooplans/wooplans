@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { listPlans } from "@/lib/db";
 import { PlanGrid } from "@/components/PlanGrid";
@@ -6,6 +7,33 @@ import { VideoTestimonials } from "@/components/VideoTestimonials";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
+export const metadata: Metadata = {
+  title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+  description:
+    "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
+  openGraph: {
+    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    description:
+      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+    type: "website",
+    locale: "fr_FR",
+    images: [
+      {
+        url: "/images/hero-home.webp",
+        width: 1600,
+        height: 900,
+        alt: "Hero WooPlans avec maquette architecturale et plans",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    description:
+      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+    images: ["/images/hero-home.webp"],
+  },
+};
 
 const homeFaqs = [
   {
@@ -36,75 +64,98 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO — Full screen on mobile */}
-      <section className="relative bg-dark-bg text-dark-text min-h-[100dvh] md:min-h-0 flex flex-col items-center justify-center px-4 pt-16 pb-20 md:py-28 overflow-hidden">
+      {/* HERO â€” Full screen on mobile */}
+      <section className="relative bg-dark-bg text-dark-text min-h-[100dvh] md:min-h-0 px-4 pt-16 pb-20 md:py-28 overflow-hidden">
         {/* Subtle dot pattern background */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-            backgroundSize: '32px 32px'
+            backgroundSize: "32px 32px",
           }}
         />
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="mb-6">
-            <span className="inline-flex items-center text-xs font-black px-4 py-1.5 bg-accent text-white uppercase tracking-[0.2em] rounded-full">
-              Catalogue de plans de construction
-            </span>
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+          <div className="relative z-10 text-center lg:text-left">
+            {/* Title */}
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.05] mb-6 tracking-tight">
+              Trouvez le plan idéal
+              <span className="text-highlight"> pour votre projet</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto lg:mx-0 leading-relaxed mb-10">
+              Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
+            </p>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <Link
+                href="/plans"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-accent/80 bg-accent px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-accent/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 sm:rounded-full sm:px-10 sm:py-5 sm:text-lg"
+              >
+                Voir les plans
+              </Link>
+              <a
+                href="#comment-ca-marche"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/5 px-7 py-3.5 text-base font-semibold text-white/90 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white sm:rounded-full sm:px-10 sm:py-5 sm:text-lg"
+              >
+                Comment ça marche
+              </a>
+            </div>
+
+            {/* Quick benefits */}
+            <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-white/50">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {allPlans.length} plans disponibles
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Devis estimatifs inclus
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Architectes certifiés
+              </div>
+            </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.1] mb-6 tracking-tight">
-            Trouvez le plan idéal
-            <span className="text-highlight"> pour votre projet</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed mb-10">
-            Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/plans"
-              className="w-full sm:w-auto inline-flex items-center justify-center bg-accent text-white font-bold px-10 py-5 rounded-full border-2 border-accent hover:bg-accent/90 transition-colors text-lg shadow-lg shadow-accent/20"
-            >
-              Voir les plans
-            </Link>
-            <a
-              href="#comment-ca-marche"
-              className="w-full sm:w-auto inline-flex items-center justify-center text-white font-semibold px-10 py-5 rounded-full border-2 border-white/30 hover:bg-white hover:text-foreground transition-colors text-lg"
-            >
-              Comment ça marche
-            </a>
-          </div>
-
-          {/* Quick benefits */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/50">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              {allPlans.length} plans disponibles
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Devis estimatifs inclus
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Architectes certifiés
+          <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
+            <div className="absolute inset-0 -z-10 rounded-[2rem] bg-accent/10 blur-3xl" aria-hidden="true" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/40 ring-1 ring-white/10">
+              <div className="relative aspect-[4/3] md:aspect-[16/10] lg:aspect-[4/3]">
+                <picture>
+                  <source
+                    media="(max-width: 767px)"
+                    srcSet="/images/hero-home-mobile.webp"
+                    type="image/webp"
+                  />
+                  <source
+                    media="(min-width: 768px)"
+                    srcSet="/images/hero-home.webp"
+                    type="image/webp"
+                  />
+                  <img
+                    src="/images/hero-home.webp"
+                    alt="Aperçu d'un concept architectural premium avec plans et maquette"
+                    className="h-full w-full object-cover object-center md:object-[75%_center]"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
+                </picture>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
       {/* BARRE DE CONFIANCE */}
       <section className="bg-surface border-b border-outline/10">
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -227,7 +278,7 @@ export default async function HomePage() {
               Découvrez les témoignages de propriétaires qui ont utilisé nos plans.
             </p>
           </div>
-          <VideoTestimonials />
+          <VideoTestimonials variant="vertical" />
         </div>
       </section>
 

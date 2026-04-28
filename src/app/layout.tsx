@@ -2,15 +2,31 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "WooPlans — Plans de villas et duplex pour l'Afrique",
+  metadataBase: new URL("https://wooplans.com"),
+  title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
   description:
-    "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain. Trouvez le plan idéal pour votre projet.",
+    "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
   openGraph: {
-    title: "WooPlans — Plans de villas et duplex pour l'Afrique",
+    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
     description:
-      "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain.",
+      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
     type: "website",
     locale: "fr_FR",
+    images: [
+      {
+        url: "/images/hero-home.webp",
+        width: 1600,
+        height: 900,
+        alt: "Hero WooPlans avec maquette architecturale et plans",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    description:
+      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+    images: ["/images/hero-home.webp"],
   },
 };
 
