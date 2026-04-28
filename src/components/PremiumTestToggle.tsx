@@ -38,7 +38,7 @@ export function PremiumTestToggle({ initialUnlocked = false }: PremiumTestToggle
       onClick={togglePremiumTest}
       className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-primary transition-colors hover:border-primary hover:bg-primary hover:text-white"
     >
-      {isUnlocked ? "Bloquer" : "Tout debloquer"}
+      {isUnlocked ? "Bloquer" : "Tout débloquer"}
     </button>
   );
 }
