@@ -128,10 +128,14 @@ export async function POST(request: Request) {
       referrer: typeof body.referrer === "string" ? body.referrer : null,
     });
 
-    await ensureFunnelSession({
-      sessionId,
-      ...attribution,
-    });
+    try {
+      await ensureFunnelSession({
+        sessionId,
+        ...attribution,
+      });
+    } catch (error) {
+      console.error("Failed to persist funnel session before checkout:", error);
+    }
 
     const checkoutMetadata = {
       funnel_session_id: sessionId,
@@ -204,21 +208,25 @@ export async function POST(request: Request) {
     const currency = payload.data?.purchase?.amount?.currency || "XAF";
     const status = payload.data?.purchase?.status || "awaiting_payment";
 
-    await recordFunnelEvent({
-      sessionId,
-      type: "checkout_started",
-      path: current.path,
-      ctaId: typeof body.cta_id === "string" && body.cta_id.trim() ? body.cta_id.trim() : null,
-      metadata: {
-        checkout_url: checkoutUrl,
-        chariow_sale_id: chariowSaleId,
-        product_id: productIdFromResponse,
-        product_name: productName,
-        amount,
-        currency,
-        status,
-      },
-    });
+    try {
+      await recordFunnelEvent({
+        sessionId,
+        type: "checkout_started",
+        path: current.path,
+        ctaId: typeof body.cta_id === "string" && body.cta_id.trim() ? body.cta_id.trim() : null,
+        metadata: {
+          checkout_url: checkoutUrl,
+          chariow_sale_id: chariowSaleId,
+          product_id: productIdFromResponse,
+          product_name: productName,
+          amount,
+          currency,
+          status,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to record checkout_started funnel event:", error);
+    }
 
     return NextResponse.json({
       checkout_url: checkoutUrl,
