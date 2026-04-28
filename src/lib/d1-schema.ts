@@ -77,6 +77,24 @@ export async function ensureD1Schema() {
         );
       }
 
+      if (!(await hasTable(db, "FunnelSession"))) {
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS FunnelSession (id TEXT NOT NULL PRIMARY KEY, source TEXT NOT NULL, landingPath TEXT NOT NULL, referrer TEXT, utmSource TEXT, utmMedium TEXT, utmCampaign TEXT, utmContent TEXT, utmTerm TEXT, fbclidPresent INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,
+        );
+      }
+
+      if (!(await hasTable(db, "FunnelEvent"))) {
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS FunnelEvent (id TEXT NOT NULL PRIMARY KEY, sessionId TEXT NOT NULL, type TEXT NOT NULL, path TEXT NOT NULL, ctaId TEXT, metadataJson TEXT NOT NULL DEFAULT '{}', createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (sessionId) REFERENCES FunnelSession(id) ON DELETE CASCADE);`,
+        );
+      }
+
+      if (!(await hasTable(db, "FunnelSale"))) {
+        await db.exec(
+          `CREATE TABLE IF NOT EXISTS FunnelSale (id TEXT NOT NULL PRIMARY KEY, sessionId TEXT, chariowSaleId TEXT NOT NULL UNIQUE, productId TEXT NOT NULL, productName TEXT NOT NULL, amount INTEGER NOT NULL, currency TEXT NOT NULL, status TEXT NOT NULL, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (sessionId) REFERENCES FunnelSession(id) ON DELETE SET NULL);`,
+        );
+      }
+
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_category_idx ON Plan(category);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_featured_idx ON Plan(featured);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_published_idx ON Plan(published);`);
@@ -85,6 +103,18 @@ export async function ensureD1Schema() {
       await db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS CostRate_category_region_key ON CostRate(category, region);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS CostRate_category_idx ON CostRate(category);`);
       await db.exec(`CREATE INDEX IF NOT EXISTS CostRate_region_idx ON CostRate(region);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSession_source_idx ON FunnelSession(source);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSession_landingPath_idx ON FunnelSession(landingPath);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSession_createdAt_idx ON FunnelSession(createdAt);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelEvent_sessionId_idx ON FunnelEvent(sessionId);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelEvent_type_idx ON FunnelEvent(type);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelEvent_path_idx ON FunnelEvent(path);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelEvent_ctaId_idx ON FunnelEvent(ctaId);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelEvent_createdAt_idx ON FunnelEvent(createdAt);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSale_sessionId_idx ON FunnelSale(sessionId);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSale_chariowSaleId_idx ON FunnelSale(chariowSaleId);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSale_status_idx ON FunnelSale(status);`);
+      await db.exec(`CREATE INDEX IF NOT EXISTS FunnelSale_createdAt_idx ON FunnelSale(createdAt);`);
       await db.exec(
         `INSERT OR IGNORE INTO CostRate (id, category, region, amountPerSquareMeter, createdAt, updatedAt) VALUES ('default-villa', 'villa', 'default', 150000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), ('default-duplex', 'duplex', 'default', 180000, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);`,
       );
@@ -93,6 +123,12 @@ export async function ensureD1Schema() {
       await addColumnIfMissing(db, "Plan", "distributionPlans", `"distributionPlans" TEXT NOT NULL DEFAULT '[]'`);
       await addColumnIfMissing(db, "Plan", "cataloguePreview", `"cataloguePreview" INTEGER NOT NULL DEFAULT 0`);
       await addColumnIfMissing(db, "Subscriber", "premiumCode", `"premiumCode" TEXT`);
+      await addColumnIfMissing(db, "FunnelSession", "utmSource", `"utmSource" TEXT`);
+      await addColumnIfMissing(db, "FunnelSession", "utmMedium", `"utmMedium" TEXT`);
+      await addColumnIfMissing(db, "FunnelSession", "utmCampaign", `"utmCampaign" TEXT`);
+      await addColumnIfMissing(db, "FunnelSession", "utmContent", `"utmContent" TEXT`);
+      await addColumnIfMissing(db, "FunnelSession", "utmTerm", `"utmTerm" TEXT`);
+      await addColumnIfMissing(db, "FunnelEvent", "metadataJson", `"metadataJson" TEXT NOT NULL DEFAULT '{}'`);
       await db.exec(`CREATE INDEX IF NOT EXISTS Plan_cataloguePreview_idx ON Plan(cataloguePreview);`);
     })();
   }

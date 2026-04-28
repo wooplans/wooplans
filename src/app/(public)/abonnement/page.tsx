@@ -155,6 +155,7 @@ export default function AbonnementPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="#abonnement"
+              data-funnel-cta="abonnement-hero-cta"
               className="w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 hover:border-accent/90 transition-colors shadow-lg shadow-accent/25 text-center"
             >
               Découvrir l&apos;abonnement Premium
@@ -281,6 +282,7 @@ export default function AbonnementPage() {
 
                 <Link
                   href="#abonnement"
+                  data-funnel-cta="abonnement-card-cta"
                   className="block w-full py-4 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors mb-4 shadow-lg shadow-accent/25 text-center"
                 >
                   Découvrir l&apos;abonnement Premium
@@ -400,6 +402,7 @@ export default function AbonnementPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="#abonnement"
+              data-funnel-cta="abonnement-final-cta"
               className="px-8 py-4 bg-accent text-white font-semibold text-lg rounded-full border border-accent hover:bg-accent/90 transition-colors"
             >
               Découvrir l&apos;abonnement Premium

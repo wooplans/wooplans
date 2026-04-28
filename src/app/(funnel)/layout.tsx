@@ -1,3 +1,5 @@
+import { FunnelTracker } from "@/components/FunnelTracker";
+
 export const metadata = {
   title: "WooPlans Premium — Économisez 30-50% sur votre construction",
   description:
@@ -16,5 +18,10 @@ export default function FunnelLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="min-h-screen bg-background text-foreground antialiased">{children}</div>;
+  return (
+    <div className="min-h-screen bg-background text-foreground antialiased">
+      <FunnelTracker />
+      {children}
+    </div>
+  );
 }

@@ -235,6 +235,7 @@ export default async function AbonnementFacebookPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
               href="#offre"
+              data-funnel-cta="facebook-hero-cta"
               className="w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors shadow-xl shadow-accent/30 text-center animate-pulse"
             >
               Oui, je veux économiser sur ma construction →
@@ -314,6 +315,7 @@ export default async function AbonnementFacebookPage() {
                 </p>
                 <Link
                   href="#offre"
+                  data-funnel-cta="facebook-preview-cta"
                   className="inline-flex items-center justify-center px-8 py-3 bg-accent text-white font-semibold rounded-full hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                 >
                   Débloquer tous les plans maintenant →
@@ -453,6 +455,7 @@ export default async function AbonnementFacebookPage() {
             <div className="bg-accent p-6 text-center">
               <Link
                 href="#offre"
+                data-funnel-cta="facebook-value-stack-cta"
                 className="inline-block w-full sm:w-auto px-10 py-4 bg-white text-accent font-bold text-lg rounded-full hover:bg-white/90 transition-colors shadow-lg"
               >
                 Oui, je veux tout ça pour 19 900 FCFA →
@@ -564,6 +567,7 @@ export default async function AbonnementFacebookPage() {
 
               <Link
                 href="#offre"
+                data-funnel-cta="facebook-offre-cta"
                 className="block w-full py-4 bg-accent text-white font-bold text-lg rounded-full border-2 border-accent hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25 text-center"
               >
                 Obtenir mon accès Premium maintenant →
@@ -661,6 +665,7 @@ export default async function AbonnementFacebookPage() {
 
           <Link
             href="#offre"
+            data-funnel-cta="facebook-final-cta"
             className="inline-block w-full sm:w-auto px-10 py-5 bg-accent text-white font-bold text-xl rounded-full border-2 border-accent hover:bg-accent/90 transition-colors shadow-xl shadow-accent/30"
           >
             Obtenir mon accès Premium maintenant →

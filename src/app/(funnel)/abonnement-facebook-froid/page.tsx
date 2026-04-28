@@ -2,12 +2,14 @@
 
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { VideoTestimonials } from "@/components/VideoTestimonials";
+import { CheckoutLeadForm } from "@/components/CheckoutLeadForm";
 import { demoPlans } from "@/lib/demo-plans";
 import Image from "next/image";
+import Script from "next/script";
 import { useEffect, useState } from "react";
-
-const CHECKOUT_URL = "https://wooplans.mychariow.shop/cataloguepupsell";
-const HERO_MOCKUP_IMAGE = "/images/premium-catalogue-mockup.png";
+const FACEBOOK_PIXEL_ID = "1651374605332302";
+const HERO_MOCKUP_AVIF = "/images/premium-catalogue-mockup.avif";
+const HERO_MOCKUP_WEBP = "/images/premium-catalogue-mockup.webp";
 const WHATSAPP_URL =
   "https://wa.me/237694327885?text=Bonjour%2C%20j'ai%20une%20question%20sur%20le%20Catalogue%20Premium%20WooPlans.";
 
@@ -109,18 +111,18 @@ const fallbackCatalogPreviewPlans: CataloguePreviewPlan[] = demoPlans
 const steps = [
   {
     number: "01",
-    title: "Cliquez sur Obtenir Premium",
-    desc: "Vous êtes redirigé vers la page de paiement pour entrer vos informations.",
+    title: "Payez par Mobile Money",
+    desc: "Cliquez sur \"Obtenir le Catalogue\" et remplissez vos informations, ensuite vous êtes dirigé vers la page de paiement.",
   },
   {
     number: "02",
-    title: "Payez votre accès",
-    desc: "Payez 29 000 FCFA en une seule fois, par Mobile Money ou carte selon les options disponibles.",
+    title: "Recevez le Catalogue Premium",
+    desc: "Vous recevez immédiatement le lien d'accès et le code pour obtenir votre catalogue premium sur WhatsApp et par Email.",
   },
   {
     number: "03",
-    title: "Recevez votre catalogue",
-    desc: "Après validation, vous recevez immédiatement un code pour accéder aux plans et devis du Catalogue Premium.",
+    title: "Lancer votre projet !",
+    desc: "Comparer et choississez les modèles qui vous intéresse, ensuite écgangé avec nos architectes sur WhatsApp pour personnaliser le plan selon vos besoins.",
   },
 ];
 
@@ -183,16 +185,17 @@ function formatPrice(value: number) {
 
 function CheckoutButton({
   children,
+  ctaId,
   className = "",
 }: {
   children: React.ReactNode;
+  ctaId: string;
   className?: string;
 }) {
   return (
     <a
-      href={CHECKOUT_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+      href="#checkout"
+      data-funnel-cta={ctaId}
       className={`inline-flex items-center justify-center rounded-full bg-accent px-8 py-4 text-center text-base font-bold text-white shadow-xl shadow-accent/25 transition-colors hover:bg-accent/90 ${className}`}
     >
       {children}
@@ -249,6 +252,33 @@ export default function AbonnementFacebookFroidPage() {
 
   return (
     <>
+      <Script
+        id="facebook-pixel"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${FACEBOOK_PIXEL_ID}');
+            fbq('track', 'PageView');
+          `,
+        }}
+      />
+      <noscript>
+        <img
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          alt=""
+          src={`https://www.facebook.com/tr?id=${FACEBOOK_PIXEL_ID}&ev=PageView&noscript=1`}
+        />
+      </noscript>
       <main className="overflow-hidden pb-24 md:pb-0">
         <section className="relative bg-dark-bg text-dark-text">
           <div
@@ -268,9 +298,9 @@ export default function AbonnementFacebookFroidPage() {
                 Obtenez le Catalogue Premium avec plus de 50 plans de villas et duplex pour voir les plans de distribution, les devis estimatifs et les vues 3D avant de choisir un modèle avec plus de clarté, avant de dépenser des millions sur le chantier.
               </p>
               <div className="hidden flex-col gap-3 sm:flex-row md:mb-8 md:flex">
-                <CheckoutButton className="w-full sm:w-auto">
-                  Obtenir le Catalogue - 29 000 FCFA
-                </CheckoutButton>
+              <CheckoutButton ctaId="facebook-froid-hero" className="w-full sm:w-auto">
+                Obtenir le Catalogue - 29 000 FCFA
+              </CheckoutButton>
               </div>
               <div className="hidden grid-cols-2 gap-3 text-sm text-white/55 sm:flex-wrap md:flex">
                 {trustPoints.map((item) => (
@@ -285,14 +315,20 @@ export default function AbonnementFacebookFroidPage() {
             <div className="relative w-full md:order-2">
               <div className="absolute -inset-6 rounded-[2.5rem] bg-accent/20 blur-3xl" />
               <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] p-3 shadow-2xl backdrop-blur">
-                <Image
-                  src={HERO_MOCKUP_IMAGE}
-                  alt="Mockup du Catalogue Premium WooPlans sur ordinateur et smartphone"
-                  width={1400}
-                  height={788}
-                  priority
-                  className="h-auto w-full rounded-[1.5rem] object-cover"
-                />
+                <picture>
+                  <source srcSet={HERO_MOCKUP_AVIF} type="image/avif" />
+                  <source srcSet={HERO_MOCKUP_WEBP} type="image/webp" />
+                  <img
+                    src={HERO_MOCKUP_WEBP}
+                    alt="Mockup du Catalogue Premium WooPlans sur ordinateur et smartphone"
+                    width={1672}
+                    height={941}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    className="h-auto w-full rounded-[1.5rem]"
+                  />
+                </picture>
               </div>
             </div>
 
@@ -305,7 +341,7 @@ export default function AbonnementFacebookFroidPage() {
                   Offre de lancement
                 </span>
               </div>
-              <CheckoutButton className="w-full">
+              <CheckoutButton ctaId="facebook-froid-hero-mobile" className="w-full">
                 Obtenir le Catalogue - 29 000 FCFA
               </CheckoutButton>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-white/55">
@@ -317,60 +353,6 @@ export default function AbonnementFacebookFroidPage() {
                 ))}
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="border-y border-outline/10 bg-surface">
-          <div className="mx-auto max-w-6xl px-4 py-14 md:py-18">
-            <div className="mb-10 max-w-2xl">
-              <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-                Le problème
-              </p>
-              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                Vous voulez construire, mais vous ne savez pas encore par où commencer
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-foreground/60 md:text-lg">
-                Entre les photos qui donnent envie, les plans incomplets et les devis approximatifs partagés sur les réseaux sociaux, il est normal d&apos;hésiter. Vous avez besoin d&apos;inspiration, mais aussi de chiffres et de plans plus sérieux pour avancer sans stress.
-              </p>
-            </div>
-            <div className="grid gap-5 md:grid-cols-3">
-              {problems.map((problem) => (
-                <article key={problem.title} className="rounded-2xl border border-outline/10 bg-background p-6">
-                  <div className="mb-4 h-1.5 w-12 rounded-full bg-accent" />
-                  <h3 className="mb-3 text-lg font-semibold tracking-tight text-foreground">
-                    {problem.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-foreground/60">{problem.desc}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="solution" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
-          <div className="mb-10 text-center">
-            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
-              La solution
-            </p>
-            <h2 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              Un catalogue de plans de villas et duplex pour votre inspiration
-            </h2>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {benefits.map((benefit, index) => (
-              <article
-                key={benefit.title}
-                className="rounded-2xl border border-outline/10 bg-surface p-6 transition-colors hover:border-primary/25"
-              >
-                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
-                  {String(index + 1).padStart(2, "0")}
-                </div>
-                <h3 className="mb-2 text-base font-semibold tracking-tight text-foreground">
-                  {benefit.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-foreground/60">{benefit.desc}</p>
-              </article>
-            ))}
           </div>
         </section>
 
@@ -455,12 +437,66 @@ export default function AbonnementFacebookFroidPage() {
                   <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/60">
                     Villas, duplex, maisons familiales et nouveaux modèles ajoutés pour comparer plus d&apos;options avant de choisir.
                   </p>
-                  <CheckoutButton className="w-full px-6 py-3 text-sm sm:w-auto">
+                  <CheckoutButton ctaId="facebook-froid-preview-cta" className="w-full px-6 py-3 text-sm sm:w-auto">
                     Obtenir le Catalogue
                   </CheckoutButton>
                 </div>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section className="border-y border-outline/10 bg-surface">
+          <div className="mx-auto max-w-6xl px-4 py-14 md:py-18">
+            <div className="mb-10 max-w-2xl">
+              <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
+                Le problème
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Vous voulez construire, mais vous ne savez pas encore par où commencer
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-foreground/60 md:text-lg">
+                Entre les photos qui donnent envie, les plans incomplets et les devis approximatifs partagés sur les réseaux sociaux, il est normal d&apos;hésiter. Vous avez besoin d&apos;inspiration, mais aussi de chiffres et de plans plus sérieux pour avancer sans stress.
+              </p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {problems.map((problem) => (
+                <article key={problem.title} className="rounded-2xl border border-outline/10 bg-background p-6">
+                  <div className="mb-4 h-1.5 w-12 rounded-full bg-accent" />
+                  <h3 className="mb-3 text-lg font-semibold tracking-tight text-foreground">
+                    {problem.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-foreground/60">{problem.desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="solution" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
+          <div className="mb-10 text-center">
+            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
+              La solution
+            </p>
+            <h2 className="mx-auto max-w-3xl text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+              Un catalogue de plans de villas et duplex pour votre inspiration
+            </h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {benefits.map((benefit, index) => (
+              <article
+                key={benefit.title}
+                className="rounded-2xl border border-outline/10 bg-surface p-6 transition-colors hover:border-primary/25"
+              >
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <h3 className="mb-2 text-base font-semibold tracking-tight text-foreground">
+                  {benefit.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-foreground/60">{benefit.desc}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -475,7 +511,7 @@ export default function AbonnementFacebookFroidPage() {
                   Ils ont déjà découvert le Catalogue Premium
                 </h2>
                 <p className="mb-6 text-white/60">
-                  Regardez les retours de personnes qui ont utilisé WooPlans pour mieux préparer leur projet de construction.
+                  Regardez les retours de personnes qui ont utilisé le Catalogue Premium pour mieux préparer leur projet de construction.
                 </p>
               </div>
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
@@ -581,7 +617,7 @@ export default function AbonnementFacebookFroidPage() {
                 </div>
               </div>
 
-              <CheckoutButton className="w-full text-lg md:w-auto">
+              <CheckoutButton ctaId="facebook-froid-offre-cta" className="w-full text-lg md:w-auto">
                 Obtenir mon Catalogue Premium
               </CheckoutButton>
               <p className="mt-4 text-xs text-foreground/45">
@@ -611,9 +647,31 @@ export default function AbonnementFacebookFroidPage() {
             <p className="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-white/60">
               Pour 29 000 FCFA, vous pouvez comparer les plans, consulter les estimations et avancer avec une vision plus précise de votre future maison.
             </p>
-            <CheckoutButton className="w-full text-lg sm:w-auto">
-              Acheter le Catalogue Premium
-            </CheckoutButton>
+              <CheckoutButton ctaId="facebook-froid-final-cta" className="w-full text-lg sm:w-auto">
+                Acheter le Catalogue Premium
+              </CheckoutButton>
+          </div>
+        </section>
+        <section id="checkout" className="border-y border-outline/10 bg-surface">
+          <div className="mx-auto max-w-3xl px-4 py-16 md:py-20">
+            <div className="mb-8 text-center">
+              <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
+                Checkout léger
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Finalisez votre demande en quelques secondes
+              </h2>
+              <p className="mt-4 text-foreground/60">
+                Le formulaire alimente le tunnel interne, puis envoie vers Chariow avec la metadata d&apos;attribution.
+              </p>
+            </div>
+            <div className="rounded-3xl border-2 border-outline bg-background p-6 md:p-8">
+              <CheckoutLeadForm
+                ctaId="facebook-froid-checkout-form"
+                buttonLabel="Accéder au paiement Chariow"
+                helperText="Une fois le formulaire envoyé, vous êtes redirigé vers le checkout Chariow sécurisé."
+              />
+            </div>
           </div>
         </section>
       </main>
@@ -623,10 +681,11 @@ export default function AbonnementFacebookFroidPage() {
           showStickyCta ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <CheckoutButton className="w-full py-3 animate-pulse">
+        <CheckoutButton ctaId="facebook-froid-sticky-cta" className="w-full py-3 animate-pulse">
           Obtenir le Catalogue - 29 000 FCFA
         </CheckoutButton>
       </div>
     </>
   );
 }
+

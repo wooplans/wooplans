@@ -68,3 +68,59 @@ model CostRate {
   @@index([category])
   @@index([region])
 }
+
+model FunnelSession {
+  id             String         @id
+  source         String
+  landingPath    String
+  referrer       String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  utmContent     String?
+  utmTerm        String?
+  fbclidPresent  Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  events         FunnelEvent[]
+  sales          FunnelSale[]
+
+  @@index([source])
+  @@index([landingPath])
+  @@index([createdAt])
+}
+
+model FunnelEvent {
+  id            String        @id @default(cuid())
+  sessionId     String
+  session       FunnelSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type          String
+  path          String
+  ctaId         String?
+  metadataJson  String        @default("{}")
+  createdAt     DateTime      @default(now())
+
+  @@index([sessionId])
+  @@index([type])
+  @@index([path])
+  @@index([ctaId])
+  @@index([createdAt])
+}
+
+model FunnelSale {
+  id             String         @id @default(cuid())
+  sessionId      String?
+  session        FunnelSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  chariowSaleId  String         @unique
+  productId      String
+  productName    String
+  amount         Int
+  currency       String
+  status         String
+  createdAt      DateTime       @default(now())
+
+  @@index([sessionId])
+  @@index([chariowSaleId])
+  @@index([status])
+  @@index([createdAt])
+}
