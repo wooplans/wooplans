@@ -64,75 +64,66 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO â€” Full screen on mobile */}
-      <section className="relative bg-dark-bg text-dark-text min-h-[calc(100dvh-4rem)] md:min-h-0 px-4 pt-3 pb-4 md:py-28 overflow-hidden">
-        {/* Subtle dot pattern background */}
+      {/* HERO - full screen on mobile */}
+      <section className="relative isolate overflow-hidden bg-dark-bg px-4 py-4 text-dark-text min-h-[calc(100svh-4rem)] md:px-6 md:py-10">
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
             backgroundSize: "32px 32px",
           }}
         />
         <div
-          className="absolute inset-0 pointer-events-none opacity-100"
+          className="pointer-events-none absolute inset-0 opacity-100"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 50% 14%, rgba(234, 88, 12, 0.18), transparent 28%), radial-gradient(circle at 15% 82%, rgba(231, 195, 108, 0.10), transparent 20%), radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.05), transparent 16%)",
+              "radial-gradient(circle at 50% 14%, rgba(234, 88, 12, 0.16), transparent 30%), radial-gradient(circle at 15% 82%, rgba(231, 195, 108, 0.08), transparent 22%), radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.04), transparent 18%)",
           }}
         />
 
-        <div className="relative mx-auto flex min-h-[calc(100dvh-5.75rem)] max-w-7xl flex-col justify-between gap-3 lg:grid lg:min-h-0 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
-          <div className="relative z-10 flex h-full flex-col text-center lg:h-auto lg:text-left">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/70 backdrop-blur-sm lg:hidden">
-              Catalogue premium
-            </div>
-
-            <div className="flex flex-1 flex-col justify-start gap-2 lg:flex-none">
-              {/* Title */}
-              <h1 className="text-[clamp(1.9rem,7.2vw,2.7rem)] sm:text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[0.96] tracking-[-0.045em]">
+        <div className="relative mx-auto flex min-h-[calc(100svh-6.5rem)] max-w-7xl flex-col justify-between gap-8 lg:grid lg:min-h-[calc(100svh-6.5rem)] lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
+          <div className="relative z-10 flex h-full flex-col justify-center text-center lg:h-auto lg:text-left">
+            <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center lg:mx-0">
+              <h1 className="text-[clamp(2rem,8vw,3.1rem)] font-semibold leading-[0.95] tracking-[-0.045em] text-white sm:text-5xl lg:text-7xl">
                 Trouvez le plan idéal
                 <span className="block text-highlight">pour votre projet</span>
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-[14px] sm:text-base md:text-xl text-white/65 max-w-[20rem] sm:max-w-2xl mx-auto lg:mx-0 leading-5 sm:leading-relaxed mb-0">
-                Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
+              <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-6 text-white/66 sm:text-lg lg:mx-0 lg:text-xl lg:leading-8">
+                Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets et accompagnement par nos architectes.
               </p>
             </div>
 
-            {/* Desktop CTAs */}
-            <div className="hidden lg:flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mt-10">
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
               <Link
                 href="/plans"
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-accent/80 bg-accent px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-accent/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 sm:rounded-full sm:px-10 sm:py-5 sm:text-lg"
+                className="inline-flex w-full items-center justify-center rounded-full border border-accent/80 bg-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 sm:w-auto sm:px-9 sm:py-4 sm:text-base"
               >
                 Voir les plans
               </Link>
               <a
                 href="#comment-ca-marche"
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/5 px-7 py-3.5 text-base font-semibold text-white/90 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white sm:rounded-full sm:px-10 sm:py-5 sm:text-lg"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/16 bg-white/6 px-7 py-3.5 text-sm font-semibold text-white/90 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white sm:w-auto sm:px-9 sm:py-4 sm:text-base"
               >
                 Comment ça marche
               </a>
             </div>
 
-            {/* Quick benefits */}
-            <div className="mt-12 hidden flex-wrap items-center justify-center lg:flex lg:justify-start gap-6 text-sm text-white/50">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 text-sm text-white/62 lg:justify-start">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+                <svg className="h-4 w-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 {allPlans.length} plans disponibles
               </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+                <svg className="h-4 w-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Devis estimatifs inclus
               </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
+                <svg className="h-4 w-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Architectes certifiés
@@ -140,47 +131,62 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative order-2 mx-auto flex w-full max-w-[23rem] flex-1 items-center lg:order-none lg:max-w-none lg:flex-none">
+          <div className="relative hidden lg:block">
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-accent/10 blur-3xl" aria-hidden="true" />
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 shadow-[0_24px_80px_rgba(0,0,0,0.42)] ring-1 ring-white/10 backdrop-blur-md">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/6" aria-hidden="true" />
-              <div className="pointer-events-none absolute inset-px rounded-[1.7rem] border border-white/6" aria-hidden="true" />
-              <div className="relative aspect-[4/3] max-h-[44vh] md:aspect-[16/10] lg:aspect-[4/3]">
-                <picture>
-                  <source
-                    media="(max-width: 767px)"
-                    srcSet="/images/hero-home-mobile.webp"
-                    type="image/webp"
-                  />
-                  <source
-                    media="(min-width: 768px)"
-                    srcSet="/images/hero-home.webp"
-                    type="image/webp"
-                  />
-                  <img
-                    src="/images/hero-home.webp"
-                    alt="Aperçu d'un concept architectural premium avec plans et maquette"
-                    className="h-full w-full object-cover object-center md:object-[75%_center]"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                  />
-                </picture>
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.4)] ring-1 ring-white/10 backdrop-blur-md">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-black/10" aria-hidden="true" />
+              <div className="relative">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">
+                      Catalogue en direct
+                    </p>
+                    <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">
+                      Une sélection prête à explorer
+                    </h2>
+                  </div>
+                  <div className="rounded-full border border-white/12 bg-white/6 px-4 py-2 text-right">
+                    <div className="text-2xl font-semibold leading-none text-white">{allPlans.length}</div>
+                    <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/45">Plans</div>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                    <div className="text-sm font-medium text-white/70">Plans populaires</div>
+                    <div className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
+                      {featuredPlans.length}
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/56">
+                      Sélection des modèles les plus consultés, avec budget estimatif.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                    <div className="text-sm font-medium text-white/70">Accès Premium</div>
+                    <div className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
+                      19 900
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/56">
+                      Débloquez les plans HD, les devis détaillés et l&apos;accompagnement.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-medium text-white/80">En trois étapes simples</div>
+                      <div className="mt-1 text-sm leading-6 text-white/56">
+                        Choisissez un modèle, débloquez les détails et lancez votre projet.
+                      </div>
+                    </div>
+                    <div className="hidden rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-white/55 md:block">
+                      Fluide
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Mobile CTA */}
-          <div className="order-3 flex w-full justify-center pb-1 lg:hidden">
-            <Link
-              href="/plans"
-              className="inline-flex w-full max-w-[23rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-secondary px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.28)] ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(234,88,12,0.34)]"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M13 5l7 7-7 7M5 12h15" />
-              </svg>
-              Voir les plans
-            </Link>
           </div>
         </div>
       </section>
