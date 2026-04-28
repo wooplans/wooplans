@@ -22,14 +22,14 @@ export function SimilarPlans({ plans, currentSlug }: SimilarPlansProps) {
             Plans similaires
           </h2>
           <p className="text-sm text-foreground/50 mt-1">
-            Decouvrez d&apos;autres modeles qui pourraient vous interesser
+            Découvrez d&apos;autres modèles qui pourraient vous intéresser
           </p>
         </div>
         <Link
           href="/plans"
           className="text-sm font-bold text-primary border border-primary/30 px-4 py-1.5 rounded-full hover:bg-primary hover:text-white transition-colors"
         >
-          Tout voir -&gt;
+          Tout voir →
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
