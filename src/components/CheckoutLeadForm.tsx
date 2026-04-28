@@ -104,6 +104,7 @@ export function CheckoutLeadForm({
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("CM");
+  const [discountCode, setDiscountCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const manualCountrySelection = useRef(false);
@@ -185,6 +186,7 @@ export function CheckoutLeadForm({
         email: email.trim().toLowerCase(),
         phoneNumber: phoneNumber.replace(/\D/g, ""),
         countryCode: countryCode.trim().toUpperCase(),
+        discountCode: discountCode.trim(),
         ctaId,
       });
 
@@ -279,6 +281,18 @@ export function CheckoutLeadForm({
             />
           </div>
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-bold text-slate-700">Code promo</label>
+        <input
+          type="text"
+          autoComplete="off"
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value.slice(0, 100))}
+          className="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-primary"
+          placeholder="Entrez votre code promo"
+        />
       </div>
 
       {error && (

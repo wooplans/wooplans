@@ -5,6 +5,14 @@ import { getPrisma } from "@/lib/prisma";
 
 export const runtime = "edge";
 
+const SUPPORTED_SALE_EVENTS = [
+  "successful.sale",
+  "abandoned.sale",
+  "failed.sale",
+] as const;
+
+type SupportedSaleEvent = (typeof SUPPORTED_SALE_EVENTS)[number];
+
 type ChariowWebhookPayload = {
   event?: string;
   sale?: {
@@ -21,6 +29,8 @@ type ChariowWebhookPayload = {
     email?: string | null;
     first_name?: string | null;
     last_name?: string | null;
+    phone?: string | null;
+    country?: string | null;
   } | null;
   license?: { key?: string | null } | null;
 };
@@ -29,20 +39,29 @@ function parseBoolean(value: string | undefined | null) {
   return value === "true" || value === "1";
 }
 
+function isSupportedSaleEvent(event: string | undefined): event is SupportedSaleEvent {
+  return SUPPORTED_SALE_EVENTS.includes(event as SupportedSaleEvent);
+}
+
+function eventToFunnelType(event: SupportedSaleEvent) {
+  if (event === "successful.sale") return "checkout_completed";
+  if (event === "abandoned.sale") return "checkout_abandoned";
+  return "checkout_failed";
+}
+
+function defaultStatus(event: SupportedSaleEvent) {
+  if (event === "successful.sale") return "completed";
+  if (event === "abandoned.sale") return "abandoned";
+  return "failed";
+}
+
 export async function POST(request: Request) {
   try {
     const prisma = getPrisma();
     const payload = (await request.json()) as ChariowWebhookPayload;
     const event = payload.event;
 
-    if (event !== "successful.sale") {
-      return NextResponse.json({ received: true });
-    }
-
-    const { customer } = payload;
-
-    if (!customer?.email) {
-      console.error("No customer email in webhook payload");
+    if (!isSupportedSaleEvent(event)) {
       return NextResponse.json({ received: true });
     }
 
@@ -92,7 +111,7 @@ export async function POST(request: Request) {
       payload.sale?.original_amount?.currency ||
       customMetadata.currency?.trim() ||
       "XAF";
-    const status = payload.sale?.status || payload.sale?.payment?.status || "completed";
+    const status = payload.sale?.status || payload.sale?.payment?.status || defaultStatus(event);
 
     if (saleId) {
       await recordFunnelSale({
@@ -104,6 +123,42 @@ export async function POST(request: Request) {
         currency,
         status,
       });
+    }
+
+    if (funnelSessionId) {
+      await recordFunnelEvent({
+        sessionId: funnelSessionId,
+        type: eventToFunnelType(event),
+        path: landingPath || "/",
+        ctaId: customMetadata.cta_id?.trim() || null,
+        metadata: {
+          chariow_sale_id: saleId || "",
+          product_id: productId,
+          product_name: productName,
+          amount,
+          currency,
+          status,
+          source,
+          customer_email: payload.customer?.email || "",
+          customer_first_name: payload.customer?.first_name || "",
+          customer_last_name: payload.customer?.last_name || "",
+          customer_phone: payload.customer?.phone || "",
+          customer_country: payload.customer?.country || "",
+          pulse_event: event,
+        },
+      });
+    }
+
+    if (event !== "successful.sale") {
+      console.log(`Chariow ${event} recorded for relance (Sale: ${saleId || "unknown"})`);
+      return NextResponse.json({ received: true, recorded: true, activated: false });
+    }
+
+    const { customer } = payload;
+
+    if (!customer?.email) {
+      console.error("No customer email in successful sale webhook payload");
+      return NextResponse.json({ received: true, recorded: true, activated: false });
     }
 
     const subscriber = await prisma.subscriber.findUnique({
@@ -136,24 +191,6 @@ export async function POST(request: Request) {
           chariowCustomerId: chariowSaleId,
           chariowLicenseKey,
           premiumCode,
-        },
-      });
-    }
-
-    if (funnelSessionId) {
-      await recordFunnelEvent({
-        sessionId: funnelSessionId,
-        type: "checkout_completed",
-        path: landingPath || "/",
-        ctaId: customMetadata.cta_id?.trim() || null,
-        metadata: {
-          chariow_sale_id: saleId || "",
-          product_id: productId,
-          product_name: productName,
-          amount,
-          currency,
-          status,
-          source,
         },
       });
     }

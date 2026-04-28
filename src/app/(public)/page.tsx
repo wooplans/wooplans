@@ -65,7 +65,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO â€” Full screen on mobile */}
-      <section className="relative bg-dark-bg text-dark-text min-h-[calc(100dvh-4rem)] md:min-h-0 px-4 pt-3 pb-5 md:py-28 overflow-hidden">
+      <section className="relative bg-dark-bg text-dark-text min-h-[calc(100dvh-4rem)] md:min-h-0 px-4 pt-3 pb-4 md:py-28 overflow-hidden">
         {/* Subtle dot pattern background */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -82,22 +82,24 @@ export default async function HomePage() {
           }}
         />
 
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-4 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
-          <div className="relative z-10 text-center lg:text-left">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/70 backdrop-blur-sm lg:hidden">
+        <div className="relative mx-auto flex min-h-[calc(100dvh-5.75rem)] max-w-7xl flex-col justify-between gap-3 lg:grid lg:min-h-0 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
+          <div className="relative z-10 flex h-full flex-col text-center lg:h-auto lg:text-left">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/70 backdrop-blur-sm lg:hidden">
               Catalogue premium
             </div>
 
-            {/* Title */}
-            <h1 className="text-[clamp(2rem,7.8vw,2.85rem)] sm:text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[0.98] mb-3 tracking-[-0.04em]">
-              Trouvez le plan idéal
-              <span className="block text-highlight">pour votre projet</span>
-            </h1>
+            <div className="flex flex-1 flex-col justify-start gap-2 lg:flex-none">
+              {/* Title */}
+              <h1 className="text-[clamp(1.9rem,7.2vw,2.7rem)] sm:text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[0.96] tracking-[-0.045em]">
+                Trouvez le plan idéal
+                <span className="block text-highlight">pour votre projet</span>
+              </h1>
 
-            {/* Subtitle */}
-            <p className="text-[15px] sm:text-base md:text-xl text-white/65 max-w-[20rem] sm:max-w-2xl mx-auto lg:mx-0 leading-6 sm:leading-relaxed mb-0">
-              Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
-            </p>
+              {/* Subtitle */}
+              <p className="text-[14px] sm:text-base md:text-xl text-white/65 max-w-[20rem] sm:max-w-2xl mx-auto lg:mx-0 leading-5 sm:leading-relaxed mb-0">
+                Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
+              </p>
+            </div>
 
             {/* Desktop CTAs */}
             <div className="hidden lg:flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mt-10">
@@ -138,12 +140,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative order-2 mx-auto w-full max-w-[22rem] sm:max-w-md lg:order-none lg:max-w-none">
+          <div className="relative order-2 mx-auto flex w-full max-w-[23rem] flex-1 items-center lg:order-none lg:max-w-none lg:flex-none">
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-accent/10 blur-3xl" aria-hidden="true" />
             <div className="relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 shadow-[0_24px_80px_rgba(0,0,0,0.42)] ring-1 ring-white/10 backdrop-blur-md">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/6" aria-hidden="true" />
               <div className="pointer-events-none absolute inset-px rounded-[1.7rem] border border-white/6" aria-hidden="true" />
-              <div className="relative aspect-[16/9] md:aspect-[16/10] lg:aspect-[4/3]">
+              <div className="relative aspect-[4/3] max-h-[44vh] md:aspect-[16/10] lg:aspect-[4/3]">
                 <picture>
                   <source
                     media="(max-width: 767px)"
@@ -169,10 +171,10 @@ export default async function HomePage() {
           </div>
 
           {/* Mobile CTA */}
-          <div className="order-3 flex w-full justify-center lg:hidden">
+          <div className="order-3 flex w-full justify-center pb-1 lg:hidden">
             <Link
               href="/plans"
-              className="inline-flex w-full max-w-[22rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-secondary px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.28)] ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(234,88,12,0.34)]"
+              className="inline-flex w-full max-w-[23rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-secondary px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.28)] ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(234,88,12,0.34)]"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M13 5l7 7-7 7M5 12h15" />

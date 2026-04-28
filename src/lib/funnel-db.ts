@@ -132,6 +132,10 @@ function money(value: number) {
   return `${value.toLocaleString("fr-FR")} FCFA`;
 }
 
+function isCompletedSaleStatus(status: string) {
+  return ["completed", "successful", "success", "paid"].includes(status.toLowerCase());
+}
+
 function normalizeSession(row: {
   id: string;
   source: string;
@@ -283,10 +287,11 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
   const normalizedSessions = sessions.map((session) => normalizeSession(session as FunnelSessionRecord));
   const normalizedEvents = events.map((event) => normalizeEvent(event as FunnelEventRecord));
   const normalizedSales = sales.map((sale) => normalizeSale(sale as FunnelSaleRecord));
+  const completedSales = normalizedSales.filter((sale) => isCompletedSaleStatus(sale.status));
 
   const sessionMap = new Map(normalizedSessions.map((session) => [session.id, session]));
   const sessionSales = new Map<string, FunnelSaleRecord>();
-  for (const sale of normalizedSales) {
+  for (const sale of completedSales) {
     if (sale.sessionId) {
       sessionSales.set(sale.sessionId, sale);
     }
@@ -347,7 +352,7 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
     if (bucket) bucket.checkoutsStarted += 1;
   }
 
-  for (const sale of normalizedSales) {
+  for (const sale of completedSales) {
     const session = sale.sessionId ? sessionMap.get(sale.sessionId) : null;
     if (!session) continue;
     const bucket = comparisonBySource.get(session.source);
@@ -378,7 +383,7 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
     },
     {
       stage: "Checkout -> Paiement",
-      rate: percent(normalizedSales.length, normalizedEvents.filter((event) => event.type === "checkout_started").length),
+      rate: percent(completedSales.length, normalizedEvents.filter((event) => event.type === "checkout_started").length),
     },
   ];
 
@@ -482,7 +487,7 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
   }
 
   if (checkoutsStarted.length > 0) {
-    const checkoutToSaleRate = percent(normalizedSales.length, checkoutsStarted.length);
+    const checkoutToSaleRate = percent(completedSales.length, checkoutsStarted.length);
     if (checkoutToSaleRate < 65) {
       insights.push({
         title: "Forte perte checkout -> paiement Chariow",
@@ -521,8 +526,8 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
       sessions: normalizedSessions.length,
       ctaClicks: ctaClicks.length,
       checkoutsStarted: checkoutsStarted.length,
-      salesCompleted: normalizedSales.length,
-      revenue: normalizedSales.reduce((sum, sale) => sum + sale.amount, 0),
+      salesCompleted: completedSales.length,
+      revenue: completedSales.reduce((sum, sale) => sum + sale.amount, 0),
     },
     comparisons: Array.from(comparisonBySource.values()),
     dropOff: dropOffStage

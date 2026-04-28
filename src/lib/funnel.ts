@@ -4,7 +4,9 @@ export type FunnelEventType =
   | "page_view"
   | "premium_cta_click"
   | "checkout_started"
-  | "checkout_completed";
+  | "checkout_completed"
+  | "checkout_abandoned"
+  | "checkout_failed";
 
 export type FunnelAttribution = {
   source: FunnelSource;

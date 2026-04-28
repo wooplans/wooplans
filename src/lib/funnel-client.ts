@@ -31,6 +31,7 @@ type CheckoutStartPayload = Omit<FunnelEventPayload, "event_type" | "path"> & {
   email: string;
   phone_number: string;
   country_code: string;
+  discount_code?: string;
   cta_id: string;
 };
 
@@ -145,6 +146,7 @@ export async function startCheckoutWithFunnelTracking(input: {
   email: string;
   phoneNumber: string;
   countryCode: string;
+  discountCode?: string;
   ctaId: string;
 }) {
   const state = getOrCreateFunnelState();
@@ -169,6 +171,7 @@ export async function startCheckoutWithFunnelTracking(input: {
     email: input.email,
     phone_number: input.phoneNumber,
     country_code: input.countryCode,
+    discount_code: input.discountCode?.trim() || undefined,
   };
 
   const response = await fetch("/api/checkout/start", {
@@ -178,7 +181,7 @@ export async function startCheckoutWithFunnelTracking(input: {
   });
 
   const data = (await response.json().catch(() => ({}))) as
-    | { checkout_url?: string; error?: string; message?: string }
+    | { checkout_url?: string; redirect_url?: string; step?: string; error?: string; message?: string }
     | Record<string, never>;
 
   if (!response.ok) {
@@ -192,6 +195,11 @@ export async function startCheckoutWithFunnelTracking(input: {
   }
 
   const checkoutUrl = typeof data.checkout_url === "string" ? data.checkout_url : "";
+  const redirectUrl = typeof data.redirect_url === "string" ? data.redirect_url : "";
+  if (!checkoutUrl && data.step === "completed" && redirectUrl) {
+    return redirectUrl;
+  }
+
   if (!checkoutUrl) {
     throw new Error("Le checkout Chariow n'a pas renvoye d'URL de paiement");
   }

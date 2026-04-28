@@ -22,6 +22,7 @@ type CheckoutStartBody = {
   email?: string;
   phone_number?: string;
   country_code?: string;
+  discount_code?: string;
   path?: string;
 };
 
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const phoneNumber = typeof body.phone_number === "string" ? normalizePhone(body.phone_number) : "";
     const countryCode = typeof body.country_code === "string" ? normalizeCountryCode(body.country_code) : "";
+    const discountCode = typeof body.discount_code === "string" ? body.discount_code.trim().slice(0, 100) : "";
     const landing = parsePath(body.landing_path);
     const current = parsePath(body.path, landing.path);
     const searchParams = new URLSearchParams();
@@ -168,6 +170,7 @@ export async function POST(request: Request) {
           number: phoneNumber,
           country_code: countryCode,
         },
+        ...(discountCode ? { discount_code: discountCode } : {}),
         redirect_url: redirectUrl.toString(),
         custom_metadata: checkoutMetadata,
       }),
@@ -222,6 +225,7 @@ export async function POST(request: Request) {
           amount,
           currency,
           status,
+          discount_code: discountCode,
         },
       });
     } catch (error) {
@@ -230,6 +234,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       checkout_url: checkoutUrl,
+      redirect_url: payload.data?.step === "completed" ? redirectUrl.toString() : "",
       purchase_id: chariowSaleId,
       step: payload.data?.step || "payment",
     });
