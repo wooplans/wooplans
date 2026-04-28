@@ -29,10 +29,12 @@ type CheckoutStartBody = {
 type CloudflareEnv = {
   CHARIOW_API_KEY?: string;
   CHARIOW_PRODUCT_ID?: string;
-  CHARIOW_STORE_URL?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
+  SITE_URL?: string;
 };
 
 const DEFAULT_CHARIOW_PRODUCT_ID = "prd_9cbatg";
+const DEFAULT_PUBLIC_SITE_URL = "https://woo-premium.pages.dev";
 
 function parsePath(value: string | undefined, fallback = "/") {
   const input = value && value.trim() ? value.trim() : fallback;
@@ -58,8 +60,25 @@ function getEnv() {
   return {
     apiKey: env?.CHARIOW_API_KEY || process.env.CHARIOW_API_KEY || "",
     productId: env?.CHARIOW_PRODUCT_ID || process.env.CHARIOW_PRODUCT_ID || DEFAULT_CHARIOW_PRODUCT_ID,
-    storeUrl: env?.CHARIOW_STORE_URL || process.env.CHARIOW_STORE_URL || "https://wooplans.mychariow.shop",
+    siteUrl: env?.SITE_URL || process.env.SITE_URL || env?.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "",
   };
+}
+
+function isLocalOrigin(origin: string) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(origin);
+}
+
+function getPublicSiteUrl(request: Request, configuredSiteUrl: string) {
+  if (configuredSiteUrl.trim()) {
+    return configuredSiteUrl.trim().replace(/\/+$/, "");
+  }
+
+  const requestOrigin = new URL(request.url).origin;
+  if (!isLocalOrigin(requestOrigin)) {
+    return requestOrigin;
+  }
+
+  return DEFAULT_PUBLIC_SITE_URL;
 }
 
 function normalizePhone(value: string) {
@@ -116,7 +135,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Pays invalide" }, { status: 400 });
     }
 
-    const { apiKey, productId, storeUrl } = getEnv();
+    const { apiKey, productId, siteUrl } = getEnv();
     if (!apiKey || !productId) {
       return NextResponse.json(
         { error: "La configuration Chariow est incomplète" },
@@ -152,7 +171,7 @@ export async function POST(request: Request) {
       fbclid_present: attribution.fbclidPresent ? "true" : "false",
     };
 
-    const redirectUrl = new URL("/merci", storeUrl);
+    const redirectUrl = new URL("/merci", getPublicSiteUrl(request, siteUrl));
     redirectUrl.searchParams.set("email", email);
 
     const response = await fetch("https://api.chariow.com/v1/checkout", {
