@@ -65,7 +65,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO â€” Full screen on mobile */}
-      <section className="relative bg-dark-bg text-dark-text min-h-[100dvh] md:min-h-0 px-4 pt-16 pb-20 md:py-28 overflow-hidden">
+      <section className="relative bg-dark-bg text-dark-text min-h-[calc(100dvh-4rem)] md:min-h-0 px-4 pt-3 pb-5 md:py-28 overflow-hidden">
         {/* Subtle dot pattern background */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -74,22 +74,33 @@ export default async function HomePage() {
             backgroundSize: "32px 32px",
           }}
         />
+        <div
+          className="absolute inset-0 pointer-events-none opacity-100"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 14%, rgba(234, 88, 12, 0.18), transparent 28%), radial-gradient(circle at 15% 82%, rgba(231, 195, 108, 0.10), transparent 20%), radial-gradient(circle at 85% 18%, rgba(255, 255, 255, 0.05), transparent 16%)",
+          }}
+        />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-4 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
           <div className="relative z-10 text-center lg:text-left">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/70 backdrop-blur-sm lg:hidden">
+              Catalogue premium
+            </div>
+
             {/* Title */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[1.05] mb-6 tracking-tight">
+            <h1 className="text-[clamp(2rem,7.8vw,2.85rem)] sm:text-4xl md:text-6xl lg:text-7xl font-semibold text-white leading-[0.98] mb-3 tracking-[-0.04em]">
               Trouvez le plan idéal
-              <span className="text-highlight"> pour votre projet</span>
+              <span className="block text-highlight">pour votre projet</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto lg:mx-0 leading-relaxed mb-10">
+            <p className="text-[15px] sm:text-base md:text-xl text-white/65 max-w-[20rem] sm:max-w-2xl mx-auto lg:mx-0 leading-6 sm:leading-relaxed mb-0">
               Villas et duplex conçus pour l&apos;Afrique. Devis estimatifs détaillés, plans de distribution complets, et accompagnement par nos architectes.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+            {/* Desktop CTAs */}
+            <div className="hidden lg:flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mt-10">
               <Link
                 href="/plans"
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-accent/80 bg-accent px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-accent/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 sm:rounded-full sm:px-10 sm:py-5 sm:text-lg"
@@ -105,7 +116,7 @@ export default async function HomePage() {
             </div>
 
             {/* Quick benefits */}
-            <div className="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-white/50">
+            <div className="mt-12 hidden flex-wrap items-center justify-center lg:flex lg:justify-start gap-6 text-sm text-white/50">
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -127,10 +138,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
+          <div className="relative order-2 mx-auto w-full max-w-[22rem] sm:max-w-md lg:order-none lg:max-w-none">
             <div className="absolute inset-0 -z-10 rounded-[2rem] bg-accent/10 blur-3xl" aria-hidden="true" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-black/40 ring-1 ring-white/10">
-              <div className="relative aspect-[4/3] md:aspect-[16/10] lg:aspect-[4/3]">
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 shadow-[0_24px_80px_rgba(0,0,0,0.42)] ring-1 ring-white/10 backdrop-blur-md">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-white/6" aria-hidden="true" />
+              <div className="pointer-events-none absolute inset-px rounded-[1.7rem] border border-white/6" aria-hidden="true" />
+              <div className="relative aspect-[16/9] md:aspect-[16/10] lg:aspect-[4/3]">
                 <picture>
                   <source
                     media="(max-width: 767px)"
@@ -153,6 +166,19 @@ export default async function HomePage() {
                 </picture>
               </div>
             </div>
+          </div>
+
+          {/* Mobile CTA */}
+          <div className="order-3 flex w-full justify-center lg:hidden">
+            <Link
+              href="/plans"
+              className="inline-flex w-full max-w-[22rem] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-secondary px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.28)] ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(234,88,12,0.34)]"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M13 5l7 7-7 7M5 12h15" />
+              </svg>
+              Voir les plans
+            </Link>
           </div>
         </div>
       </section>
