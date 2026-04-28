@@ -11,6 +11,7 @@ type PremiumCodeLookupResponse = {
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const loginHref = email ? `/connexion?email=${encodeURIComponent(email)}` : "/connexion";
   const [premiumCode, setPremiumCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -85,7 +86,7 @@ function ThankYouContent() {
 
         <div className="space-y-3">
           <Link
-            href="/connexion"
+            href={loginHref}
             className="block w-full px-6 py-4 bg-primary text-white font-semibold text-lg rounded-full border border-primary hover:bg-primary-dark transition-colors"
           >
             Accéder à la page de connexion

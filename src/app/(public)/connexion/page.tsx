@@ -8,7 +8,8 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/plans";
-  const [email, setEmail] = useState("");
+  const initialEmail = searchParams.get("email")?.trim().toLowerCase() || "";
+  const [email, setEmail] = useState(initialEmail);
   const [premiumCode, setPremiumCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);

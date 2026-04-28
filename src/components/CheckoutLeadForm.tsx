@@ -111,7 +111,7 @@ export function CheckoutLeadForm({
 
   const resolvedCountry = COUNTRY_INDEX.get(countryCode) ?? COUNTRY_INDEX.get("CM")!;
   const phonePreview = getPhoneExample(countryCode);
-  const phoneLabel = `Téléphone WhatsApp (${resolvedCountry.label})`;
+  const phoneLabel = "Téléphone ( WhatsApp de préférence )";
 
   const canSubmit = useMemo(
     () =>
