@@ -5,6 +5,7 @@ import { VideoTestimonials } from "@/components/VideoTestimonials";
 import { FAQAccordion } from "@/components/FAQAccordion";
 
 export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 function formatPrice(value: number) {
   return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
