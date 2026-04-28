@@ -106,7 +106,6 @@ export function CheckoutLeadForm({
   const [countryCode, setCountryCode] = useState("CM");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [countryHint, setCountryHint] = useState("Détection automatique du pays en cours...");
   const manualCountrySelection = useRef(false);
 
   const resolvedCountry = COUNTRY_INDEX.get(countryCode) ?? COUNTRY_INDEX.get("CM")!;
@@ -143,11 +142,6 @@ export function CheckoutLeadForm({
         const detectedCode = data.country_code?.toUpperCase();
         if (detectedCode && COUNTRY_INDEX.has(detectedCode) && !manualCountrySelection.current) {
           setCountryCode(detectedCode);
-          setCountryHint(
-            data.country_name
-              ? `Pays détecté automatiquement : ${data.country_name}`
-              : "Pays détecté automatiquement",
-          );
           return;
         }
       } catch {
@@ -160,9 +154,6 @@ export function CheckoutLeadForm({
         const localeCountry = guessCountryFromLocale(navigator.language);
         if (localeCountry !== "CM") {
           setCountryCode(localeCountry);
-          setCountryHint("Pays détecté à partir de la langue du navigateur.");
-        } else {
-          setCountryHint("Pays par défaut : Cameroun");
         }
       }
     }
@@ -210,25 +201,25 @@ export function CheckoutLeadForm({
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-bold text-foreground/70">Prénom</label>
+          <label className="mb-1 block text-sm font-bold text-slate-700">Prénom</label>
           <input
             type="text"
             autoComplete="given-name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full border-2 border-outline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary"
+            className="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-primary"
             placeholder="Jean"
             required
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-bold text-foreground/70">Nom</label>
+          <label className="mb-1 block text-sm font-bold text-slate-700">Nom</label>
           <input
             type="text"
             autoComplete="family-name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full border-2 border-outline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary"
+            className="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-primary"
             placeholder="Kouassi"
             required
           />
@@ -236,7 +227,7 @@ export function CheckoutLeadForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-bold text-foreground/70">Pays</label>
+        <label className="mb-1 block text-sm font-bold text-slate-700">Pays</label>
         <select
           value={countryCode}
           onChange={(e) => {
@@ -244,7 +235,7 @@ export function CheckoutLeadForm({
             setCountryCode(e.target.value);
             setPhoneNumber("");
           }}
-          className="w-full border-2 border-outline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary"
+          className="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors focus:border-primary"
         >
           {COUNTRY_OPTIONS.map((option) => (
             <option key={option.code} value={option.code}>
@@ -252,26 +243,25 @@ export function CheckoutLeadForm({
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs font-medium text-foreground/45">{countryHint}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-bold text-foreground/70">Email</label>
+          <label className="mb-1 block text-sm font-bold text-slate-700">Email</label>
           <input
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border-2 border-outline bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary"
+            className="w-full border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-primary"
             placeholder="vous@email.com"
             required
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-bold text-foreground/70">{phoneLabel}</label>
-          <div className="flex border-2 border-outline bg-surface transition-colors focus-within:border-primary">
-            <span className="inline-flex min-w-20 items-center justify-center border-r border-outline bg-background px-3 text-sm font-bold text-foreground/60">
+          <label className="mb-1 block text-sm font-bold text-slate-700">{phoneLabel}</label>
+          <div className="flex border-2 border-slate-300 bg-white transition-colors focus-within:border-primary">
+            <span className="inline-flex min-w-20 items-center justify-center border-r border-slate-300 bg-slate-100 px-3 text-sm font-bold text-slate-700">
               {resolvedCountry.flag} {resolvedCountry.dialCode}
             </span>
             <input
@@ -283,14 +273,11 @@ export function CheckoutLeadForm({
                 const digits = normalizeLocalPhoneInput(e.target.value, countryCode);
                 setPhoneNumber(digits);
               }}
-              className="min-w-0 flex-1 bg-surface px-3 py-2 text-sm text-foreground outline-none"
+              className="min-w-0 flex-1 bg-white px-3 py-2 text-sm text-slate-950 outline-none placeholder:text-slate-400"
               placeholder={phonePreview}
               required
             />
           </div>
-          <p className="mt-1 text-xs font-medium text-foreground/45">
-            Format attendu pour {resolvedCountry.flag} {resolvedCountry.label} : {phonePreview}
-          </p>
         </div>
       </div>
 
@@ -311,7 +298,7 @@ export function CheckoutLeadForm({
         </svg>
       </button>
 
-      <p className="text-xs font-medium text-foreground/45">{helperText}</p>
+      <p className="text-xs font-medium text-slate-500">{helperText}</p>
     </form>
   );
 }

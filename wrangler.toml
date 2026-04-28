@@ -5,6 +5,7 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NODE_ENV = "production"
+CHARIOW_PRODUCT_ID = "prd_9cbatg"
 
 [[d1_databases]]
 binding = "DB"

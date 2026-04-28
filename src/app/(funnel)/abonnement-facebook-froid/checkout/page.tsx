@@ -35,7 +35,7 @@ export default function AbonnementFacebookFroidCheckoutPage() {
         />
       </noscript>
 
-      <main className="min-h-screen bg-dark-bg text-dark-text">
+      <main className="min-h-screen bg-[#172331] text-white">
         <section className="relative overflow-hidden">
           <div
             className="absolute inset-0 opacity-[0.05]"
@@ -57,16 +57,16 @@ export default function AbonnementFacebookFroidCheckoutPage() {
           </div>
 
           <div className="relative mx-auto max-w-3xl px-4 pb-16 pt-4 md:py-10">
-            <div className="rounded-[2rem] border border-white/10 bg-surface p-4 shadow-2xl shadow-black/20 md:p-6">
-              <div className="rounded-[1.6rem] border border-outline/10 bg-background p-5 md:p-7">
+            <div className="rounded-[2rem] bg-white p-4 shadow-2xl shadow-black/25 md:p-6">
+              <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5 text-slate-950 md:p-7">
                 <div className="mb-6 text-center">
                   <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
                     Formulaire de paiement
                   </p>
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-4xl">
+                  <h1 className="text-2xl font-semibold tracking-tight text-slate-950 md:text-4xl">
                     Remplissez le formulaire
                   </h1>
-                  <p className="mt-3 text-sm leading-relaxed text-foreground/60">
+                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
                     29 000 FCFA pour accéder aux plans, devis estimatifs et vues 3D.
                   </p>
                 </div>

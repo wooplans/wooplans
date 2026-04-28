@@ -31,6 +31,8 @@ type CloudflareEnv = {
   CHARIOW_STORE_URL?: string;
 };
 
+const DEFAULT_CHARIOW_PRODUCT_ID = "prd_9cbatg";
+
 function parsePath(value: string | undefined, fallback = "/") {
   const input = value && value.trim() ? value.trim() : fallback;
   try {
@@ -54,7 +56,7 @@ function getEnv() {
   const env = context?.env as CloudflareEnv | undefined;
   return {
     apiKey: env?.CHARIOW_API_KEY || process.env.CHARIOW_API_KEY || "",
-    productId: env?.CHARIOW_PRODUCT_ID || process.env.CHARIOW_PRODUCT_ID || "",
+    productId: env?.CHARIOW_PRODUCT_ID || process.env.CHARIOW_PRODUCT_ID || DEFAULT_CHARIOW_PRODUCT_ID,
     storeUrl: env?.CHARIOW_STORE_URL || process.env.CHARIOW_STORE_URL || "https://wooplans.mychariow.shop",
   };
 }
