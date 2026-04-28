@@ -48,7 +48,7 @@ function LoginForm() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">Connexion</h1>
         <p className="text-foreground/60">
-          Entrez votre email et votre code premium pour accéder à votre compte Premium
+          Entrez votre email et votre code Premium pour accéder à votre compte Premium
         </p>
       </div>
 
@@ -83,7 +83,7 @@ function LoginForm() {
             htmlFor="premiumCode"
             className="block text-xs font-semibold text-foreground/70 mb-2 uppercase tracking-[0.2em]"
           >
-            Code premium
+            Code Premium
           </label>
           <input
             type="text"
@@ -126,7 +126,7 @@ function LoginForm() {
 
       <div className="mt-8 p-4 border border-outline/10 bg-background rounded-2xl">
         <p className="text-[11px] text-foreground/50 text-center mb-2 font-semibold uppercase tracking-[0.2em]">
-          Comment obtenir mon code premium ?
+          Comment obtenir mon code Premium ?
         </p>
         <ol className="text-sm text-foreground/70 space-y-2">
           <li className="flex items-start gap-2">
@@ -135,7 +135,7 @@ function LoginForm() {
           </li>
           <li className="flex items-start gap-2">
             <span className="font-semibold text-primary">2.</span>
-            <span>Recevez votre code premium à 4 chiffres après le paiement</span>
+            <span>Recevez votre code Premium à 4 chiffres après le paiement</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-semibold text-primary">3.</span>
