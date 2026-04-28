@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { FAQAccordion } from "@/components/FAQAccordion";
 import { VideoTestimonials } from "@/components/VideoTestimonials";
-import { CheckoutLeadForm } from "@/components/CheckoutLeadForm";
 import { demoPlans } from "@/lib/demo-plans";
 import Image from "next/image";
 import Script from "next/script";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 const FACEBOOK_PIXEL_ID = "1651374605332302";
 const HERO_MOCKUP_AVIF = "/images/premium-catalogue-mockup.avif";
@@ -185,87 +183,6 @@ function formatPrice(value: number) {
   return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
 }
 
-function CheckoutModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6">
-      <button
-        type="button"
-        aria-label="Fermer le checkout"
-        className="absolute inset-0 cursor-pointer bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="checkout-modal-title"
-        className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[2rem] border border-outline/10 bg-surface shadow-2xl"
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-outline/10 px-6 py-5 md:px-8">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">
-              Checkout en popup
-            </p>
-            <h2
-              id="checkout-modal-title"
-              className="mt-2 text-2xl font-semibold tracking-tight text-foreground"
-            >
-              Finalisez votre demande
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-              Renseignez vos coordonnées pour ouvrir le paiement Chariow sécurisé dans la foulée.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-outline/20 text-foreground/60 transition-colors hover:bg-foreground hover:text-white"
-            aria-label="Fermer"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-
-        <div className="max-h-[80svh] overflow-y-auto px-6 py-6 md:px-8 md:py-8">
-          <CheckoutLeadForm
-            ctaId="facebook-froid-checkout-form"
-            buttonLabel="Accéder au paiement Chariow"
-            helperText="Une fois le formulaire envoyé, vous êtes redirigé vers le checkout Chariow sécurisé."
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function CheckoutButton({
   children,
   ctaId,
@@ -289,20 +206,11 @@ function CheckoutButton({
 }
 
 export default function AbonnementFacebookFroidPage() {
-  const searchParams = useSearchParams();
   const [showStickyCta, setShowStickyCta] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [catalogPreviewPlans, setCatalogPreviewPlans] = useState<CataloguePreviewPlan[]>(
     fallbackCatalogPreviewPlans,
   );
   const remainingCatalogPlans = Math.max(50 - catalogPreviewPlans.length, 0);
-
-  useEffect(() => {
-    const shouldOpenCheckout = searchParams.get("checkout");
-    if (shouldOpenCheckout === "1" || shouldOpenCheckout === "open") {
-      setIsCheckoutOpen(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const solutionSection = document.getElementById("solution");
@@ -764,8 +672,6 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
       </main>
-
-      <CheckoutModal isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
 
       <div
         className={`fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-dark-bg/95 p-3 shadow-2xl backdrop-blur transition-transform duration-300 md:hidden ${
