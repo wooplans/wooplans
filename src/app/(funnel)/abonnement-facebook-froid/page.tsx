@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 const HERO_MOCKUP_AVIF = "/images/premium-catalogue-mockup.avif";
 const HERO_MOCKUP_WEBP = "/images/premium-catalogue-mockup.webp";
+const CHECKOUT_URL = "https://wooplans.mychariow.shop/prd_kufwer/checkout";
 const WHATSAPP_URL =
   "https://wa.me/237694327885?text=Bonjour%2C%20j'ai%20une%20question%20sur%20le%20Catalogue%20Premium%20WooPlans.";
 
@@ -274,7 +275,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-hero"
                 className="w-full sm:w-auto"
-                href="/abonnement-facebook-froid/checkout"
+                href={CHECKOUT_URL}
               >
                 Obtenir le Catalogue - 29 000 FCFA
               </CheckoutButton>
@@ -321,7 +322,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-hero-mobile"
                 className="w-full"
-                href="/abonnement-facebook-froid/checkout"
+                href={CHECKOUT_URL}
               >
                 Obtenir le Catalogue - 29 000 FCFA
               </CheckoutButton>
@@ -421,7 +422,7 @@ export default function AbonnementFacebookFroidPage() {
                   <CheckoutButton
                     ctaId="facebook-froid-preview-cta"
                     className="w-full px-6 py-3 text-sm sm:w-auto"
-                    href="/abonnement-facebook-froid/checkout"
+                    href={CHECKOUT_URL}
                   >
                     Obtenir le Catalogue
                   </CheckoutButton>
@@ -602,7 +603,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-offre-cta"
                 className="w-full text-lg md:w-auto"
-                href="/abonnement-facebook-froid/checkout"
+                href={CHECKOUT_URL}
               >
                 Obtenir mon Catalogue Premium
               </CheckoutButton>
@@ -636,7 +637,7 @@ export default function AbonnementFacebookFroidPage() {
               <CheckoutButton
                 ctaId="facebook-froid-final-cta"
                 className="w-full text-lg sm:w-auto"
-                href="/abonnement-facebook-froid/checkout"
+                href={CHECKOUT_URL}
               >
                 Acheter le Catalogue Premium
               </CheckoutButton>
@@ -652,7 +653,7 @@ export default function AbonnementFacebookFroidPage() {
         <CheckoutButton
           ctaId="facebook-froid-sticky-cta"
           className="w-full py-3 animate-pulse"
-          href="/abonnement-facebook-froid/checkout"
+          href={CHECKOUT_URL}
         >
           Obtenir le Catalogue - 29 000 FCFA
         </CheckoutButton>
