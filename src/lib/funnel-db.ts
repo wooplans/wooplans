@@ -97,6 +97,28 @@ export type FunnelInsight = {
   severity: "info" | "warning" | "critical";
 };
 
+export type FunnelScrollDepthRow = {
+  depth: number;
+  sessions: number;
+  rate: number;
+};
+
+export type FunnelSectionEngagementRow = {
+  sectionId: string;
+  label: string;
+  sessions: number;
+  views: number;
+  engagementPings: number;
+  ctaClicks: number;
+  shareOfEngagement: number;
+};
+
+export type FunnelExitDepthRow = {
+  bucket: string;
+  sessions: number;
+  rate: number;
+};
+
 export type FunnelAnalytics = {
   periodDays: number;
   startDate: Date;
@@ -114,6 +136,13 @@ export type FunnelAnalytics = {
     rate: number;
     loss: number;
   } | null;
+  behavior: {
+    pagePath: string;
+    sessions: number;
+    scrollDepth: FunnelScrollDepthRow[];
+    topSections: FunnelSectionEngagementRow[];
+    exitsByScrollDepth: FunnelExitDepthRow[];
+  };
   topPages: FunnelTopStepRow[];
   topCtas: FunnelTopStepRow[];
   insights: FunnelInsight[];
@@ -130,6 +159,15 @@ function percent(part: number, total: number) {
 
 function money(value: number) {
   return `${value.toLocaleString("fr-FR")} FCFA`;
+}
+
+function numberFromMetadata(value: unknown) {
+  const numberValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+function stringFromMetadata(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
 function isCompletedSaleStatus(status: string) {
@@ -463,6 +501,130 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
     .sort((a, b) => b.sales - a.sales || b.conversionRate - a.conversionRate)
     .slice(0, 5);
 
+  const behaviorPagePath = "/abonnement-facebook-froid";
+  const behaviorSessionIds = new Set<string>();
+  for (const session of normalizedSessions) {
+    if (session.landingPath.startsWith(behaviorPagePath)) {
+      behaviorSessionIds.add(session.id);
+    }
+  }
+
+  const behaviorEvents = normalizedEvents.filter((event) => event.path.startsWith(behaviorPagePath));
+  for (const event of behaviorEvents) {
+    behaviorSessionIds.add(event.sessionId);
+  }
+
+  const behaviorSessionCount = behaviorSessionIds.size;
+  const scrollMaxBySession = new Map<string, number>();
+  const exitScrollBySession = new Map<string, number>();
+  const sectionStats = new Map<
+    string,
+    {
+      sectionId: string;
+      label: string;
+      sessionIds: Set<string>;
+      views: number;
+      engagementPings: number;
+      ctaClicks: number;
+    }
+  >();
+
+  function getSectionStat(sectionId: string, label: string) {
+    const key = sectionId || "unknown";
+    const current = sectionStats.get(key) ?? {
+      sectionId: key,
+      label: label || key,
+      sessionIds: new Set<string>(),
+      views: 0,
+      engagementPings: 0,
+      ctaClicks: 0,
+    };
+    if (label && current.label === key) {
+      current.label = label;
+    }
+    sectionStats.set(key, current);
+    return current;
+  }
+
+  for (const event of behaviorEvents) {
+    const metadata = parseFunnelJson<Record<string, unknown>>(event.metadataJson, {});
+    const maxScroll = Math.max(
+      numberFromMetadata(metadata.max_scroll),
+      numberFromMetadata(metadata.depth),
+    );
+
+    if (maxScroll > 0) {
+      scrollMaxBySession.set(
+        event.sessionId,
+        Math.max(scrollMaxBySession.get(event.sessionId) ?? 0, maxScroll),
+      );
+    }
+
+    if (event.type === "page_exit") {
+      exitScrollBySession.set(event.sessionId, maxScroll);
+    }
+
+    const sectionId = stringFromMetadata(metadata.section_id);
+    if (!sectionId) continue;
+
+    const section = getSectionStat(sectionId, stringFromMetadata(metadata.section_label));
+    section.sessionIds.add(event.sessionId);
+
+    if (event.type === "section_view") {
+      section.views += 1;
+    } else if (event.type === "engagement_ping") {
+      section.engagementPings += 1;
+    } else if (event.type === "premium_cta_click") {
+      section.ctaClicks += 1;
+    }
+  }
+
+  const totalEngagementPings = Array.from(sectionStats.values()).reduce(
+    (sum, row) => sum + row.engagementPings,
+    0,
+  );
+
+  const scrollDepth = [25, 50, 75, 90, 100].map((depth) => {
+    const sessions = Array.from(scrollMaxBySession.values()).filter((value) => value >= depth).length;
+    return {
+      depth,
+      sessions,
+      rate: percent(sessions, behaviorSessionCount),
+    };
+  });
+
+  const topSections = Array.from(sectionStats.values())
+    .map((row) => ({
+      sectionId: row.sectionId,
+      label: row.label,
+      sessions: row.sessionIds.size,
+      views: row.views,
+      engagementPings: row.engagementPings,
+      ctaClicks: row.ctaClicks,
+      shareOfEngagement: percent(row.engagementPings, totalEngagementPings),
+    }))
+    .sort((a, b) => b.engagementPings - a.engagementPings || b.sessions - a.sessions || b.views - a.views)
+    .slice(0, 8);
+
+  const exitBuckets = [
+    { bucket: "0-24%", min: 0, max: 24 },
+    { bucket: "25-49%", min: 25, max: 49 },
+    { bucket: "50-74%", min: 50, max: 74 },
+    { bucket: "75-89%", min: 75, max: 89 },
+    { bucket: "90-100%", min: 90, max: 100 },
+  ];
+
+  const exitsByScrollDepth = exitBuckets.map((bucket) => {
+    const sessions = Array.from(exitScrollBySession.values()).filter(
+      (value) => value >= bucket.min && value <= bucket.max,
+    ).length;
+    return {
+      bucket: bucket.bucket,
+      sessions,
+      rate: percent(sessions, behaviorSessionCount),
+    };
+  });
+
   const insights: FunnelInsight[] = [];
   if (normalizedSessions.length > 0) {
     const visitToCtaRate = percent(ctaClicks.length, normalizedSessions.length);
@@ -537,6 +699,13 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
           loss: dropOffStage.loss,
         }
       : null,
+    behavior: {
+      pagePath: behaviorPagePath,
+      sessions: behaviorSessionCount,
+      scrollDepth,
+      topSections,
+      exitsByScrollDepth,
+    },
     topPages,
     topCtas,
     insights,

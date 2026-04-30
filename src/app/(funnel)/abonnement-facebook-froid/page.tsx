@@ -158,6 +158,7 @@ const faqs = [
         Oui.{" "}
         <a
           href={WHATSAPP_URL}
+          data-funnel-cta="facebook-froid-faq-whatsapp"
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-accent underline underline-offset-4"
@@ -254,7 +255,11 @@ export default function AbonnementFacebookFroidPage() {
   return (
     <>
       <main className="overflow-hidden pb-24 md:pb-0">
-        <section className="relative bg-dark-bg text-dark-text">
+        <section
+          data-funnel-section="hero"
+          data-funnel-section-label="Hero"
+          className="relative bg-dark-bg text-dark-text"
+        >
           <div
             className="absolute inset-0 opacity-[0.04]"
             style={{
@@ -338,7 +343,11 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="border-y border-outline/10 bg-surface">
+        <section
+          data-funnel-section="catalogue-preview"
+          data-funnel-section-label="Apercu du catalogue"
+          className="border-y border-outline/10 bg-surface"
+        >
           <div className="mx-auto max-w-6xl px-4 py-16 md:py-20">
             <div className="mb-10 grid gap-6 md:grid-cols-[0.9fr_1.1fr] md:items-end">
               <div>
@@ -432,7 +441,11 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="border-y border-outline/10 bg-surface">
+        <section
+          data-funnel-section="problem"
+          data-funnel-section-label="Probleme"
+          className="border-y border-outline/10 bg-surface"
+        >
           <div className="mx-auto max-w-6xl px-4 py-14 md:py-18">
             <div className="mb-10 max-w-2xl">
               <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
@@ -456,7 +469,12 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section id="solution" className="mx-auto max-w-6xl px-4 py-16 md:py-20">
+        <section
+          id="solution"
+          data-funnel-section="solution"
+          data-funnel-section-label="Solution"
+          className="mx-auto max-w-6xl px-4 py-16 md:py-20"
+        >
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
               La solution
@@ -483,7 +501,11 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="bg-dark-bg py-16 text-dark-text md:py-20">
+        <section
+          data-funnel-section="testimonials"
+          data-funnel-section-label="Temoignages video"
+          className="bg-dark-bg py-16 text-dark-text md:py-20"
+        >
           <div className="mx-auto max-w-6xl px-4">
             <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr] md:items-center">
               <div>
@@ -504,7 +526,11 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="border-y border-outline/10 bg-surface">
+        <section
+          data-funnel-section="steps"
+          data-funnel-section-label="Comment ca marche"
+          className="border-y border-outline/10 bg-surface"
+        >
           <div className="mx-auto max-w-6xl px-4 py-16">
             <div className="mb-10 text-center">
               <h2 className="mb-3 text-3xl font-semibold tracking-tight text-foreground">
@@ -530,7 +556,12 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="bg-dark-bg py-16 md:py-24" id="offre">
+        <section
+          className="bg-dark-bg py-16 md:py-24"
+          id="offre"
+          data-funnel-section="offer"
+          data-funnel-section-label="Offre"
+        >
           <div className="mx-auto max-w-3xl px-4">
             <div className="rounded-[2rem] border-2 border-accent bg-surface p-6 text-center shadow-2xl shadow-accent/20 md:p-10">
               <p className="mb-4 inline-flex rounded-full bg-secondary px-4 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white">
@@ -614,7 +645,11 @@ export default function AbonnementFacebookFroidPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-3xl px-4 py-16">
+        <section
+          data-funnel-section="faq"
+          data-funnel-section-label="FAQ"
+          className="mx-auto max-w-3xl px-4 py-16"
+        >
           <div className="mb-10 text-center">
             <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-primary">
               Questions fréquentes
@@ -626,7 +661,11 @@ export default function AbonnementFacebookFroidPage() {
           <FAQAccordion items={faqs} />
         </section>
 
-        <section className="bg-dark-bg">
+        <section
+          data-funnel-section="final-cta"
+          data-funnel-section-label="CTA final"
+          className="bg-dark-bg"
+        >
           <div className="mx-auto max-w-3xl px-4 py-16 text-center md:py-20">
             <h2 className="mb-4 text-3xl font-semibold tracking-tight text-white md:text-4xl">
               Donnez à votre projet une base plus claire

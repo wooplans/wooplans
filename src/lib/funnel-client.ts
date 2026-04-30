@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 import { buildFunnelAttribution, type FunnelEventType, type FunnelSessionSnapshot } from "@/lib/funnel";
 
 const STORAGE_KEY = "wooplans-funnel-state";
+const COLD_FACEBOOK_PATH_PREFIX = "/abonnement-facebook-froid";
+const SCROLL_DEPTH_THRESHOLDS = [25, 50, 75, 90, 100] as const;
 
 type StoredFunnelState = FunnelSessionSnapshot;
 
@@ -42,6 +44,54 @@ function canUseBrowserStorage() {
 function getCurrentPath() {
   if (!canUseBrowserStorage()) return "/";
   return `${window.location.pathname}${window.location.search}`;
+}
+
+function getScrollPercent() {
+  if (!canUseBrowserStorage()) return 0;
+
+  const documentElement = document.documentElement;
+  const scrollableHeight = Math.max(
+    documentElement.scrollHeight,
+    document.body.scrollHeight,
+  ) - window.innerHeight;
+
+  if (scrollableHeight <= 0) return 100;
+  return Math.max(0, Math.min(100, Math.round((window.scrollY / scrollableHeight) * 100)));
+}
+
+function getSectionPayload(element: Element | null) {
+  if (!(element instanceof HTMLElement)) {
+    return {
+      section_id: "",
+      section_label: "",
+    };
+  }
+
+  return {
+    section_id: element.dataset.funnelSection || "",
+    section_label: element.dataset.funnelSectionLabel || element.dataset.funnelSection || "",
+  };
+}
+
+function getActiveSectionPayload() {
+  if (!canUseBrowserStorage()) return getSectionPayload(null);
+
+  const sections = Array.from(document.querySelectorAll("[data-funnel-section]"));
+  let active: Element | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  const targetY = window.innerHeight * 0.38;
+
+  for (const section of sections) {
+    const rect = section.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+    const distance = Math.abs(rect.top - targetY);
+    if (distance < bestDistance) {
+      active = section;
+      bestDistance = distance;
+    }
+  }
+
+  return getSectionPayload(active);
 }
 
 function readStoredState(): StoredFunnelState | null {
@@ -227,11 +277,13 @@ export function useFunnelTracker() {
       const ctaId = target.getAttribute("data-funnel-cta");
       if (!ctaId) return;
 
+      const section = getSectionPayload(target.closest("[data-funnel-section]"));
       void trackFunnelEvent("premium_cta_click", {
         ctaId,
         metadata: {
           href: target instanceof HTMLAnchorElement ? target.href : undefined,
           text: target.textContent?.trim().slice(0, 120) || "",
+          ...section,
         },
       });
     };
@@ -239,4 +291,112 @@ export function useFunnelTracker() {
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, []);
+
+  useEffect(() => {
+    if (!pathname.startsWith(COLD_FACEBOOK_PATH_PREFIX) || !canUseBrowserStorage()) {
+      return;
+    }
+
+    const trackedDepths = new Set<number>();
+    const viewedSections = new Set<string>();
+    let animationFrame = 0;
+    let maxScroll = getScrollPercent();
+    let latestSection = getActiveSectionPayload();
+    const startedAt = Date.now();
+    let exitSent = false;
+
+    const updateScrollDepth = () => {
+      animationFrame = 0;
+      maxScroll = Math.max(maxScroll, getScrollPercent());
+      latestSection = getActiveSectionPayload();
+
+      for (const depth of SCROLL_DEPTH_THRESHOLDS) {
+        if (maxScroll >= depth && !trackedDepths.has(depth)) {
+          trackedDepths.add(depth);
+          void trackFunnelEvent("scroll_depth", {
+            metadata: {
+              depth,
+              max_scroll: maxScroll,
+              ...latestSection,
+            },
+          });
+        }
+      }
+    };
+
+    const onScroll = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateScrollDepth);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.35) continue;
+          const section = getSectionPayload(entry.target);
+          if (!section.section_id || viewedSections.has(section.section_id)) continue;
+
+          viewedSections.add(section.section_id);
+          latestSection = section;
+          void trackFunnelEvent("section_view", {
+            metadata: {
+              ...section,
+              percent_visible: Math.round(entry.intersectionRatio * 100),
+              max_scroll: maxScroll,
+            },
+          });
+        }
+      },
+      { threshold: [0.35, 0.6] },
+    );
+
+    document.querySelectorAll("[data-funnel-section]").forEach((section) => observer.observe(section));
+
+    const pingInterval = window.setInterval(() => {
+      if (document.hidden) return;
+      maxScroll = Math.max(maxScroll, getScrollPercent());
+      latestSection = getActiveSectionPayload();
+      void trackFunnelEvent("engagement_ping", {
+        metadata: {
+          seconds_on_page: Math.round((Date.now() - startedAt) / 1000),
+          max_scroll: maxScroll,
+          ...latestSection,
+        },
+      });
+    }, 15000);
+
+    const sendExitEvent = () => {
+      if (exitSent) return;
+      exitSent = true;
+      maxScroll = Math.max(maxScroll, getScrollPercent());
+      latestSection = getActiveSectionPayload();
+      void trackFunnelEvent("page_exit", {
+        metadata: {
+          seconds_on_page: Math.round((Date.now() - startedAt) / 1000),
+          max_scroll: maxScroll,
+          ...latestSection,
+        },
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        sendExitEvent();
+      }
+    };
+
+    window.setTimeout(updateScrollDepth, 500);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", sendExitEvent);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      window.clearInterval(pingInterval);
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", sendExitEvent);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [pathname]);
 }

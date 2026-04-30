@@ -6,7 +6,11 @@ export type FunnelEventType =
   | "checkout_started"
   | "checkout_completed"
   | "checkout_abandoned"
-  | "checkout_failed";
+  | "checkout_failed"
+  | "scroll_depth"
+  | "section_view"
+  | "engagement_ping"
+  | "page_exit";
 
 export type FunnelAttribution = {
   source: FunnelSource;

@@ -266,6 +266,96 @@ export default async function AdminTunnelPage({
             </div>
           </section>
 
+          <section className="border-2 border-outline bg-surface p-5">
+            <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h2 className="text-lg font-black tracking-tight text-foreground">
+                  Comportement sur /abonnement-facebook-froid
+                </h2>
+                <p className="mt-1 text-sm font-medium text-foreground/55">
+                  Scroll, sections consultees, clics et sorties de page.
+                </p>
+              </div>
+              <span className="border-2 border-outline px-3 py-1 text-xs font-black uppercase tracking-wider text-foreground/60">
+                {formatNumber(analytics.behavior.sessions)} session(s)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <div className="border-2 border-outline p-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.18em] text-foreground/50">
+                  Profondeur de scroll
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {analytics.behavior.scrollDepth.map((row) => (
+                    <div key={row.depth}>
+                      <div className="mb-1 flex items-center justify-between text-xs font-bold text-foreground/60">
+                        <span>{row.depth}% atteint</span>
+                        <span>{formatPercent(row.rate)}</span>
+                      </div>
+                      <div className="h-2 bg-foreground/10">
+                        <div className="h-full bg-primary" style={{ width: `${row.rate}%` }} />
+                      </div>
+                      <p className="mt-1 text-[11px] font-semibold text-foreground/40">
+                        {formatNumber(row.sessions)} session(s)
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-2 border-outline p-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.18em] text-foreground/50">
+                  Sections les plus lues
+                </h3>
+                {analytics.behavior.topSections.length === 0 ? (
+                  <div className="mt-4 border-2 border-dashed border-outline/40 p-6 text-center text-sm font-semibold text-foreground/50">
+                    Pas encore de donnees de sections.
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {analytics.behavior.topSections.map((row) => (
+                      <div key={row.sectionId} className="border-b border-outline/30 pb-3 last:border-b-0 last:pb-0">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-black text-foreground">{row.label}</p>
+                          <p className="text-xs font-black text-primary">
+                            {formatPercent(row.shareOfEngagement)}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-xs font-semibold text-foreground/50">
+                          {formatNumber(row.sessions)} session(s) · {formatNumber(row.engagementPings)} ping(s) ·{" "}
+                          {formatNumber(row.ctaClicks)} clic(s)
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="border-2 border-outline p-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.18em] text-foreground/50">
+                  Sorties par niveau de scroll
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {analytics.behavior.exitsByScrollDepth.map((row) => (
+                    <div key={row.bucket}>
+                      <div className="mb-1 flex items-center justify-between text-xs font-bold text-foreground/60">
+                        <span>{row.bucket}</span>
+                        <span>{formatPercent(row.rate)}</span>
+                      </div>
+                      <div className="h-2 bg-foreground/10">
+                        <div className="h-full bg-secondary" style={{ width: `${row.rate}%` }} />
+                      </div>
+                      <p className="mt-1 text-[11px] font-semibold text-foreground/40">
+                        {formatNumber(row.sessions)} sortie(s)
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <div className="border-2 border-outline bg-surface p-5">
               <div className="mb-5 flex items-center justify-between gap-4">
