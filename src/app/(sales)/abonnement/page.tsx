@@ -292,7 +292,7 @@ export default function AbonnementPage() {
           {/* Hero image */}
           <div className="relative w-full rounded-2xl overflow-hidden border border-white/15 mb-6">
             <Image
-              src="/images/premium-catalogue-mockup.webp"
+              src="/images/catalogue-premium-banner.jpg"
               alt="Catalogue Premium Wooplans — 50 plans de maison avec devis"
               width={1200}
               height={675}
@@ -337,7 +337,7 @@ export default function AbonnementPage() {
           {/* Solution image */}
           <div className="relative w-full rounded-2xl overflow-hidden border border-outline/10 mb-6">
             <Image
-              src="/images/premium-catalogue-mockup.webp"
+              src="/images/catalogue-premium-banner.jpg"
               alt="Catalogue Premium Wooplans — 50 plans de maison"
               width={1200}
               height={675}
