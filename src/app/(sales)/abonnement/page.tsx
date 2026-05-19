@@ -330,9 +330,20 @@ export default function AbonnementPage() {
           <h2 className="text-xl md:text-2xl font-semibold text-foreground tracking-tight mb-2">
             Le catalogue Premium que vous attendiez.
           </h2>
-          <p className="text-sm text-muted mb-6">
+          <p className="text-sm text-muted mb-5">
             Tout ce qu&apos;il faut pour démarrer votre projet — au même endroit.
           </p>
+
+          {/* Solution image */}
+          <div className="relative w-full rounded-2xl overflow-hidden border border-outline/10 mb-6">
+            <Image
+              src="/images/premium-catalogue-mockup.webp"
+              alt="Catalogue Premium Wooplans — 50 plans de maison"
+              width={1200}
+              height={675}
+              className="w-full h-auto"
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Full-width benefit */}
