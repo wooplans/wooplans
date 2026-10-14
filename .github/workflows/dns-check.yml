@@ -1,0 +1,32 @@
+name: Vérification DNS (lecture seule)
+
+on:
+  push:
+    branches: [ccr-03cfaad2-40szss]
+    paths: [".github/workflows/dns-check.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CF: https://api.cloudflare.com/client/v4
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Zone et enregistrements DNS de wooplans.com
+        run: |
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          echo "== Zone"
+          curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq '{success, errors, zones: [.result[]? | {id, status, account: .account.id == env.CLOUDFLARE_ACCOUNT_ID, name_servers, plan: .plan.name}]}'
+          zone=$(curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id // empty')
+          if [ -n "$zone" ]; then
+            echo "== DNS (apex et www)"
+            curl -sS "${auth[@]}" "$CF/zones/$zone/dns_records?per_page=100" | jq '{success, errors, records: [.result[]? | select(.name=="wooplans.com" or .name=="www.wooplans.com") | {type, name, content, proxied}]}'
+            echo "== Autres enregistrements (noms seulement)"
+            curl -sS "${auth[@]}" "$CF/zones/$zone/dns_records?per_page=100" | jq -r '.result[]? | "\(.type) \(.name)"' | sort
+          fi
+          echo "== Domaines personnalisés des Workers"
+          curl -sS "${auth[@]}" "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" | jq '{success, errors, domains: [.result[]? | {hostname, service}]}'
+          echo "== Résolution publique"
+          dig +short www.wooplans.com; dig +short wooplans.com; dig +short NS wooplans.com
