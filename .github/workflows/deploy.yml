@@ -97,3 +97,9 @@ jobs:
         env:
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
+      - name: Sitemap Framer (inventaire des URL à rediriger)
+        if: always()
+        run: |
+          curl -fsSL https://www.wooplans.com/sitemap.xml -o /tmp/framer-sitemap.xml || true
+          grep -o '<loc>[^<]*' /tmp/framer-sitemap.xml | sed 's/<loc>//' | sort -u | tee /tmp/framer-urls.txt
+          echo "Total : $(wc -l < /tmp/framer-urls.txt)"
