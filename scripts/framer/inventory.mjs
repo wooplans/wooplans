@@ -50,5 +50,9 @@ for (const url of urls) {
 
 mkdirSync("scripts/framer/out", { recursive: true });
 writeFileSync("scripts/framer/out/pages.json", JSON.stringify(pages, null, 2));
-const sample = pages.find((p) => p.path === "/catalogue/duplex-d4-001");
-if (sample) console.log("\n--- Exemple de fiche (duplex-d4-001) ---\n" + sample.lines.join("\n"));
+// Résumé compact des fiches (lignes uniques avant le bloc « Accès Premium »)
+for (const p of pages.filter((x) => x.lines)) {
+  const end = p.lines.findIndex((l) => /^Accès Premium$/i.test(l));
+  const body = [...new Set(p.lines.slice(0, end > 0 ? end : 80))];
+  console.log(`FICHE ${JSON.stringify({ path: p.path, title: p.title, description: p.description, og: p.ogImage, images: p.images, body })}`);
+}
