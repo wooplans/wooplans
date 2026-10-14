@@ -19,20 +19,21 @@ export const legacyRedirects: Redirect[] = [
   r("/espace-membre", "/espace-premium"),
   r("/login", "/connexion"),
   // Fiches
-  r("/plan/:slug", "/plans/:slug"),
-  r("/modeles", "/plans"),
-  r("/modeles/:slug", "/plans/:slug"),
+  r("/plan/:slug", "/catalogue/:slug"),
+  r("/modeles", "/catalogue"),
+  r("/modeles/:slug", "/catalogue/:slug"),
 
-  // Site Framer (sitemap www.wooplans.com, octobre 2026)
-  r("/catalogue", "/plans"),
-  r("/catalogue-villa", "/plans?categorie=villa"),
-  r("/catalogue-duplex", "/plans?categorie=duplex"),
-  r("/catalogue/:slug", "/plans/:slug"),
+  // Premières URL de la nouvelle plateforme (avant le retour aux URL Framer /catalogue)
+  r("/plans", "/catalogue"),
+  r("/plans/:slug", "/catalogue/:slug"),
+
+  // Site Framer (sitemap www.wooplans.com, octobre 2026). /catalogue, /catalogue-villa,
+  // /catalogue-duplex et /catalogue/<modèle> sont conservées telles quelles (aucune redirection).
   r("/premium-wooplans", "/catalogue-premium"),
   r("/cp19k", "/catalogue-premium"),
   r("/cptest", "/catalogue-premium"),
-  r("/ap-v3-037", "/plans/villa-v3-037"),
-  r("/ap-d4-034", "/plans/duplex-d4-034"),
+  r("/ap-v3-037", "/catalogue/villa-v3-037"),
+  r("/ap-d4-034", "/catalogue/duplex-d4-034"),
   r("/contacter-nous", "/contact"),
   // Pages à accents : forme encodée (telle que demandée par les navigateurs) et forme décodée
   r("/conditions-g%C3%A9n%C3%A9rales-de-vente", "/conditions-generales-de-vente"),

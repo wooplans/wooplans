@@ -16,9 +16,9 @@ export function SiteFooter() {
         <div>
           <p className="mb-3 text-sm font-semibold text-white">Catalogue</p>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/plans" className="hover:text-white">Tous les modèles</Link></li>
-            <li><Link href="/plans?categorie=villa" className="hover:text-white">Villas</Link></li>
-            <li><Link href="/plans?categorie=duplex" className="hover:text-white">Duplex</Link></li>
+            <li><Link href="/catalogue" className="hover:text-white">Tous les modèles</Link></li>
+            <li><Link href="/catalogue-villa" className="hover:text-white">Villas</Link></li>
+            <li><Link href="/catalogue-duplex" className="hover:text-white">Duplex</Link></li>
             <li><Link href={SITE.catalogueUrl} data-cta="footer" className="hover:text-white">Catalogue Premium</Link></li>
           </ul>
         </div>

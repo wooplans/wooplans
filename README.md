@@ -5,7 +5,7 @@ Site vitrine, page de vente, espace Premium, tableau de bord et CRM de WooPlans,
 ## Le tunnel
 
 ```
-Vidéos et publications ──▶ Vitrine (/ , /plans, /plans/<modèle>)
+Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
                               │  bouton unique « Obtenir le Catalogue Premium »
                               ▼
                      Page de vente /catalogue-premium
@@ -39,7 +39,7 @@ Vidéos et publications ──▶ Vitrine (/ , /plans, /plans/<modèle>)
 | URL | Contenu |
 |---|---|
 | `/` | Accueil, modèles mis en avant, étapes, témoignages, FAQ |
-| `/plans`, `/plans/<slug>` | Catalogue public filtrable et fiches (rendus, chambres, niveaux, surfaces, dimensions, budget indicatif) |
+| `/catalogue`, `/catalogue-villa`, `/catalogue-duplex`, `/catalogue/<slug>` | Catalogue public filtrable et fiches (rendus, chambres, niveaux, surfaces, dimensions, budget indicatif) |
 | `/catalogue-premium` | Page de vente (HTML optimisé, `public/lp/catalogue-premium.html`, généré par `scripts/build-sales-page.py`) |
 | `/merci` | Confirmation de paiement et affichage du code d'accès |
 | `/connexion` | Connexion membre (email + code), « code perdu » |

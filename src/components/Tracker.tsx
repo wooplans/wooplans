@@ -26,7 +26,7 @@ export function Tracker() {
 
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
-    const planMatch = /^\/plans\/([^/]+)$/.exec(pathname);
+    const planMatch = /^\/catalogue\/([^/]+)$/.exec(pathname);
     const type = pathname === "/catalogue-premium" ? "sales_page_view" : planMatch ? "plan_view" : "page_view";
     track({ type, planSlug: planMatch?.[1] });
     // La première vue est envoyée par le script du Pixel lui-même.

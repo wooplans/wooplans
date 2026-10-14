@@ -141,7 +141,7 @@ export async function updatePlan(id: string, form: FormData) {
     })
     .where(eq(schema.plans.id, id));
   revalidatePath("/admin/plans");
-  revalidatePath(`/plans/${data.slug}`);
+  revalidatePath(`/catalogue/${data.slug}`);
   redirect(`/admin/plans/${id}?ok=1`);
 }
 

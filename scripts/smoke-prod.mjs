@@ -22,22 +22,21 @@ const get = (path, init = {}) => fetch(base + path, { redirect: "manual", ...ini
 const cookieOf = (res) => (res.headers.getSetCookie?.() || []).map((c) => c.split(";")[0]).join("; ");
 
 // Vitrine et fiches
-for (const path of ["/", "/plans", "/plans-personnalises", "/a-propos", "/contact", "/connexion", "/sitemap.xml", "/robots.txt"]) {
+for (const path of ["/", "/catalogue", "/catalogue-villa", "/catalogue-duplex", "/plans-personnalises", "/a-propos", "/contact", "/connexion", "/sitemap.xml", "/robots.txt"]) {
   const res = await get(path);
   ok(`GET ${path}`, res.status === 200, String(res.status));
 }
-const plansHtml = await (await get("/plans")).text();
-const slugs = [...new Set([...plansHtml.matchAll(/href="\/plans\/([a-z0-9-]+)"/g)].map((m) => m[1]))];
-ok("fiches listées sur /plans", slugs.length > 0, `${slugs.length}`);
+const plansHtml = await (await get("/catalogue")).text();
+const slugs = [...new Set([...plansHtml.matchAll(/href="\/catalogue\/([a-z0-9-]+)"/g)].map((m) => m[1]))];
+ok("fiches listées sur /catalogue", slugs.length > 0, `${slugs.length}`);
 for (const slug of slugs) {
-  const res = await get(`/plans/${slug}`);
-  ok(`GET /plans/${slug}`, res.status === 200, String(res.status));
+  const res = await get(`/catalogue/${slug}`);
+  ok(`GET /catalogue/${slug}`, res.status === 200, String(res.status));
 }
 const redirects = {
-  "/modeles": "/plans",
-  "/catalogue": "/plans",
-  "/catalogue-villa": "/plans?categorie=villa",
-  "/catalogue/villa-v3-018": "/plans/villa-v3-018",
+  "/modeles": "/catalogue",
+  "/plans": "/catalogue",
+  "/plans/villa-v3-018": "/catalogue/villa-v3-018",
   "/premium-wooplans": "/catalogue-premium",
   "/contacter-nous": "/contact",
   "/conditions-g%C3%A9n%C3%A9rales-de-vente": "/conditions-generales-de-vente",

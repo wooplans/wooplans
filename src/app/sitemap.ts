@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/", priority: 1 },
   { path: "/catalogue-premium", priority: 0.9 },
-  { path: "/plans", priority: 0.9 },
-  { path: "/plans?categorie=villa", priority: 0.7 },
-  { path: "/plans?categorie=duplex", priority: 0.7 },
+  { path: "/catalogue", priority: 0.9 },
+  { path: "/catalogue-villa", priority: 0.7 },
+  { path: "/catalogue-duplex", priority: 0.7 },
   { path: "/plans-personnalises", priority: 0.6 },
   { path: "/a-propos", priority: 0.4 },
   { path: "/contact", priority: 0.4 },
@@ -23,7 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...STATIC_PAGES.map((p) => ({ url: siteUrl(p.path), priority: p.priority, changeFrequency: "weekly" as const })),
     ...plans.map((plan) => ({
-      url: siteUrl(`/plans/${plan.slug}`),
+      url: siteUrl(`/catalogue/${plan.slug}`),
       lastModified: plan.updatedAt,
       priority: 0.8,
       changeFrequency: "monthly" as const,

@@ -4,9 +4,9 @@ import { MobileMenu } from "@/components/MobileMenu";
 import { SITE } from "@/lib/site";
 
 export const NAV_LINKS = [
-  { href: "/plans", label: "Les modèles" },
-  { href: "/plans?categorie=villa", label: "Villas" },
-  { href: "/plans?categorie=duplex", label: "Duplex" },
+  { href: "/catalogue", label: "Les modèles" },
+  { href: "/catalogue-villa", label: "Villas" },
+  { href: "/catalogue-duplex", label: "Duplex" },
   { href: "/plans-personnalises", label: "Plans personnalisés" },
 ];
 

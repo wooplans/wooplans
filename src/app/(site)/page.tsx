@@ -58,7 +58,7 @@ export default async function HomePage() {
             <Link href={SITE.catalogueUrl} data-cta="home_hero" className="btn-cta px-8 py-4 text-base">
               {SITE.catalogueCta}
             </Link>
-            <Link href="/plans" className="btn border border-white/30 px-8 py-4 text-base text-white hover:bg-white/10">
+            <Link href="/catalogue" className="btn border border-white/30 px-8 py-4 text-base text-white hover:bg-white/10">
               Explorer les modèles
             </Link>
           </div>
@@ -71,13 +71,13 @@ export default async function HomePage() {
             <p className="eyebrow">Les modèles</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Quelques maisons du catalogue</h2>
           </div>
-          <Link href="/plans" className="hidden text-sm font-semibold text-primary hover:underline sm:inline">
+          <Link href="/catalogue" className="hidden text-sm font-semibold text-primary hover:underline sm:inline">
             Tous les modèles →
           </Link>
         </div>
         <PlanGrid plans={featured} />
         <div className="mt-8 text-center sm:hidden">
-          <Link href="/plans" className="btn-ghost">Tous les modèles</Link>
+          <Link href="/catalogue" className="btn-ghost">Tous les modèles</Link>
         </div>
       </section>
 

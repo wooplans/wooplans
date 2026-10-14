@@ -5,7 +5,7 @@ export function PlanCard({ plan, priority = false }: { plan: PublicPlan; priorit
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   return (
     <Link
-      href={`/plans/${plan.slug}`}
+      href={`/catalogue/${plan.slug}`}
       className="group card flex flex-col overflow-hidden transition-shadow hover:shadow-xl hover:shadow-black/5"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-outline/40">

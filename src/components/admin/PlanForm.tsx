@@ -87,7 +87,7 @@ export function PlanForm({ plan, action }: { plan?: PlanRow; action: (form: Form
 
       <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-outline bg-background/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
         <button className="btn-primary">Enregistrer</button>
-        {p ? <a href={`/plans/${p.slug}`} target="_blank" className="btn-ghost">Voir la fiche ↗</a> : null}
+        {p ? <a href={`/catalogue/${p.slug}`} target="_blank" className="btn-ghost">Voir la fiche ↗</a> : null}
       </div>
     </form>
   );

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `/plans/${plan.slug}` },
+    alternates: { canonical: `/catalogue/${plan.slug}` },
     openGraph: { title, description, images: plan.coverImage ? [{ url: plan.coverImage }] : undefined },
   };
 }
@@ -55,8 +55,8 @@ export default async function PlanPage({ params }: Props) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Accueil", item: siteUrl("/") },
-      { "@type": "ListItem", position: 2, name: "Modèles", item: siteUrl("/plans") },
-      { "@type": "ListItem", position: 3, name: plan.name, item: siteUrl(`/plans/${plan.slug}`) },
+      { "@type": "ListItem", position: 2, name: "Modèles", item: siteUrl("/catalogue") },
+      { "@type": "ListItem", position: 3, name: plan.name, item: siteUrl(`/catalogue/${plan.slug}`) },
     ],
   };
 
@@ -66,7 +66,7 @@ export default async function PlanPage({ params }: Props) {
       <div className="container-page py-8 md:py-12">
         <nav className="mb-6 text-sm text-muted" aria-label="Fil d'Ariane">
           <Link href="/" className="hover:text-primary">Accueil</Link> /{" "}
-          <Link href="/plans" className="hover:text-primary">Modèles</Link> / <span className="text-foreground">{plan.name}</span>
+          <Link href="/catalogue" className="hover:text-primary">Modèles</Link> / <span className="text-foreground">{plan.name}</span>
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr]">

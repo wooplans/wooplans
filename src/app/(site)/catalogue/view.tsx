@@ -5,12 +5,12 @@ import { PlanFiltersForm } from "@/components/PlanFiltersForm";
 import { applyPlanFilters, type PlanFilters } from "@/lib/plan-filters";
 import { listPublicPlans } from "@/lib/plans";
 
-export const dynamic = "force-dynamic";
+/** Adresse canonique : /catalogue, /catalogue-villa, /catalogue-duplex (URL héritées du site Framer). */
+export function cataloguePath(categorie?: string) {
+  return categorie === "villa" || categorie === "duplex" ? `/catalogue-${categorie}` : "/catalogue";
+}
 
-type Props = { searchParams: Promise<PlanFilters> };
-
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const params = await searchParams;
+export function catalogueMetadata(params: PlanFilters): Metadata {
   const { categorie } = params;
   const label = categorie === "villa" ? "villas" : categorie === "duplex" ? "duplex" : "villas et duplex";
   // Seules les pages « toutes » et « par catégorie » sont indexées ; les combinaisons de filtres ne le sont pas.
@@ -18,13 +18,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: `Plans de ${label} modernes pour l'Afrique`,
     description: `Découvrez nos modèles de ${label} : rendus 3D, chambres, niveaux, surfaces et budget de construction indicatif. Comparez et choisissez votre future maison.`,
-    alternates: { canonical: categorie === "villa" || categorie === "duplex" ? `/plans?categorie=${categorie}` : "/plans" },
+    alternates: { canonical: cataloguePath(categorie) },
     robots: extraFilters ? { index: false, follow: true } : undefined,
   };
 }
 
-export default async function PlansPage({ searchParams }: Props) {
-  const filters = await searchParams;
+export async function CatalogueView({ filters }: { filters: PlanFilters }) {
   const plans = applyPlanFilters(await listPublicPlans(), filters);
   const title =
     filters.categorie === "villa" ? "Plans de villas" : filters.categorie === "duplex" ? "Plans de duplex" : "Tous nos modèles de maisons";
@@ -38,7 +37,7 @@ export default async function PlansPage({ searchParams }: Props) {
           Rendus, chambres, niveaux, surfaces et budget indicatif de chaque modèle. Tous ces modèles sont inclus dans le Catalogue Premium, avec leurs distributions cotées et leurs devis détaillés.
         </p>
         <div className="mt-8">
-          <PlanFiltersForm filters={filters} action="/plans" />
+          <PlanFiltersForm filters={filters} action="/catalogue" />
         </div>
         <p className="mb-6 mt-6 text-sm text-muted">{plans.length} modèle{plans.length > 1 ? "s" : ""}</p>
         <PlanGrid plans={plans} />

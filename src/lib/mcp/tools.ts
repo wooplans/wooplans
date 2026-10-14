@@ -399,7 +399,7 @@ export const TOOLS: McpTool[] = [
         has_floor_plans: p.floorPlans.length > 0,
         has_estimate_lots: p.estimateLots.length > 0,
         renders: p.renders.length,
-        url: `/plans/${p.slug}`,
+        url: `/catalogue/${p.slug}`,
       }));
     },
   },
@@ -470,7 +470,7 @@ export const TOOLS: McpTool[] = [
         if (Array.isArray(v)) u[key] = v.filter((x): x is string => typeof x === "string" && x.trim() !== "").map((x) => x.trim());
       }
       await db.update(schema.plans).set(u).where(eq(schema.plans.id, plan.id));
-      return { code: plan.code, updated: Object.keys(u).filter((k) => k !== "updatedAt"), url: `/plans/${plan.slug}` };
+      return { code: plan.code, updated: Object.keys(u).filter((k) => k !== "updatedAt"), url: `/catalogue/${plan.slug}` };
     },
   },
 ];
