@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wooplans-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    "SITE_URL": "https://www.wooplans.com",
+    "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",
+    "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_41k85hc0",
+    "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx",
+    "CATALOGUE_PRICE_XAF": "39000",
+    "WHATSAPP_NUMBER": "237653769998",
+    "FB_PIXEL_ID": "1025626273769966",
+    "CLARITY_PROJECT_ID": "y284dj587r",
+    "EMAIL_FROM": "WooPlans <bonjour@wooplans.com>",
+    "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
+  },
+  // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,
+  // RESEND_API_KEY, FB_ACCESS_TOKEN, MCP_TOKEN, ANTHROPIC_API_KEY
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wooplans-platform",
+      "database_id": "REPLACE_WITH_D1_ID",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "plans-catalogue-images" },
+    { "binding": "VIDEOS", "bucket_name": "cpbook-videos" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "wooplans-next-cache" }
+  ]
+}

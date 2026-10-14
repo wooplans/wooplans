@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>50+ Plans de Maisons avec leurs vrais devis | Wooplans</title>
+<meta name="description" content="Accédez à 50+ plans de maisons avec leurs vrais devis, rendus 3D et plans détaillés. Valeur réelle 500 000 FCFA, prix du jour 39 000 FCFA.">
+<link rel="canonical" href="https://www.wooplans.com/catalogue-premium">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WooPlans">
+<meta property="og:title" content="Catalogue Premium WooPlans : 50+ plans de maisons avec leurs devis">
+<meta property="og:description" content="Choisissez la maison adaptée à votre famille, votre terrain et votre budget : rendus 3D, distributions cotées et devis estimatifs détaillés.">
+<meta property="og:url" content="https://www.wooplans.com/catalogue-premium">
+<meta property="og:image" content="https://www.wooplans.com/assets/digital/hero-catalogue.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg">
+<link rel="preload" as="image" href="/assets/digital/hero-video-poster.webp" fetchpriority="high">
+<style>
+:root {
+  --teal:      #0F5B59;
+  --teal-dark: #0A3F3E;
+  --orange:    #F08A2E;
+  --orange-dk: #D4731A;
+  --red:       #C75B3A;
+  --gold:      #E7C36C;
+  --dark:      #1E2933;
+  --gray:      #6B7280;
+  --bg:        #F5F7F9;
+  --white:     #FFFFFF;
+  --border:    rgba(15,91,89,0.12);
+  --shadow:    0 4px 24px rgba(15,91,89,0.10);
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dark);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── TOPBAR (hidden in hero, shown after) ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  background:#8f2f1e;
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(0,0,0,0.2);
+  transform:translateY(-100%);
+  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.topbar.visible{transform:translateY(0)}
+.topbar-logo{display:flex;align-items:center;line-height:0}
+.topbar-logo img{display:block;width:auto;height:34px;max-width:196px}
+.topbar-btn{background:var(--orange);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;padding:10px 18px;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background 0.2s,transform 0.15s;white-space:nowrap}
+.topbar-btn:active{transform:scale(0.97);background:var(--orange-dk)}
+.topbar-fomo{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;text-align:center}
+.topbar-fomo strong{font-size:18px;letter-spacing:.04em;color:#FFD39B}
+
+/* ── HERO ── */
+.hero{
+  min-height:100svh;
+  background:var(--teal);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:48px 24px 40px;
+  position:relative;overflow:hidden;
+  text-align:center;
+}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 80% 20%, rgba(231,195,108,0.08) 0%, transparent 60%),radial-gradient(ellipse 40% 40% at 10% 80%, rgba(231,195,108,0.05) 0%, transparent 60%);pointer-events:none}
+
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:rgba(231,195,108,0.12);border:1px solid rgba(231,195,108,0.35);padding:5px 12px;border-radius:4px;margin-bottom:20px}
+.hero-eyebrow span{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold)}
+
+.hero h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:clamp(30px,8.5vw,52px);color:var(--white);line-height:1.08;letter-spacing:-0.025em;margin-bottom:14px}
+.hero h1 .hl{color:var(--gold)}
+
+/* RATING */
+.hero-rating{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px}
+.rating-stars{color:var(--gold);font-size:18px;letter-spacing:1px;line-height:1}
+.rating-text{font-size:13px;color:rgba(255,255,255,0.75);font-weight:500}
+.rating-text strong{color:var(--white);font-weight:700}
+
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.7);line-height:1.65;margin-bottom:28px;max-width:460px;font-weight:400}
+
+/* VSL */
+.vsl-wrap{border-radius:12px;overflow:hidden;background:var(--teal-dark);aspect-ratio:16/9;position:relative;margin-bottom:24px;box-shadow:0 8px 32px rgba(0,0,0,0.35);cursor:pointer;width:100%;max-width:520px}
+.vsl-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(4,31,31,.42) 0%,rgba(4,31,31,.72) 100%);gap:14px}
+.vsl-play{width:68px;height:68px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 14px rgba(240,138,46,0.18);transition:transform 0.2s,box-shadow 0.2s}
+.vsl-wrap:hover .vsl-play{transform:scale(1.08);box-shadow:0 0 0 20px rgba(240,138,46,0.12)}
+.vsl-video-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.72);border:1px solid rgba(255,255,255,.28);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:7px 11px;border-radius:99px;box-shadow:0 5px 16px rgba(0,0,0,.22)}
+.vsl-video-badge::before{content:'▶';color:var(--gold);font-size:10px}
+.vsl-play::after{content:'';border-left:24px solid white;border-top:15px solid transparent;border-bottom:15px solid transparent;margin-left:5px}
+.vsl-lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:rgba(255,255,255,0.55);letter-spacing:0.04em}
+.vsl-dur{position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.55);color:white;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
+
+/* PRICE */
+.hero-price{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:20px}
+.price-row{display:flex;align-items:center;gap:10px}
+.price-old{font-size:16px;color:rgba(255,255,255,0.4);text-decoration:line-through;font-weight:500}
+.price-badge{background:var(--red);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;padding:4px 10px;border-radius:4px;white-space:nowrap}
+.price-new{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:44px;color:var(--white);letter-spacing:-0.025em;line-height:1}
+.price-fcfa{font-size:16px;font-weight:600;color:rgba(255,255,255,0.65);margin-left:2px}
+
+/* CTA */
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:400px;background:var(--orange);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;padding:18px 24px;border:none;border-radius:8px;cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;box-shadow:0 4px 20px rgba(240,138,46,0.35);margin-bottom:20px}
+.hero-cta:active{transform:scale(0.98);background:var(--orange-dk)}
+.wa-svg{width:22px;height:22px;fill:white;flex-shrink:0}
+
+/* SOCIAL BADGE */
+.social-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:99px;padding:8px 14px}
+.avatar-stack{display:flex}
+.avatar-mini{width:28px;height:28px;border-radius:50%;border:2px solid var(--teal);background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;margin-left:-8px;overflow:hidden}
+.avatar-mini:first-child{margin-left:0}
+.social-text{font-size:13px;color:rgba(255,255,255,0.85);font-weight:500}
+.social-text strong{color:var(--white);font-weight:700}
+
+/* ── PROOF BAR ── */
+.proof-bar{background:var(--white);padding:14px 20px;display:flex;align-items:center;gap:16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.proof-bar::-webkit-scrollbar{display:none}
+.proof-item{display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0}
+.proof-num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:var(--teal);line-height:1}
+.proof-text{font-size:12px;color:var(--gray);line-height:1.3}
+.proof-sep{width:1px;height:30px;background:var(--border);flex-shrink:0}
+
+/* ── URGENCY / OFFRE LIMITÉE ── */
+.offre-banner{background:var(--red);padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.offre-banner span{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;color:white;text-align:center}
+
+/* ── JAUGE OFFRE ── */
+.gauge-section{background:var(--white);padding:14px 20px;border-bottom:1px solid var(--border)}
+.gauge-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.gauge-label{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:var(--dark)}
+.gauge-count{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;color:var(--red)}
+.gauge-bg{height:10px;background:#E5E7EB;border-radius:99px;overflow:hidden}
+.gauge-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--red));border-radius:99px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1)}
+.gauge-sub{margin-top:6px;font-size:12px;color:var(--gray);display:flex;align-items:center;gap:5px}
+.gauge-dot{width:7px;height:7px;background:var(--red);border-radius:50%;animation:blink 1.2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* VALUE STACK / COUNTDOWN / GUARANTEE */
+.value-stack{background:var(--white);border:1px solid rgba(15,91,89,.14);border-radius:18px;padding:24px;box-shadow:0 14px 40px rgba(15,91,89,.12);margin-top:26px}
+.value-stack h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;line-height:1.15;color:var(--dark);margin-bottom:8px}
+.value-stack-intro{font-size:14px;line-height:1.65;color:var(--gray);margin-bottom:18px}
+.value-table{width:100%;border-collapse:collapse;font-size:13px}
+.value-table td{padding:11px 0;border-bottom:1px solid var(--border);vertical-align:top}
+.value-table td:last-child{text-align:right;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;color:var(--teal);white-space:nowrap}
+.value-table tr.total td{font-weight:800;color:var(--dark);border-bottom:0;padding-top:16px}
+.value-table tr.total td:last-child{font-size:18px;color:var(--teal)}
+.value-table tr.price td{border-top:2px solid var(--orange);border-bottom:0;padding-top:14px;font-weight:800}
+.value-table tr.price td:last-child{font-size:22px;color:var(--orange)}
+.value-foot{font-size:13px;line-height:1.6;color:var(--gray);margin-top:16px}
+.countdown{display:flex;align-items:center;justify-content:center;gap:9px;background:#8f2f1e;border:2px solid #ffbd78;border-radius:12px;padding:12px 16px;margin:0 auto 18px;max-width:420px;color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;box-shadow:0 8px 22px rgba(143,47,30,.32)}
+.countdown strong{font-size:22px;letter-spacing:.04em;color:var(--white);text-shadow:0 1px 1px rgba(0,0,0,.18)}
+.countdown-final{background:rgba(255,255,255,.08);border:1px dashed rgba(255,211,155,.9);color:#FFD39B;box-shadow:none;max-width:360px;font-size:12px}
+.countdown-final strong{color:#FFD39B;text-shadow:none}
+@keyframes fomoPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.58;transform:scale(1.045)}}
+.topbar-fomo strong,.countdown-final strong{animation:fomoPulse 1.15s ease-in-out infinite}
+.hero-value-anchor{font-size:13px;color:rgba(255,255,255,.72);margin:-8px 0 18px}
+.guarantee-box{display:flex;align-items:flex-start;gap:12px;background:#FFF8ED;border:1px solid rgba(240,138,46,.35);border-radius:12px;padding:15px 16px;margin-top:18px;color:var(--dark)}
+.guarantee-box strong{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;margin-bottom:4px}
+.guarantee-box p{font-size:12px;line-height:1.55;color:var(--gray)}
+.guarantee-mark{font-size:22px;line-height:1}
+.written-testimonials{margin-top:24px;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;scrollbar-width:none}
+.written-testimonials::-webkit-scrollbar{display:none}
+.written-testimonial{min-width:min(82vw,330px);scroll-snap-align:start;background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.written-person{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.written-person img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--white)}
+.written-person strong{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--dark)}
+.written-person span{display:block;font-size:12px;color:var(--gray);margin-top:2px}
+.verified-badge{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;font-size:10px;font-weight:800;color:var(--teal);letter-spacing:.02em}
+.written-testimonial blockquote{font-size:14px;line-height:1.65;color:var(--dark);font-style:italic}
+.written-testimonial small{display:block;margin-top:10px;font-size:10px;line-height:1.4;color:var(--red)}
+.written-dots{text-align:center;font-size:18px;letter-spacing:4px;color:var(--orange);margin-top:2px}
+.section-rating{display:flex;align-items:center;gap:9px;margin:14px 0 22px;font-size:13px;color:var(--gray);font-weight:700}
+.section-rating-stars{color:var(--gold);font-size:19px;letter-spacing:1px;line-height:1}
+.section-rating strong{color:var(--dark);font-family:'Plus Jakarta Sans',sans-serif;font-weight:800}
+.testi-rating{margin-top:4px;color:var(--gold);font-size:12px;letter-spacing:1px;line-height:1}
+.sticky-countdown{font-size:11px;color:var(--red);font-weight:700;margin-top:2px}
+.support-guarantee{max-width:680px;margin:24px auto 0;background:var(--white);border-radius:18px;padding:26px 24px;color:var(--dark);box-shadow:0 14px 36px rgba(0,0,0,.12)}
+.support-guarantee h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;line-height:1.2;margin-bottom:10px}
+.support-guarantee p{font-size:14px;line-height:1.65;color:var(--gray);margin-bottom:18px}
+.guarantee-points{display:grid;gap:9px;margin:0 0 20px;padding:0;list-style:none}
+.guarantee-points li{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:1.5;color:var(--dark);font-weight:700}
+.guarantee-points li::before{content:'✓';display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:rgba(15,91,89,.1);color:var(--teal);font-size:12px;font-weight:800}
+.support-links{display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+.support-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;text-decoration:none}
+.support-link.email{background:rgba(15,91,89,.1);color:var(--teal);border:1px solid rgba(15,91,89,.18)}
+.support-link.whatsapp{background:#25D366;color:#fff}
+.guarantee-compact{display:flex;align-items:center;justify-content:center;gap:7px;margin:14px auto 0;color:var(--gray);font-size:12px;font-weight:700}
+.guarantee-compact .guarantee-mark{font-size:16px;color:var(--teal)}
+.hero-guarantee-compact{color:rgba(255,255,255,.62);margin-top:14px}
+.hero-guarantee-compact .guarantee-mark{color:rgba(255,255,255,.7)}
+@keyframes stickyShake{0%,88%,100%{transform:translateX(0)}90%{transform:translateX(-2px)}92%{transform:translateX(2px)}94%{transform:translateX(-2px)}96%{transform:translateX(0)}}
+.sticky-btn{animation:stickyShake 6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.sticky-btn{animation:none}}
+@media(max-width:560px){.value-stack{padding:18px}.value-table{font-size:12px}.value-table td{padding:9px 0}.countdown{font-size:12px}.countdown strong{font-size:18px}}
+
+/* ── SECTIONS ── */
+section{padding:56px 20px}
+section:not(.hero),footer{content-visibility:auto;contain-intrinsic-size:760px}
+.s-white{background:var(--white)}
+.s-teal{background:var(--teal);color:var(--white)}
+.s-bg{background:var(--bg)}
+.s-dark{background:var(--dark);color:var(--white)}
+
+.section-label{display:inline-block;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+.section-label-gold{color:var(--gold)}
+
+h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:clamp(24px,6vw,36px);line-height:1.1;letter-spacing:-0.02em;margin-bottom:8px}
+.ao{color:var(--orange)}
+.ag{color:var(--gold)}
+.aw{color:var(--white)}
+
+.section-intro{font-size:14px;line-height:1.75;color:var(--gray);margin-bottom:28px}
+.section-intro-light{color:rgba(255,255,255,0.65)}
+
+/* ── INSIDE LIST ── */
+.inside-list{display:grid;grid-template-columns:1fr;gap:16px}
+.inside-item{display:flex;align-items:flex-start;gap:14px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow)}
+.inside-icon{width:44px;height:44px;background:rgba(15,91,89,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.inside-text h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--dark);margin-bottom:3px}
+.inside-text p{font-size:13px;color:var(--gray);line-height:1.55}
+
+/* ── PREMIUM MODELS GALLERY ── */
+.models-gallery-section{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg,#082f2e 0%,#0f5b59 58%,#126a67 100%);
+  color:var(--white);
+}
+.models-gallery-section::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 88% 8%,rgba(231,195,108,.20),transparent 30%),radial-gradient(circle at 6% 92%,rgba(240,138,46,.16),transparent 28%);
+  pointer-events:none;
+}
+.models-gallery-inner{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+.models-gallery-heading{max-width:760px}
+.models-gallery-heading h2{color:var(--white);margin-bottom:12px}
+.models-gallery-heading .section-intro{max-width:670px;margin-bottom:24px}
+.models-proof-line{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:rgba(255,255,255,.78);font-size:12px;font-weight:700}
+.models-proof-line::before{content:'✓';display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--dark);font-weight:900;flex:0 0 auto}
+.models-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.model-card{position:relative;overflow:hidden;min-height:178px;border-radius:14px;background:#0a3f3e;border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 34px rgba(0,0,0,.2);isolation:isolate}
+.model-card img{width:100%;height:100%;min-height:178px;object-fit:cover;display:block;transition:transform .45s ease}
+.model-card::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(3,22,22,.94) 0%,rgba(3,22,22,.16) 62%,rgba(3,22,22,.04) 100%);z-index:1}
+.model-card:hover img{transform:scale(1.04)}
+.model-card-copy{position:absolute;left:12px;right:10px;bottom:11px;z-index:2}
+.model-card-type{display:inline-block;margin-bottom:5px;padding:4px 7px;border-radius:999px;background:rgba(240,138,46,.94);color:#fff;font-size:8px;line-height:1;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+.model-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;line-height:1.2;color:#fff;margin-bottom:3px}
+.model-card p{font-size:10px;line-height:1.35;color:rgba(255,255,255,.75)}
+.models-gallery-note{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0 14px;color:rgba(255,255,255,.72);font-size:12px;text-align:center}
+.models-gallery-note strong{font-family:'Plus Jakarta Sans',sans-serif;color:var(--gold);font-size:14px}
+.models-gallery-cta{max-width:440px;margin:0 auto}
+
+/* ── FIT / RISK SECTIONS ── */
+.info-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:24px}
+.info-card{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  background:var(--white);
+  border:1px solid rgba(15,91,89,0.08);
+  border-radius:14px;
+  padding:18px 20px;
+  box-shadow:0 10px 30px rgba(15,91,89,0.08);
+}
+.info-card.check{padding:20px 22px}
+.info-mark{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  font-size:20px;
+}
+.info-card.check .info-mark{
+  width:auto;
+  height:auto;
+  border-radius:0;
+  background:none;
+  color:var(--teal);
+  font-size:18px;
+  padding-top:2px;
+}
+.info-card.risk .info-mark{
+  background:rgba(240,138,46,0.10);
+}
+.info-copy{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:700;
+  font-size:17px;
+  line-height:1.45;
+  color:var(--dark);
+}
+
+/* ── CATALOG PREVIEW ── */
+.catalog-preview-wrap{margin-top:24px}
+.catalog-video-card{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
+.catalog-video-frame{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background:linear-gradient(135deg,#0A3F3E 0%, #0F5B59 100%);
+  aspect-ratio:16/9;
+}
+.catalog-video-frame video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  background:#082828;
+}
+.catalog-video-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  color:rgba(255,255,255,0.78);
+  text-align:center;
+  padding:24px;
+  pointer-events:none;
+}
+.catalog-video-placeholder strong{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:18px;
+  font-weight:700;
+  color:var(--white);
+}
+.catalog-video-note{
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.6;
+  color:rgba(255,255,255,0.68);
+}
+
+/* ── TÉMOIGNAGES 2x2 9:16 ── */
+.testi-grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.testi-card{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:transform 0.2s,box-shadow 0.2s}
+.testi-card:active{transform:scale(0.99)}
+.testi-video{aspect-ratio:9/16;background:var(--dark);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.testi-video-bg{position:absolute;inset:0;background:linear-gradient(160deg,var(--teal-dark) 0%,#071A1A 100%)}
+.testi-play{position:relative;z-index:1;width:44px;height:44px;background:rgba(240,138,46,0.92);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform 0.2s}
+.testi-card:hover .testi-play{transform:scale(1.08)}
+.testi-play::after{content:'';border-left:15px solid white;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.testi-video-lbl{position:absolute;bottom:8px;left:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.06em;color:rgba(255,255,255,0.6);text-transform:uppercase}
+.testi-vid-el{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity 0.5s}
+.testi-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:var(--teal-dark)}
+.testi-video-bg{position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,63,62,0.5) 0%,rgba(7,26,26,0.7) 100%);z-index:3}
+.testi-play{position:relative;z-index:4!important}
+.testi-video-lbl{z-index:4!important}
+.testi-body{padding:12px}
+.testi-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;color:var(--dark)}
+.testi-loc{font-size:11px;color:var(--gray)}
+
+/* ── LIVRAISON ── */
+.delivery-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.delivery-opt{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px}
+.delivery-icon{font-size:26px;flex-shrink:0}
+.delivery-opt h4{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--white);margin-bottom:2px}
+.delivery-opt p{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.4}
+.cities-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.city-pill{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:12px;font-weight:500;padding:5px 12px;border-radius:99px}
+
+/* ── FAQ ── */
+.faq-list{display:flex;flex-direction:column}
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-btn{width:100%;background:none;border:none;padding:18px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;text-align:left;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15px;color:var(--dark)}
+.faq-chevron{color:var(--teal);font-size:18px;transition:transform 0.3s;flex-shrink:0}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-ans{max-height:0;overflow:hidden;transition:max-height 0.35s ease}
+.faq-ans-inner{padding-bottom:18px;font-size:14px;color:var(--gray);line-height:1.7}
+.faq-item.open .faq-ans{max-height:300px}
+
+/* ── PRICING BOX ── */
+.pricing-box{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(15,91,89,0.15);border:2px solid var(--teal);margin-bottom:16px}
+.pricing-top{background:var(--teal);padding:28px 20px;text-align:center}
+.pricing-top .lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:10px}
+.pricing-top .p-main{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:52px;color:var(--white);letter-spacing:-0.03em;line-height:1}
+.pricing-top .p-fcfa{font-size:18px;font-weight:600;color:rgba(255,255,255,0.65)}
+.pricing-top .p-was{font-size:14px;color:rgba(255,255,255,0.45);text-decoration:line-through;margin-top:6px}
+.pricing-badge{display:inline-block;background:var(--red);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;padding:5px 14px;border-radius:4px;margin-top:12px}
+.pricing-body{padding:24px 20px}
+.pricing-incs{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.pinc{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--dark);font-weight:500}
+.pinc::before{content:'✓';width:22px;height:22px;background:rgba(15,91,89,0.1);color:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+/* ── FINAL CTA SECTION ── */
+/* BONUS SPECIAL DU JOUR */
+.bonus-section{position:relative;overflow:hidden;background:linear-gradient(145deg,#082f2e 0%,var(--teal) 54%,#14706d 100%);color:var(--white)}
+.bonus-section::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(231,195,108,.2),transparent 34%),radial-gradient(circle at 8% 92%,rgba(240,138,46,.14),transparent 28%);pointer-events:none}
+.bonus-shell{position:relative;max-width:980px;margin:0 auto}
+.bonus-date-pill{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;padding:7px 12px;border:1px solid rgba(255,211,155,.55);border-radius:99px;background:rgba(255,255,255,.08);color:#FFD39B;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.bonus-date-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:#FFD39B;box-shadow:0 0 0 5px rgba(255,211,155,.12);animation:blink 1.2s ease-in-out infinite}
+.bonus-date-copy{display:flex;flex-direction:column;line-height:1.25}
+.bonus-section h2{max-width:690px;margin-bottom:14px;color:var(--white)}
+.bonus-lead{max-width:680px;color:rgba(255,255,255,.76);font-size:15px;line-height:1.7;margin-bottom:26px}
+.bonus-grid{display:grid;gap:24px;align-items:center}
+.bonus-visual{position:relative;min-height:330px;border:1px solid rgba(255,255,255,.16);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.04));box-shadow:0 24px 60px rgba(0,0,0,.26);overflow:hidden;padding:26px}
+.bonus-cover{position:absolute;left:50%;bottom:24px;width:min(52%,210px);height:270px;object-fit:cover;object-position:top;transform:translateX(-50%) rotate(-3deg);border:7px solid #fff;border-radius:12px;box-shadow:0 18px 40px rgba(0,0,0,.38);z-index:2}
+.bonus-house{position:absolute;width:132px;height:96px;object-fit:cover;border:5px solid #fff;border-radius:11px;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+.bonus-house.one{left:18px;top:38px;transform:rotate(-7deg)}
+.bonus-house.two{right:16px;bottom:40px;transform:rotate(7deg);z-index:3}
+.bonus-calendar{position:absolute;right:20px;top:20px;z-index:4;width:112px;border-radius:14px;background:#fff;color:var(--dark);box-shadow:0 12px 30px rgba(0,0,0,.24);overflow:hidden;text-align:center}
+.bonus-calendar-head{display:block;padding:7px;background:var(--orange);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.bonus-calendar strong{display:block;padding:10px 8px 2px;font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;line-height:1;color:var(--teal)}
+.bonus-calendar small{display:block;padding:0 6px 10px;font-size:10px;color:var(--gray);font-weight:700;text-transform:capitalize}
+.bonus-plus{position:absolute;left:22px;bottom:26px;z-index:5;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--gold);color:var(--teal-dark);font-family:'Plus Jakarta Sans',sans-serif;font-size:32px;font-weight:800;box-shadow:0 0 0 9px rgba(231,195,108,.16)}
+.bonus-card{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:22px}
+.bonus-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:21px;line-height:1.25;margin-bottom:14px;color:var(--white)}
+.bonus-points{list-style:none;display:grid;gap:12px;margin-bottom:20px}
+.bonus-points li{display:flex;align-items:flex-start;gap:10px;color:rgba(255,255,255,.84);font-size:14px;line-height:1.5}
+.bonus-points li::before{content:'✓';display:flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--teal-dark);font-size:12px;font-weight:900}
+.bonus-deadline{padding:12px 14px;border-radius:10px;background:rgba(8,40,40,.48);border:1px dashed rgba(255,211,155,.62);color:#FFD39B;font-size:12px;line-height:1.55;text-align:center;font-weight:700}
+.bonus-cta{margin:20px 0 0;max-width:430px}
+@media(min-width:760px){.bonus-grid{grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr)}.bonus-visual{min-height:400px}.bonus-cover{height:330px;width:220px}}
+
+.final-section{background:var(--teal);padding:48px 20px;text-align:center}
+
+
+/* ── CTA BUTTON ── */
+.cta-primary{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--orange);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;padding:18px 20px;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(240,138,46,0.3);margin-bottom:10px}
+.cta-primary:active{transform:scale(0.98);background:var(--orange-dk)}
+.trust-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray)}
+.trust-item-light{color:rgba(255,255,255,0.5)}
+.trust-item svg{flex-shrink:0}
+
+/* ── STICKY BAR ── */
+.sticky-bar{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--white);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 -4px 24px rgba(0,0,0,0.1);transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1)}
+.sticky-bar.visible{transform:translateY(0)}
+.sticky-price{flex:1}
+.s-price{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;color:var(--teal);line-height:1}
+.s-was{font-size:11px;color:var(--gray);text-decoration:line-through}
+.sticky-btn{background:var(--orange);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;padding:13px 18px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px rgba(240,138,46,0.35);transition:all 0.2s;white-space:nowrap}
+.sticky-btn:active{transform:scale(0.97);background:var(--orange-dk)}
+
+/* ── MODALS ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.modal-ov.active{opacity:1;pointer-events:all}
+.modal-box{width:100%;max-width:520px;background:var(--dark);border-radius:12px;overflow:hidden;transform:translateY(20px) scale(0.97);transition:transform 0.25s}
+.modal-ov.active .modal-box{transform:translateY(0) scale(1)}
+.modal-vid-area{aspect-ratio:16/9;background:#071A1A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,0.3);font-size:14px}
+.modal-big-play{font-size:48px;opacity:0.15}
+.modal-footer{padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.modal-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--white)}
+.modal-loc{font-size:11px;color:var(--gray)}
+.modal-close{background:rgba(255,255,255,0.1);border:none;color:white;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+
+/* ── OFFRE FLASH 29 000 FCFA ── */
+.promo-popup{position:fixed;inset:0;z-index:720;background:rgba(4,20,20,.76);display:flex;align-items:flex-end;justify-content:center;padding:14px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s ease;backdrop-filter:blur(4px)}
+.promo-popup.active{opacity:1;visibility:visible;pointer-events:auto}
+.promo-card{position:relative;width:min(100%,460px);overflow:hidden;border:2px solid var(--gold);border-radius:20px;background:linear-gradient(145deg,#0F5B59 0%,#082F2E 100%);padding:28px 22px 22px;color:#fff;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.42);cursor:pointer;transform:translateY(30px) scale(.97);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.promo-popup.active .promo-card{transform:translateY(0) scale(1)}
+.promo-card:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.promo-close{position:absolute;top:10px;right:10px;width:34px;height:34px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(0,0,0,.22);color:#fff;font-size:18px;line-height:1;cursor:pointer;z-index:2}
+.promo-kicker{display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:6px 11px;border-radius:999px;background:var(--gold);color:#473006;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.promo-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:clamp(24px,7vw,34px);font-weight:800;line-height:1.08;margin:0 0 9px}
+.promo-saving{color:#FFD76A}
+.promo-copy{max-width:350px;margin:0 auto 15px;color:rgba(255,255,255,.83);font-size:14px;line-height:1.5}
+.promo-prices{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:17px}
+.promo-old{color:rgba(255,255,255,.58);font-size:17px;text-decoration:line-through}
+.promo-new{font-family:'Plus Jakarta Sans',sans-serif;font-size:30px;font-weight:800;color:#fff}
+.promo-cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:11px;background:var(--orange);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;box-shadow:0 8px 24px rgba(240,139,47,.34)}
+.promo-note{display:block;margin-top:10px;color:rgba(255,255,255,.65);font-size:11px}
+@media(min-width:700px){.promo-popup{align-items:center}.promo-card{padding:34px 30px 26px}}
+
+/* ORDER SHEET */
+.order-ov{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.order-ov.active{opacity:1;pointer-events:all}
+.order-sheet{width:100%;max-width:540px;margin:0 auto;background:var(--white);border-radius:20px 20px 0 0;overflow:hidden;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);max-height:95vh;overflow-y:auto}
+.order-ov.active .order-sheet{transform:translateY(0)}
+.checkout-ov{position:fixed;inset:0;z-index:650;background:rgba(6,24,24,.88);display:flex;align-items:center;justify-content:center;padding:14px;opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(5px)}
+.checkout-ov.active{opacity:1;pointer-events:auto}
+.checkout-dialog{position:relative;width:min(100%,560px);max-height:94vh;overflow-y:auto;background:#fff;border-radius:18px;padding:18px;box-shadow:0 28px 80px rgba(0,0,0,.38);transform:translateY(18px) scale(.98);transition:transform .25s ease}
+.checkout-ov.active .checkout-dialog{transform:translateY(0) scale(1)}
+.checkout-close{position:sticky;top:0;z-index:2;margin:0 0 10px auto;width:38px;height:38px;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--dark);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.checkout-heading{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;color:var(--teal);text-align:center;margin:-38px 42px 14px}
+.checkout-note{text-align:center;color:var(--gray);font-size:12px;line-height:1.5;margin:0 12px 16px}
+#chariow-widget{min-height:220px}
+#chariow-widget:empty::before{content:'Chargement du paiement sécurisé…';min-height:220px;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:13px;text-align:center}
+.order-handle{width:40px;height:4px;background:#E5E7EB;border-radius:99px;margin:14px auto 0}
+.order-head{padding:16px 20px 18px;background:var(--teal)}
+.order-head h3{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;color:var(--white);margin-bottom:3px}
+.order-head p{font-size:13px;color:rgba(255,255,255,0.6)}
+.order-body{padding:22px 20px}
+.ff{margin-bottom:16px}
+.ff label{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);margin-bottom:7px}
+.ff input,.ff select{width:100%;padding:13px 15px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;color:var(--dark);background:var(--bg);outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
+.ff input:focus,.ff select:focus{border-color:var(--teal);background:white}
+.ff input::placeholder{color:#B0B8C1}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--teal);pointer-events:none}
+.order-sum{display:flex;align-items:center;justify-content:space-between;background:rgba(15,91,89,0.05);border:1px solid rgba(15,91,89,0.15);border-radius:8px;padding:14px 16px;margin-bottom:18px}
+.os-lbl{font-size:13px;color:var(--gray)}
+.os-lbl strong{display:block;font-size:14px;color:var(--dark);font-weight:600}
+.os-price{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:22px;color:var(--teal)}
+.submit-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;padding:17px 20px;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(37,211,102,0.25)}
+.submit-btn:active{transform:scale(0.98);background:#1FAD57}
+.submit-btn .wa-svg{width:22px;height:22px;fill:white;flex-shrink:0}
+.form-note{text-align:center;font-size:12px;color:var(--gray);margin-top:8px}
+.desktop-help{display:none;background:rgba(15,91,89,0.05);border:1px solid rgba(15,91,89,0.14);border-radius:12px;padding:14px 14px 12px;margin:0 0 16px}
+.desktop-help.active{display:block}
+.desktop-help strong{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--teal);margin-bottom:4px}
+.desktop-help p{font-size:12px;color:var(--gray);line-height:1.5}
+.desktop-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.desktop-copy-btn{border:1px solid rgba(15,91,89,0.16);background:#fff;border-radius:10px;padding:12px 10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--teal);cursor:pointer}
+.desktop-copy-btn:active{transform:scale(0.98)}
+.lead-status{display:none;margin-top:12px;padding:11px 12px;border-radius:10px;font-size:12px;line-height:1.5}
+.lead-status.active{display:block}
+.lead-status.ok{background:rgba(16,185,129,0.1);color:#047857}
+.lead-status.info{background:rgba(240,138,46,0.12);color:#B45309}
+.err-msg{color:var(--red);font-size:12px;margin-top:4px;display:none}
+.ff.has-error input,.ff.has-error select{border-color:var(--red);background:rgba(199,91,58,0.04)}
+.ff.has-error .err-msg{display:block}
+
+
+/* ── REVEAL ── */
+.r{opacity:0;transform:translateY(22px);transition:opacity 0.6s ease,transform 0.6s ease}
+.r.d1{transition-delay:0.08s}.r.d2{transition-delay:0.16s}.r.d3{transition-delay:0.24s}
+.r.vis{opacity:1;transform:translateY(0)}
+
+@media(min-width:480px){
+  .hero,.final-section{padding-left:32px;padding-right:32px}
+  section{padding-left:28px;padding-right:28px}
+  .topbar,.gauge-section,.proof-bar,.offre-banner,.order-body{padding-left:28px;padding-right:28px}
+  .sticky-bar{padding:14px 28px}
+}
+
+@media(min-width:900px){
+  .inside-list{grid-template-columns:1fr 1fr}
+  .info-grid{grid-template-columns:1fr 1fr}
+  .models-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .model-card,.model-card img{min-height:230px}
+  .model-card-copy{left:18px;right:16px;bottom:16px}
+  .model-card h3{font-size:17px}
+  .model-card p{font-size:12px}
+  .model-card-type{font-size:9px;padding:5px 9px}
+}
+
+/* ── PAYMENT OPTIONS ── */
+.pay-opt{flex:1;cursor:pointer}
+.pay-opt input{display:none}
+.pay-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);transition:all 0.2s;text-align:center}
+.pay-opt input:checked + .pay-card{border-color:var(--teal);background:rgba(15,91,89,0.06)}
+.pay-icon{font-size:22px;line-height:1}
+.pay-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:12px;color:var(--dark)}
+
+/* ── PULSE CTA ── */
+@keyframes pulse-btn{0%,100%{box-shadow:0 4px 20px rgba(240,138,46,0.3),0 0 0 0 rgba(240,138,46,0.4)}70%{box-shadow:0 4px 20px rgba(240,138,46,0.3),0 0 0 12px rgba(240,138,46,0)}}
+.cta-pulse{animation:pulse-btn 2s infinite}
+@keyframes blink-count{0%,100%{opacity:1;color:var(--gold)}50%{opacity:0.4;color:#fff}}
+.gauge-count-blink{animation:blink-count 2s ease-in-out infinite}
+@keyframes offer-badge-blink{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.55;transform:scale(1.04)}
+}
+.pricing-badge.blink-offer{animation:offer-badge-blink 1.15s ease-in-out infinite}
+@media(max-width:759px){.cta-pulse,.pricing-badge.blink-offer,.sticky-btn{animation:none!important}}
+</style>
+<!-- Tracking events are queued immediately; third-party libraries load after interaction or idle. -->
+<script>
+(function(){
+  var loaded=false;
+  var loadTracking=function(){
+    if(loaded)return;
+    loaded=true;
+    var queued=(window.fbq&&window.fbq.queue)||[];
+    !function(f,b,e,v,n,t,s){if(f.fbq&&f.fbq.callMethod)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=queued;t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    var t=document.createElement('script');t.async=true;t.src='https://www.clarity.ms/tag/y284dj587r';
+    document.head.appendChild(t);
+  };
+  window.fbq=window.fbq||function(){(window.fbq.queue=window.fbq.queue||[]).push(arguments)};
+  window.clarity=window.clarity||function(){(window.clarity.q=window.clarity.q||[]).push(arguments)};
+  window.fbq('init','1025626273769966');
+  window.fbq('track','PageView');
+  ['pointerdown','keydown','touchstart'].forEach(function(name){window.addEventListener(name,loadTracking,{once:true,passive:true});});
+  window.addEventListener('load',function(){
+    if('requestIdleCallback' in window)requestIdleCallback(loadTracking,{timeout:8000});
+    else window.setTimeout(loadTracking,8000);
+  },{once:true});
+})();
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></noscript>
+</head>
+<body>
+
+<!-- TOPBAR (appears after hero) -->
+<nav class="topbar" id="topbar">
+  <div class="topbar-fomo" data-countdown>
+    <span>Prix promo · encore</span>
+    <strong>24H:00:00</strong>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="heroSection">
+  
+
+  <h1>OBTENEZ 50+ PLANS<br>AVEC LEURS <span class="hl">VRAIS DEVIS.</span></h1>
+
+  <div class="hero-rating">
+    <span class="rating-stars">★★★★★</span>
+    <span class="rating-text"><strong>4,9</strong> · +450 avis</span>
+  </div>
+
+  <p class="hero-sub">Comparez les modèles, visualisez votre future maison et estimez votre budget avant de lancer votre chantier.</p>
+
+  <div class="vsl-wrap" id="vslWrap" onclick="playHeroVid()">
+     <video id="heroVid" data-src="/videos/vsl-cpbook-digital.mp4" poster="/assets/digital/hero-video-poster.webp" playsinline webkit-playsinline preload="none" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 0.5s"></video>
+    <div class="vsl-inner" id="vslOverlay" onclick="playHeroVid()" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:background 0.5s">
+      <span class="vsl-video-badge">Vidéo de présentation</span>
+      <div class="vsl-play"></div>
+      <span class="vsl-lbl">Cliquez pour regarder la vidéo</span>
+    </div>
+  </div>
+
+
+  <div class="hero-price">
+    <div class="price-row">
+      <span class="price-old">500 000 FCFA</span>
+      <span class="price-badge">–92%</span>
+    </div>
+    <div class="price-new">39 000<span class="price-fcfa"> FCFA</span></div>
+  </div>
+
+  <button class="hero-cta" data-cta-id="hero_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
+    <svg class="wa-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    Télécharger le Catalogue
+  </button>
+
+
+  <div class="social-badge">
+    <div class="avatar-stack">
+      <div class="avatar-mini"><img width="44" height="44" decoding="async" src="/assets/avatars/avatar-1.jpeg" alt="client" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <div class="avatar-mini"><img width="44" height="44" decoding="async" src="/assets/avatars/avatar-2.jpeg" alt="client" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <div class="avatar-mini"><img width="44" height="44" decoding="async" src="/assets/avatars/avatar-3.jpeg" alt="client" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+      <div class="avatar-mini"><img width="44" height="44" decoding="async" src="/assets/avatars/avatar-4.jpeg" alt="client" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>
+    </div>
+    <span class="social-text">Déjà <strong>+735 commandes</strong></span>
+  </div>
+</section>
+
+<!-- AVIS ECRITS - preuve sociale juste apres le hero -->
+<section class="s-bg" id="avis-clients">
+  <span class="section-label r">Ils construisent <span data-geo-phrase>en Afrique</span></span>
+  <h2 class="r">Des clients satisfaits qui ont obtenu <span class="ao">le catalogue <span data-geo-phrase>en Afrique</span></span></h2>
+  <div class="section-rating r" aria-label="Note moyenne de 4,9 sur 5">
+    <span class="section-rating-stars" aria-hidden="true">★★★★★</span>
+    <span><strong>4,9/5</strong> · plus de 450 avis</span>
+  </div>
+  <div class="written-testimonials r" aria-label="Témoignages clients par ville">
+    <article class="written-testimonial">
+      <div class="written-person"><img width="44" height="44" loading="lazy" decoding="async" src="/assets/avatars/avatar-1.jpeg" alt="Avatar client"><div><strong data-geo-name>M. Idriss</strong><span data-geo-testimonial-location>Abidjan, Côte d’Ivoire</span></div></div>
+      <span class="verified-badge">✓ Achat vérifié</span>
+      <div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      <blockquote>« Je cherchais plusieurs modèles avant de commencer les démarches. Les devis m'ont permis de comparer beaucoup plus facilement. »</blockquote>
+    </article>
+    <article class="written-testimonial">
+      <div class="written-person"><img width="44" height="44" loading="lazy" decoding="async" src="/assets/avatars/avatar-2.jpeg" alt="Avatar client"><div><strong data-geo-name>M. Mamadou</strong><span data-geo-testimonial-location>Conakry, Guinée Conakry</span></div></div>
+      <span class="verified-badge">✓ Achat vérifié</span>
+      <div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      <blockquote>« Le catalogue m'a donné une vue claire des styles et du budget avant de contacter un entrepreneur. »</blockquote>
+    </article>
+    <article class="written-testimonial">
+      <div class="written-person"><img width="44" height="44" loading="lazy" decoding="async" src="/assets/avatars/avatar-3.jpeg" alt="Avatar client"><div><strong data-geo-name>M. Ousmane</strong><span data-geo-testimonial-location>Dakar, Sénégal</span></div></div>
+      <span class="verified-badge">✓ Achat vérifié</span>
+      <div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      <blockquote>« Je pouvais enfin montrer des exemples concrets à ma famille et avancer sur un choix précis. »</blockquote>
+    </article>
+    <article class="written-testimonial">
+      <div class="written-person"><img width="44" height="44" loading="lazy" decoding="async" src="/assets/avatars/avatar-4.jpeg" alt="Avatar client"><div><strong data-geo-name>Mme. Grâce</strong><span data-geo-testimonial-location>Yaoundé, Cameroun</span></div></div>
+      <span class="verified-badge">✓ Achat vérifié</span>
+      <div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      <blockquote>« Les plans et les devis m'ont aidé à poser les bonnes questions avant le chantier. »</blockquote>
+    </article>
+    <article class="written-testimonial">
+      <div class="written-person"><img width="44" height="44" loading="lazy" decoding="async" src="/assets/avatars/avatar-5.jpeg" alt="Avatar client"><div><strong data-geo-name>Mme. Aïcha</strong><span data-geo-testimonial-location>Douala, Cameroun</span></div></div>
+      <span class="verified-badge">✓ Achat vérifié</span>
+      <div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      <blockquote>« J'ai pu comparer plusieurs maisons au même endroit au lieu de choisir dans la précipitation. »</blockquote>
+    </article>
+  </div>
+  <div class="written-dots" aria-hidden="true">•••</div>
+</section>
+
+<!-- TÉMOIGNAGES VIDÉO - juste après les avis écrits -->
+<section class="s-white">
+  <span class="section-label r">Ils ont commandé</span>
+  <h2 class="r">Ce qu'ils <span class="ao">en disent</span></h2>
+  <div class="section-rating r" aria-label="Note moyenne de 4,9 sur 5">
+    <span class="section-rating-stars" aria-hidden="true">★★★★★</span>
+    <span><strong>4,9/5</strong> · avis clients vérifiés</span>
+  </div>
+  <div class="testi-grid-2x2" style="margin-top:20px">
+    <div class="testi-card r" onclick="openVideo(0)">
+      <div class="testi-video">
+        <video class="testi-vid-el" id="tvid0" data-src="/videos/testimonials/ibrahim.mp4" preload="none" playsinline muted loop></video>
+        <img class="testi-poster" id="tposter0" alt="">
+        <div class="testi-video-bg"></div><div class="testi-play"></div><span class="testi-video-lbl">▶ Vidéo</span>
+      </div>
+      <div class="testi-body">
+        <div class="testi-name">Ibrahim</div><div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card r d1" onclick="openVideo(1)">
+      <div class="testi-video">
+        <video class="testi-vid-el" id="tvid1" data-src="/videos/testimonials/bassirou.mp4" preload="none" playsinline muted loop></video>
+        <img class="testi-poster" id="tposter1" alt="">
+        <div class="testi-video-bg"></div><div class="testi-play"></div><span class="testi-video-lbl">▶ Vidéo</span>
+      </div>
+      <div class="testi-body">
+        <div class="testi-name">Bassirou</div><div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card r d2" onclick="openVideo(2)">
+      <div class="testi-video">
+        <video class="testi-vid-el" id="tvid2" data-src="/videos/testimonials/francis.mp4" preload="none" playsinline muted loop></video>
+        <img class="testi-poster" id="tposter2" alt="">
+        <div class="testi-video-bg"></div><div class="testi-play"></div><span class="testi-video-lbl">▶ Vidéo</span>
+      </div>
+      <div class="testi-body">
+        <div class="testi-name">Francis</div><div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      </div>
+    </div>
+    <div class="testi-card r d3" onclick="openVideo(3)">
+      <div class="testi-video">
+        <video class="testi-vid-el" id="tvid3" data-src="/videos/testimonials/renaud.mp4" preload="none" playsinline muted loop></video>
+        <img class="testi-poster" id="tposter3" alt="">
+        <div class="testi-video-bg"></div><div class="testi-play"></div><span class="testi-video-lbl">▶ Vidéo</span>
+      </div>
+      <div class="testi-body">
+        <div class="testi-name">Renaud</div><div class="testi-rating" aria-label="5 étoiles sur 5">★★★★★</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CE QUE VOUS RECEVEZ -->
+<section class="s-bg">
+  <span class="section-label r">Ce que vous recevez</span>
+  <h2 class="r">Chaque plan que vous recevez <span class="ao">contient...</span></h2>
+  <p class="section-intro r">Les éléments essentiels pour comprendre le modèle, le visualiser et anticiper son budget avant d'aller plus loin.</p>
+  <div class="inside-list">
+    <div class="inside-item r">
+      <div class="inside-icon">🏗️</div>
+      <div class="inside-text"><h3>Rendus 3D professionnels</h3><p>Montrez la maison à votre famille avant d'aller plus loin.</p></div>
+    </div>
+    <div class="inside-item r d1">
+      <div class="inside-icon">📐</div>
+      <div class="inside-text"><h3>Plans de distribution</h3><p>Comprenez chaque pièce, chaque dimension, avant d'aller plus loin.</p></div>
+    </div>
+    <div class="inside-item r d2">
+      <div class="inside-icon">💰</div>
+      <div class="inside-text"><h3>Devis estimatifs</h3><p>Sachez combien ça coûte vraiment avant de négocier avec les entrepreneurs.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- GALERIE DE MODELES PREMIUM -->
+<section class="models-gallery-section" id="modeles-premium" data-analytics-section="modeles_premium">
+  <div class="models-gallery-inner">
+    <div class="models-gallery-heading">
+      <span class="section-label section-label-gold r">Un aperçu réel du catalogue</span>
+      <h2 class="r">Des maisons que vous pouvez <span class="ag">vraiment visualiser.</span></h2>
+      <p class="section-intro section-intro-light r">Voici quelques-uns des modèles à découvrir dans le Catalogue Premium. Chaque modèle est présenté avec ses rendus 3D, son plan et son devis estimatif.</p>
+      <div class="models-proof-line r">Rendus issus des modèles actuellement disponibles chez WooPlans</div>
+    </div>
+
+    <div class="models-gallery" aria-label="Aperçu des modèles du Catalogue Premium">
+      <article class="model-card r">
+        <img src="https://wooplans.b-cdn.net/villa-v3-037/images/villa-v3-037-img-1.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="447" loading="lazy" decoding="async" alt="Rendu 3D de la villa V3-037">
+        <div class="model-card-copy"><span class="model-card-type">Villa</span><h3>Villa V3-037</h3><p>Plain-pied · 164 m² · 3 chambres</p></div>
+      </article>
+      <article class="model-card r d1">
+        <img src="https://wooplans.b-cdn.net/duplex-d4-046/images/img-1774462340790-0.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="449" loading="lazy" decoding="async" alt="Rendu 3D du duplex D4-046">
+        <div class="model-card-copy"><span class="model-card-type">Duplex</span><h3>Duplex D4-046</h3><p>Deux niveaux · 294 m² · 4 chambres</p></div>
+      </article>
+      <article class="model-card r d2">
+        <img src="https://wooplans.b-cdn.net/d4-043/images/img-1774462483076-6.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="447" loading="lazy" decoding="async" alt="Rendu 3D du duplex D4-043">
+        <div class="model-card-copy"><span class="model-card-type">Duplex</span><h3>Duplex D4-043</h3><p>Style moderne · 318 m² · 4 chambres</p></div>
+      </article>
+      <article class="model-card r">
+        <img src="https://wooplans.b-cdn.net/duplex-d4-034/images/img-1774462559384-0.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="449" loading="lazy" decoding="async" alt="Rendu 3D du duplex D4-034">
+        <div class="model-card-copy"><span class="model-card-type">Duplex</span><h3>Duplex D4-034</h3><p>Deux niveaux · 143 m² · 4 chambres</p></div>
+      </article>
+      <article class="model-card r d1">
+        <img src="https://wooplans.b-cdn.net/villa-v4-032/images/img-1774456514861-3.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="447" loading="lazy" decoding="async" alt="Rendu 3D de la villa V4-032">
+        <div class="model-card-copy"><span class="model-card-type">Villa</span><h3>Villa V4-032</h3><p>Contemporaine · 240 m² · 4 chambres</p></div>
+      </article>
+      <article class="model-card r d2">
+        <img src="https://wooplans.b-cdn.net/villa-v4-036/images/img-1774462786124-0.jpg?width=800&amp;quality=82&amp;format=webp" width="800" height="449" loading="lazy" decoding="async" alt="Rendu 3D de la villa V4-036">
+        <div class="model-card-copy"><span class="model-card-type">Villa</span><h3>Villa V4-036</h3><p>Plain-pied · 234 m² · 4 chambres</p></div>
+      </article>
+    </div>
+
+    <div class="models-gallery-note r"><strong>50+ modèles</strong><span>à comparer dans le catalogue complet</span></div>
+    <button class="cta-primary cta-pulse models-gallery-cta r" data-cta-id="gallery_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
+      Obtenir le Catalogue Premium
+      <span class="cta-arrow">→</span>
+    </button>
+  </div>
+</section>
+
+<div class="value-stack r" style="margin:26px 20px 0">
+  <h3>Ce catalogue a une valeur de 500 000 FCFA</h3>
+  <p class="value-stack-intro">Réunir autant de plans, de rendus et de devis auprès d'un professionnel demande du temps et une prestation dédiée. Le catalogue vous donne cette base de décision immédiatement.</p>
+  <table class="value-table" aria-label="Valeur réelle du catalogue">
+    <tbody>
+      <tr><td>Sélection de 50+ plans</td><td>250 000 FCFA</td></tr>
+      <tr><td>Rendus 3D et présentation</td><td>100 000 FCFA</td></tr>
+      <tr><td>Plans détaillés et dimensions</td><td>75 000 FCFA</td></tr>
+      <tr><td>Devis estimatifs pour comparer</td><td>75 000 FCFA</td></tr>
+      <tr class="total"><td>Valeur totale de comparaison</td><td>500 000 FCFA</td></tr>
+      <tr class="price"><td>Prix du catalogue aujourd'hui</td><td>39 000 FCFA</td></tr>
+    </tbody>
+  </table>
+  <p class="value-foot"><strong>Vous ne payez pas 500 000 FCFA, mais seulement 39 000 FCFA aujourd'hui.</strong></p>
+</div>
+
+<!-- POUR QUI -->
+<section class="s-bg">
+  <span class="section-label r">Pour qui ?</span>
+  <h2 class="r">Ce catalogue est fait <span class="ao">pour vous si...</span></h2>
+  <div class="info-grid">
+    <div class="info-card check r">
+      <div class="info-mark">✓</div>
+      <div class="info-copy">Vous planifiez construire votre maison.</div>
+    </div>
+    <div class="info-card check r d1">
+      <div class="info-mark">✓</div>
+      <div class="info-copy">Vous voulez comparer les devis de plusieurs plans.</div>
+    </div>
+    <div class="info-card check r d2">
+      <div class="info-mark">✓</div>
+      <div class="info-copy">Vous ne savez pas encore quel type de maison choisir.</div>
+    </div>
+    <div class="info-card check r d3">
+      <div class="info-mark">✓</div>
+      <div class="info-copy">Vous cherchez à voir des plans concrets et choisir avec votre partenaire.</div>
+    </div>
+    <div class="info-card check r">
+      <div class="info-mark">✓</div>
+      <div class="info-copy">Vous voulez contrôler votre chantier et éviter de vous faire arnaquer par les entrepreneurs.</div>
+    </div>
+  </div>
+</section>
+
+<!-- APERCU DU CATALOGUE -->
+<section class="s-teal">
+  <span class="section-label section-label-gold r">Vidéo</span>
+  <h2 class="r"><span class="aw">Aperçu</span> <span class="ag">du catalogue</span></h2>
+  <p class="section-intro section-intro-light r">Visionnez le catalogue en train d'être feuilleté pour découvrir sa finition premium et la présentation des modèles.</p>
+  <div class="catalog-preview-wrap r d1">
+    <div class="catalog-video-card">
+      <div class="catalog-video-frame">
+        <video id="catalogPreviewVideo" src="/videos/catalogue-preview.mp4" controls playsinline preload="metadata" poster="/assets/digital/catalogue-cover.jpg" data-start="8" data-end="60" aria-label="Aperçu vidéo du catalogue, de 8 à 60 secondes, lu à vitesse 1,5"></video>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ATTENTION -->
+<section class="s-bg">
+  <span class="section-label r">⚠ Attention</span>
+  <h2 class="r">Construire sans choisir parmi plusieurs plans, c'est <span class="ao">très risqué</span></h2>
+  <div class="info-grid">
+    <div class="info-card risk r">
+      <div class="info-mark">💸</div>
+      <div class="info-copy">Des modifications imprévues en cours de chantier coûtent cher.</div>
+    </div>
+    <div class="info-card risk r d1">
+      <div class="info-mark">🫠</div>
+      <div class="info-copy">Beaucoup de personnes regrettent à la fin du chantier quand elles voient la maison du voisin.</div>
+    </div>
+  </div>
+</section>
+
+<!-- GARANTIE ET SUPPORT -->
+<section class="s-teal">
+  <span class="section-label section-label-gold r">Garantie Wooplans</span>
+  <h2 class="r"><span class="aw">Achetez</span> <span class="ag">sans risque.</span></h2>
+  <div class="support-guarantee r">
+    <h3>Garantie 7 jours satisfait ou remboursé</h3>
+    <p>Accédez au catalogue et vérifiez son contenu. Si le produit ne correspond pas à la promesse, contactez notre support sous 7 jours pour demander une solution ou un remboursement.</p>
+    <ul class="guarantee-points">
+      <li>Accès immédiat.</li>
+      <li>Des plans professionnels.</li>
+      <li>On vous accompagne en cas de problème.</li>
+    </ul>
+    <div class="support-links">
+      <a class="support-link email" href="mailto:info@wooplans.com">✉ info@wooplans.com</a>
+      <a class="support-link whatsapp" href="https://wa.me/237694327885" target="_blank" rel="noopener">Contacter le support WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="s-bg" id="commander">
+  <span class="section-label r">Votre exemplaire</span>
+  <h2 class="r">Commander <span class="ao">maintenant</span></h2>
+  <div class="pricing-box r" style="margin-top:20px">
+    <div class="pricing-top">
+      <div class="lbl">Catalogue Premium Wooplans · Édition 2026</div>
+      <div class="p-main">39 000<span class="p-fcfa"> FCFA</span></div>
+      <div class="p-was">valeur réelle 500 000 FCFA</div>
+      <div class="pricing-badge blink-offer">Économie : 461 000 FCFA</div>
+    </div>
+      <div class="pricing-body">
+      <div class="pricing-incs">
+        <div class="pinc">Catalogue complet en haute résolution</div>
+        <div class="pinc">50+ plans — villas &amp; duplex</div>
+        <div class="pinc">Rendus 3D + Plans + Devis estimatifs</div>
+        <div class="pinc">Téléchargement immédiat (accès à vie)</div>
+        <div class="pinc"><strong>Bonus du jour :</strong>&nbsp; les nouveaux plans ajoutés chaque mois</div>
+      </div>
+      <button class="cta-primary" data-cta-id="pricing_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
+        <svg class="wa-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Télécharger le Catalogue
+      </button>
+      <div class="trust-row">
+        <div class="trust-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Paiement sécurisé</div>
+        <div class="trust-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>Offre limitée</div>
+        <div class="trust-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Téléchargement direct</div>
+      </div>
+      <div class="guarantee-compact"><span class="guarantee-mark">✓</span><span>Garantie 7 jours satisfait ou remboursé</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- BONUS SPECIAL -->
+<section class="bonus-section" id="bonusSpecial">
+  <div class="bonus-shell">
+    <div class="bonus-date-pill r"><span class="bonus-date-copy"><span>Bonus spécial valable ce</span><span data-bonus-date-short>jour de votre visite</span></span></div>
+    <h2 class="r">Achetez une fois aujourd’hui. <span class="ag">Découvrez de nouveaux plans chaque mois.</span></h2>
+    <p class="bonus-lead r">Votre catalogue ne reste pas figé : en commandant aujourd’hui, vous débloquez aussi la possibilité de recevoir les nouveaux plans que Wooplans ajoutera au fil des mois, sans devoir racheter un nouveau catalogue.</p>
+
+    <div class="bonus-grid">
+      <div class="bonus-visual r" aria-label="Le catalogue Wooplans enrichi de nouveaux plans chaque mois">
+        <img class="bonus-house one" width="1536" height="1024" loading="lazy" decoding="async" src="/assets/digital/house-model-01.webp" alt="Nouveau modèle de maison Wooplans">
+        <img class="bonus-cover" width="600" height="590" loading="lazy" decoding="async" src="/assets/digital/catalogue-cover.jpg" alt="Couverture du catalogue Premium Wooplans">
+        <img class="bonus-house two" width="1536" height="1024" loading="lazy" decoding="async" src="/assets/digital/house-model-03.webp" alt="Autre nouveau modèle de maison Wooplans">
+        <div class="bonus-calendar" aria-hidden="true">
+          <span class="bonus-calendar-head">Nouveautés</span>
+          <strong data-bonus-day>—</strong>
+          <small data-bonus-month>chaque mois</small>
+        </div>
+        <div class="bonus-plus" aria-hidden="true">+</div>
+      </div>
+
+      <div class="bonus-card r d1">
+        <h3>Le bonus « Nouveaux Plans » est inclus sans supplément</h3>
+        <ul class="bonus-points">
+          <li>De nouveaux modèles de maisons à découvrir au rythme des publications Wooplans.</li>
+          <li>Les futurs ajouts réunis avec vos plans, rendus 3D et estimations pour continuer à comparer.</li>
+          <li>Aucun nouveau catalogue à racheter pour profiter des mises à jour envoyées.</li>
+        </ul>
+        <div class="bonus-deadline">Bonus valable uniquement ce <strong data-bonus-date-short>jour de votre visite</strong> jusqu’à 23 h 59.</div>
+        <button class="cta-primary cta-pulse bonus-cta" data-cta-id="bonus_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
+          <svg class="wa-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Obtenir le catalogue + le bonus
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="s-white">
+  <span class="section-label r">Questions fréquentes</span>
+  <h2 class="r">Vos <span class="ao">questions</span></h2>
+  <div class="faq-list" style="margin-top:20px">
+    <div class="faq-item r">
+      <button class="faq-btn" onclick="toggleFaq(this)">Comment commander ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Cliquez sur le bouton "Télécharger" pour être redirigé vers notre page de paiement sécurisé. Une fois le paiement validé, vous recevrez immédiatement le lien de téléchargement.</div></div>
+    </div>
+    <div class="faq-item r d1">
+      <button class="faq-btn" onclick="toggleFaq(this)">Quand vais-je recevoir mon catalogue ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Immédiatement après votre paiement. Vous serez redirigé vers la page de téléchargement du catalogue au format PDF et vous recevrez également un e-mail contenant votre lien d'accès à vie.</div></div>
+    </div>
+    <div class="faq-item r d2">
+      <button class="faq-btn" onclick="toggleFaq(this)">Comment vais-je recevoir les nouveaux plans chaque mois ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Après votre paiement, vous recevrez immédiatement le catalogue ainsi qu’une invitation à rejoindre notre groupe WhatsApp Premium. C’est dans ce groupe privé que vous recevrez les nouveaux plans ajoutés chaque mois, à vie et sans aucuns frais supplémentaires.</div></div>
+    </div>
+    <div class="faq-item r d2">
+      <button class="faq-btn" onclick="toggleFaq(this)">Comment payer ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Vous pouvez payer en ligne par Mobile Money ou par carte bancaire de manière totalement sécurisée.</div></div>
+    </div>
+    <div class="faq-item r">
+      <button class="faq-btn" onclick="toggleFaq(this)">Le prix va augmenter ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Oui. Le tarif spécial de 39 000 FCFA est valable jusqu'à la fin du compte à rebours du jour. Les campagnes promotionnelles peuvent être reconduites, mais le tarif et les conditions peuvent changer.</div></div>
+    </div>
+    <div class="faq-item r">
+      <button class="faq-btn" onclick="toggleFaq(this)">Et si je ne suis pas satisfait ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Un simple message WhatsApp dans les 7 jours et on vous rembourse intégralement. Aucune question posée.</div></div>
+    </div>
+    <div class="faq-item r">
+      <button class="faq-btn" onclick="toggleFaq(this)">Les devis sont fiables ?<span class="faq-chevron">▾</span></button>
+      <div class="faq-ans"><div class="faq-ans-inner">Ce sont des devis basés sur 10 ans d'expérience dans le BTP. Ils vous donnent une base solide pour négocier avec votre maçon ou votre entrepreneur.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-section" id="finalSection">
+  <!-- Mockup catalogue -->
+  <div class="r" style="width:100%;max-width:480px;margin:0 auto 28px">
+    <img width="600" height="590" loading="lazy" decoding="async" src="/assets/digital/catalogue-cover.jpg"
+         alt="Catalogue Premium Wooplans — 50 Plans de Maison"
+         style="width:100%;display:block;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"
+         loading="lazy">
+  </div>
+
+  <span class="section-label section-label-gold r" style="display:block;text-align:center">Votre maison commence ici</span>
+  <h2 class="r" style="color:var(--white);text-align:center;margin-bottom:8px"><span class="ag">50 plans.</span> Un seul catalogue.</h2>
+  <p class="section-intro section-intro-light r" style="text-align:center;margin-bottom:24px">Accès immédiat après paiement.</p>
+
+  <div style="max-width:400px;margin:0 auto">
+    <div class="r" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px">
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;font-size:16px;color:rgba(255,255,255,0.4);text-decoration:line-through">500 000</span>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:48px;color:var(--white);letter-spacing:-0.03em;line-height:1">39 000</span>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:16px;color:rgba(255,255,255,0.6)">FCFA</span>
+    </div>
+    <div class="countdown countdown-final" data-countdown style="margin-bottom:18px"><span>Tarif spécial du jour · encore</span> <strong>24H:00:00</strong></div>
+    <!-- Legacy gauge hidden by the daily-offer script -->
+    <div class="r" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px 16px;margin-bottom:18px;width:100%;max-width:400px;text-align:left">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;color:rgba(255,255,255,0.9)">🎯 Catalogues disponibles</span>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;color:var(--gold)" id="gaugeCount2" class="gauge-count-blink">—</span>
+      </div>
+      <div style="height:8px;background:rgba(255,255,255,0.12);border-radius:99px;overflow:hidden">
+        <div id="gaugeFill2" style="height:100%;background:linear-gradient(90deg,var(--orange),var(--red));border-radius:99px;width:0%;transition:width 1.2s cubic-bezier(0.4,0,0.2,1)"></div>
+      </div>
+      <div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5)" id="gaugeSub2">—</div>
+    </div>
+    <button class="cta-primary cta-pulse r" data-cta-id="final_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))" style="max-width:420px">
+      <svg class="wa-svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Télécharger le Catalogue
+    </button>
+    <div class="trust-row r">
+      <div class="trust-item trust-item-light"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Paiement sécurisé</div>
+      <div class="trust-item trust-item-light"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Téléchargement direct</div>
+    </div>
+  </div>
+</section>
+
+<!-- STICKY BAR -->
+<div class="sticky-bar" id="stickyBar">
+  <div class="sticky-price">
+    <div class="s-price">39 000 FCFA</div>
+    <div class="s-was">valeur réelle 500 000 FCFA</div>
+    <div class="sticky-countdown" data-countdown>Encore <strong>24H:00:00</strong></div>
+  </div>
+  <button class="sticky-btn" data-cta-id="sticky_btn" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
+    <svg style="width:16px;height:16px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+    Télécharger
+  </button>
+</div>
+
+<!-- OFFRE FLASH -->
+<div class="promo-popup" id="promoPopup" aria-hidden="true" onclick="closePromoPopup(event)">
+  <div class="promo-card" role="link" tabindex="0" data-cta-id="promo_popup_29000" aria-label="Profiter de la réduction immédiate et obtenir le catalogue à 29 000 FCFA" onclick="openPromoOffer(event)" onkeydown="handlePromoKey(event)">
+    <button class="promo-close" type="button" aria-label="Fermer l’offre" onclick="dismissPromoPopup(event)">✕</button>
+    <span class="promo-kicker">🎁 Offre spéciale</span>
+    <h2 class="promo-title">Économisez immédiatement<br><span class="promo-saving">10 000 FCFA</span></h2>
+    <p class="promo-copy">Profitez maintenant du Catalogue Premium complet à un tarif exceptionnel.</p>
+    <div class="promo-prices">
+      <span class="promo-old">39 000 FCFA</span>
+      <span class="promo-new">29 000 FCFA</span>
+    </div>
+    <span class="promo-cta">Activer ma réduction immédiate</span>
+    <span class="promo-note">Paiement sécurisé · Accès numérique à vie</span>
+  </div>
+</div>
+
+<!-- VIDEO MODAL -->
+<div class="modal-ov" id="videoModal" onclick="closeVideo(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-vid-area" style="position:relative;background:#000">
+      <video id="modalVideo"
+        style="width:100%;height:100%;object-fit:contain;display:block"
+        playsinline
+        controls
+        preload="none">
+      </video>
+    </div>
+    <div class="modal-footer">
+      <div><div class="modal-name" id="modalName">—</div><div class="modal-loc" id="modalLoc">—</div></div>
+      <button class="modal-close" onclick="closeVideo()">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER SHEET -->
+
+<div class="order-ov" id="orderOv" onclick="closeOrderBg(event)">
+  <div class="order-sheet">
+    <div class="order-handle"></div>
+    <div class="order-head">
+      <h3>Commander mon Catalogue</h3>
+      <p>Remplissez vos informations</p>
+    </div>
+    <div class="order-body">
+      <div class="ff" id="ff-name">
+        <label for="fName">Votre nom complet</label>
+        <input type="text" id="fName" placeholder="Ex : Marie Nguema" autocomplete="name">
+        <div class="err-msg">Veuillez entrer votre nom</div>
+      </div>
+      <div class="ff" id="ff-country">
+        <label for="fCountry">Pays de résidence</label>
+        <select id="fCountry" autocomplete="country" onchange="updatePhoneField()">
+          <option value="CM" data-dial="237" selected>Cameroun (+237)</option>
+          <option value="CI" data-dial="225">Côte d’Ivoire (+225)</option>
+          <option value="SN" data-dial="221">Sénégal (+221)</option>
+          <option value="BJ" data-dial="229">Bénin (+229)</option>
+          <option value="TG" data-dial="228">Togo (+228)</option>
+          <option value="BF" data-dial="226">Burkina Faso (+226)</option>
+          <option value="ML" data-dial="223">Mali (+223)</option>
+          <option value="GN" data-dial="224">Guinée (+224)</option>
+          <option value="GA" data-dial="241">Gabon (+241)</option>
+          <option value="CG" data-dial="242">Congo (+242)</option>
+          <option value="CD" data-dial="243">R.D. Congo (+243)</option>
+          <option value="NE" data-dial="227">Niger (+227)</option>
+          <option value="TD" data-dial="235">Tchad (+235)</option>
+        </select>
+        <div class="err-msg">Sélectionnez votre pays</div>
+      </div>
+      <div class="ff" id="ff-phone">
+        <label for="fPhone">Numéro de téléphone / WhatsApp</label>
+        <div style="display:flex;align-items:center;gap:8px"><span id="phoneDial" style="min-width:52px;padding:13px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-weight:700;color:var(--dark);text-align:center">+237</span><input type="tel" id="fPhone" placeholder="Ex : 655 123 456" autocomplete="tel" inputmode="tel" style="flex:1"></div>
+        <div class="err-msg">Veuillez entrer votre numéro</div>
+      </div>
+      <div class="ff" id="ff-email">
+        <label for="fEmail">Adresse E-mail</label>
+        <input type="email" id="fEmail" placeholder="Ex : marie@gmail.com" autocomplete="email">
+        <div class="err-msg">Veuillez entrer une adresse e-mail valide</div>
+      </div>
+      <div class="order-sum">
+        <div class="os-lbl">
+          <strong>Catalogue Premium (Téléchargement PDF)</strong>
+        </div>
+        <div class="os-price">39 000 FCFA</div>
+      </div>
+      <button class="submit-btn" onclick="submitOrder()">
+        <svg class="wa-svg" style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        Payer et recevoir mon catalogue
+      </button>
+      <p class="form-note">Paiement sécurisé par Mobile Money ou carte. Votre code d'accès s'affiche juste après le paiement et vous est envoyé par email.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* DATE DU BONUS SPECIAL - se renouvelle automatiquement chaque jour */
+(function(){
+  function updateBonusDate(){
+    var now=new Date();
+  var fullDate=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long',year:'numeric'}).format(now);
+  var shortDate=new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'long'}).format(now);
+    var month=new Intl.DateTimeFormat('fr-FR',{month:'long'}).format(now);
+  document.querySelectorAll('[data-bonus-date]').forEach(function(el){el.textContent=fullDate;});
+  document.querySelectorAll('[data-bonus-date-short]').forEach(function(el){el.textContent=shortDate;});
+    document.querySelectorAll('[data-bonus-day]').forEach(function(el){el.textContent=String(now.getDate()).padStart(2,'0');});
+    document.querySelectorAll('[data-bonus-month]').forEach(function(el){el.textContent=month;});
+  }
+  updateBonusDate();
+  setInterval(updateBonusDate,60000);
+})();
+
+/* GEOLOCALISATION DES MARCHES ET TEMOIGNAGES */
+(function(){
+  var markets={
+    CI:{phrase:'en Côte d’Ivoire',location:'Abidjan, Côte d’Ivoire'},
+    CM:{phrase:'au Cameroun',location:'Yaoundé, Cameroun'},
+    GN:{phrase:'en Guinée Conakry',location:'Conakry, Guinée Conakry'},
+    ML:{phrase:'au Mali',location:'Bamako, Mali'},
+    BJ:{phrase:'au Bénin',location:'Cotonou, Bénin'},
+    TG:{phrase:'au Togo',location:'Lomé, Togo'},
+    CG:{phrase:'au Congo',location:'Brazzaville, Congo'},
+    CD:{phrase:'au Congo RDC',location:'Kinshasa, Congo RDC'},
+    SN:{phrase:'au Sénégal',location:'Dakar, Sénégal'},
+    GA:{phrase:'au Gabon',location:'Libreville, Gabon'},
+    BF:{phrase:'au Burkina Faso',location:'Ouagadougou, Burkina Faso'}
+  };
+
+  function applyMarket(countryCode){
+    var normalizedCountry=String(countryCode||'').toUpperCase();
+    if(normalizedCountry)document.documentElement.setAttribute('data-visitor-country',normalizedCountry);
+    var market=markets[normalizedCountry];
+    if(!market)return;
+    document.querySelectorAll('[data-geo-phrase]').forEach(function(el){el.textContent=market.phrase;});
+    document.querySelectorAll('[data-geo-testimonial-location]').forEach(function(el){el.textContent=market.location;});
+  }
+
+  var forcedCountry=new URLSearchParams(window.location.search).get('geo');
+  if(forcedCountry){applyMarket(forcedCountry);return;}
+  if(window.location.protocol!=='http:'&&window.location.protocol!=='https:')return;
+
+  fetch('/visitor-context',{headers:{Accept:'application/json'},cache:'no-store'})
+    .then(function(response){if(!response.ok)throw new Error('geo');return response.json();})
+    .then(function(data){applyMarket(data&&data.country);})
+    .catch(function(){/* Valeur par défaut : en Afrique. */});
+})();
+
+/* DAILY OFFER COUNTDOWN */
+(function(){
+  var countdowns=document.querySelectorAll('[data-countdown]');
+  function tick(){
+    var now=new Date();
+    var end=new Date(now); end.setHours(24,0,0,0);
+    var seconds=Math.max(0,Math.floor((end-now)/1000));
+    var h=String(Math.floor(seconds/3600)).padStart(2,'0');
+    var m=String(Math.floor((seconds%3600)/60)).padStart(2,'0');
+    var s=String(seconds%60).padStart(2,'0');
+    countdowns.forEach(function(el){
+      var target=el.querySelector('strong');
+      if(target) target.textContent=h+'H:'+m+':'+s;
+    });
+  }
+  tick(); setInterval(tick,1000);
+  document.querySelectorAll('.gauge-section').forEach(function(el){el.style.display='none';});
+  document.querySelectorAll('.final-section .gauge-count-blink').forEach(function(el){
+    var box=el.closest('.r'); if(box) box.style.display='none';
+  });
+})();
+
+/* ── FB PIXEL EVENTS ── */
+if(typeof fbq==='function'){
+  fbq('track','ViewContent',{content_name:'Catalogue Premium Wooplans',content_category:'Catalogue',value:39000,currency:'XAF'});
+}
+
+/* ── TOPBAR & STICKY BAR ── */
+const hero=document.getElementById('heroSection');
+const topbar=document.getElementById('topbar');
+const stickyBar=document.getElementById('stickyBar');
+const finalSection=document.getElementById('finalSection');
+
+function onScroll(){
+  const heroBottom=hero.getBoundingClientRect().bottom;
+  const finalTop=finalSection.getBoundingClientRect().top;
+  const afterHero=heroBottom<0;
+  const nearFinal=finalTop<80;
+  topbar.classList.toggle('visible',afterHero);
+  stickyBar.classList.toggle('visible',afterHero&&!nearFinal);
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+
+
+/* ── REVEAL ── */
+const rEls=document.querySelectorAll('.r');
+const rObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');rObs.unobserve(e.target)}});
+},{threshold:0.08,rootMargin:'0px 0px -24px 0px'});
+rEls.forEach(el=>rObs.observe(el));
+
+/* ── FAQ ── */
+function toggleFaq(btn){
+  const item=btn.closest('.faq-item');
+  const isOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el=>el.classList.remove('open'));
+  if(!isOpen)item.classList.add('open');
+}
+
+/* ── VIDEO MODAL ── */
+const tData=[
+  {name:'Ibrahim',loc:'Cameroun',src:'/videos/testimonials/ibrahim.mp4'},
+  {name:'Bassirou',loc:'Cameroun',src:'/videos/testimonials/bassirou.mp4'},
+  {name:'Francis',loc:'Cameroun',src:'/videos/testimonials/francis.mp4'},
+  {name:'Renaud',loc:'Cameroun',src:'/videos/testimonials/renaud.mp4'},
+];
+
+function openVideo(i){
+  const t=tData[i];
+  const mv=document.getElementById('modalVideo');
+  document.getElementById('modalName').textContent=t.name;
+  document.getElementById('modalLoc').textContent=t.loc;
+  mv.src=t.src;
+  mv.load();
+  mv.play().catch(()=>{});
+  document.getElementById('videoModal').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+
+function closeVideo(e){
+  if(!e||e.target===document.getElementById('videoModal')){
+    const mv=document.getElementById('modalVideo');
+    mv.pause();
+    mv.src='';
+    document.getElementById('videoModal').classList.remove('active');
+    document.body.style.overflow='';
+  }
+}
+
+function playHeroVid(){
+  var vid=document.getElementById('heroVid');
+  var overlay=document.getElementById('vslOverlay');
+  if(!vid.src && vid.dataset.src){vid.src=vid.dataset.src;vid.load();}
+  overlay.style.display='none';
+  vid.muted=false;
+  vid.controls=true;
+  vid.style.opacity='1';
+  vid.play().catch(()=>{});
+}
+function playVSL(){ playHeroVid(); }
+
+var currentCtaId='sales_page';
+function redirectToCheckout(ctaId) {
+  currentCtaId=ctaId||'sales_page';
+  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:currentCtaId});
+  wpTrack('cta_click',currentCtaId);
+  openOrder();
+}
+function closeChariowCheckout(){}
+
+/* ── ORDER ── */
+function openOrder(){
+  const leadStatus=document.getElementById('leadStatus');
+  if(leadStatus){leadStatus.className='lead-status';leadStatus.textContent='';}
+  document.getElementById('orderOv').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeOrderBg(e){if(e.target===document.getElementById('orderOv'))closeOrder()}
+function closeOrder(){
+  document.getElementById('orderOv').classList.remove('active');
+  document.body.style.overflow='';
+}
+function chk(id,ffId){
+  const v=document.getElementById(id).value.trim();
+  const ff=document.getElementById(ffId);
+  if(!v){ff.classList.add('has-error');return false}
+  ff.classList.remove('has-error');return true;
+}
+const WHATSAPP_NUMBER='237653769998';
+const WHATSAPP_NUMBER_DISPLAY='+237 653 76 99 98';
+const CURRENT_DEVICE=window.innerWidth<768?'mobile':window.innerWidth<1024?'tablet':'desktop';
+let lastOrderMessage='';
+function getOrderData(){
+  const country=document.getElementById('fCountry');
+  const dial=country.options[country.selectedIndex].dataset.dial;
+  const local=document.getElementById('fPhone').value.replace(/\D/g,'').replace(/^0+/,'');
+  return {
+    name:document.getElementById('fName').value.trim(),
+    phone:'+'+dial+local,
+    country:country.value,
+    email:document.getElementById('fEmail').value.trim(),
+    city:'Digital'
+  };
+}
+function selectedDial(){return document.getElementById('fCountry').options[document.getElementById('fCountry').selectedIndex].dataset.dial}
+function updatePhoneField(){document.getElementById('phoneDial').textContent='+'+selectedDial();document.getElementById('fPhone').value='';document.getElementById('fPhone').focus()}
+function getCookie(name){
+  const row=document.cookie.split('; ').find(item=>item.startsWith(name+'='));
+  return row ? row.split('=').slice(1).join('=') : '';
+}
+async function submitOrder(){
+  const v1=chk('fName','ff-name'),vCountry=chk('fCountry','ff-country'),v2=chk('fPhone','ff-phone'),v3=chk('fEmail','ff-email');
+  const phoneDigits=document.getElementById('fPhone').value.replace(/\D/g,'').replace(/^0+/,'');
+  if(phoneDigits.length<7||phoneDigits.length>12){document.getElementById('ff-phone').classList.add('has-error');return}
+  if(!v1||!vCountry||!v2||!v3)return;
+  const emailVal=document.getElementById('fEmail').value.trim();
+  const emailFf=document.getElementById('ff-email');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){emailFf.classList.add('has-error');return;}
+  emailFf.classList.remove('has-error');
+  const button=document.querySelector('.order-body .submit-btn');
+  const note=document.querySelector('.order-body .form-note');
+  button.disabled=true;
+  button.textContent='Paiement en préparation…';
+  note.style.color='';
+  note.textContent='Connexion sécurisée à notre plateforme de paiement…';
+  try{
+    const response=await fetch('/api/checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name:document.getElementById('fName').value.trim(),
+        email:emailVal,
+        phone:phoneDigits,
+        countryCode:document.getElementById('fCountry').value,
+        ctaId:currentCtaId
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||!data.url)throw new Error(data.error||'Paiement indisponible');
+    if(typeof clarity==='function')clarity('event','checkout_redirect');
+    window.location.href=data.url;
+  }catch(error){
+    note.textContent=error.message||'Impossible de lancer le paiement. Réessayez.';
+    note.style.color='#b42318';
+    button.disabled=false;
+    button.textContent='Payer et recevoir mon catalogue';
+  }
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeVideo();closeOrder();}});
+
+function checkReturnedPayment(){}
+window.addEventListener('DOMContentLoaded',checkReturnedPayment);
+
+/* ── APERÇU CATALOGUE : extrait 8s–60s à vitesse x1,5 ── */
+(function(){
+  var video=document.getElementById('catalogPreviewVideo');
+  if(!video)return;
+  var start=Number(video.dataset.start)||8;
+  var end=Number(video.dataset.end)||60;
+  var resetting=false;
+  function applyPlaybackSettings(){
+    video.defaultPlaybackRate=1.5;
+    video.playbackRate=1.5;
+    if(Number.isFinite(video.duration)&&video.currentTime<start)video.currentTime=start;
+  }
+  video.addEventListener('loadedmetadata',function(){video.currentTime=start;applyPlaybackSettings();});
+  video.addEventListener('play',function(){
+    if(video.currentTime<start||video.currentTime>=end)video.currentTime=start;
+    applyPlaybackSettings();
+  });
+  video.addEventListener('ratechange',function(){if(video.playbackRate!==1.5)video.playbackRate=1.5;});
+  video.addEventListener('seeking',function(){
+    if(resetting)return;
+    if(video.currentTime<start||video.currentTime>end){resetting=true;video.currentTime=video.currentTime<start?start:end;resetting=false;}
+  });
+  video.addEventListener('timeupdate',function(){
+    if(video.currentTime>=end){video.pause();video.currentTime=start;}
+  });
+  video.addEventListener('ended',function(){video.currentTime=start;});
+})();
+
+/* ── VIDEO THUMBNAILS — load only near the viewport ── */
+(function(){
+  function loadVideo(vid){
+    if(!vid||vid.dataset.loaded) return;
+    var src=vid.dataset.src;
+    if(!src) return;
+    vid.dataset.loaded='1';
+    vid.src=src;
+    vid.load();
+  }
+
+  function showThumb(vid,onReady){
+    if(!vid) return;
+    loadVideo(vid);
+    var done=false;
+    function show(){
+      if(done) return; done=true;
+      vid.style.opacity='1';
+      if(onReady) onReady();
+    }
+    if(vid.readyState>=2){show();return;}
+    vid.muted=true;
+    var p=vid.play();
+    if(p) p.then(function(){vid.pause();vid.currentTime=0;show();}).catch(function(){});
+    vid.addEventListener('canplay',show,{once:true});
+  }
+
+  var io=('IntersectionObserver' in window)&&new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      showThumb(e.target,null);
+      io.unobserve(e.target);
+    });
+  },{rootMargin:'0px 0px 120px 0px'});
+
+  ['tvid0','tvid1','tvid2','tvid3'].forEach(function(id){
+    var v=document.getElementById(id);
+    if(!v) return;
+    if(io) io.observe(v); else showThumb(v,null);
+  });
+})();
+</script>
+
+<script>
+/* ── POPUP OFFRE IMMÉDIATE : 39 000 → 29 000 FCFA ── */
+(function(){
+  var popup=document.getElementById('promoPopup');
+  var promoEnabled=false; // Offre temporairement désactivée.
+  var promoUrl='https://wooplans.mychariow.shop/prd_41k85hc0?chw_pvar=8D0NXW';
+  var shown=false;
+  function sessionHasSeenPromo(){try{return sessionStorage.getItem('cpbook_promo_29000_seen')==='1';}catch(error){return false;}}
+  function rememberPromo(){try{sessionStorage.setItem('cpbook_promo_29000_seen','1');}catch(error){}}
+  function anotherModalIsOpen(){return !!document.querySelector('.modal-ov.active,.checkout-ov.active,.order-ov.active');}
+  window.showPromoPopup=function(){
+    if(!promoEnabled)return;
+    if(!popup||shown||sessionHasSeenPromo())return;
+    if(anotherModalIsOpen()){window.setTimeout(window.showPromoPopup,3000);return;}
+    shown=true;
+    rememberPromo();
+    popup.classList.add('active');
+    popup.setAttribute('aria-hidden','false');
+    var card=popup.querySelector('.promo-card');
+    if(card)window.setTimeout(function(){card.focus({preventScroll:true});},250);
+    if(typeof clarity==='function')clarity('event','promo_popup_view_29000');
+  };
+  window.dismissPromoPopup=function(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    if(!popup)return;
+    popup.classList.remove('active');
+    popup.setAttribute('aria-hidden','true');
+    if(typeof clarity==='function')clarity('event','promo_popup_dismiss_29000');
+  };
+  window.closePromoPopup=function(event){if(event&&event.target===popup)window.dismissPromoPopup(event);};
+  window.openPromoOffer=function(event){
+    if(event){event.preventDefault();event.stopPropagation();}
+    if(typeof fbq==='function')fbq('track','InitiateCheckout',{content_name:'Catalogue Premium - Offre popup',content_ids:['cpbook-premium-2026-promo'],content_type:'product',value:29000,currency:'XAF',cta_id:'promo_popup_29000'});
+    if(typeof clarity==='function'){clarity('set','promo_offer','29000');clarity('event','promo_popup_click_29000');}
+    window.location.href=promoUrl;
+  };
+  window.handlePromoKey=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();window.openPromoOffer(event);}};
+  document.addEventListener('keydown',function(event){if(event.key==='Escape'&&popup&&popup.classList.contains('active'))window.dismissPromoPopup(event);});
+  window.addEventListener('load',function(){window.setTimeout(window.showPromoPopup,8000);},{once:true});
+})();
+</script>
+
+<script>
+function wpTrack(type,ctaId){
+  try{
+    var body=JSON.stringify({type:type,ctaId:ctaId||undefined,url:location.href,referrer:document.referrer||null});
+    if(navigator.sendBeacon)navigator.sendBeacon('/api/t',new Blob([body],{type:'application/json'}));
+    else fetch('/api/t',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true});
+  }catch(e){}
+}
+wpTrack('sales_page_view');
+document.addEventListener('click',function(e){
+  var wa=e.target.closest&&e.target.closest('a[href*="wa.me"]');
+  if(wa)wpTrack('whatsapp_click','sales_page');
+},true);
+</script>
+</body>
+</html>

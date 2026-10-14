@@ -3,58 +3,63 @@
 @tailwind utilities;
 
 :root {
-  --background: #F5F7F9;
-  --foreground: #1E2933;
-  --primary: #0F5B59;
-  --primary-dark: #0A3D3B;
-  --accent: #F08A2E;
-  --secondary: #C75B3A;
-  --highlight: #E7C36C;
-  --surface: #FFFFFF;
-  --muted: #6B7280;
-  --outline: #1E2933;
-  --dark-bg: #1E2933;
-  --dark-text: #FFFFFF;
-  --input-bg: #FFFFFF;
-  --input-border: #CBD5E1;
+  --background: #f5f7f9;
+  --foreground: #1e2933;
+  --primary: #0f5b59;
+  --primary-dark: #0a3d3b;
+  --accent: #f08a2e;
+  --secondary: #c75b3a;
+  --highlight: #e7c36c;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --outline: #dfe5ea;
 }
 
-.dark {
-  --background: #0B0F14;
-  --foreground: #E2E8F0;
-  --primary: #14B8A6;
-  --primary-dark: #0F5B59;
-  --accent: #F97316;
-  --secondary: #E8704A;
-  --highlight: #E7C36C;
-  --surface: #151C28;
-  --muted: #94A3B8;
-  --outline: #334155;
-  --dark-bg: #0A0E14;
-  --dark-text: #E2E8F0;
-  --input-bg: #1E293B;
-  --input-border: #475569;
-}
-
-* {
-  box-sizing: border-box;
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-cta {
+    @apply btn bg-accent text-white shadow-lg shadow-accent/25 hover:bg-[#d97a24] focus-visible:ring-accent;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-dark focus-visible:ring-primary;
+  }
+  .btn-ghost {
+    @apply btn border border-outline bg-surface text-foreground hover:border-primary hover:text-primary;
+  }
+  .card {
+    @apply rounded-2xl border border-outline bg-surface;
+  }
+  .input {
+    @apply w-full rounded-xl border border-outline bg-surface px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-foreground;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-primary;
+  }
+  .prose-wp p {
+    @apply mb-4 leading-relaxed text-foreground/80;
+  }
+  .prose-wp h2 {
+    @apply mb-3 mt-8 text-xl font-semibold text-foreground;
+  }
+  .prose-wp ul {
+    @apply mb-4 list-disc space-y-1 pl-5 text-foreground/80;
+  }
 }

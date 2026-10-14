@@ -1,49 +1,9 @@
-export type TestimonialVideo = {
-  id: string;
-  title: string;
-  subtitle: string;
-  url: string;
-  poster?: string;
-};
+export type Testimonial = { id: string; name: string; location: string; quote: string; video: string };
 
-export const TESTIMONIAL_VIDEOS: TestimonialVideo[] = [
-  {
-    id: "t0",
-    title: "M. Mamadou Bassirou",
-    subtitle: "Très satisfait !",
-    url: "https://wooplans.b-cdn.net/VID-20250121-WA0013-original.mp4",
-    poster: "",
-  },
-  {
-    id: "t1",
-    title: "M. Ibrahim SAKO",
-    subtitle: "Recommande à 100%",
-    url: "https://wooplans.b-cdn.net/T%C3%A9moignage_Ibrahim-original%20(1).mp4",
-    poster: "",
-  },
-  {
-    id: "t2",
-    title: "M. Michel KEPONG",
-    subtitle: "Satisfait du Catalogue Premium",
-    url: "https://wooplans.b-cdn.net/T%C3%A9moignage_Michel-original%20(1).mp4",
-    poster: "",
-  },
-  {
-    id: "t3",
-    title: "M. Francis Bilong",
-    subtitle: "Recommande à 100% !!",
-    url: "https://wooplans.b-cdn.net/T%C3%A9moignages_Francis-original%20(1).mp4",
-    poster: "",
-  },
-  {
-    id: "t4",
-    title: "M. Renauld TRAORE",
-    subtitle: "Très satisfait du Catalogue Premium !!",
-    url: "https://wooplans.b-cdn.net/temoignage%20audio%20video.mp4",
-    poster: "",
-  },
+/** Vidéos hébergées dans le bucket R2 « cpbook-videos ». */
+export const TESTIMONIALS: Testimonial[] = [
+  { id: "bassirou", name: "M. Mamadou Bassirou", location: "Sénégal", quote: "Très satisfait !", video: "/videos/testimonials/bassirou.mp4" },
+  { id: "ibrahim", name: "M. Ibrahim Sako", location: "Mali", quote: "Je recommande à 100 %", video: "/videos/testimonials/ibrahim.mp4" },
+  { id: "francis", name: "M. Francis Bilong", location: "Cameroun", quote: "Je recommande à 100 % !", video: "/videos/testimonials/francis.mp4" },
+  { id: "renaud", name: "M. Renaud Traoré", location: "Burkina Faso", quote: "Très satisfait du Catalogue Premium", video: "/videos/testimonials/renaud.mp4" },
 ];
-
-export function hasTestimonialVideos(): boolean {
-  return TESTIMONIAL_VIDEOS.some((t) => t.url && t.url.length > 0);
-}

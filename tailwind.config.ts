@@ -1,43 +1,22 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  darkMode: "class",
+  content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: "var(--primary)",
-          dark: "var(--primary-dark)",
-        },
-        accent: "var(--accent)",
-        secondary: "var(--secondary)",
-        highlight: "var(--highlight)",
-        background: "var(--background)",
-        surface: "var(--surface)",
-        foreground: "var(--foreground)",
-        muted: "var(--muted)",
-        outline: "var(--outline)",
-        "dark-bg": "var(--dark-bg)",
-        "dark-text": "var(--dark-text)",
+        primary: { DEFAULT: "#0F5B59", dark: "#0A3D3B" },
+        accent: "#F08A2E",
+        secondary: "#C75B3A",
+        highlight: "#E7C36C",
+        background: "#F5F7F9",
+        surface: "#FFFFFF",
+        foreground: "#1E2933",
+        muted: "#6B7280",
+        outline: "#DFE5EA",
       },
       fontFamily: {
-        sans: [
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Arial",
-          "sans-serif",
-        ],
-      },
-      borderRadius: {
-        none: "0px",
+        sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
       },
     },
   },
