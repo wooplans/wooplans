@@ -18,7 +18,15 @@ const ok = (name, cond, detail = "") => {
   console.log(`${cond ? "OK  " : "FAIL"} ${name}${detail ? ` — ${detail}` : ""}`);
   if (!cond) failures++;
 };
-const get = (path, init = {}) => fetch(base + path, { redirect: "manual", ...init });
+let transient = 0;
+// Une seule nouvelle tentative après 2 s sur 503 (limite passagère de Cloudflare), comptée dans le résumé.
+const get = async (path, init = {}) => {
+  const res = await fetch(base + path, { redirect: "manual", ...init });
+  if (res.status !== 503) return res;
+  transient++;
+  await new Promise((r) => setTimeout(r, 2000));
+  return fetch(base + path, { redirect: "manual", ...init });
+};
 const cookieOf = (res) => (res.headers.getSetCookie?.() || []).map((c) => c.split(";")[0]).join("; ");
 
 // Vitrine et fiches
@@ -141,5 +149,6 @@ if (env.SMOKE_MEMBER_EMAIL) {
   }
 }
 
-console.log(failures ? `\n${failures} échec(s)` : "\nTous les tests passent.");
+console.log(`\n503 passagers (réessayés) : ${transient}`);
+console.log(failures ? `${failures} échec(s)` : "Tous les tests passent.");
 process.exit(failures ? 1 : 0);
