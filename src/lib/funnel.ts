@@ -63,15 +63,10 @@ export function classifyFunnelSource({
   const utmTerm = normalizeText(params.get("utm_term"));
 
   const hasFacebookUtm =
-    hasFacebookMarker(utmSource) ||
-    hasFacebookMarker(utmCampaign) ||
-    hasFacebookMarker(utmContent) ||
-    hasFacebookMarker(utmTerm) ||
-    hasFacebookMarker(utmMedium) ||
-    Boolean(utmMedium && /^(paid_social|social|cpc|ppc|paid)$/i.test(utmMedium));
+    Boolean(utmMedium && /^(paid_social|cpc|ppc|paid)$/i.test(utmMedium)) && hasFacebookMarker(utmSource);
 
   const source: FunnelSource =
-    normalizedPath.startsWith("/abonnement-facebook") || fbclidPresent || hasFacebookUtm
+    normalizedPath.startsWith("/abonnement-facebook") || hasFacebookUtm
       ? "facebook_ads"
       : "organic";
 

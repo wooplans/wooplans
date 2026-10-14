@@ -51,8 +51,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "session_id manquant" }, { status: 400 });
     }
 
-    if (!eventType) {
-      return NextResponse.json({ error: "event_type manquant" }, { status: 400 });
+    const browserEvents = new Set(["page_view", "premium_cta_click", "scroll_depth", "section_view", "engagement_ping", "page_exit"]);
+    if (!eventType || !browserEvents.has(eventType)) {
+      return NextResponse.json({ error: "Événement navigateur invalide" }, { status: 400 });
     }
 
     const landing = parsePath(rawLandingPath);

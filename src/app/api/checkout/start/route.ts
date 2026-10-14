@@ -33,8 +33,8 @@ type CloudflareEnv = {
   SITE_URL?: string;
 };
 
-const DEFAULT_CHARIOW_PRODUCT_ID = "prd_9cbatg";
-const DEFAULT_PUBLIC_SITE_URL = "https://woo-premium.pages.dev";
+const DEFAULT_CHARIOW_PRODUCT_ID = "prd_41k85hc0";
+const DEFAULT_PUBLIC_SITE_URL = "https://wooplans.com";
 
 function parsePath(value: string | undefined, fallback = "/") {
   const input = value && value.trim() ? value.trim() : fallback;

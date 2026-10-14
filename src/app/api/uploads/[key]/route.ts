@@ -1,26 +1,43 @@
 import { NextResponse } from "next/server";
 import { downloadR2Object } from "@/lib/r2";
-
+import { getCurrentSession, hasPremiumAccess } from "@/lib/auth-server";
+import { getPrisma } from "@/lib/prisma";
+import { parseStringArray } from "@/lib/plan-serialization";
 export const runtime = "edge";
-
 export async function GET(
   _request: Request,
   { params }: { params: { key: string } },
 ) {
   try {
-    const { key } = params;
-    const response = await downloadR2Object(key);
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
-
+    const url = `/api/uploads/${encodeURIComponent(params.key)}`;
+    const plans = await getPrisma().plan.findMany();
+    const privateDocument = plans.some(
+      (p) =>
+        p.distributionPlanUrl === url ||
+        p.estimatedCostImage === url ||
+        parseStringArray(p.distributionPlans).includes(url),
+    );
+    const publicImage = plans.some(
+      (p) =>
+        p.published &&
+        (p.thumbnail === url || parseStringArray(p.images).includes(url)),
+    );
+    const admin = (await getCurrentSession())?.user.role === "admin";
+    if (
+      !admin &&
+      (privateDocument ? !(await hasPremiumAccess()) : !publicImage)
+    )
+      return NextResponse.json({ error: "Accès réservé" }, { status: 403 });
+    const response = await downloadR2Object(params.key);
     return new NextResponse(response.body, {
-      status: 200,
       headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Type":
+          response.headers.get("content-type") || "application/octet-stream",
+        "Cache-Control": "private, no-store",
+        Vary: "Cookie",
       },
     });
-  } catch (error) {
-    console.error("R2 download error:", error);
+  } catch {
     return NextResponse.json({ error: "Fichier introuvable" }, { status: 404 });
   }
 }

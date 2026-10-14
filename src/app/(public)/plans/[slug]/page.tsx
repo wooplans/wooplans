@@ -6,14 +6,14 @@ import { getPlanBySlug, getSimilarPlans } from "@/lib/db";
 import { PlanGallery } from "@/components/PlanGallery";
 import { RoomTable } from "@/components/RoomTable";
 import { PremiumTeaser } from "@/components/PremiumTeaser";
-import { PremiumTestToggle } from "@/components/PremiumTestToggle";
+
 import { ConversionAnchor } from "@/components/ConversionAnchor";
 import { SimilarPlans } from "@/components/SimilarPlans";
 import { ZoomablePremiumImage } from "@/components/ZoomablePremiumImage";
 import { CostEstimateTable } from "@/components/CostEstimateTable";
 import { PlanPersonalizationCTA } from "@/components/PlanPersonalizationCTA";
 import { getDefaultCostRate } from "@/lib/cost-rates";
-import { getCurrentSession } from "@/lib/auth-server";
+import { hasPremiumAccess } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
@@ -55,6 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${plan.name} — WooPlans`,
     description: plan.description,
+    alternates: { canonical: `/plans/${plan.slug}` },
     openGraph: {
       title: `${plan.name} — WooPlans`,
       description: plan.description,
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PlanDetailPage({ params }: Props) {
-  const session = await getCurrentSession();
+  const isPremium = await hasPremiumAccess();
 
   const plan = await getPlanBySlug(params.slug);
 
@@ -76,9 +77,9 @@ export default async function PlanDetailPage({ params }: Props) {
   const costRate = await getDefaultCostRate(plan.category);
   const modelCode = getModelCode(plan.name, plan.slug);
 
-  const isPremium = session?.user?.role === "subscriber" && session?.user?.isActive === true;
 
-  const premiumContent = (
+
+  const premiumContent = isPremium ? (
     <>
       {plan.distributionPlans.length > 0 ? (
         <div className="space-y-6">
@@ -104,16 +105,16 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
       )}
     </>
-  );
+  ) : null;
 
-  const costContent = (
+  const costContent = isPremium ? (
     <CostEstimateTable
       planName={plan.name}
       category={plan.category}
       surface={plan.surface}
       amountPerSquareMeter={costRate?.amountPerSquareMeter ?? null}
     />
-  );
+  ) : null;
 
   return (
     <>
@@ -136,9 +137,7 @@ export default async function PlanDetailPage({ params }: Props) {
           {plan.category}
         </span>
 
-        <h1 className="hidden">
-          {plan.name}
-        </h1>
+
 
         <div className="hidden">
           <span>{plan.surface} m²</span>
@@ -169,7 +168,7 @@ export default async function PlanDetailPage({ params }: Props) {
 
         {plan.estimatedTotalPrice > 0 && (
           <p className="text-lg md:text-xl text-foreground/80 font-medium mb-6">
-            Budget estimé :{" "}
+            Budget de construction indicatif :{" "}
             <span className="text-accent font-semibold">
               {formatPrice(plan.estimatedTotalPrice)} FCFA
             </span>
@@ -187,10 +186,10 @@ export default async function PlanDetailPage({ params }: Props) {
         </div>
 
         <a
-          href="#plan-et-devis"
+          href={isPremium ? "#plan-et-devis" : "/abonnement"}
           className="inline-flex w-full sm:w-auto items-center justify-center px-7 py-3 bg-accent text-white text-sm font-bold rounded-full hover:bg-accent/90 transition-colors"
         >
-          Voir le plan et devis
+          {isPremium ? "Consulter les documents" : "Obtenir le Catalogue Premium"}
         </a>
       </section>
 
@@ -225,7 +224,7 @@ export default async function PlanDetailPage({ params }: Props) {
           Débloquez l&apos;accès complet pour voir les détails
             </p>
           </div>
-          <PremiumTestToggle initialUnlocked={isPremium} />
+
         </div>
       </section>
 
@@ -240,14 +239,10 @@ export default async function PlanDetailPage({ params }: Props) {
             </p>
           </div>
           <div className="px-6 pb-6">
-            <PremiumTeaser
-              type="floorplan"
+            {isPremium ? premiumContent : <PremiumTeaser
               title="Plan de distribution"
               subtitle="Agencement complet avec cotations et dimensions de chaque pièce."
-              realContent={premiumContent}
-              backgroundImage={plan.distributionPlans[0] || undefined}
-              initialUnlocked={isPremium}
-            />
+            />}
           </div>
         </div>
       </section>
@@ -267,14 +262,10 @@ export default async function PlanDetailPage({ params }: Props) {
             </p>
           </div>
           <div className="px-6 pb-6">
-            <PremiumTeaser
-              type="cost"
+            {isPremium ? costContent : <PremiumTeaser
               title="Devis estimatif"
               subtitle="Devis estimatif de la fondation aux finitions."
-              realContent={costContent}
-              previewContent={costContent}
-              initialUnlocked={isPremium}
-            />
+            />}
           </div>
         </div>
       </section>

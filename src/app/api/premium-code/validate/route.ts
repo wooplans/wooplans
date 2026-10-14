@@ -1,3 +1,4 @@
+import { allowLoginAttempt } from "@/lib/login-limit";
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 
@@ -16,9 +17,10 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (!(await allowLoginAttempt(email.trim().toLowerCase()))) return NextResponse.json({ valid: false }, { status: 429 });
     const prisma = getPrisma();
     const subscriber = await prisma.subscriber.findUnique({
-      where: { email },
+      where: { email: email.trim().toLowerCase() },
       select: {
         id: true,
         email: true,

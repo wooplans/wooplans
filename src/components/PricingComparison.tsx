@@ -10,8 +10,8 @@ const features: FeatureRow[] = [
   { label: "Prix estimé total", free: true, premium: true },
   { label: "Plans de distribution HD", free: false, premium: true },
   { label: "Devis détaillé par poste", free: false, premium: true },
-  { label: "Personnalisation du plan", free: false, premium: true },
-  { label: "Support WhatsApp architectes", free: false, premium: true },
+  { label: "Guide de sélection des modèles", free: false, premium: true },
+  { label: "Assistance pour accéder au catalogue", free: false, premium: true },
   { label: "Nouveaux modèles inclus", free: false, premium: true },
 ];
 

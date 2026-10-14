@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Cet email existe déjà" }, { status: 409 });
     }
 
-    const premiumCode = String(Math.floor(1000 + Math.random() * 9000));
+    const premiumCode = crypto.randomUUID().replace(/-/g, "");
     const isActive = typeof body.isActive === "boolean" ? body.isActive : true;
     const expiresAt = body.expiresAt
       ? new Date(body.expiresAt)

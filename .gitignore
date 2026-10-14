@@ -44,3 +44,7 @@ prisma/*.db
 next-env.d.ts
 
 /src/generated/prisma
+
+# Disposable integration test outputs
+tests/.*.db*
+tests/.*.cjs

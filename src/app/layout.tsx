@@ -8,13 +8,13 @@ const FACEBOOK_PIXEL_ID = "1651374605332302";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wooplans.com"),
-  title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+  title: "WooPlans — Plans de villas et duplex pour l'Afrique",
   description:
-    "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
+    "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
   openGraph: {
-    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    title: "WooPlans — Plans de villas et duplex pour l'Afrique",
     description:
-      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+      "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain.",
     type: "website",
     locale: "fr_FR",
     images: [
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    title: "WooPlans — Plans de villas et duplex pour l'Afrique",
     description:
-      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+      "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain.",
     images: ["/images/hero-home.webp"],
   },
 };

@@ -1,3 +1,6 @@
+import { serverEnv } from "@/lib/server-env";
+import { allowLoginAttempt } from "@/lib/login-limit";
+import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 import {
@@ -17,36 +20,65 @@ type LoginBody = {
   callbackUrl?: string;
 };
 
+function safeCallback(value: string | undefined, fallback: string) {
+  return value?.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\")
+    ? value
+    : fallback;
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as LoginBody;
     const mode = body.mode;
     const email = body.email?.trim().toLowerCase();
-    const adminEmail = (process.env.ADMIN_EMAIL || "admin@wooplans.com").trim().toLowerCase();
+    const adminEmail = (serverEnv("ADMIN_EMAIL") || "admin@wooplans.com")
+      .trim()
+      .toLowerCase();
 
     if (!mode || !email) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
+    if (!(await allowLoginAttempt(email)))
+      return NextResponse.json(
+        { error: "Trop de tentatives. Réessayez dans 15 minutes." },
+        { status: 429 },
+      );
+
     if (mode === "admin") {
-      if (email !== adminEmail) {
+      const admin = await getPrisma().admin.findUnique({ where: { email } });
+      if (
+        email !== adminEmail ||
+        !admin ||
+        !body.password ||
+        !(await compare(body.password, admin.passwordHash))
+      ) {
         return NextResponse.json({ error: "Accès refusé" }, { status: 401 });
       }
 
       const user: SessionUser = {
-        id: email,
+        id: admin.id,
         email,
         role: "admin",
       };
       const token = await createSessionToken(user, 60 * 60 * 24 * 14);
-      const response = NextResponse.json({ ok: true, user, redirectTo: body.callbackUrl || "/admin" });
+      const response = NextResponse.json({
+        ok: true,
+        user,
+        redirectTo: safeCallback(body.callbackUrl, "/admin"),
+      });
       applySessionCookie(response, token, 60 * 60 * 24 * 14);
       return response;
     }
 
     if (mode === "subscriber") {
       if (!body.premiumCode) {
-        return NextResponse.json({ error: "Code premium requis" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Code premium requis" },
+          { status: 400 },
+        );
       }
 
       const prisma = getPrisma();
@@ -56,6 +88,7 @@ export async function POST(request: Request) {
           id: true,
           email: true,
           premiumCode: true,
+          chariowLicenseKey: true,
           isActive: true,
           expiresAt: true,
         },
@@ -65,8 +98,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Accès refusé" }, { status: 401 });
       }
 
-      if (subscriber.premiumCode !== body.premiumCode.trim()) {
-        return NextResponse.json({ error: "Code premium incorrect" }, { status: 401 });
+      if (
+        subscriber.premiumCode !== body.premiumCode.trim() &&
+        subscriber.chariowLicenseKey !== body.premiumCode.trim()
+      ) {
+        return NextResponse.json(
+          { error: "Code premium incorrect" },
+          { status: 401 },
+        );
       }
 
       if (subscriber.expiresAt && new Date(subscriber.expiresAt) < new Date()) {
@@ -84,7 +123,7 @@ export async function POST(request: Request) {
       const response = NextResponse.json({
         ok: true,
         user,
-        redirectTo: body.callbackUrl || "/plans",
+        redirectTo: safeCallback(body.callbackUrl, "/premium"),
       });
       applySessionCookie(response, token, 60 * 60 * 24 * 30);
       return response;
@@ -93,6 +132,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Mode inconnu" }, { status: 400 });
   } catch (error) {
     console.error("Auth login error:", error);
-    return NextResponse.json({ error: "Erreur d'authentification" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erreur d'authentification" },
+      { status: 500 },
+    );
   }
 }

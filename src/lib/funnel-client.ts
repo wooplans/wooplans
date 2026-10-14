@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { buildFunnelAttribution, type FunnelEventType, type FunnelSessionSnapshot } from "@/lib/funnel";
 
 const STORAGE_KEY = "wooplans-funnel-state";
-const COLD_FACEBOOK_PATH_PREFIX = "/abonnement-facebook-froid";
+const COLD_FACEBOOK_PATH_PREFIX = "/abonnement";
 const SCROLL_DEPTH_THRESHOLDS = [25, 50, 75, 90, 100] as const;
 
 type StoredFunnelState = FunnelSessionSnapshot;

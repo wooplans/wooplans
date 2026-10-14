@@ -124,3 +124,40 @@ model FunnelSale {
   @@index([status])
   @@index([createdAt])
 }
+
+model WebhookReceipt {
+  id String @id
+  createdAt DateTime @default(now())
+}
+
+model Project {
+ id String @id @default(cuid())
+ subscriberId String
+ modelSlug String
+ phone String
+ location String
+ terrain String
+ needs String
+ status String @default("received")
+ notes String @default("")
+ nextFollowUp DateTime?
+ grossPrice Int @default(0)
+ catalogueCredit Int @default(0)
+ paidAmount Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@index([subscriberId])
+ @@index([status])
+}
+model Favorite {
+ id String @id @default(cuid())
+ subscriberId String
+ modelSlug String
+ createdAt DateTime @default(now())
+ @@unique([subscriberId, modelSlug])
+}
+
+model AuthAttempt {
+ id String @id
+ count Int @default(0)
+}

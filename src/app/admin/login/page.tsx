@@ -7,6 +7,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,7 @@ function LoginForm() {
         body: JSON.stringify({
           mode: "admin",
           email,
+          password,
           callbackUrl,
         }),
       });
@@ -56,7 +58,7 @@ function LoginForm() {
           <h1 className="text-3xl font-black text-foreground tracking-tight">WooPlans</h1>
           <p className="text-foreground/60 mt-1 text-sm">Panneau d&apos;administration</p>
           <p className="text-foreground/50 mt-2 text-xs">
-            Acces temporaire sans mot de passe pendant la phase privee du site
+            Connexion réservée à l’administrateur
           </p>
         </div>
 
@@ -85,6 +87,8 @@ function LoginForm() {
               placeholder="admin@wooplans.com"
             />
           </div>
+
+          <label className="block text-sm">Mot de passe<input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-2 w-full border-2 border-outline px-4 py-3" /></label>
 
           <button
             type="submit"
