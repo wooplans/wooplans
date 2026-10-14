@@ -98,6 +98,11 @@ jobs:
         env:
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
+      - name: Tests de production sur www.wooplans.com
+        run: BASE_URL=https://www.wooplans.com node scripts/smoke-prod.mjs
+        env:
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+          CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
       - name: Sitemap Framer (inventaire des URL à rediriger)
         if: always()
         run: |
