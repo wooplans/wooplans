@@ -98,11 +98,28 @@ jobs:
         env:
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
-      - name: Tests de production sur www.wooplans.com
-        run: BASE_URL=https://www.wooplans.com node scripts/smoke-prod.mjs
+      - name: Tests de production sur www.wooplans.com (si le domaine pointe vers le Worker)
+        run: |
+          if curl -s https://www.wooplans.com/sitemap.xml | grep -q "/a-propos"; then
+            BASE_URL=https://www.wooplans.com node scripts/smoke-prod.mjs
+          else
+            echo "www.wooplans.com est encore servi par Framer : tests ignorés."
+          fi
         env:
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
+      - name: Dépassements de ressources du Worker pendant les tests
+        run: |
+          sleep 30
+          now=$(date +%s000); from=$(( now - 15*60*1000 ))
+          curl -sS -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"cpu\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.outcome\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"exceededCpu\"}]}}" \
+            > /tmp/cpu.json
+          n=$(jq '[.result.events.events[]?] | length' /tmp/cpu.json)
+          echo "Requêtes arrêtées pour dépassement CPU (15 dernières minutes) : $n"
+          jq -c '.result.events.events[]? | {url: .["$workers"].event.request.url, cpu: .["$workers"].cpuTimeMs}' /tmp/cpu.json | head -10
+          [ "$n" = "0" ]
       - name: Sitemap Framer (inventaire des URL à rediriger)
         if: always()
         run: |

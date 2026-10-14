@@ -9,6 +9,8 @@
     "binding": "ASSETS"
   },
   "observability": { "enabled": true },
+  // Plan Workers Paid requis (le plan gratuit plafonne à 10 ms de CPU par requête : erreurs 1102)
+  "limits": { "cpu_ms": 30000 },
   // Récapitulatif quotidien à 6 h UTC (7 h à Douala)
   "triggers": { "crons": ["0 6 * * *"] },
   "vars": {

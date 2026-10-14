@@ -6,12 +6,21 @@
 import nextWorker from "./.open-next/worker.js";
 
 export default {
-  fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
+  async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
     // Domaine nu → www (une seule adresse canonique pour le SEO)
     const url = new URL(request.url);
     if (url.hostname === "wooplans.com") {
       url.hostname = "www.wooplans.com";
       return Response.redirect(url.toString(), 301);
+    }
+    // Images publiques (immuables) : servies depuis le cache Cloudflare, sans repasser par Next ni D1.
+    if (request.method === "GET" && url.pathname.startsWith("/media/") && !request.headers.has("range")) {
+      const cache = caches.default;
+      const hit = await cache.match(request);
+      if (hit) return hit;
+      const response = await nextWorker.fetch(request, env, ctx);
+      if (response.status === 200) ctx.waitUntil(cache.put(request, response.clone()));
+      return response;
     }
     return nextWorker.fetch(request, env, ctx);
   },
