@@ -2,7 +2,7 @@ name: CI / Déploiement Cloudflare
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, ccr-03cfaad2-40szss]
   pull_request:
   workflow_dispatch:
 
@@ -27,7 +27,7 @@ jobs:
 
   deploy:
     needs: check
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ccr-03cfaad2-40szss'))
     runs-on: ubuntu-latest
     environment: production
     steps:
