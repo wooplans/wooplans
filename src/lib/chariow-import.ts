@@ -1,0 +1,139 @@
+import { eq, inArray, notInArray } from "drizzle-orm";
+import { getDb, schema } from "@/db";
+import { catalogueProductIds } from "@/lib/chariow";
+import { randomAccessCode, randomId } from "@/lib/crypto";
+import { accessCodeEmail, sendEmail } from "@/lib/email";
+import { getEnv } from "@/lib/env";
+import { hashAccessCode, normalizeEmail, rotateAccessCode } from "@/lib/members";
+
+type ApiSale = {
+  id: string;
+  status: string;
+  amount?: { value?: number; currency?: string } | null;
+  product?: { id?: string; name?: string } | null;
+  customer?: { id?: string; email?: string; name?: string; phone?: string | { formatted?: string } | null; country?: string | { code?: string } | null } | null;
+  created_at?: string;
+  completed_at?: string | null;
+};
+
+/**
+ * Importe les acheteurs historiques du catalogue depuis l'API Chariow :
+ * ventes enregistrées (revenu) + membres créés avec un code inutilisable,
+ * à qui l'on envoie ensuite un vrai code par lots (sendLegacyWelcomeBatch).
+ */
+export async function importChariowBuyers(maxPages = 10) {
+  const apiKey = getEnv().CHARIOW_API_KEY;
+  if (!apiKey) throw new Error("CHARIOW_API_KEY manquant");
+  const products = catalogueProductIds();
+  const db = getDb();
+  let salesAdded = 0;
+  let membersAdded = 0;
+  let scanned = 0;
+
+  for (const status of ["completed", "settled"]) {
+    let cursor: string | null = null;
+    for (let page = 0; page < maxPages; page++) {
+      const url = new URL("https://api.chariow.com/v1/sales");
+      url.searchParams.set("status", status);
+      url.searchParams.set("per_page", "100");
+      if (cursor) url.searchParams.set("cursor", cursor);
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } });
+      if (!res.ok) throw new Error(`Chariow API ${res.status}`);
+      const body = (await res.json()) as { data?: ApiSale[]; pagination?: { next_cursor?: string | null; has_more?: boolean } };
+      const sales = (body.data ?? []).filter((s) => s.product?.id && products.has(s.product.id) && s.customer?.email);
+      scanned += body.data?.length ?? 0;
+
+      if (sales.length) {
+        const emails = [...new Set(sales.map((s) => normalizeEmail(s.customer!.email!)))];
+        const existing = await db.query.members.findMany({ where: inArray(schema.members.email, emails), columns: { id: true, email: true } });
+        const byEmail = new Map(existing.map((m) => [m.email, m.id]));
+        const newMembers = [];
+        for (const email of emails) {
+          if (byEmail.has(email)) continue;
+          const s = sales.find((x) => normalizeEmail(x.customer!.email!) === email)!;
+          const id = randomId();
+          byEmail.set(email, id);
+          const phone = typeof s.customer?.phone === "string" ? s.customer.phone : s.customer?.phone?.formatted;
+          const country = typeof s.customer?.country === "string" ? s.customer.country : s.customer?.country?.code;
+          newMembers.push(
+            db.insert(schema.members).values({
+              id,
+              email,
+              name: s.customer?.name ?? "",
+              phone: phone ?? null,
+              country: country ?? null,
+              source: "legacy_import",
+              chariowCustomerId: s.customer?.id ?? null,
+              // Code aléatoire jamais communiqué : le vrai code est envoyé ensuite.
+              codeHash: await hashAccessCode(randomAccessCode() + randomId()),
+            }),
+          );
+        }
+        const saleInserts = sales.map((s) =>
+          db
+            .insert(schema.sales)
+            .values({
+              id: randomId(),
+              chariowSaleId: s.id,
+              productId: s.product!.id!,
+              productName: s.product?.name ?? "Catalogue Premium",
+              status: "completed",
+              amount: Math.round(Number(s.amount?.value ?? 0)),
+              currency: s.amount?.currency ?? "XAF",
+              email: normalizeEmail(s.customer!.email!),
+              name: s.customer?.name ?? null,
+              memberId: byEmail.get(normalizeEmail(s.customer!.email!)) ?? null,
+              source: "chariow_historique",
+              occurredAt: new Date(s.completed_at || s.created_at || Date.now()),
+            })
+            .onConflictDoNothing()
+            .returning({ id: schema.sales.id }),
+        );
+        const statements = [...newMembers, ...saleInserts];
+        const results = await db.batch(statements as [(typeof statements)[number], ...(typeof statements)[number][]]);
+        membersAdded += newMembers.length;
+        salesAdded += results.slice(newMembers.length).filter((r) => Array.isArray(r) && r.length > 0).length;
+      }
+      cursor = body.pagination?.next_cursor ?? null;
+      if (!cursor || body.pagination?.has_more === false) break;
+    }
+  }
+  return { scanned, salesAdded, membersAdded };
+}
+
+/** Envoie un code d'accès aux membres importés qui n'en ont pas encore reçu (par lots). */
+export async function sendLegacyWelcomeBatch(limit = 25) {
+  const db = getDb();
+  const alreadySent = db
+    .select({ id: schema.emailLog.memberId })
+    .from(schema.emailLog)
+    .where(inArray(schema.emailLog.template, ["legacy_welcome", "access_code", "access_code_reset"]));
+  const pending = await db.query.members.findMany({
+    where: (m, { and }) => and(eq(m.source, "legacy_import"), eq(m.status, "active"), notInArray(m.id, alreadySent)),
+    limit,
+  });
+  let sent = 0;
+  for (const member of pending) {
+    const { code } = await rotateAccessCode(member.id);
+    const mail = accessCodeEmail({ name: member.name, email: member.email, code });
+    const result = await sendEmail({
+      to: member.email,
+      subject: "Nouveau : votre Catalogue Premium WooPlans est aussi en ligne",
+      html: mail.html.replace(
+        "Merci pour votre achat ! Votre Catalogue Premium est prêt. Le PDF vous est envoyé par Chariow, et vous avez aussi accès à l'espace Premium en ligne.",
+        "Vous avez acheté le Catalogue Premium WooPlans : il est désormais aussi consultable en ligne, avec les nouveaux modèles, vos favoris et un comparateur. Voici vos accès personnels.",
+      ),
+      text: mail.text,
+      template: "legacy_welcome",
+      memberId: member.id,
+    });
+    if (result.ok) sent++;
+  }
+  const remaining = (
+    await db.query.members.findMany({
+      where: (m, { and }) => and(eq(m.source, "legacy_import"), eq(m.status, "active"), notInArray(m.id, alreadySent)),
+      columns: { id: true },
+    })
+  ).length;
+  return { sent, attempted: pending.length, remaining };
+}

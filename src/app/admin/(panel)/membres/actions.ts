@@ -59,3 +59,31 @@ export async function reactivate(memberId: string) {
   await flashCode(member.email, code, emailed);
   revalidatePath("/admin/membres");
 }
+
+export async function importFromChariow() {
+  await requireAdmin();
+  const { importChariowBuyers } = await import("@/lib/chariow-import");
+  const result = await importChariowBuyers();
+  (await cookies()).set("wp_notice", `Import Chariow : ${result.scanned} ventes lues, ${result.salesAdded} ventes ajoutées, ${result.membersAdded} membres créés.`, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    path: "/admin",
+    maxAge: 120,
+  });
+  revalidatePath("/admin/membres");
+}
+
+export async function sendLegacyCodes() {
+  await requireAdmin();
+  const { sendLegacyWelcomeBatch } = await import("@/lib/chariow-import");
+  const result = await sendLegacyWelcomeBatch(25);
+  (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining}.`, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    path: "/admin",
+    maxAge: 120,
+  });
+  revalidatePath("/admin/membres");
+}

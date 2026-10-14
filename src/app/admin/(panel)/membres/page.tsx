@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { desc, like, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { Badge, fmtDate, PageTitle, Table } from "@/components/admin/ui";
-import { addMember, newCode, reactivate, revoke } from "./actions";
+import { addMember, importFromChariow, newCode, reactivate, revoke, sendLegacyCodes } from "./actions";
 
 const SOURCES: Record<string, string> = { chariow: "Chariow", legacy_import: "Import", manual: "Manuel" };
 
@@ -10,6 +10,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const { q } = await searchParams;
   const flashRaw = (await cookies()).get("wp_flash")?.value;
   const flash = flashRaw ? (JSON.parse(flashRaw) as { email: string; code: string; emailed: boolean }) : null;
+  const notice = (await cookies()).get("wp_notice")?.value;
   const term = (q || "").trim();
   const members = await getDb().query.members.findMany({
     where: term ? or(like(schema.members.email, `%${term}%`), like(schema.members.name, `%${term}%`), like(schema.members.phone, `%${term}%`)) : undefined,
@@ -19,7 +20,17 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageTitle title="Membres Premium" subtitle={`${members.length} affiché(s). La révocation coupe l'accès immédiatement.`} />
+      <PageTitle
+        title="Membres Premium"
+        subtitle={`${members.length} affiché(s). La révocation coupe l'accès immédiatement.`}
+        actions={
+          <>
+            <form action={importFromChariow}><button className="btn-ghost py-2">Importer les acheteurs Chariow</button></form>
+            <form action={sendLegacyCodes}><button className="btn-ghost py-2">Envoyer les codes (25 suivants)</button></form>
+          </>
+        }
+      />
+      {notice ? <p className="mb-4 rounded-xl bg-primary/10 px-4 py-3 text-sm text-primary">{notice}</p> : null}
 
       {flash ? (
         <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm">

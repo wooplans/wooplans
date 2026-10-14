@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "wooplans-web",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -9,6 +9,8 @@
     "binding": "ASSETS"
   },
   "observability": { "enabled": true },
+  // Récapitulatif quotidien à 6 h UTC (7 h à Douala)
+  "triggers": { "crons": ["0 6 * * *"] },
   "vars": {
     "SITE_URL": "https://www.wooplans.com",
     "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",
@@ -22,7 +24,7 @@
     "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
   },
   // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,
-  // RESEND_API_KEY, FB_ACCESS_TOKEN, MCP_TOKEN, ANTHROPIC_API_KEY
+  // RESEND_API_KEY, MCP_TOKEN, CRON_SECRET
   "d1_databases": [
     {
       "binding": "DB",
