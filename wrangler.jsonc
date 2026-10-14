@@ -29,11 +29,12 @@
     {
       "binding": "DB",
       "database_name": "wooplans-platform",
-      "database_id": "REPLACE_WITH_D1_ID",
+      "database_id": "af9ca7e1-af81-4fe1-b646-bb5cf41317e0",
       "migrations_dir": "drizzle"
     }
   ],
   "r2_buckets": [
+    // À confirmer : bucket qui contient les images « upload-… » de l'ancien site (R2_BUCKET_NAME du projet Pages woo-premium)
     { "binding": "MEDIA", "bucket_name": "plans-catalogue-images" },
     { "binding": "VIDEOS", "bucket_name": "cpbook-videos" },
     { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "wooplans-next-cache" }

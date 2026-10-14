@@ -64,8 +64,8 @@ Vidéos et publications ──▶ Vitrine (/ , /plans, /plans/<modèle>)
 
 ```bash
 npx wrangler login
-npx wrangler d1 create wooplans-platform     # puis reporter l'ID dans wrangler.jsonc (database_id)
-npx wrangler d1 migrations apply DB --remote
+# La base « wooplans-platform » existe déjà (schéma appliqué, 10 plans importés).
+npx wrangler d1 migrations apply DB --remote   # applique les futures migrations
 ```
 
 Secrets (une fois) :
@@ -90,7 +90,7 @@ npx wrangler d1 execute DB --remote --file /tmp/admin.sql
 
 ### 3. Données
 
-- **Plans de l'ancienne base** : voir `scripts/import/legacy-to-sql.mjs` (export, conversion, import).
+- **Plans de l'ancienne base** : déjà importés (`scripts/import/legacy-plans.sql`, regénérable avec `scripts/import/legacy-to-sql.mjs`).
 - **Anciens acheteurs** : Admin → Membres → « Importer les acheteurs Chariow », puis « Envoyer les codes » (par lots de 25).
 - **Nouveaux modèles** : Admin → Modèles → « Nouveau modèle » (rendus publics, distributions privées, devis par lot).
 - **PDF du catalogue** : Admin → Réglages.
