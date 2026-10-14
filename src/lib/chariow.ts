@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { hmacSha256Hex, randomId, timingSafeEqual } from "@/lib/crypto";
+import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, adminSaleEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
@@ -36,12 +36,7 @@ const SALE_EVENTS: Record<string, "completed" | "abandoned" | "failed"> = {
   "failed.sale": "failed",
 };
 
-/** HMAC-SHA256 du corps brut, comparé en temps constant (contrat « Pulse Security » de Chariow). */
-export async function verifyChariowSignature(rawBody: Uint8Array, header: string | null, secret: string) {
-  if (!header || !header.startsWith("sha256=")) return false;
-  const expected = `sha256=${await hmacSha256Hex(secret, rawBody)}`;
-  return timingSafeEqual(header, expected);
-}
+export { verifyChariowSignature } from "@/lib/chariow-signature";
 
 export function catalogueProductIds() {
   const env = getEnv();

@@ -8,10 +8,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return legacyRedirects;
   },
-  async rewrites() {
-    // Page de vente : HTML statique optimisé, servi directement par les assets Cloudflare.
-    return [{ source: "/catalogue-premium", destination: "/lp/catalogue-premium.html" }];
-  },
   async headers() {
     return [
       {

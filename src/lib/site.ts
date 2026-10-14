@@ -9,7 +9,7 @@ export const SITE = {
   catalogueCta: "Obtenir le Catalogue Premium",
 };
 
-export function whatsappLink(message: string, number = process.env.WHATSAPP_NUMBER || "237653769998") {
+export function whatsappLink(message: string, number: string = process.env.WHATSAPP_NUMBER || "237653769998") {
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 

@@ -43,7 +43,6 @@ export default async function HomePage() {
       <section className="relative overflow-hidden bg-[#0B2E2D] text-white">
         <picture>
           <source media="(max-width: 640px)" srcSet="/images/hero-home-mobile.webp" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/hero-home.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" fetchPriority="high" />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B2E2D] via-[#0B2E2D]/85 to-transparent" />
