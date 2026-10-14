@@ -1,0 +1,19 @@
+name: Inventaire Framer
+
+on:
+  push:
+    paths: ["scripts/framer/**", ".github/workflows/framer.yml"]
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/framer/inventory.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: framer-pages
+          path: scripts/framer/out/pages.json
