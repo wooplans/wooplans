@@ -1,5 +1,6 @@
 "use client";
 
+import { cataloguePrice } from "@/lib/offer";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import type { SessionUser } from "@/lib/auth";
@@ -79,25 +80,25 @@ export function Navbar() {
             <Link href="/" className="hover:text-foreground transition-colors">Accueil</Link>
           </li>
           <li>
-            <Link href="/plans" className="hover:text-foreground transition-colors">Catalogue</Link>
+            <Link href="/plans" className="hover:text-foreground transition-colors">Les maisons</Link>
           </li>
           <li>
             <Link
               href="/abonnement"
               className="px-4 py-2 rounded-full border border-outline/20 text-foreground hover:border-outline/60 transition-colors"
             >
-              Abonnement
+              Catalogue Premium
             </Link>
           </li>
           {sessionUser?.role === "subscriber" ? (
             <li>
-              <Link href="/connexion" className="text-sm text-primary hover:text-primary-dark font-semibold">
+              <Link href="/premium" className="text-sm text-primary hover:text-primary-dark font-semibold">
                 Mon Compte
               </Link>
             </li>
           ) : (
             <li>
-              <Link href="/connexion" className="text-sm text-primary hover:text-primary-dark font-semibold">
+              <Link href="/premium" className="text-sm text-primary hover:text-primary-dark font-semibold">
                 Connexion
               </Link>
             </li>
@@ -140,22 +141,22 @@ export function Navbar() {
             <Link href="/" onClick={close} className="block hover:text-foreground transition-colors">Accueil</Link>
           </li>
           <li>
-            <Link href="/plans" onClick={close} className="block hover:text-foreground transition-colors">Catalogue</Link>
+            <Link href="/plans" onClick={close} className="block hover:text-foreground transition-colors">Les maisons</Link>
           </li>
           <li>
             <Link href="/abonnement" onClick={close} className="block text-primary font-semibold hover:text-primary-dark transition-colors">
-              Abonnement
+              Catalogue Premium
             </Link>
           </li>
           {sessionUser?.role === "subscriber" ? (
             <li>
-              <Link href="/connexion" onClick={close} className="block text-primary font-semibold hover:text-primary-dark transition-colors">
+              <Link href="/premium" onClick={close} className="block text-primary font-semibold hover:text-primary-dark transition-colors">
                 Mon Compte
               </Link>
             </li>
           ) : (
             <li>
-              <Link href="/connexion" onClick={close} className="block text-primary font-semibold hover:text-primary-dark transition-colors">
+              <Link href="/premium" onClick={close} className="block text-primary font-semibold hover:text-primary-dark transition-colors">
                 Connexion
               </Link>
             </li>
@@ -186,7 +187,7 @@ export function Navbar() {
               onClick={close}
               className="block w-full text-center py-3 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent/90 transition-colors"
             >
-              Devenir Premium — 19 900 FCFA/an
+              Catalogue Premium — {cataloguePrice}
             </Link>
           </div>
         )}

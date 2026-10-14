@@ -51,6 +51,7 @@ export type FunnelSessionInput = FunnelAttribution & {
 };
 
 export type FunnelEventInput = {
+  id?: string;
   sessionId: string;
   type: FunnelEventType;
   path: string;
@@ -263,8 +264,11 @@ export async function ensureFunnelSession(input: FunnelSessionInput) {
 export async function recordFunnelEvent(input: FunnelEventInput) {
   await ensureD1Schema();
   const prisma = getPrisma();
-  const created = await prisma.funnelEvent.create({
-    data: {
+  const created = await prisma.funnelEvent.upsert({
+    where: { id: input.id ?? crypto.randomUUID() },
+    update: {},
+    create: {
+      ...(input.id ? { id: input.id } : {}),
       sessionId: input.sessionId,
       type: input.type,
       path: input.path,
@@ -288,6 +292,8 @@ export async function recordFunnelSale(input: FunnelSaleInput) {
     status: input.status,
   };
 
+  const existing = await prisma.funnelSale.findUnique({ where: { chariowSaleId: input.chariowSaleId } });
+  if (existing?.status === "completed" && input.status !== "completed") return normalizeSale(existing as FunnelSaleRecord);
   const sale = await prisma.funnelSale.upsert({
     where: { chariowSaleId: input.chariowSaleId },
     update: saleData,
@@ -501,7 +507,7 @@ export async function getFunnelAnalytics(periodDays = 30): Promise<FunnelAnalyti
     .sort((a, b) => b.sales - a.sales || b.conversionRate - a.conversionRate)
     .slice(0, 5);
 
-  const behaviorPagePath = "/abonnement-facebook-froid";
+  const behaviorPagePath = "/abonnement";
   const behaviorSessionIds = new Set<string>();
   for (const session of normalizedSessions) {
     if (session.landingPath.startsWith(behaviorPagePath)) {

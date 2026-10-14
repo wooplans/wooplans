@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/plans";
+  const callbackUrl = searchParams.get("callbackUrl") || "/premium";
   const initialEmail = searchParams.get("email")?.trim().toLowerCase() || "";
   const [email, setEmail] = useState(initialEmail);
   const [premiumCode, setPremiumCode] = useState("");
@@ -93,11 +93,11 @@ function LoginForm() {
             value={premiumCode}
             onChange={(event) => setPremiumCode(event.target.value)}
             required
-            maxLength={4}
+            maxLength={128}
             pattern="[0-9]{4}"
-            inputMode="numeric"
+            inputMode="text"
             className="w-full px-4 py-3 border border-outline/10 bg-background rounded-full focus:outline-none focus:border-primary transition-colors text-center text-2xl font-mono tracking-[0.5em] placeholder:text-base placeholder:tracking-normal placeholder:font-normal"
-            placeholder="4 chiffres"
+            placeholder="Code ou clé d’accès"
           />
         </div>
 
@@ -115,7 +115,7 @@ function LoginForm() {
           href="/abonnement"
           className="block w-full px-6 py-3 border border-outline/10 text-foreground font-semibold rounded-full hover:border-foreground/30 transition-colors text-center"
         >
-          Acheter un abonnement
+          Obtenir le Catalogue Premium
         </Link>
         <Link
           href="/"
@@ -132,11 +132,11 @@ function LoginForm() {
         <ol className="text-sm text-foreground/70 space-y-2">
           <li className="flex items-start gap-2">
             <span className="font-semibold text-primary">1.</span>
-            <span>Passez par la page d&apos;abonnement et finalisez votre paiement</span>
+            <span>Passez par la page du Catalogue Premium et finalisez votre paiement</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-semibold text-primary">2.</span>
-            <span>Recevez votre code Premium à 4 chiffres après le paiement</span>
+            <span>Retrouvez les instructions d’accès dans votre commande après paiement</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-semibold text-primary">3.</span>

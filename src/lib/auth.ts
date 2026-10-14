@@ -1,3 +1,4 @@
+import { serverEnv } from "@/lib/server-env";
 import { NextResponse } from "next/server";
 
 export const SESSION_COOKIE = "wooplans_session";
@@ -29,9 +30,10 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function getAuthSecret() {
+  if (process.env.NODE_ENV === "production" && !serverEnv("AUTH_SECRET") && !serverEnv("NEXTAUTH_SECRET")) throw new Error("AUTH_SECRET required in production");
   return (
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
+    serverEnv("AUTH_SECRET") ||
+    serverEnv("NEXTAUTH_SECRET") ||
     "wooplans-dev-secret"
   );
 }
@@ -162,8 +164,12 @@ export async function verifySessionToken(token?: string | null): Promise<AppSess
   const [payloadPart, signaturePart] = token.split(".");
   if (!payloadPart || !signaturePart) return null;
 
-  const expectedSignature = await hmacSign(getAuthSecret(), payloadPart);
-  const actualSignature = base64UrlDecode(signaturePart);
+  let expectedSignature: Uint8Array;
+  let actualSignature: Uint8Array;
+  try {
+    expectedSignature = await hmacSign(getAuthSecret(), payloadPart);
+    actualSignature = base64UrlDecode(signaturePart);
+  } catch { return null; }
 
   if (!(await timingSafeEqual(expectedSignature, actualSignature))) {
     return null;

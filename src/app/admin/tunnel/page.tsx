@@ -95,7 +95,7 @@ export default async function AdminTunnelPage({
             Organique vs Facebook Ads
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-medium text-foreground/60">
-            Vue de conversion par étapes, avec attribution interne complète sur la période
+            Vue de conversion par étapes, avec attribution interne selon les données disponibles sur la période
             sélectionnée.
           </p>
         </div>
@@ -270,7 +270,7 @@ export default async function AdminTunnelPage({
             <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="text-lg font-black tracking-tight text-foreground">
-                  Comportement sur /abonnement-facebook-froid
+                  Comportement sur la page Catalogue Premium
                 </h2>
                 <p className="mt-1 text-sm font-medium text-foreground/55">
                   Scroll, sections consultees, clics et sorties de page.

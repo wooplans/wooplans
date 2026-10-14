@@ -222,14 +222,15 @@ const plans: SeedPlan[] = [
 
 async function main() {
   const email = "admin@wooplans.com";
-  const plainPassword = "admin123";
+  const plainPassword = process.env.ADMIN_PASSWORD;
+  if (!plainPassword || plainPassword.length < 12) throw new Error("Set ADMIN_PASSWORD (at least 12 characters) before seeding");
 
   const existingAdmin = await prisma.admin.findUnique({ where: { email } });
 
   if (!existingAdmin) {
     const passwordHash = await bcrypt.hash(plainPassword, 12);
     await prisma.admin.create({ data: { email, passwordHash } });
-    console.log(`Admin créé : ${email} / ${plainPassword}`);
+    console.log(`Admin créé : ${email}`);
   } else {
     console.log("Admin existe déjà, ignoré.");
   }

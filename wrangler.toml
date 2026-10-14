@@ -5,8 +5,8 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 NODE_ENV = "production"
-CHARIOW_PRODUCT_ID = "prd_9cbatg"
-SITE_URL = "https://woo-premium.pages.dev"
+CHARIOW_PRODUCT_ID = "prd_41k85hc0"
+SITE_URL = "https://wooplans.com"
 
 [[d1_databases]]
 binding = "DB"

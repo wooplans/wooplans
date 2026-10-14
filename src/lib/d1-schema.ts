@@ -53,6 +53,12 @@ export async function ensureD1Schema() {
         return;
       }
 
+      await db.exec(`CREATE TABLE IF NOT EXISTS AuthAttempt (id TEXT NOT NULL PRIMARY KEY, count INTEGER NOT NULL DEFAULT 0);`);
+      await db.exec(`CREATE TABLE IF NOT EXISTS Project (id TEXT NOT NULL PRIMARY KEY, subscriberId TEXT NOT NULL, modelSlug TEXT NOT NULL, phone TEXT NOT NULL, location TEXT NOT NULL, terrain TEXT NOT NULL, needs TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'received', notes TEXT NOT NULL DEFAULT '', nextFollowUp DATETIME, grossPrice INTEGER NOT NULL DEFAULT 0, catalogueCredit INTEGER NOT NULL DEFAULT 0, paidAmount INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`);
+      await db.exec(`CREATE TABLE IF NOT EXISTS Favorite (id TEXT NOT NULL PRIMARY KEY, subscriberId TEXT NOT NULL, modelSlug TEXT NOT NULL, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);`);
+      await db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS Favorite_subscriberId_modelSlug_key ON Favorite(subscriberId, modelSlug);`);
+      await db.exec(`CREATE TABLE IF NOT EXISTS WebhookReceipt (id TEXT NOT NULL PRIMARY KEY, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);`);
+
       if (!(await hasTable(db, "Plan"))) {
         await db.exec(
           `CREATE TABLE IF NOT EXISTS Plan (id TEXT NOT NULL PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, category TEXT NOT NULL, description TEXT NOT NULL, surface INTEGER NOT NULL, bedrooms INTEGER NOT NULL, bathrooms INTEGER NOT NULL, floors INTEGER NOT NULL, rooms TEXT NOT NULL, images TEXT NOT NULL, thumbnail TEXT NOT NULL, estimatedCost INTEGER NOT NULL DEFAULT 0, estimatedCostImage TEXT NOT NULL DEFAULT '', distributionPlans TEXT NOT NULL DEFAULT '[]', distributionPlanUrl TEXT NOT NULL DEFAULT '', featured INTEGER NOT NULL DEFAULT 0, cataloguePreview INTEGER NOT NULL DEFAULT 0, published INTEGER NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME NOT NULL);`,

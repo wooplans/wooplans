@@ -122,3 +122,9 @@ npm run build
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
 - `npm run db:seed`
+
+## Catalogue Premium et CRM
+
+Voir [la mise en service](docs/catalogue-premium-mise-en-service.md) pour les changements, migrations, secrets, ressources privées et limites avant publication.
+
+Vérification : `npm test`, `npx tsc --noEmit`, `npm run build:cloudflare`.

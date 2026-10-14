@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cataloguePrice } from "@/lib/offer";
 import Link from "next/link";
 import { listPlans } from "@/lib/db";
 import { PlanGrid } from "@/components/PlanGrid";
@@ -8,13 +9,13 @@ import { VideoTestimonials } from "@/components/VideoTestimonials";
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 export const metadata: Metadata = {
-  title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+  title: "WooPlans — Plans de villas et duplex pour l'Afrique",
   description:
-    "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
+    "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain. Trouvez le plan idÃ©al pour votre projet.",
   openGraph: {
-    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    title: "WooPlans — Plans de villas et duplex pour l'Afrique",
     description:
-      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+      "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain.",
     type: "website",
     locale: "fr_FR",
     images: [
@@ -28,9 +29,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "WooPlans â€” Plans de villas et duplex pour l'Afrique",
+    title: "WooPlans — Plans de villas et duplex pour l'Afrique",
     description:
-      "Catalogue de plans de construction de villas et duplex conÃ§us pour le contexte africain.",
+      "Catalogue de plans de construction de villas et duplex conçus pour le contexte africain.",
     images: ["/images/hero-home.webp"],
   },
 };
@@ -39,22 +40,22 @@ const homeFaqs = [
   {
     question: "Combien coûte un plan de construction avec WooPlans ?",
     answer:
-      "L'accès au catalogue est gratuit. Pour débloquer les plans de distribution HD et les devis détaillés, l'abonnement Premium est à 19 900 FCFA pour 12 mois. Si vous souhaitez des plans complets personnalisés, nos architectes vous établissent un devis sur mesure à partir de 150 000 FCFA.",
+      "L'accès au catalogue est gratuit. Pour débloquer les plans de distribution HD et les devis détaillés, le Catalogue Premium est à 39 000 FCFA en paiement unique, avec accès à vie. Si vous souhaitez des plans complets personnalisés, nos architectes vous établissent un devis sur mesure selon le modèle, le terrain et les modifications.",
   },
   {
     question: "Puis-je modifier un plan du catalogue ?",
     answer:
-      "Oui ! Une fois abonné Premium, vous pouvez discuter avec nos architectes sur WhatsApp pour adapter n'importe quel modèle à votre terrain et à vos besoins spécifiques.",
+      "Oui ! Après avoir choisi votre modèle, vous pouvez discuter avec nos architectes sur WhatsApp pour obtenir un devis de prestation distincte et adapter le modèle à votre terrain et à vos besoins spécifiques.",
   },
   {
     question: "Le devis estimatif est-il fiable ?",
     answer:
-      "Nos devis sont basés sur des ratios professionnels et des tarifs au m² actualisés pour le marché africain. Ils constituent une estimation fiable à +/- 15% selon la qualité des matériaux et la localisation.",
+      "Nos devis sont basés sur des ratios professionnels et des tarifs au m² actualisés pour le marché africain. Ils constituent une base indicative, à ajuster selon la qualité des matériaux et la localisation.",
   },
   {
     question: "Comment ça marche après le paiement ?",
     answer:
-      "Après votre paiement sécurisé par Mobile Money, vous recevez immédiatement un code premium à 4 chiffres par email. Connectez-vous avec ce code et accédez à l'intégralité du catalogue.",
+      "Après votre paiement sécurisé par Mobile Money, vous recevez immédiatement les documents et instructions dans votre commande. Votre accès privé est activé après confirmation du paiement.",
   },
 ];
 
@@ -96,10 +97,10 @@ export default async function HomePage() {
 
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
               <Link
-                href="/plans"
+                href="/abonnement"
                 className="inline-flex w-full items-center justify-center rounded-full border border-accent/80 bg-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(234,88,12,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 sm:w-auto sm:px-9 sm:py-4 sm:text-base"
               >
-                Voir les plans
+                Obtenir le Catalogue Premium
               </Link>
               <a
                 href="#comment-ca-marche"
@@ -126,7 +127,7 @@ export default async function HomePage() {
                 <svg className="h-4 w-4 text-highlight" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Architectes certifiés
+                Conception architecturale
               </div>
             </div>
           </div>
@@ -158,13 +159,13 @@ export default async function HomePage() {
                       {featuredPlans.length}
                     </div>
                     <p className="mt-2 text-sm leading-6 text-white/56">
-                      Sélection des modèles les plus consultés, avec budget estimatif.
+                      Sélection de modèles à découvrir, avec budget estimatif.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
                     <div className="text-sm font-medium text-white/70">Accès Premium</div>
                     <div className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
-                      19 900
+                      {cataloguePrice}
                     </div>
                     <p className="mt-2 text-sm leading-6 text-white/56">
                       Débloquez les plans HD, les devis détaillés et l&apos;accompagnement.
@@ -204,7 +205,7 @@ export default async function HomePage() {
               <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span className="font-medium">Architectes certifiés</span>
+              <span className="font-medium">Conception architecturale</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +231,7 @@ export default async function HomePage() {
               Plans populaires
             </h2>
             <p className="text-foreground/60 max-w-xl">
-              Les modèles les plus consultés par nos visiteurs, avec budget estimé.
+              Une sélection de modèles, avec budget estimé.
             </p>
           </div>
           <PlanGrid plans={featuredPlans} />
@@ -281,7 +282,7 @@ export default async function HomePage() {
                 2. Débloquez les détails
               </h3>
               <p className="text-foreground/60 text-sm leading-relaxed">
-                Abonnez-vous Premium pour voir les plans de distribution, les devis détaillés et discuter avec nos architectes.
+                Achetez le Catalogue Premium pour voir les plans de distribution, les devis détaillés et discuter avec nos architectes.
               </p>
             </div>
             <div className="text-center p-8 border border-outline/10 bg-background rounded-2xl">

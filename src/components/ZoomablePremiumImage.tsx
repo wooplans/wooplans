@@ -20,6 +20,7 @@ export function ZoomablePremiumImage({ src, alt }: ZoomablePremiumImageProps) {
         aria-label={`Agrandir ${alt}`}
       >
         <Image
+          unoptimized
           src={src}
           alt={alt}
           width={1800}
@@ -48,6 +49,7 @@ export function ZoomablePremiumImage({ src, alt }: ZoomablePremiumImageProps) {
             onClick={(event) => event.stopPropagation()}
           >
             <Image
+              unoptimized
               src={src}
               alt={alt}
               fill
