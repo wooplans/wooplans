@@ -35,6 +35,7 @@ export const legacyRedirects: Redirect[] = [
   r("/ap-v3-037", "/catalogue/villa-v3-037"),
   r("/ap-d4-034", "/catalogue/duplex-d4-034"),
   r("/contacter-nous", "/contact"),
+  r("/arnaques-foncieres", "https://wooplans.mychariow.shop/prd_bri6ow"),
   // Pages à accents : forme encodée (telle que demandée par les navigateurs) et forme décodée
   r("/conditions-g%C3%A9n%C3%A9rales-de-vente", "/conditions-generales-de-vente"),
   r("/conditions-générales-de-vente", "/conditions-generales-de-vente"),
