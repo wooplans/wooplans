@@ -1,0 +1,40 @@
+# Bascule de www.wooplans.com et wooplans.com (Framer) vers le Worker wooplans-web.
+# Validée par le propriétaire le 14/10/2026. Retour arrière : supprimer les deux domaines
+# personnalisés du Worker, puis recréer dans la zone DNS :
+#   wooplans.com      A      31.43.161.6 (proxied)
+#   wooplans.com      A      31.43.160.6 (proxied)
+#   www.wooplans.com  CNAME  sites.framer.app (proxied)
+name: Bascule DNS vers le Worker
+
+on:
+  push:
+    branches: [ccr-03cfaad2-40szss]
+    paths: [".github/workflows/cutover.yml"]
+
+jobs:
+  cutover:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CF: https://api.cloudflare.com/client/v4
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Domaines personnalisés du Worker
+        run: |
+          zone=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id')
+          for host in www.wooplans.com wooplans.com; do
+            echo "== $host"
+            curl -sS -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" \
+              --data "{\"hostname\":\"$host\",\"service\":\"wooplans-web\",\"environment\":\"production\",\"zone_id\":\"$zone\",\"override_existing_dns_record\":true}" \
+              | tee /tmp/r.json | jq '{success, errors, result: (.result | {hostname, service})}'
+            jq -e '.success' /tmp/r.json > /dev/null
+          done
+      - name: Vérification
+        run: |
+          sleep 30
+          for u in https://www.wooplans.com/ https://www.wooplans.com/catalogue https://www.wooplans.com/catalogue/duplex-d4-001 https://www.wooplans.com/catalogue-premium https://wooplans.com/catalogue https://www.wooplans.com/sitemap.xml; do
+            echo "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$u") $u"
+          done
+          echo "Serveur : $(curl -sI https://www.wooplans.com/ | grep -i -E '^(server|x-powered|x-opennext)' | tr -d '\r' | tr '\n' ' ')"
