@@ -14,7 +14,6 @@ export const legacyRedirects: Redirect[] = [
   r("/abonnement-facebook-froid/checkout", "/catalogue-premium"),
   r("/digital", "/catalogue-premium"),
   r("/index-digital", "/catalogue-premium"),
-  r("/catalogue", "/catalogue-premium"),
   r("/premium", "/catalogue-premium"),
   // Espace membre
   r("/espace-membre", "/espace-premium"),
@@ -23,4 +22,23 @@ export const legacyRedirects: Redirect[] = [
   r("/plan/:slug", "/plans/:slug"),
   r("/modeles", "/plans"),
   r("/modeles/:slug", "/plans/:slug"),
+
+  // Site Framer (sitemap www.wooplans.com, octobre 2026)
+  r("/catalogue", "/plans"),
+  r("/catalogue-villa", "/plans?categorie=villa"),
+  r("/catalogue-duplex", "/plans?categorie=duplex"),
+  r("/catalogue/:slug", "/plans/:slug"),
+  r("/premium-wooplans", "/catalogue-premium"),
+  r("/cp19k", "/catalogue-premium"),
+  r("/cptest", "/catalogue-premium"),
+  r("/ap-v3-037", "/plans/villa-v3-037"),
+  r("/ap-d4-034", "/plans/duplex-d4-034"),
+  r("/contacter-nous", "/contact"),
+  // Pages à accents : forme encodée (telle que demandée par les navigateurs) et forme décodée
+  r("/conditions-g%C3%A9n%C3%A9rales-de-vente", "/conditions-generales-de-vente"),
+  r("/conditions-générales-de-vente", "/conditions-generales-de-vente"),
+  r("/mention-l%C3%A9gales", "/mentions-legales"),
+  r("/mention-légales", "/mentions-legales"),
+  r("/politique-de-confidentialit%C3%A9", "/confidentialite"),
+  r("/politique-de-confidentialité", "/confidentialite"),
 ];

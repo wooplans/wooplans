@@ -33,8 +33,22 @@ for (const slug of slugs) {
   const res = await get(`/plans/${slug}`);
   ok(`GET /plans/${slug}`, res.status === 200, String(res.status));
 }
-const redirect = await get("/modeles");
-ok("redirection /modeles → /plans", [301, 308].includes(redirect.status) && /\/plans$/.test(redirect.headers.get("location") || ""), `${redirect.status} ${redirect.headers.get("location")}`);
+const redirects = {
+  "/modeles": "/plans",
+  "/catalogue": "/plans",
+  "/catalogue-villa": "/plans?categorie=villa",
+  "/catalogue/villa-v3-018": "/plans/villa-v3-018",
+  "/premium-wooplans": "/catalogue-premium",
+  "/contacter-nous": "/contact",
+  "/conditions-g%C3%A9n%C3%A9rales-de-vente": "/conditions-generales-de-vente",
+  "/mention-l%C3%A9gales": "/mentions-legales",
+  "/politique-de-confidentialit%C3%A9": "/confidentialite",
+};
+for (const [from, to] of Object.entries(redirects)) {
+  const res = await get(from);
+  const location = res.headers.get("location") || "";
+  ok(`redirection ${from} → ${to}`, [301, 308].includes(res.status) && location.replace(base, "").endsWith(to), `${res.status} ${location}`);
+}
 
 // Page de vente
 const sales = await get("/catalogue-premium");

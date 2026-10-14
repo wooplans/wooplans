@@ -2,7 +2,7 @@ name: Inventaire Framer
 
 on:
   push:
-    paths: ["scripts/framer/**", ".github/workflows/framer.yml"]
+    paths: ["scripts/framer/inventory.mjs", ".github/workflows/framer.yml"]
 
 jobs:
   inventory:
