@@ -6,7 +6,15 @@
 import nextWorker from "./.open-next/worker.js";
 
 export default {
-  fetch: nextWorker.fetch,
+  fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
+    // Domaine nu → www (une seule adresse canonique pour le SEO)
+    const url = new URL(request.url);
+    if (url.hostname === "wooplans.com") {
+      url.hostname = "www.wooplans.com";
+      return Response.redirect(url.toString(), 301);
+    }
+    return nextWorker.fetch(request, env, ctx);
+  },
   async scheduled(_event: ScheduledController, env: CloudflareEnv, ctx: ExecutionContext) {
     if (!env.CRON_SECRET) return;
     const request = new Request(`${env.SITE_URL}/api/cron`, {
