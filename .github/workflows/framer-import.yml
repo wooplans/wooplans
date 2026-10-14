@@ -1,0 +1,26 @@
+name: Import des modèles Framer (brouillons)
+
+on:
+  push:
+    branches: [ccr-03cfaad2-40szss, master, main]
+    paths: ["scripts/framer/plans.json", "scripts/framer/import.mjs", ".github/workflows/framer-import.yml"]
+
+concurrency:
+  group: framer-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/framer/import.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

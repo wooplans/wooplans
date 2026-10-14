@@ -3,7 +3,7 @@ name: CI / Déploiement Cloudflare
 on:
   push:
     branches: [master, main, ccr-03cfaad2-40szss]
-    paths-ignore: ["scripts/framer/**", ".github/workflows/framer.yml"]
+    paths-ignore: ["scripts/framer/**", ".github/workflows/framer.yml", ".github/workflows/framer-import.yml"]
   pull_request:
   workflow_dispatch:
 
