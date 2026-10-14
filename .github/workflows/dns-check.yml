@@ -1,4 +1,4 @@
-name: Vérification DNS (lecture seule)
+name: Diagnostic (lecture seule)
 
 on:
   push:
@@ -31,5 +31,18 @@ jobs:
           fi
           echo "== Domaines personnalisés des Workers"
           curl -sS "${auth[@]}" "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" | jq '{success, errors, domains: [.result[]? | {hostname, service}]}'
+          echo "== Abonnement Workers du compte"
+          curl -sS "${auth[@]}" "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/account-settings" | jq -c '{success, errors, result}'
+          curl -sS "${auth[@]}" "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/subscriptions" | jq -c '{success, errors, subs: [.result[]? | {product: .rate_plan.id, state}]}'
+          echo "== Requêtes successives sur www (une toutes les 0,5 s)"
+          for i in $(seq 1 30); do
+            for path in /catalogue/villa-v4-0$(( (i % 9) + 1 ))0 /media/upload-framer-77c915f1fb301a921d61.jpg /api/webhooks/chariow; do :; done
+            code=$(curl -s -o /tmp/b.txt -w '%{http_code}' https://www.wooplans.com/catalogue/duplex-d4-01$(( i % 10 )))
+            [ "$code" != "200" ] && { echo "$code $(grep -o -E 'Error [0-9]+|error code: [0-9]+|<title>[^<]*' /tmp/b.txt | head -2 | tr '\n' ' ')"; } || echo -n "."
+            sleep 0.5
+          done; echo
+          echo "== Rafale (20 requêtes en parallèle)"
+          for i in $(seq 1 20); do curl -s -o /tmp/p$i.txt -w '%{http_code}\n' https://www.wooplans.com/catalogue/villa-v4-00$(( (i % 9) + 1 )) & done; wait
+          for i in $(seq 1 20); do grep -o -E 'error code: [0-9]+|Error [0-9]+' /tmp/p$i.txt | head -1; done | sort | uniq -c
           echo "== Résolution publique"
           dig +short www.wooplans.com; dig +short wooplans.com; dig +short NS wooplans.com
