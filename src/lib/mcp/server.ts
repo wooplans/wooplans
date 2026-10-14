@@ -69,6 +69,9 @@ async function handle(message: RpcRequest) {
 
 export async function handleMcpRequest(request: Request, pathToken?: string) {
   if (!isAuthorized(request, pathToken)) {
+    // URL à jeton invalide : 404 sans « WWW-Authenticate », sinon les connecteurs (claude.ai)
+    // tentent une connexion OAuth inexistante et affichent une erreur trompeuse.
+    if (pathToken !== undefined) return new Response("Introuvable", { status: 404 });
     return Response.json(rpcError(null, -32001, "Non autorisé"), {
       status: 401,
       headers: { "WWW-Authenticate": 'Bearer realm="wooplans-mcp"' },
