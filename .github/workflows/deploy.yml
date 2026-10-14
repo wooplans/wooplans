@@ -66,3 +66,34 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: URL workers.dev, secrets du Worker, médias
+        run: |
+          sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | jq -r .result.subdomain)
+          echo "BASE_URL=https://wooplans-web.$sub.workers.dev" >> "$GITHUB_ENV"
+          echo "URL : https://wooplans-web.$sub.workers.dev"
+          echo "Secrets du Worker :"
+          npx wrangler secret list --name wooplans-web --format json | jq -r '.[].name'
+          npx wrangler d1 execute DB --remote --json --command "SELECT key, visibility FROM media" | jq '.[0].results' > /tmp/media.json
+          echo "SMOKE_MEDIA=/tmp/media.json" >> "$GITHUB_ENV"
+          jq -r 'group_by(.visibility) | map("\(.[0].visibility): \(length)") | .[]' /tmp/media.json
+      - name: Tests de production (lecture seule)
+        run: node scripts/smoke-prod.mjs
+        env:
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+          CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
