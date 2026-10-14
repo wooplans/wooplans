@@ -118,10 +118,10 @@ export async function sendLegacyWelcomeBatch(limit = 25) {
     const mail = accessCodeEmail({ name: member.name, email: member.email, code });
     const result = await sendEmail({
       to: member.email,
-      subject: "Nouveau : votre Catalogue Premium WooPlans est aussi en ligne",
+      subject: "Nouveau : votre Catalogue Premium WOOPLANS est aussi en ligne",
       html: mail.html.replace(
         "Merci pour votre achat ! Votre Catalogue Premium est prêt. Le PDF vous est envoyé par Chariow, et vous avez aussi accès à l'espace Premium en ligne.",
-        "Vous avez acheté le Catalogue Premium WooPlans : il est désormais aussi consultable en ligne, avec les nouveaux modèles, vos favoris et un comparateur. Voici vos accès personnels.",
+        "Vous avez acheté le Catalogue Premium WOOPLANS : il est désormais aussi consultable en ligne, avec les nouveaux modèles, vos favoris et un comparateur. Voici vos accès personnels.",
       ),
       text: mail.text,
       template: "legacy_welcome",

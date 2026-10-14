@@ -16,7 +16,7 @@ export default async function SettingsPage() {
           <h2 className="font-semibold">PDF du Catalogue Premium</h2>
           <p className="mt-1 text-sm text-muted">Fichier privé, téléchargeable uniquement par les membres depuis leur espace.</p>
           <form action={saveCatalogueFiles} className="mt-4 grid gap-4">
-            <input name="label" defaultValue={files[0]?.label?.replace(/ — partie \d+$/, "") ?? "Catalogue Premium WooPlans (PDF)"} className="input" />
+            <input name="label" defaultValue={files[0]?.label?.replace(/ — partie \d+$/, "") ?? "Catalogue Premium WOOPLANS (PDF)"} className="input" />
             <MediaField name="files" label="Fichiers PDF" initial={files.map((f) => f.key)} visibility="private" folder="catalogue" />
             <button className="btn-primary">Enregistrer</button>
           </form>

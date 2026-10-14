@@ -20,7 +20,7 @@
     "WHATSAPP_NUMBER": "237653769998",
     "FB_PIXEL_ID": "1025626273769966",
     "CLARITY_PROJECT_ID": "y284dj587r",
-    "EMAIL_FROM": "WooPlans <bonjour@wooplans.com>",
+    "EMAIL_FROM": "WOOPLANS <bonjour@shop.wooplans.com>",
     "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
   },
   // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,

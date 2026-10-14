@@ -16,7 +16,8 @@ const config: Config = {
         outline: "#DFE5EA",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["Segoe UI", "Arial", "system-ui", "-apple-system", "Roboto", "Helvetica Neue", "sans-serif"],
+        heading: ["Montserrat", "Segoe UI", "Arial", "sans-serif"],
       },
     },
   },

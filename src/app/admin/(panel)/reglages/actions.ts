@@ -22,7 +22,7 @@ export async function savePricing(form: FormData) {
 export async function saveCatalogueFiles(form: FormData) {
   await requireAdmin();
   const keys = JSON.parse(String(form.get("files") || "[]")) as string[];
-  const label = String(form.get("label") || "Catalogue Premium WooPlans (PDF)");
+  const label = String(form.get("label") || "Catalogue Premium WOOPLANS (PDF)");
   const files = keys.map((key, i) => ({
     key,
     label: keys.length > 1 ? `${label} — partie ${i + 1}` : label,

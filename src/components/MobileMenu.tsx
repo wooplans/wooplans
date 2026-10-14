@@ -14,7 +14,7 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
     <>
       <button
         type="button"
-        className="rounded-lg p-2 text-foreground lg:hidden"
+        className="rounded-lg p-2 text-white lg:hidden"
         aria-label="Ouvrir le menu"
         aria-expanded={open}
         onClick={() => setOpen(true)}

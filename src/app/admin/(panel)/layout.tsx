@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +20,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const admin = await requireAdmin();
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[220px_1fr]">
-      <aside className="border-b border-outline bg-[#0B2E2D] text-white lg:min-h-screen lg:border-b-0">
+      <aside className="border-b border-outline bg-primary text-white lg:min-h-screen lg:border-b-0">
         <div className="flex items-center justify-between p-4 lg:block">
-          <Link href="/admin" className="text-lg font-bold">WooPlans</Link>
+          <Logo href="/admin" height={34} />
           <p className="hidden text-xs text-white/50 lg:mt-1 lg:block">{admin.email}</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2 text-sm lg:flex-col lg:px-3">

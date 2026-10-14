@@ -9,13 +9,13 @@ export default function LegalPage() {
     <ContentPage title="Mentions légales">
       <h2>Éditeur du site</h2>
       <p>
-        Le site wooplans.com est édité par WooPlans. Contact : {SITE.email}.
+        Le site wooplans.com est édité par WOOPLANS. Contact : {SITE.email}.
       </p>
       <h2>Hébergement</h2>
       <p>Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis.</p>
       <h2>Propriété intellectuelle</h2>
       <p>
-        Les plans, rendus, textes et estimations publiés sur ce site sont la propriété de WooPlans. Toute reproduction ou diffusion sans autorisation écrite est interdite.
+        Les plans, rendus, textes et estimations publiés sur ce site sont la propriété de WOOPLANS. Toute reproduction ou diffusion sans autorisation écrite est interdite.
       </p>
     </ContentPage>
   );

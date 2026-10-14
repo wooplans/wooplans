@@ -1,13 +1,14 @@
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { SITE, whatsappLink } from "@/lib/site";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="mt-auto bg-[#0B2E2D] text-white/80">
+    <footer className="mt-auto bg-primary text-white/80">
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <p className="text-xl font-bold text-white">WooPlans</p>
+          <Logo height={44} />
           <p className="mt-3 text-sm leading-relaxed text-white/60">
             Des plans de villas et duplex pensés pour l&apos;Afrique francophone, avec rendus 3D, distributions et budgets estimatifs.
           </p>
@@ -34,7 +35,7 @@ export function SiteFooter() {
           <p className="mb-3 text-sm font-semibold text-white">Nous écrire</p>
           <ul className="space-y-2 text-sm">
             <li>
-              <a href={whatsappLink("Bonjour WooPlans, j'ai une question.")} data-whatsapp="footer" target="_blank" rel="noopener noreferrer" className="hover:text-white">
+              <a href={whatsappLink("Bonjour WOOPLANS, j'ai une question.")} data-whatsapp="footer" target="_blank" rel="noopener noreferrer" className="hover:text-white">
                 WhatsApp
               </a>
             </li>
@@ -44,7 +45,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="container-page flex flex-col gap-3 py-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} WooPlans. Tous droits réservés.</p>
+          <p>© {year} WOOPLANS. Tous droits réservés.</p>
           <div className="flex flex-wrap gap-4">
             <Link href="/mentions-legales" className="hover:text-white">Mentions légales</Link>
             <Link href="/conditions-generales-de-vente" className="hover:text-white">CGV</Link>

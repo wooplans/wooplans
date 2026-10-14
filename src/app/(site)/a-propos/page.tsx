@@ -4,8 +4,8 @@ import { ContentPage } from "@/components/ContentPage";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "À propos de WooPlans",
-  description: "WooPlans conçoit des plans de villas et duplex adaptés au contexte de l'Afrique francophone, pour aider chaque famille à choisir sa maison.",
+  title: "À propos de WOOPLANS",
+  description: "WOOPLANS conçoit des plans de villas et duplex adaptés au contexte de l'Afrique francophone, pour aider chaque famille à choisir sa maison.",
   alternates: { canonical: "/a-propos" },
 };
 
@@ -13,7 +13,7 @@ export default function AboutPage() {
   return (
     <ContentPage eyebrow="À propos" title="Aider chaque famille à choisir la bonne maison">
       <p>
-        WooPlans est né d&apos;un constat simple : avant de construire, la plupart des familles n&apos;ont ni plans à comparer ni idée claire du budget. On choisit souvent trop tard, ou sur la base d&apos;une seule image.
+        WOOPLANS est né d&apos;un constat simple : avant de construire, la plupart des familles n&apos;ont ni plans à comparer ni idée claire du budget. On choisit souvent trop tard, ou sur la base d&apos;une seule image.
       </p>
       <p>
         Nous avons donc réuni plus de 50 modèles de villas et de duplex pensés pour l&apos;Afrique francophone : climat, modes de vie, tailles de terrains et coûts de construction locaux. Chaque modèle est présenté avec ses rendus 3D, sa distribution cotée et un devis estimatif détaillé.

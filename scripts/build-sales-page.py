@@ -4,8 +4,9 @@ Génère public/lp/catalogue-premium.html à partir de la page de vente historiq
 
 Changements appliqués :
 - chemins des médias : ./assets → /assets, /media → /videos (bucket R2 cpbook-videos) ;
-- paiement : le formulaire de commande appelle /api/checkout (Chariow) au lieu de MoneyFusion ;
-- suppression du widget Chariow intégré, du retour MoneyFusion et de l'analytics Supabase ;
+- paiement : widget Snap Chariow conservé (produit de type « service ») ; chaque clic enregistre
+  une intention d'achat (/api/checkout, mode widget) pour l'attribution UTM ;
+- suppression du formulaire MoneyFusion, de son retour de paiement et de l'analytics Supabase ;
 - suivi first-party du tunnel via /api/t ; balises SEO (canonical, Open Graph).
 
 Usage : python3 scripts/build-sales-page.py
@@ -54,25 +55,14 @@ replace_once(
     '<meta property="og:url" content="https://www.wooplans.com/catalogue-premium">\n'
     '<meta property="og:image" content="https://www.wooplans.com/assets/digital/hero-catalogue.jpg">\n'
     '<meta name="twitter:card" content="summary_large_image">\n'
-    '<link rel="icon" href="/favicon.svg">\n'
+    '<link rel="icon" href="/favicon.png">\n'
     '<link rel="preload" as="image"',
 )
 
-# 3. Bouton CTA → formulaire de commande (puis paiement Chariow)
-replace_between(
-    "var chariowLoadPromise=null;",
-    "/* ── ORDER ── */",
-    """var currentCtaId='sales_page';
-function redirectToCheckout(ctaId) {
-  currentCtaId=ctaId||'sales_page';
-  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:currentCtaId});
-  wpTrack('cta_click',currentCtaId);
-  openOrder();
-}
-function closeChariowCheckout(){}
-
-/* ── ORDER ── */""",
-    include_end=True,
+# 3. Bouton CTA → widget Snap Chariow (inchangé) + enregistrement de l'intention d'achat (UTM)
+replace_once(
+    "function redirectToCheckout(ctaId) {\n",
+    "function redirectToCheckout(ctaId) {\n  wpTrack('cta_click',ctaId||'sales_page');\n  wpCheckoutIntent(ctaId||'sales_page');\n",
 )
 
 # 4. Envoi du formulaire → /api/checkout
@@ -130,9 +120,6 @@ replace_once("    city:'Digital',\n    payment_method:'MoneyFusion'\n", "    cit
 # 5. Retour MoneyFusion : supprimé (la confirmation se fait sur /merci)
 replace_between("async function checkReturnedPayment(){", "\n}\n", "function checkReturnedPayment(){}\n")
 
-# 6. Widget Chariow intégré : supprimé
-replace_between('<div class="checkout-ov" id="chariowCheckout"', "</div>\n</div>\n", "")
-
 # 7. Analytics Supabase → suivi first-party
 replace_between(
     "<!-- ══════════════════════════════════════════════════════════\n     ANALYTICS",
@@ -144,6 +131,9 @@ function wpTrack(type,ctaId){
     if(navigator.sendBeacon)navigator.sendBeacon('/api/t',new Blob([body],{type:'application/json'}));
     else fetch('/api/t',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true});
   }catch(e){}
+}
+function wpCheckoutIntent(ctaId){
+  try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true});}catch(e){}
 }
 wpTrack('sales_page_view');
 document.addEventListener('click',function(e){

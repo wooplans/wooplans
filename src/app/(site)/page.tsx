@@ -31,7 +31,7 @@ export default async function HomePage() {
     "@type": "Organization",
     name: SITE.name,
     url: "https://www.wooplans.com",
-    logo: "https://www.wooplans.com/favicon.svg",
+    logo: "https://www.wooplans.com/apple-touch-icon.png",
     email: SITE.email,
   };
 
@@ -40,12 +40,12 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
       <FaqJsonLd items={CATALOGUE_FAQ} />
 
-      <section className="relative overflow-hidden bg-[#0B2E2D] text-white">
+      <section className="relative overflow-hidden bg-primary-dark text-white">
         <picture>
           <source media="(max-width: 640px)" srcSet="/images/hero-home-mobile.webp" />
           <img src="/images/hero-home.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" fetchPriority="high" />
         </picture>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B2E2D] via-[#0B2E2D]/85 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-dark via-primary-dark/85 to-transparent" />
         <div className="container-page relative py-20 md:py-28">
           <p className="eyebrow text-highlight">Villas et duplex pour l&apos;Afrique francophone</p>
           <h1 className="mt-4 max-w-2xl text-4xl font-bold leading-tight tracking-tight md:text-5xl">
@@ -100,7 +100,7 @@ export default async function HomePage() {
       <section className="container-page py-16">
         <div className="mb-8 text-center">
           <p className="eyebrow">Témoignages</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Ils ont choisi leur maison avec WooPlans</h2>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Ils ont choisi leur maison avec WOOPLANS</h2>
         </div>
         <Testimonials />
       </section>

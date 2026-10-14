@@ -32,7 +32,7 @@ export default async function PlansPage({ searchParams }: Props) {
   return (
     <>
       <section className="container-page py-12">
-        <p className="eyebrow">Catalogue WooPlans</p>
+        <p className="eyebrow">Catalogue WOOPLANS</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
         <p className="mt-3 max-w-2xl text-foreground/70">
           Rendus, chambres, niveaux, surfaces et budget indicatif de chaque modèle. Tous ces modèles sont inclus dans le Catalogue Premium, avec leurs distributions cotées et leurs devis détaillés.

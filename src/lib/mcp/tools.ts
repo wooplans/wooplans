@@ -55,7 +55,7 @@ async function findMember(email: unknown) {
   return member;
 }
 
-/** Outils exposés à un agent IA pour piloter l'activité WooPlans. */
+/** Outils exposés à un agent IA pour piloter l'activité WOOPLANS. */
 export const TOOLS: McpTool[] = [
   /* ─────────── Pilotage ─────────── */
   {

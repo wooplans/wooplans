@@ -3,7 +3,7 @@ import { whatsappLink } from "@/lib/site";
 export function WhatsAppFloat() {
   return (
     <a
-      href={whatsappLink("Bonjour WooPlans, j'aimerais des informations sur vos plans.")}
+      href={whatsappLink("Bonjour WOOPLANS, j'aimerais des informations sur vos plans.")}
       target="_blank"
       rel="noopener noreferrer"
       data-whatsapp="float"

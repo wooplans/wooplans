@@ -37,14 +37,14 @@ export async function POST(request: Request) {
     const revenue = sales.reduce((s, x) => s + x.amount, 0);
     const li = (items: string[]) => (items.length ? `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>` : "<p>—</p>");
     const esc = (v: string | null) => (v || "").replace(/[<>&]/g, "");
-    const html = `<h2>Récapitulatif WooPlans</h2>
+    const html = `<h2>Récapitulatif WOOPLANS</h2>
 <p><strong>${sales.length} vente(s)</strong> du catalogue sur 24 h : ${formatFcfa(revenue)}.</p>
 <h3>Paniers abandonnés à relancer sur WhatsApp</h3>${li(abandoned.map((a) => `${esc(a.name) || "Client"} — ${esc(a.phone) || esc(a.email)}`))}
 <h3>Relances CRM du jour</h3>${li(due.map((l) => `<a href="${siteUrl(`/admin/crm/${l.id}`)}">${esc(l.name)}</a> (${l.stage}) — ${esc(l.phone)}`))}
 <p><a href="${siteUrl("/admin")}">Ouvrir le tableau de bord</a></p>`;
     await sendEmail({
       to,
-      subject: `WooPlans : ${sales.length} vente(s), ${due.length} relance(s) aujourd'hui`,
+      subject: `WOOPLANS : ${sales.length} vente(s), ${due.length} relance(s) aujourd'hui`,
       html,
       text: `${sales.length} vente(s) (${formatFcfa(revenue)}), ${abandoned.length} panier(s) abandonné(s), ${due.length} relance(s) CRM.`,
       template: "admin_digest",

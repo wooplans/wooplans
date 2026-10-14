@@ -21,7 +21,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
     (acc[level] ||= []).push(room);
     return acc;
   }, {});
-  const orderMessage = `Bonjour WooPlans, je suis membre Premium (${member.email}) et je souhaite commander les plans complets du modèle ${plan.code} (${plan.name}).`;
+  const orderMessage = `Bonjour WOOPLANS, je suis membre Premium (${member.email}) et je souhaite commander les plans complets du modèle ${plan.code} (${plan.name}).`;
 
   return (
     <div className="container-page py-8">
@@ -141,7 +141,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
         </section>
       ) : null}
 
-      <section className="mt-12 rounded-2xl bg-[#0B2E2D] p-6 text-white md:p-8">
+      <section className="mt-12 rounded-2xl bg-primary-dark p-6 text-white md:p-8">
         <h2 className="text-xl font-semibold">Ce modèle est le bon ?</h2>
         <p className="mt-2 max-w-2xl text-white/75">
           Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets. En tant que membre, le prix du catalogue est déduit de la commande.

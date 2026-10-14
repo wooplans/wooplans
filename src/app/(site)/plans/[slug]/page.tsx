@@ -138,7 +138,7 @@ export default async function PlanPage({ params }: Props) {
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link href="/plans-personnalises" className="btn-ghost">En savoir plus</Link>
               <a
-                href={whatsappLink(`Bonjour WooPlans, je suis intéressé(e) par le modèle ${plan.code} (${plan.name}).`)}
+                href={whatsappLink(`Bonjour WOOPLANS, je suis intéressé(e) par le modèle ${plan.code} (${plan.name}).`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 data-whatsapp={`plan_${plan.slug}`}

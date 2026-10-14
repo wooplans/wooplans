@@ -108,7 +108,11 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   const currency = sale.amount?.currency || sale.original_amount?.currency || "XAF";
   const metadata = sale.custom_metadata ?? {};
 
-  const intent = await findIntent(metadata.intent_id, email);
+  const matched = await findIntent(metadata.intent_id, email);
+  // Widget Snap : aucune donnée ne relie la vente au navigateur. On rattache, pour les
+  // statistiques uniquement, le dernier clic « acheter » non attribué (jamais pour afficher un code).
+  const attributionOnly = matched ? null : await findRecentAnonymousIntent();
+  const intent = matched ?? attributionOnly;
   const visitor = intent?.visitorId
     ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) })
     : null;
@@ -187,7 +191,8 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
       .set({
         status: "paid",
         saleId: sale.id,
-        revealCode: code,
+        email,
+        revealCode: attributionOnly ? null : code,
         revealUntil: new Date(Date.now() + 6 * 60 * 60 * 1000),
         updatedAt: new Date(),
       })
@@ -207,6 +212,19 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   }
 
   return "access_granted";
+}
+
+async function findRecentAnonymousIntent() {
+  return (
+    (await getDb().query.checkoutIntents.findFirst({
+      where: and(
+        isNull(schema.checkoutIntents.email),
+        eq(schema.checkoutIntents.status, "started"),
+        gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 2 * 60 * 60 * 1000)),
+      ),
+      orderBy: desc(schema.checkoutIntents.createdAt),
+    })) ?? null
+  );
 }
 
 async function findIntent(intentId: string | undefined, email: string | null) {

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Plans de maison complets et personnalisés",
   description:
-    "Faites adapter un modèle WooPlans à votre terrain : plans architecturaux complets, façades, coupes et fondations. Honoraires dès 150 000 FCFA, prix du catalogue déduit.",
+    "Faites adapter un modèle WOOPLANS à votre terrain : plans architecturaux complets, façades, coupes et fondations. Honoraires dès 150 000 FCFA, prix du catalogue déduit.",
   alternates: { canonical: "/plans-personnalises" },
 };
 

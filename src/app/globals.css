@@ -19,6 +19,30 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Charte WOOPLANS : titres en Montserrat, corps en Segoe UI / Arial */
+h1,
+h2,
+h3,
+.btn {
+  font-family: Montserrat, "Segoe UI", Arial, sans-serif;
+}
+
+h1,
+h2 {
+  color: #0f5b59;
+}
+
+.text-white h1,
+.text-white h2,
+h1.text-white,
+h2.text-white,
+.bg-primary h1,
+.bg-primary h2,
+.bg-primary-dark h1,
+.bg-primary-dark h2 {
+  color: inherit;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);

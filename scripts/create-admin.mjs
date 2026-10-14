@@ -7,11 +7,14 @@
  */
 import { pbkdf2Sync, randomBytes, randomUUID } from "node:crypto";
 
-const [email, password] = process.argv.slice(2);
-if (!email || !password || password.length < 12) {
-  console.error("Usage : node scripts/create-admin.mjs <email> <mot de passe (12 caractères min.)>");
+const args = process.argv.slice(2);
+const allowWeak = args.includes("--allow-weak");
+const [email, password] = args.filter((a) => a !== "--allow-weak");
+if (!email || !password || (password.length < 12 && !allowWeak)) {
+  console.error("Usage : node scripts/create-admin.mjs <email> <mot de passe (12 caractères min.)> [--allow-weak]");
   process.exit(1);
 }
+if (password.length < 12) console.error("ATTENTION : mot de passe faible, à changer rapidement.");
 const b64url = (buf) => buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const iterations = 100000;
 const salt = randomBytes(16);

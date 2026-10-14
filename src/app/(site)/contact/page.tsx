@@ -4,7 +4,7 @@ import { SITE, whatsappLink } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Contactez WooPlans sur WhatsApp ou par email pour toute question sur nos plans de maisons et le Catalogue Premium.",
+  description: "Contactez WOOPLANS sur WhatsApp ou par email pour toute question sur nos plans de maisons et le Catalogue Premium.",
   alternates: { canonical: "/contact" },
 };
 
@@ -14,7 +14,7 @@ export default function ContactPage() {
       <p>Le moyen le plus rapide de nous joindre est WhatsApp. Nous répondons du lundi au samedi.</p>
       <p>
         <a
-          href={whatsappLink("Bonjour WooPlans, j'ai une question.")}
+          href={whatsappLink("Bonjour WOOPLANS, j'ai une question.")}
           target="_blank"
           rel="noopener noreferrer"
           data-whatsapp="contact"

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Logo } from "@/components/Logo";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { getCurrentAdmin } from "@/lib/auth";
 
@@ -11,7 +12,7 @@ export default async function AdminLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <p className="text-center text-xl font-bold text-primary">WooPlans · Admin</p>
+        <div className="flex justify-center rounded-2xl bg-primary p-4"><Logo height={40} /></div>
         <div className="mt-6">
           <AdminLoginForm />
         </div>

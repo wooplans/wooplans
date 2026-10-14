@@ -73,12 +73,12 @@ function layout(title: string, bodyHtml: string) {
   return `<!doctype html><html lang="fr"><body style="margin:0;background:#F5F7F9;font-family:Segoe UI,Arial,sans-serif;color:#1E2933">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#0F5B59;padding:20px 28px;color:#fff;font-size:20px;font-weight:700">WooPlans</td></tr>
+<tr><td style="background:#0F5B59;padding:20px 28px;color:#fff;font-size:20px;font-weight:700">WOOPLANS</td></tr>
 <tr><td style="padding:28px">
 <h1 style="font-size:20px;margin:0 0 16px">${escape(title)}</h1>
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 28px;background:#F5F7F9;color:#6B7280;font-size:12px">WooPlans · Plans de villas et duplex pour l'Afrique · <a href="${siteUrl()}" style="color:#0F5B59">wooplans.com</a></td></tr>
+<tr><td style="padding:16px 28px;background:#F5F7F9;color:#6B7280;font-size:12px">WOOPLANS · Plans de villas et duplex pour l'Afrique · <a href="${siteUrl()}" style="color:#0F5B59">wooplans.com</a></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -90,8 +90,8 @@ export function accessCodeEmail(params: { name?: string | null; email: string; c
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
   const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}`);
   const subject = params.isNewCode
-    ? "Votre nouveau code d'accès WooPlans Premium"
-    : "Votre accès au Catalogue Premium WooPlans";
+    ? "Votre nouveau code d'accès WOOPLANS Premium"
+    : "Votre accès au Catalogue Premium WOOPLANS";
   const intro = params.isNewCode
     ? "Voici votre nouveau code d'accès. L'ancien code ne fonctionne plus."
     : "Merci pour votre achat ! Votre Catalogue Premium est prêt. Le PDF vous est envoyé par Chariow, et vous avez aussi accès à l'espace Premium en ligne.";

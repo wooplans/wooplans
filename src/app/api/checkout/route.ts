@@ -9,6 +9,7 @@ import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
 
 type Body = {
+  mode?: "widget" | "redirect";
   name?: string;
   email?: string;
   phone?: string;
@@ -21,6 +22,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Démarre un achat : enregistre l'intention (attribution) puis renvoie l'URL de paiement Chariow. */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as Body;
+  if (body.mode === "widget") return recordWidgetIntent(request, body);
   const name = (body.name || "").trim().replace(/\s+/g, " ");
   const email = normalizeEmail(body.email || "");
   const phone = (body.phone || "").replace(/\D/g, "");
@@ -65,4 +67,19 @@ export async function POST(request: NextRequest) {
     maxAge: 60 * 60 * 48,
   });
   return response;
+}
+
+/**
+ * Paiement via le widget Snap Chariow (produit de type « service ») : le client saisit
+ * ses coordonnées dans le widget. On enregistre seulement l'intention (visiteur, UTM,
+ * bouton) pour attribuer ensuite la vente à sa campagne.
+ */
+async function recordWidgetIntent(request: NextRequest, body: Body) {
+  const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
+  if (!visitorId) return NextResponse.json({ ok: true });
+  if (!(await rateLimit(`intent:${clientIp(request.headers)}`, 30, 60 * 60 * 1000))) return NextResponse.json({ ok: true });
+  const ctaId = (body.ctaId || "sales_page").slice(0, 80);
+  await getDb().insert(schema.checkoutIntents).values({ id: randomId(), visitorId, ctaId });
+  await recordServerEvent({ visitorId, type: "checkout_start", path: "/catalogue-premium", ctaId }).catch(() => {});
+  return NextResponse.json({ ok: true });
 }

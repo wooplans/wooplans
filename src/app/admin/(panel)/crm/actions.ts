@@ -150,7 +150,7 @@ export async function sendLeadEmail(id: string, form: FormData) {
   const admin = await requireAdmin();
   const lead = await getDb().query.leads.findFirst({ where: eq(schema.leads.id, id) });
   if (!lead?.email) throw new Error("Cette demande n'a pas d'email");
-  const subject = str(form, "subject") ?? "Votre projet de maison avec WooPlans";
+  const subject = str(form, "subject") ?? "Votre projet de maison avec WOOPLANS";
   const message = str(form, "message");
   if (!message) throw new Error("Message vide");
   const mail = leadFollowUpEmail({ name: lead.name, subject, message });

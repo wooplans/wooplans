@@ -31,7 +31,7 @@ export function LeadForm({ defaultPlan = "" }: { defaultPlan?: string }) {
     return (
       <div className="card p-6 text-center">
         <p className="text-lg font-semibold text-primary">Demande envoyée ✓</p>
-        <p className="mt-2 text-foreground/70">Un architecte WooPlans vous contacte sur WhatsApp sous 24 h ouvrées.</p>
+        <p className="mt-2 text-foreground/70">Un architecte WOOPLANS vous contacte sur WhatsApp sous 24 h ouvrées.</p>
       </div>
     );
   }

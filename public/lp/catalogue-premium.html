@@ -13,7 +13,7 @@
 <meta property="og:url" content="https://www.wooplans.com/catalogue-premium">
 <meta property="og:image" content="https://www.wooplans.com/assets/digital/hero-catalogue.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg">
+<link rel="icon" href="/favicon.png">
 <link rel="preload" as="image" href="/assets/digital/hero-video-poster.webp" fetchpriority="high">
 <style>
 :root {
@@ -1104,6 +1104,22 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
 </div>
 
 <!-- ORDER SHEET -->
+<div class="checkout-ov" id="chariowCheckout" onclick="closeChariowCheckout(event)" aria-hidden="true">
+  <div class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkoutHeading" onclick="event.stopPropagation()">
+    <button class="checkout-close" type="button" onclick="closeChariowCheckout()" aria-label="Fermer le paiement">✕</button>
+    <h3 class="checkout-heading" id="checkoutHeading">Finaliser ma commande</h3>
+    <p class="checkout-note">Paiement sécurisé · Catalogue Premium à 39 000 FCFA</p>
+    <div id="chariow-widget" data-product-id="prd_41k85hc0"
+        data-store-domain="wooplans.mychariow.shop"
+        data-style="frame"
+        data-border-style="rounded"
+        data-cta-width="xs"
+        data-cta-animation="none"
+        data-locale="en"
+        data-primary-color="#f08b2f"
+        data-background-color="#FFFFFF"></div>
+  </div>
+</div>
 
 <div class="order-ov" id="orderOv" onclick="closeOrderBg(event)">
   <div class="order-sheet">
@@ -1315,14 +1331,56 @@ function playHeroVid(){
 }
 function playVSL(){ playHeroVid(); }
 
-var currentCtaId='sales_page';
-function redirectToCheckout(ctaId) {
-  currentCtaId=ctaId||'sales_page';
-  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:currentCtaId});
-  wpTrack('cta_click',currentCtaId);
-  openOrder();
+var chariowLoadPromise=null;
+function ensureChariowWidget(){
+  if(chariowLoadPromise)return chariowLoadPromise;
+  chariowLoadPromise=new Promise(function(resolve,reject){
+    if(!document.querySelector('link[data-chariow-style]')){
+      var link=document.createElement('link');
+      link.rel='stylesheet';
+      link.href='https://js.chariowcdn.com/v1/widget.min.css';
+      link.dataset.chariowStyle='1';
+      document.head.appendChild(link);
+    }
+    var existing=document.querySelector('script[data-chariow-script]');
+    if(existing){
+      if(existing.dataset.loaded==='1')resolve();
+      else{existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});}
+      return;
+    }
+    var script=document.createElement('script');
+    script.src='https://js.chariowcdn.com/v1/widget.min.js';
+    script.async=true;
+    script.dataset.chariowScript='1';
+    script.addEventListener('load',function(){script.dataset.loaded='1';resolve();},{once:true});
+    script.addEventListener('error',reject,{once:true});
+    document.head.appendChild(script);
+  });
+  return chariowLoadPromise;
 }
-function closeChariowCheckout(){}
+
+function redirectToCheckout(ctaId) {
+  wpTrack('cta_click',ctaId||'sales_page');
+  wpCheckoutIntent(ctaId||'sales_page');
+  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:ctaId||'unknown'});
+  var checkout=document.getElementById('chariowCheckout');
+  checkout.classList.add('active');
+  checkout.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  var closeButton=checkout.querySelector('.checkout-close');
+  if(closeButton)window.setTimeout(function(){closeButton.focus();},50);
+  ensureChariowWidget().catch(function(){
+    window.location.href='https://wooplans.mychariow.shop/prd_41k85hc0/checkout';
+  });
+}
+
+function closeChariowCheckout(event){
+  if(event&&event.target!==document.getElementById('chariowCheckout'))return;
+  var checkout=document.getElementById('chariowCheckout');
+  checkout.classList.remove('active');
+  checkout.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
 
 /* ── ORDER ── */
 function openOrder(){
@@ -1527,6 +1585,9 @@ function wpTrack(type,ctaId){
     if(navigator.sendBeacon)navigator.sendBeacon('/api/t',new Blob([body],{type:'application/json'}));
     else fetch('/api/t',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true});
   }catch(e){}
+}
+function wpCheckoutIntent(ctaId){
+  try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true});}catch(e){}
 }
 wpTrack('sales_page_view');
 document.addEventListener('click',function(e){
