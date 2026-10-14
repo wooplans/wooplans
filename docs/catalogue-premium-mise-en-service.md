@@ -41,3 +41,7 @@ Le CRM est un premier suivi des projets : les encaissements sont un total corrig
 Le projet conserve son adaptateur Cloudflare Pages actuel pour limiter la portée de cette branche. `@cloudflare/next-on-pages` est déprécié ; prévoir une migration du runtime dans une tâche distincte, avec recette sur Cloudflare, sans la confondre avec la refonte commerciale.
 
 Sources de l'intégration : https://chariow.dev/en/guides/pulse-security et https://chariow.dev/en/guides/pulses.
+
+### Vérification du packaging Cloudflare
+
+Le build doit contenir des routes Edge (notamment `/premium` et les API), pas seulement retourner un code de succès. Le script de fin de build retire le marqueur temporaire de prérendu Next 14 lorsque le projet ne demande pas un export statique, pour éviter sa mauvaise interprétation par le builder Vercel utilisé par Pages. Le CLI Vercel est fixé à la version compatible avec cet adaptateur.
