@@ -575,7 +575,7 @@ h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:clamp(24
  *   identifiant = identifiant anonyme first-party (wp_vid) renvoyé par /api/t.
  * Événements : wpCapture(nom, propriétés) — mis en attente tant que PostHog n'est pas chargé. */
 (function(){
-  var PH_KEY='',PH_HOST='https://eu.i.posthog.com',PIXEL='1025626273769966';
+  var PH_KEY='phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68',PH_HOST='https://eu.i.posthog.com',PIXEL='1025626273769966';
   var CK='wp_consent',started=false,pending=[];
   function consent(){var m=document.cookie.match(/(?:^|;\s*)wp_consent=(granted|denied)/);return m?m[1]:null;}
   function euTz(){try{return /^(Europe\/|Atlantic\/(Canary|Madeira|Azores|Reykjavik|Faroe))/.test(Intl.DateTimeFormat().resolvedOptions().timeZone);}catch(e){return false;}}
