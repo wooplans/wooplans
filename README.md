@@ -135,6 +135,8 @@ Donnez à l'agent le PDF du modèle (descriptif, surfaces, pièces, devis) et le
 4. **`get_plan`** — fiche complète, champs Premium compris, pour vérification.
 5. L'agent vous présente un résumé ; **la publication** (`update_plan_content` avec `status=published`) n'a lieu qu'après votre accord.
 
+**Plusieurs modèles d'un coup (Cowork ou Claude Code)** : donnez à l'agent l'accès à un dossier contenant un sous-dossier par modèle (PDF + images). Il vérifie les références déjà au catalogue, crée chaque fiche en brouillon, envoie lui-même les images par le lien d'envoi (`curl -T`), puis vous présente un tableau récapitulatif ; vous choisissez ce qui est publié.
+
 Conventions : référence `V4-001` (V = villa, D = duplex, chiffre = nombre de chambres), nom « Villa V4-001 », surfaces en m², dimensions en m, montants entiers en FCFA.
 
 ## Développement local
