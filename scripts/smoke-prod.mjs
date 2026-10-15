@@ -73,8 +73,9 @@ ok("page de vente B : aperçu ?variante=b", salesB.status === 200 && salesB.head
 ok("page de vente B : cookie d'aperçu posé", /wp_lp=b/.test(salesB.headers.get("set-cookie") || ""));
 const countB = salesBHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
 ok("page de vente B : nombre de modèles lu en base", Number(countB) > 0, countB || "absent");
-const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<div class="models-gallery-note/)?.[1] || "").match(/<article/g)?.length ?? 0;
+const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<p class="count-line"/)?.[1] || "").match(/<article/g)?.length ?? 0;
 ok("page de vente B : galerie des modèles en vedette", galleryB > 0, `${galleryB} cartes`);
+ok("page de vente B : aperçu d'un vrai modèle (sans montants)", /data-wp-preview><article class="preview"/.test(salesBHtml) && !/class="lots"[^]*?\d{3} \d{3} FCFA/.test(salesBHtml.split("data-wp-preview")[1]?.split("</article>")[0] || ""));
 ok("page de vente B : widget Chariow prd_41k85hc0", salesBHtml.includes('data-product-id="prd_41k85hc0"'));
 
 // Images (R2 MEDIA)

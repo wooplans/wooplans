@@ -1,13 +1,13 @@
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
-import { VARIANT_COOKIE, chooseVariant, galleryHtml, type GalleryPlan } from "@/lib/sales-page";
+import { VARIANT_COOKIE, chooseVariant, galleryHtml, previewHtml, type GalleryPlan } from "@/lib/sales-page";
 
-const GALLERY_SIZE = 6;
+const GALLERY_SIZE = 8;
 const DATA_TTL_MS = 5 * 60_000;
-let cached: { at: number; count: number; gallery: string } | null = null;
+let cached: { at: number; count: number; gallery: string; preview: string } | null = null;
 
-/** Nombre de modèles publiés et galerie (modèles en vedette d'abord), gardés 5 min en mémoire. */
+/** Nombre de modèles publiés, galerie et aperçu (modèles en vedette d'abord), gardés 5 min en mémoire. */
 async function salesPageData() {
   if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached;
   const db = getDb();
@@ -15,14 +15,27 @@ async function salesPageData() {
   const [[total], plans] = await Promise.all([
     db.select({ n: count() }).from(schema.plans).where(published),
     db.query.plans.findMany({
-      columns: { name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true },
+      columns: {
+        name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true, bathrooms: true,
+        budgetMin: true, budgetMax: true, rooms: true, floorPlans: true, estimateLots: true,
+      },
       where: and(published),
       orderBy: [desc(schema.plans.featured), asc(schema.plans.sortOrder), desc(schema.plans.publishedAt)],
-      limit: GALLERY_SIZE * 2,
+      limit: GALLERY_SIZE * 3,
     }),
   ]);
-  const withCover = (plans as GalleryPlan[]).filter((p) => p.coverImage).slice(0, GALLERY_SIZE);
-  cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover) };
+  const withCover = plans.filter((p) => p.coverImage);
+  // Aperçu : le premier modèle (en vedette d'abord) qui a plan coté et devis par lots.
+  const showcase = withCover.find((p) => p.floorPlans.length > 0 && p.estimateLots.length > 0) ?? null;
+  const preview = previewHtml(
+    showcase && {
+      ...showcase,
+      roomsCount: showcase.rooms.length,
+      floorPlansCount: showcase.floorPlans.length,
+      lotLabels: showcase.estimateLots.map((l) => l.label),
+    },
+  );
+  cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover.slice(0, GALLERY_SIZE) as GalleryPlan[]), preview };
   return cached;
 }
 
@@ -60,6 +73,7 @@ export async function GET(request: Request) {
   const rewritten = new HTMLRewriter()
     .on("[data-wp-count]", { element: (el) => void el.setInnerContent(String(data.count)) })
     .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
+    .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) })
     .transform(new Response(asset.body, { status: 200, headers }));
   return rewritten;
 }
