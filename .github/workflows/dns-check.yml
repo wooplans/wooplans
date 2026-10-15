@@ -59,6 +59,8 @@ jobs:
           echo "MX send : $(dig +short MX send.wooplans.com)"
           echo "TXT send : $(dig +short TXT send.wooplans.com)"
           echo "CNAME rsend : $(dig +short CNAME rsend.wooplans.com)"
-          echo "MX wooplans.com (réception info@) : $(dig +short MX wooplans.com)"
+          echo "MX wooplans.com (réception info@) : $(dig +short MX wooplans.com | tr '\n' ' ')"
+          echo "TXT wooplans.com (SPF) : $(dig +short TXT wooplans.com | tr '\n' ' ')"
+          echo "DMARC : $(dig +short TXT _dmarc.wooplans.com)"
           echo "== Résolution publique"
           dig +short www.wooplans.com; dig +short wooplans.com; dig +short NS wooplans.com
