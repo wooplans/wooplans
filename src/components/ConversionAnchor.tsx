@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 const PREMIUM_TEST_STORAGE_KEY = "wooplans-premium-test-unlocked";
 const PREMIUM_TEST_EVENT = "wooplans-premium-test-changed";
 const WHATSAPP_PHONE = "237694327885";
+const PREMIUM_BENEFITS = [
+  "Distributions cotées de chaque niveau",
+  "Tableau des pièces et de leurs surfaces",
+  "Devis estimatif détaillé par lot (fondation, élévations, etc…)",
+];
 const FULL_PLAN_PRICES = {
   villa: 150000,
   duplex: 250000,
@@ -95,11 +100,20 @@ export function ConversionAnchor({
           ? `Commander les plans complets du modèle ${modelCode}`
           : "Commencez votre projet maintenant"}
       </h2>
-      <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed mb-8">
-        {isPremium
-          ? `À partir de : ${formatPrice(fullPlanPrice)} FCFA`
-          : "Comparez tous nos plans et devis, et discutez avec un architecte sur WhatsApp."}
-      </p>
+      {isPremium ? (
+        <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed mb-8">
+          {`À partir de : ${formatPrice(fullPlanPrice)} FCFA`}
+        </p>
+      ) : (
+        <ul className="text-sm text-white/70 max-w-md mx-auto leading-relaxed mb-8 space-y-2 text-left">
+          {PREMIUM_BENEFITS.map((benefit) => (
+            <li key={benefit} className="flex items-start gap-2">
+              <span className="text-highlight shrink-0" aria-hidden="true">✓</span>
+              <span>{benefit}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         {isPremium ? (
           <a

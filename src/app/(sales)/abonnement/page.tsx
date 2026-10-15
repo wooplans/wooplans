@@ -395,7 +395,7 @@ export default function AbonnementPage() {
           <div className="grid grid-cols-2 gap-3">
             {PLANS.map((p) => (
               <div key={p.code} className="bg-background border border-outline/10 rounded-xl overflow-hidden">
-                <div className="relative aspect-[5/3] overflow-hidden">
+                <div className="relative aspect-[16/9] overflow-hidden">
                   <Image
                     src={p.img}
                     alt={`${p.type} ${p.code} — ${p.ch} ch. ${p.m2} m²`}

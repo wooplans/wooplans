@@ -64,7 +64,7 @@ export function PlanGallery({ images, name, modelCode }: PlanGalleryProps) {
               onClick={() => openLightbox(i)}
               className="relative overflow-hidden bg-surface group cursor-pointer border border-outline/10 rounded-2xl"
             >
-              <div className={i === 0 && images.length > 2 ? "aspect-[16/9]" : "aspect-[4/3]"}>
+              <div className={i === 0 && images.length > 2 ? "aspect-[16/9]" : "aspect-[16/9]"}>
                 <Image
                   src={img}
                   alt={`${name} — vue ${i + 1}`}

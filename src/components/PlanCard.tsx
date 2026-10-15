@@ -31,7 +31,7 @@ export function PlanCard({
   return (
     <Link href={`/plans/${slug}`} className="group block">
       <div className="bg-surface overflow-hidden border border-outline/10 rounded-2xl transition-all duration-200 hover:shadow-sm hover:-translate-y-1">
-        <div className="aspect-[4/3] overflow-hidden bg-background relative">
+        <div className="aspect-[16/9] overflow-hidden bg-background relative">
           <Image
             src={thumbnail}
             alt={name}

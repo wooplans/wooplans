@@ -89,7 +89,7 @@ export function Footer() {
             {/* Réseaux sociaux */}
             <div className="mt-4 flex items-center gap-3">
               <a
-                href="#"
+                href="https://web.facebook.com/woohouseplans"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-colors"
@@ -100,7 +100,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://www.youtube.com/@wooplans"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-colors"
@@ -111,7 +111,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://www.tiktok.com/@wooplans"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/40 transition-colors"

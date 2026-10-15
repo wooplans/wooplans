@@ -369,7 +369,7 @@ export default function AbonnementFacebookFroidPage() {
                   key={plan.slug}
                   className="group overflow-hidden rounded-2xl border border-outline/10 bg-background"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-surface">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-surface">
                     <Image
                       src={plan.thumbnail}
                       alt={plan.name}

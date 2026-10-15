@@ -140,7 +140,7 @@ function PreviewCard({ plan }: { plan: PlanPreview }) {
         Inclus Premium
       </div>
 
-      <div className="aspect-[4/3] overflow-hidden bg-background relative">
+      <div className="aspect-[16/9] overflow-hidden bg-background relative">
         <Image
           src={plan.thumbnail}
           alt={plan.name}
