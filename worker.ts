@@ -16,7 +16,7 @@ export default {
     }
     // Images publiques (immuables) : servies depuis le cache Cloudflare, sans repasser par Next ni D1.
     if (request.method === "GET" && url.pathname.startsWith("/media/") && !request.headers.has("range")) {
-      const cache = caches.default;
+      const cache = (caches as unknown as { default: Cache }).default;
       const hit = await cache.match(request);
       if (hit) return hit;
       const response = await nextWorker.fetch(request, env, ctx);

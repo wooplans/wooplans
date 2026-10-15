@@ -19,7 +19,10 @@
     "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_41k85hc0",
     "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx",
     "CATALOGUE_PRICE_XAF": "39000",
-    "WHATSAPP_NUMBER": "237653769998",
+    // Part du trafic de /catalogue-premium envoyée sur la variante B (0 à 100).
+    // 0 = variante B visible seulement avec ?variante=b (aperçu).
+    "SALES_PAGE_B_SHARE": "0",
+    "WHATSAPP_NUMBER": "237694327885",
     "FB_PIXEL_ID": "1025626273769966",
     "CLARITY_PROJECT_ID": "y284dj587r",
     "EMAIL_FROM": "WOOPLANS <info@wooplans.com>",
@@ -37,6 +40,8 @@
       "migrations_dir": "drizzle"
     }
   ],
+  // Cloudflare Images : conversion WebP → JPEG des images des fiches PDF (hors CPU du Worker)
+  "images": { "binding": "IMAGES" },
   "r2_buckets": [
     // À confirmer : bucket qui contient les images « upload-… » de l'ancien site (R2_BUCKET_NAME du projet Pages woo-premium)
     { "binding": "MEDIA", "bucket_name": "plans-catalogue-images" },

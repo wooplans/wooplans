@@ -35,6 +35,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
           <div className="mt-5 flex flex-wrap gap-3">
             <FavoriteButton planId={plan.id} initial={favorites.has(plan.id)} />
             <Link href={`/espace-premium/comparer?m=${plan.slug}`} className="btn-ghost">Comparer</Link>
+            <a href={`/api/premium/fiche-pdf/${plan.slug}`} className="btn-ghost" data-pdf={plan.code}>Fiche PDF</a>
           </div>
           <div className="mt-6 rounded-2xl bg-primary p-5 text-white">
             <p className="text-sm text-white/70">Devis estimatif de construction</p>

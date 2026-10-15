@@ -11,7 +11,7 @@ const NAV = [
   { href: "/espace-premium", label: "Modèles" },
   { href: "/espace-premium/favoris", label: "Favoris" },
   { href: "/espace-premium/comparer", label: "Comparer" },
-  { href: "/espace-premium/telechargements", label: "PDF" },
+  { href: "/espace-premium/telechargements", label: "Fiches PDF" },
 ];
 
 export default async function PremiumLayout({ children }: { children: React.ReactNode }) {
