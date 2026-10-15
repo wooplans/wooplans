@@ -16,6 +16,7 @@ interface __BaseEnv_CloudflareEnv {
 	FB_PIXEL_ID: "1025626273769966";
 	CLARITY_PROJECT_ID: "y284dj587r";
 	EMAIL_FROM: "WooPlans <bonjour@wooplans.com>";
+	EMAIL_REPLY_TO: string;
 	ADMIN_NOTIFY_EMAIL: "wooplans237@gmail.com";
 }
 declare namespace Cloudflare {

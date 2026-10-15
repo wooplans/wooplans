@@ -47,7 +47,7 @@ export async function sendEmail(input: SendInput) {
         subject: input.subject,
         html: input.html,
         text: input.text,
-        reply_to: input.replyTo,
+        reply_to: input.replyTo ?? (env.EMAIL_REPLY_TO || undefined),
       }),
     });
     const data = (await response.json().catch(() => ({}))) as { id?: string; message?: string };

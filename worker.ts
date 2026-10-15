@@ -9,7 +9,8 @@ export default {
   async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
     // Domaine nu → www (une seule adresse canonique pour le SEO)
     const url = new URL(request.url);
-    if (url.hostname === "wooplans.com") {
+    // (sauf /api/* : une 301 transformerait les POST en GET — MCP, webhooks)
+    if (url.hostname === "wooplans.com" && !url.pathname.startsWith("/api/")) {
       url.hostname = "www.wooplans.com";
       return Response.redirect(url.toString(), 301);
     }

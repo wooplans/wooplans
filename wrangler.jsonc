@@ -23,6 +23,8 @@
     "FB_PIXEL_ID": "1025626273769966",
     "CLARITY_PROJECT_ID": "y284dj587r",
     "EMAIL_FROM": "WOOPLANS <bonjour@shop.wooplans.com>",
+    // Les réponses des clients arrivent sur la boîte info@wooplans.com (hébergée chez mailhostbox)
+    "EMAIL_REPLY_TO": "info@wooplans.com",
     "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
   },
   // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,
