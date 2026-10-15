@@ -1,10 +1,23 @@
-import { and, asc, desc, eq, gte, like, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
 import { getFunnelKpis, getSourceBreakdown, type Period } from "@/lib/analytics";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
+import { deleteMedia, planMediaFolder, storeMedia } from "@/lib/media-store";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
+import {
+  PLAN_CATEGORIES,
+  PLAN_IMAGE_MAX_BYTES,
+  acceptedForRole,
+  decodeBase64File,
+  parseCreatePlanInput,
+  reorderList,
+  sniffFileType,
+  type ImageRole,
+} from "@/lib/plan-input";
+import { privateFileUrl } from "@/lib/premium";
+import { downloadFile, type IncomingFile } from "@/lib/remote-file";
 
 type JsonSchema = Record<string, unknown>;
 export type McpTool = {
@@ -54,6 +67,82 @@ async function findMember(email: unknown) {
   if (!member) throw new Error(`Aucun membre avec l'email ${e}`);
   return member;
 }
+
+async function findPlan(code: unknown) {
+  const ref = asString(code);
+  if (!ref) throw new Error("code requis (référence du modèle, ex. V4-001)");
+  const plan = await getDb().query.plans.findFirst({ where: or(eq(schema.plans.code, ref.toUpperCase()), eq(schema.plans.slug, ref.toLowerCase())) });
+  if (!plan) throw new Error(`Modèle introuvable : ${ref}`);
+  return plan;
+}
+
+const asRole = (v: unknown): ImageRole => {
+  if (v === "render" || v === "floor_plan") return v;
+  throw new Error("role : « render » (rendu 3D public) ou « floor_plan » (distribution privée, Premium)");
+};
+
+/** Retrouve une image dans la liste du rôle : valeur exacte, clé R2 seule, ou position (1 = première). */
+function matchImage(list: string[], image: unknown) {
+  const value = typeof image === "number" ? String(image) : asString(image);
+  if (value && /^\d{1,3}$/.test(value) && Number(value) >= 1 && Number(value) <= list.length) return list[Number(value) - 1];
+  const found = value ? list.find((item) => item === value || item === `/media/${value}` || item.replace(/^\/media\//, "") === value) : undefined;
+  if (!found) throw new Error(`Image introuvable dans cette liste : ${JSON.stringify(list)}`);
+  return found;
+}
+
+const mediaKeyOf = (ref: string) => ref.replace(/^\/media\//, "");
+
+function planDetails(p: typeof schema.plans.$inferSelect) {
+  return {
+    id: p.id,
+    code: p.code,
+    slug: p.slug,
+    name: p.name,
+    category: p.category,
+    status: p.status,
+    public_url: `/catalogue/${p.slug}`,
+    premium_url: `/espace-premium/plans/${p.slug}`,
+    summary: p.summary,
+    description: p.description,
+    seo_title: p.seoTitle,
+    seo_description: p.seoDescription,
+    bedrooms: p.bedrooms,
+    bathrooms: p.bathrooms,
+    levels: p.levels,
+    surface_total: p.surfaceTotal,
+    footprint: p.footprint,
+    building_width: p.buildingWidth,
+    building_depth: p.buildingDepth,
+    land_area: p.landArea,
+    land_width: p.landWidth,
+    land_depth: p.landDepth,
+    budget_min: p.budgetMin,
+    budget_max: p.budgetMax,
+    featured: p.featured,
+    sort_order: p.sortOrder,
+    cover_image: p.coverImage,
+    renders: p.renders,
+    premium: {
+      floor_plans: p.floorPlans.map((key) => ({ key, url: privateFileUrl(key) })),
+      rooms: p.rooms,
+      rooms_area_total: Math.round(p.rooms.reduce((sum, r) => sum + r.area, 0) * 100) / 100,
+      estimate_total: p.estimateTotal,
+      estimate_lots: p.estimateLots,
+      estimate_lots_total: p.estimateLots.reduce((sum, l) => sum + l.amount, 0),
+      cost_assumptions: p.costAssumptions,
+      strengths: p.strengths,
+      watchouts: p.watchouts,
+      premium_notes: p.premiumNotes,
+    },
+    currency: "XAF",
+    published_at: iso(p.publishedAt),
+    created_at: iso(p.createdAt),
+    updated_at: iso(p.updatedAt),
+  };
+}
+
+const roomSchema = obj({ name: str("Pièce, ex. « Séjour »"), area: num("Surface (m²)"), level: str("Niveau, ex. « RDC », « R+1 »") }, ["name", "area"]);
+const lotSchema = obj({ label: str("Lot, ex. « Gros œuvre »"), amount: num("Montant entier (FCFA)") }, ["label", "amount"]);
 
 /** Outils exposés à un agent IA pour piloter l'activité WOOPLANS. */
 export const TOOLS: McpTool[] = [
@@ -404,9 +493,231 @@ export const TOOLS: McpTool[] = [
     },
   },
   {
+    name: "get_plan",
+    description:
+      "Fiche complète d'un modèle (référence ou slug), y compris les champs Premium (distributions, pièces, devis par lots, hypothèses, points forts, points de vigilance, notes). À utiliser pour vérifier une fiche avant de la présenter au propriétaire.",
+    inputSchema: obj({ code: str("Référence (ex. V4-001) ou slug (ex. villa-v4-001)") }, ["code"]),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => planDetails(await findPlan(args.code)),
+  },
+  {
+    name: "create_plan",
+    description:
+      "Crée une nouvelle fiche du catalogue, toujours en BROUILLON (invisible du public). Slug généré automatiquement : catégorie + référence (villa + V4-001 → villa-v4-001). Refus si la référence ou le slug existe déjà. Nombres en valeurs numériques (pas de texte ni d'unité) : surfaces en m², dimensions en m, montants entiers en FCFA. Si budget_min/budget_max manquent, ils sont déduits du devis (± 10 %). Les images s'ajoutent ensuite avec upload_plan_image.",
+    inputSchema: obj(
+      {
+        code: str("Référence commerciale en majuscules, ex. V4-001, D4-034"),
+        name: str("Nom du modèle, ex. « Villa V4-001 »"),
+        category: str("Catégorie", { enum: [...PLAN_CATEGORIES] }),
+        summary: str("Accroche publique (300 caractères max)"),
+        description: str("Description publique"),
+        seo_title: str("Titre SEO (≈ 60 caractères)"),
+        seo_description: str("Méta-description SEO (≈ 155 caractères)"),
+        bedrooms: { type: "integer", minimum: 0, maximum: 50, description: "Chambres" },
+        bathrooms: { type: "integer", minimum: 0, maximum: 50, description: "Salles de bain / d'eau" },
+        levels: { type: "integer", minimum: 1, maximum: 30, description: "Niveaux (1 = plain-pied, 2 = R+1…)" },
+        surface_total: { type: "integer", minimum: 10, maximum: 100000, description: "Surface totale habitable (m²)" },
+        footprint: { type: "integer", minimum: 1, description: "Emprise au sol (m²)" },
+        building_width: { type: "number", minimum: 1, maximum: 500, description: "Largeur du bâtiment (m)" },
+        building_depth: { type: "number", minimum: 1, maximum: 500, description: "Profondeur du bâtiment (m)" },
+        land_area: { type: "integer", minimum: 1, description: "Terrain minimum conseillé (m²)" },
+        land_width: { type: "number", minimum: 1, description: "Largeur du terrain (m)" },
+        land_depth: { type: "number", minimum: 1, description: "Profondeur du terrain (m)" },
+        budget_min: { type: "integer", minimum: 0, description: "Budget de construction indicatif min (FCFA)" },
+        budget_max: { type: "integer", minimum: 0, description: "Budget de construction indicatif max (FCFA)" },
+        rooms: { type: "array", maxItems: 150, items: roomSchema, description: "Premium : pièces avec surfaces" },
+        estimate_lots: { type: "array", maxItems: 80, items: lotSchema, description: "Premium : devis par lots" },
+        estimate_total: { type: "integer", minimum: 0, description: "Premium : total du devis (FCFA, défaut = somme des lots)" },
+        cost_assumptions: str("Premium : hypothèses de coût (prix au m², ville, finitions…)"),
+        strengths: { type: "array", maxItems: 30, items: { type: "string" }, description: "Premium : points forts" },
+        watchouts: { type: "array", maxItems: 30, items: { type: "string" }, description: "Premium : points de vigilance" },
+        premium_notes: str("Premium : notes réservées aux membres"),
+        featured: { type: "boolean", description: "Mis en avant sur l'accueil (défaut false)" },
+        sort_order: { type: "integer", description: "Ordre d'affichage (défaut 0)" },
+      },
+      ["code", "name", "category", "surface_total"],
+    ),
+    handler: async (args) => {
+      const { values, warnings } = parseCreatePlanInput(args);
+      const db = getDb();
+      const existing = await db.query.plans.findFirst({
+        where: or(eq(schema.plans.code, values.code), eq(schema.plans.slug, values.slug)),
+        columns: { code: true, slug: true, status: true },
+      });
+      if (existing) throw new Error(`Déjà au catalogue : ${existing.code} (${existing.slug}, ${existing.status}). Utilisez update_plan_content ou une autre référence.`);
+      const id = randomId();
+      await db.insert(schema.plans).values({ id, ...values, coverImage: "", renders: [], floorPlans: [], publishedAt: null });
+      return {
+        id,
+        code: values.code,
+        slug: values.slug,
+        status: "draft",
+        warnings,
+        next_steps: "Ajouter les rendus (upload_plan_image role=render) puis les distributions (role=floor_plan), vérifier avec get_plan, présenter un résumé au propriétaire et ne publier qu'après son accord.",
+        admin_url: `/admin/plans/${id}`,
+      };
+    },
+  },
+  {
+    name: "upload_plan_image",
+    description:
+      "Ajoute un fichier à la galerie d'un modèle, depuis une URL https (téléchargée par le serveur) OU un contenu base64 (8 Mo max). role « render » : rendu 3D public (png, jpeg, webp), ajouté à la fin des rendus ; le premier devient la couverture s'il n'y en a pas. role « floor_plan » : distribution cotée PRIVÉE, visible des seuls membres Premium (png, jpeg, webp ou PDF). Le type réel du fichier est contrôlé.",
+    inputSchema: obj(
+      {
+        code: str("Référence du modèle"),
+        role: str("render | floor_plan", { enum: ["render", "floor_plan"] }),
+        url: str("URL https du fichier (au lieu de content_base64)"),
+        content_base64: str("Contenu du fichier en base64, préfixe data: accepté (au lieu de url)"),
+        filename: str("Nom lisible du fichier, ex. « V4-001 rendu façade.jpg »"),
+        set_as_cover: { type: "boolean", description: "render uniquement : en faire la couverture" },
+      },
+      ["code", "role"],
+    ),
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const role = asRole(args.role);
+      const url = asString(args.url);
+      const base64 = asString(args.content_base64);
+      if (Boolean(url) === Boolean(base64)) throw new Error("Fournir soit url, soit content_base64 (un seul des deux).");
+      if (args.set_as_cover === true && role !== "render") throw new Error("set_as_cover ne s'applique qu'aux rendus (role=render).");
+
+      let file: IncomingFile;
+      if (base64) {
+        const bytes = decodeBase64File(base64, PLAN_IMAGE_MAX_BYTES);
+        file = { body: bytes, size: bytes.byteLength, type: sniffFileType(bytes.subarray(0, 16)) };
+      } else {
+        file = await downloadFile(url!, PLAN_IMAGE_MAX_BYTES);
+      }
+      if (!acceptedForRole(file.type, role)) {
+        if (file.body instanceof ReadableStream) await file.body.cancel().catch(() => {});
+        throw new Error(
+          role === "render" ? "Type refusé : un rendu doit être une image png, jpeg ou webp." : "Type refusé : une distribution doit être une image png, jpeg, webp ou un PDF.",
+        );
+      }
+      if (file.size === 0) throw new Error("Fichier vide");
+
+      const visibility = role === "render" ? "public" : "private";
+      const label = (asString(args.filename) ?? (url ? new URL(url).pathname.split("/").pop() : undefined))?.slice(0, 200) || null;
+      const stored = await storeMedia({ body: file.body, size: file.size, contentType: file.type.contentType, ext: file.type.ext, visibility, folder: planMediaFolder(plan.code), label });
+
+      try {
+        const db = getDb();
+        const fresh = (await db.query.plans.findFirst({ where: eq(schema.plans.id, plan.id) }))!;
+        const update: Partial<typeof schema.plans.$inferInsert> = { updatedAt: new Date() };
+        if (role === "render") {
+          update.renders = [...fresh.renders, stored.url];
+          if (!fresh.coverImage || args.set_as_cover === true) update.coverImage = stored.url;
+        } else {
+          update.floorPlans = [...fresh.floorPlans, stored.key];
+        }
+        await db.update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
+        return {
+          code: plan.code,
+          role,
+          visibility,
+          content_type: file.type.contentType,
+          size: file.size,
+          key: stored.key,
+          url: role === "render" ? stored.url : privateFileUrl(stored.key),
+          is_cover: update.coverImage === stored.url || fresh.coverImage === stored.url,
+          count: role === "render" ? update.renders!.length : update.floorPlans!.length,
+        };
+      } catch (error) {
+        await deleteMedia(stored.key).catch(() => {});
+        throw error;
+      }
+    },
+  },
+  {
+    name: "set_plan_cover",
+    description: "Choisit l'image de couverture d'un modèle parmi ses rendus (valeur renvoyée par get_plan, clé R2, ou position à partir de 1).",
+    inputSchema: obj({ code: str("Référence du modèle"), image: str("Rendu choisi : « /media/… », clé R2, ou position (« 1 » = premier)") }, ["code", "image"]),
+    annotations: { idempotentHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const cover = matchImage(plan.renders, args.image);
+      await getDb().update(schema.plans).set({ coverImage: cover, updatedAt: new Date() }).where(eq(schema.plans.id, plan.id));
+      return { code: plan.code, cover_image: cover };
+    },
+  },
+  {
+    name: "reorder_plan_images",
+    description:
+      "Réordonne les rendus (role=render) ou les distributions (role=floor_plan) d'un modèle. order doit reprendre exactement toutes les valeurs actuelles (voir get_plan), dans le nouvel ordre. La couverture ne change pas (voir set_plan_cover).",
+    inputSchema: obj(
+      {
+        code: str("Référence du modèle"),
+        role: str("render | floor_plan", { enum: ["render", "floor_plan"] }),
+        order: { type: "array", items: { type: "string" }, description: "Toutes les valeurs actuelles, dans le nouvel ordre" },
+      },
+      ["code", "role", "order"],
+    ),
+    annotations: { idempotentHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const role = asRole(args.role);
+      if (!Array.isArray(args.order) || !args.order.every((x) => typeof x === "string")) throw new Error("order : liste de textes attendue");
+      const current = role === "render" ? plan.renders : plan.floorPlans;
+      const next = reorderList(current, args.order.map((x) => matchImage(current, x)));
+      await getDb()
+        .update(schema.plans)
+        .set(role === "render" ? { renders: next, updatedAt: new Date() } : { floorPlans: next, updatedAt: new Date() })
+        .where(eq(schema.plans.id, plan.id));
+      return { code: plan.code, role, order: next };
+    },
+  },
+  {
+    name: "remove_plan_image",
+    description:
+      "Retire un rendu ou une distribution d'un modèle. Le fichier est aussi supprimé de R2 s'il appartient au dossier de ce modèle et n'est utilisé par aucun autre modèle. Si c'était la couverture, le premier rendu restant la remplace. Action irréversible : confirmer avec le propriétaire si la fiche est publiée.",
+    inputSchema: obj(
+      {
+        code: str("Référence du modèle"),
+        role: str("render | floor_plan", { enum: ["render", "floor_plan"] }),
+        image: str("Valeur renvoyée par get_plan, clé R2, ou position (« 1 » = premier)"),
+      },
+      ["code", "role", "image"],
+    ),
+    annotations: { destructiveHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const role = asRole(args.role);
+      const current = role === "render" ? plan.renders : plan.floorPlans;
+      const target = matchImage(current, args.image);
+      const remaining = current.filter((item) => item !== target);
+      const update: Partial<typeof schema.plans.$inferInsert> = { updatedAt: new Date() };
+      if (role === "render") {
+        update.renders = remaining;
+        if (plan.coverImage === target) update.coverImage = remaining[0] ?? "";
+      } else {
+        update.floorPlans = remaining;
+      }
+      const db = getDb();
+      await db.update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
+
+      const key = mediaKeyOf(target);
+      const visibility = role === "render" ? "public" : "private";
+      let fileDeleted = false;
+      if (key.startsWith(`${visibility}/${planMediaFolder(plan.code)}/`)) {
+        const others = await db.query.plans.findFirst({
+          where: and(
+            or(like(schema.plans.renders, `%${key}%`), like(schema.plans.floorPlans, `%${key}%`), like(schema.plans.coverImage, `%${key}%`)),
+            sql`${schema.plans.id} <> ${plan.id}`,
+          ),
+          columns: { id: true },
+        });
+        if (!others) {
+          await deleteMedia(key);
+          fileDeleted = true;
+        }
+      }
+      return { code: plan.code, role, removed: target, file_deleted: fileDeleted, cover_image: update.coverImage ?? plan.coverImage, remaining };
+    },
+  },
+  {
     name: "update_plan_content",
     description:
-      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, surfaces, terrain, budget, atouts, points d'attention, statut de publication. Les images se gèrent dans l'admin.",
+      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, surfaces, terrain, budget, atouts, points d'attention, statut de publication. Publier (status « published ») rend la fiche visible de tous : ne le faire qu'après l'accord explicite du propriétaire. Les images se gèrent avec upload_plan_image, set_plan_cover, reorder_plan_images et remove_plan_image.",
     inputSchema: obj(
       {
         code: str("Référence du modèle, ex. V3-037"),

@@ -8,6 +8,7 @@ import type { EstimateLot, PlanRoom } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { buildCostEstimate, isPlanCategory } from "@/lib/cost-estimate";
 import { randomId } from "@/lib/crypto";
+import { slugify } from "@/lib/plan-input";
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const n = (f: FormData, k: string) => {
@@ -29,16 +30,6 @@ const json = (f: FormData, k: string): string[] => {
     return [];
   }
 };
-
-function slugify(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80);
-}
 
 /** « Séjour | 32 | RDC » → { name, area, level } */
 function parseRooms(f: FormData): PlanRoom[] {

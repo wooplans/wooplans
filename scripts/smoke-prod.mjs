@@ -103,6 +103,11 @@ ok("MCP : initialize", Boolean(init.result?.serverInfo), init.result?.serverInfo
 const list = await (await rpc({ jsonrpc: "2.0", id: 2, method: "tools/list" }, auth)).json().catch(() => ({}));
 const tools = list.result?.tools?.map((t) => t.name) || [];
 ok("MCP : tools/list", tools.length > 0, `${tools.length} outils`);
+// Outils de création de fiches : présence uniquement (aucune fiche ni fichier créé en production).
+const catalogueTools = ["create_plan", "get_plan", "upload_plan_image", "set_plan_cover", "reorder_plan_images", "remove_plan_image"];
+const missingTools = catalogueTools.filter((t) => !tools.includes(t));
+ok("MCP : outils de création de fiches présents", missingTools.length === 0, missingTools.length ? `manquants : ${missingTools.join(", ")}` : catalogueTools.join(", "));
+ok("MCP : instructions de publication", /accord explicite/.test(init.result?.instructions || ""));
 const readTool = tools.find((t) => /funnel|summary|resume|list_plans/.test(t));
 if (readTool) {
   const call = await (await rpc({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: readTool, arguments: {} } }, auth)).json().catch(() => ({}));

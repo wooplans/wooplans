@@ -112,7 +112,7 @@ Chaque push sur `master` lance `.github/workflows/deploy.yml` : vérifications (
 
 ## Pilotage par un agent (MCP)
 
-Le site expose un serveur MCP (`/api/mcp`, transport HTTP) protégé par `MCP_TOKEN`. Outils : résumé du tunnel par source/campagne, ventes, membres (donner, renvoyer ou révoquer un accès), CRM (lister, créer, faire avancer une demande, noter, encaisser, relancer par email), catalogue (lister, mettre à jour textes/SEO/caractéristiques, publier).
+Le site expose un serveur MCP (`/api/mcp`, transport HTTP) protégé par `MCP_TOKEN`. Outils : résumé du tunnel par source/campagne, ventes, membres (donner, renvoyer ou révoquer un accès), CRM (lister, créer, faire avancer une demande, noter, encaisser, relancer par email), catalogue (lister, consulter une fiche complète, créer un modèle en brouillon, ajouter et organiser rendus et distributions, mettre à jour textes/SEO/caractéristiques, publier).
 
 ```bash
 # Claude Code
@@ -123,6 +123,18 @@ claude mcp add --transport http wooplans https://www.wooplans.com/api/mcp \
 Pour un client qui ne permet pas d'en-tête (connecteur personnalisé claude.ai) : `https://www.wooplans.com/api/mcp/<MCP_TOKEN>` — à garder secret, et à changer (`wrangler secret put MCP_TOKEN`) en cas de doute.
 
 Exemples de demandes : « Combien de ventes cette semaine et quelle campagne a le mieux converti ? », « Ajoute la demande de M. Kamga reçue sur WhatsApp, modèle V3-037, relance jeudi », « Quelles relances dois-je faire aujourd'hui ? ».
+
+### Créer un modèle du catalogue par l'agent
+
+Donnez à l'agent le PDF du modèle (descriptif, surfaces, pièces, devis) et les images (rendus 3D, distributions). Il suit ce flux, décrit dans les instructions du serveur MCP :
+
+1. **`create_plan`** — crée la fiche, **toujours en brouillon**. Slug généré depuis catégorie + référence (`villa` + `V4-001` → `villa-v4-001`) ; refus si la référence ou le slug existe déjà. Validation stricte : nombres réels (pas de texte), entiers pour chambres/niveaux/surfaces/montants, bornes, champs inconnus refusés. Champs : référence, nom, catégorie (`villa`, `duplex`, `immeuble`, `autre`), accroche, description, SEO, chambres, salles de bain, niveaux, surface totale, emprise, dimensions du bâtiment et du terrain, budget indicatif (déduit du devis ± 10 % s'il manque), et côté Premium : pièces avec surfaces, devis par lots, hypothèses de coût, points forts, points de vigilance, notes.
+2. **`upload_plan_image`** — depuis une URL https (téléchargée par le Worker, en flux vers R2) ou un contenu base64 (8 Mo max). `role=render` : rendu public (png, jpeg, webp) servi par `/media/<clé>`, le premier devient la couverture. `role=floor_plan` : distribution **privée** (png, jpeg, webp ou PDF) servie par `/api/premium/fichier/<clé>` aux seuls membres. Le type réel est vérifié sur les premiers octets ; fichiers rangés dans `public|private/<référence>/` comme l'upload admin (code commun : `src/lib/media-store.ts`).
+3. **`set_plan_cover`**, **`reorder_plan_images`**, **`remove_plan_image`** — gestion de la galerie (le retrait supprime aussi le fichier de R2 s'il n'appartient qu'à ce modèle).
+4. **`get_plan`** — fiche complète, champs Premium compris, pour vérification.
+5. L'agent vous présente un résumé ; **la publication** (`update_plan_content` avec `status=published`) n'a lieu qu'après votre accord.
+
+Conventions : référence `V4-001` (V = villa, D = duplex, chiffre = nombre de chambres), nom « Villa V4-001 », surfaces en m², dimensions en m, montants entiers en FCFA.
 
 ## Développement local
 

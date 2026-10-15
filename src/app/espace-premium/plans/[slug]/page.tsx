@@ -51,13 +51,20 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
         <section className="mt-12">
           <h2 className="text-xl font-semibold">Distributions cotées</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {plan.floorPlans.map((key, i) => (
-              <a key={key} href={privateFileUrl(key)} target="_blank" rel="noopener noreferrer" className="card block overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={privateFileUrl(key)} alt={`${plan.name} — distribution ${i + 1}`} loading="lazy" className="w-full bg-white object-contain" />
-                <p className="border-t border-outline px-4 py-2 text-sm text-muted">Toucher pour agrandir</p>
-              </a>
-            ))}
+            {plan.floorPlans.map((key, i) =>
+              key.toLowerCase().endsWith(".pdf") ? (
+                <a key={key} href={privateFileUrl(key)} target="_blank" rel="noopener noreferrer" className="card flex items-center justify-between gap-4 p-5">
+                  <span className="font-semibold">{`${plan.name} — distribution ${i + 1} (PDF)`}</span>
+                  <span className="text-sm text-muted">Ouvrir</span>
+                </a>
+              ) : (
+                <a key={key} href={privateFileUrl(key)} target="_blank" rel="noopener noreferrer" className="card block overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={privateFileUrl(key)} alt={`${plan.name} — distribution ${i + 1}`} loading="lazy" className="w-full bg-white object-contain" />
+                  <p className="border-t border-outline px-4 py-2 text-sm text-muted">Toucher pour agrandir</p>
+                </a>
+              ),
+            )}
           </div>
         </section>
       ) : null}

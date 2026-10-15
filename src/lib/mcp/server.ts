@@ -12,7 +12,13 @@ const INSTRUCTIONS =
   "Outils de pilotage de WOOPLANS (catalogue de plans de maisons, Afrique francophone). Montants en FCFA (XAF). " +
   "Le tunnel : vitrine → page de vente /catalogue-premium → achat du Catalogue Premium (39 000 FCFA, Chariow) → membre Premium → demande de plans complets (CRM). " +
   "Le revenu du catalogue (ventes Chariow) est distinct des encaissements des plans complets (CRM). " +
-  "Avant toute action qui écrit à un client (send_lead_email, grant_premium_access, send_new_access_code) ou qui révoque un accès, confirmez avec le propriétaire.";
+  "Avant toute action qui écrit à un client (send_lead_email, grant_premium_access, send_new_access_code) ou qui révoque un accès, confirmez avec le propriétaire. " +
+  "Ajout d'un modèle au catalogue : 1) lire le PDF fourni (descriptif, surfaces, pièces, devis) ; 2) create_plan — la fiche est toujours créée en brouillon ; " +
+  "3) upload_plan_image avec role=render pour les rendus 3D (publics, le premier devient la couverture), puis role=floor_plan pour les distributions cotées (privées, réservées aux membres Premium, PDF accepté) ; " +
+  "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
+  "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
+  "Conventions : référence en majuscules « V4-001 » (V = villa, D = duplex, chiffre = nombre de chambres), slug généré « villa-v4-001 », nom « Villa V4-001 » ou « Duplex D5-002 » ; " +
+  "surfaces en m², dimensions en m, montants entiers en FCFA (XAF, sans séparateur ni unité). N'inventez aucune valeur absente du PDF : laissez le champ vide et signalez-le.";
 
 type RpcRequest = { jsonrpc: "2.0"; id?: string | number | null; method: string; params?: Record<string, unknown> };
 
