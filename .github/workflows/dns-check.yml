@@ -41,5 +41,11 @@ jobs:
           echo "== Pare-feu / Bot Fight Mode de la zone"
           zone=$(curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id')
           curl -sS "${auth[@]}" "$CF/zones/$zone/bot_management" | jq -c '{success, errors, r: .result}'
+          echo "== Enregistrements Resend (domaine wooplans.com)"
+          echo "DKIM  : $(dig +short TXT resend._domainkey.wooplans.com | cut -c1-40)"
+          echo "MX send : $(dig +short MX send.wooplans.com)"
+          echo "TXT send : $(dig +short TXT send.wooplans.com)"
+          echo "CNAME rsend : $(dig +short CNAME rsend.wooplans.com)"
+          echo "MX wooplans.com (réception info@) : $(dig +short MX wooplans.com)"
           echo "== Résolution publique"
           dig +short www.wooplans.com; dig +short wooplans.com; dig +short NS wooplans.com
