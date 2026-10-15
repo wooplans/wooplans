@@ -4,6 +4,7 @@
  */
 // @ts-expect-error — généré par `opennextjs-cloudflare build`
 import nextWorker from "./.open-next/worker.js";
+import { isCacheablePageRequest, isCacheablePageResponse, PAGE_CACHE_TTL_SECONDS, pageCacheKey } from "./src/lib/page-cache";
 
 export default {
   async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
@@ -21,6 +22,26 @@ export default {
       if (hit) return hit;
       const response = await nextWorker.fetch(request, env, ctx);
       if (response.status === 200) ctx.waitUntil(cache.put(request, response.clone()));
+      return response;
+    }
+    // Pages publiques (accueil, catalogue, fiches) : copie de 5 min par centre de données Cloudflare.
+    if (isCacheablePageRequest(request.method, url, request.headers)) {
+      const cache = (caches as unknown as { default: Cache }).default;
+      const key = new Request(pageCacheKey(url));
+      const hit = await cache.match(key);
+      if (hit) {
+        const response = new Response(hit.body, hit);
+        response.headers.set("Cache-Control", "private, no-cache");
+        response.headers.set("X-Page-Cache", "HIT");
+        return response;
+      }
+      const response = await nextWorker.fetch(request, env, ctx);
+      if (isCacheablePageResponse(response.status, response.headers)) {
+        const copy = new Response(response.clone().body, response);
+        copy.headers.set("Cache-Control", `public, max-age=${PAGE_CACHE_TTL_SECONDS}`);
+        copy.headers.delete("Vary");
+        ctx.waitUntil(cache.put(key, copy));
+      }
       return response;
     }
     return nextWorker.fetch(request, env, ctx);

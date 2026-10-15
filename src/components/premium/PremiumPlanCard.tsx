@@ -6,7 +6,7 @@ import { isNewPlan } from "@/lib/premium";
 export function PremiumPlanCard({ plan, favorite }: { plan: PlanRow; favorite: boolean }) {
   return (
     <Link href={`/espace-premium/plans/${plan.slug}`} className="card group flex flex-col overflow-hidden">
-      <div className="relative aspect-[4/3] bg-outline/40">
+      <div className="relative aspect-video bg-outline/40">
         {plan.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={plan.coverImage} alt={plan.name} loading="lazy" className="h-full w-full object-cover" />

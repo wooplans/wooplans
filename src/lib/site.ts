@@ -7,6 +7,11 @@ export const SITE = {
   email: "bonjour@wooplans.com",
   catalogueUrl: "/catalogue-premium",
   catalogueCta: "Obtenir le Catalogue Premium",
+  social: [
+    { label: "Facebook", href: "https://web.facebook.com/woohouseplans" },
+    { label: "YouTube", href: "https://www.youtube.com/@wooplans" },
+    { label: "TikTok", href: "https://www.tiktok.com/@wooplans" },
+  ],
 };
 
 export function whatsappLink(message: string, number: string = process.env.WHATSAPP_NUMBER || "237653769998") {

@@ -24,7 +24,7 @@ h1,
 h2,
 h3,
 .btn {
-  font-family: Montserrat, "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-heading), Montserrat, "Segoe UI", Arial, sans-serif;
 }
 
 h1,

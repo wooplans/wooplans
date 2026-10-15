@@ -17,7 +17,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Segoe UI", "Arial", "system-ui", "-apple-system", "Roboto", "Helvetica Neue", "sans-serif"],
-        heading: ["Montserrat", "Segoe UI", "Arial", "sans-serif"],
+        heading: ["var(--font-heading)", "Montserrat", "Segoe UI", "Arial", "sans-serif"],
       },
     },
   },

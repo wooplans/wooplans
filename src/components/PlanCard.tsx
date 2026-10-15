@@ -8,13 +8,14 @@ export function PlanCard({ plan, priority = false }: { plan: PublicPlan; priorit
       href={`/catalogue/${plan.slug}`}
       className="group card flex flex-col overflow-hidden transition-shadow hover:shadow-xl hover:shadow-black/5"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-outline/40">
+      <div className="relative aspect-video overflow-hidden bg-outline/40">
         {plan.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={plan.coverImage}
             alt={`${plan.name} — rendu 3D`}
             loading={priority ? "eager" : "lazy"}
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : null}

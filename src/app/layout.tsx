@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Montserrat } from "next/font/google";
 import { Suspense } from "react";
 import { Tracker } from "@/components/Tracker";
 import { siteUrl } from "@/lib/env";
@@ -20,17 +21,14 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
 };
 
+// Police auto-hébergée (téléchargée au build) : plus de feuille de style Google bloquante au premier affichage.
+const montserrat = Montserrat({ subsets: ["latin"], weight: ["600", "700", "800"], display: "swap", variable: "--font-heading" });
+
 export const viewport: Viewport = { themeColor: "#0F5B59", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="fr" className={montserrat.variable}>
       <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         {children}
         <Suspense fallback={null}>

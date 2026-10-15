@@ -41,6 +41,16 @@ export function SiteFooter() {
             </li>
             <li><a href={`mailto:${SITE.email}`} className="hover:text-white">{SITE.email}</a></li>
           </ul>
+          <p className="mb-3 mt-6 text-sm font-semibold text-white">Suivez-nous</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            {SITE.social.map((s) => (
+              <li key={s.label}>
+                <a href={s.href} target="_blank" rel="noopener noreferrer" data-social={s.label.toLowerCase()} className="hover:text-white">
+                  {s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       <div className="border-t border-white/10">

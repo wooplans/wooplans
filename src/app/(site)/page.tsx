@@ -33,6 +33,7 @@ export default async function HomePage() {
     url: "https://www.wooplans.com",
     logo: "https://www.wooplans.com/apple-touch-icon.png",
     email: SITE.email,
+    sameAs: SITE.social.map((s) => s.href),
   };
 
   return (

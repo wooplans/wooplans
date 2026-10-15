@@ -61,7 +61,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
                   <th key={p.id} className="p-2 text-left align-top">
                     <Link href={`/espace-premium/plans/${p.slug}`} className="block">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.coverImage} alt={p.name} className="aspect-[4/3] w-full rounded-xl object-cover" />
+                      <img src={p.coverImage} alt={p.name} className="aspect-video w-full rounded-xl object-cover" />
                       <span className="mt-2 block font-semibold">{p.name}</span>
                       <span className="text-xs font-normal text-muted">{p.code}</span>
                     </Link>
