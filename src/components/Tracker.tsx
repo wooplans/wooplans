@@ -5,6 +5,9 @@ import { useEffect, useRef } from "react";
 import { FUNNEL_EVENTS, isPrivatePath, pageType, planSlugFromPath } from "@/lib/behavior";
 import { phCapture } from "@/lib/posthog-browser";
 
+/** Adresse de la page sans fragment (#) : le lien de connexion y transporte le code d'accès. */
+const pageUrl = () => window.location.origin + window.location.pathname + window.location.search;
+
 type TrackPayload = { type: string; ctaId?: string; planSlug?: string };
 
 let resolveVisitorId: (id: string | null) => void = () => {};
@@ -14,7 +17,7 @@ export const visitorIdPromise: Promise<string | null> =
 
 export function track(payload: TrackPayload) {
   if (typeof window === "undefined") return;
-  const body = JSON.stringify({ ...payload, url: window.location.href, referrer: document.referrer || null });
+  const body = JSON.stringify({ ...payload, url: pageUrl(), referrer: document.referrer || null });
   if (navigator.sendBeacon) {
     navigator.sendBeacon("/api/t", new Blob([body], { type: "application/json" }));
   } else {
@@ -23,7 +26,7 @@ export function track(payload: TrackPayload) {
 }
 
 function trackAndIdentify(payload: TrackPayload) {
-  const body = JSON.stringify({ ...payload, url: window.location.href, referrer: document.referrer || null });
+  const body = JSON.stringify({ ...payload, url: pageUrl(), referrer: document.referrer || null });
   fetch("/api/t", { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true })
     .then((res) => res.json() as Promise<{ vid?: string }>)
     .then((data) => resolveVisitorId(data.vid ?? null))

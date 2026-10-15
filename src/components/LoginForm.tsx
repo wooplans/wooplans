@@ -1,13 +1,31 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+/**
+ * Lien de l'email d'accès : /connexion?email=…#code=46TE. Le code est dans le fragment (#),
+ * jamais envoyé au serveur ; il est lu ici puis retiré de la barre d'adresse et de l'historique.
+ */
+function takeCodeFromHash() {
+  const code = new URLSearchParams(window.location.hash.slice(1)).get("code");
+  if (code) window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  return code?.trim().toUpperCase().slice(0, 12) || "";
+}
 
 export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "forgot">("login");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "info"; text: string } | null>(null);
+  const [code, setCode] = useState("");
+
+  useEffect(() => {
+    const fromLink = takeCodeFromHash();
+    if (!fromLink) return;
+    setCode(fromLink);
+    setMessage({ tone: "info", text: "Vos identifiants sont pré-remplis : appuyez sur « Se connecter »." });
+  }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,7 +64,9 @@ export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
             required
             autoComplete="one-time-code"
             autoCapitalize="characters"
-            placeholder="XXXX-XXXX"
+            placeholder="Ex. 46TE"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
             className="input font-mono uppercase tracking-widest"
           />
         </div>

@@ -15,7 +15,10 @@ export async function POST(request: NextRequest) {
 
   const ip = clientIp(request.headers);
   const allowed =
-    (await rateLimit(`login-ip:${ip}`, 20, 15 * 60 * 1000)) && (await rateLimit(`login-email:${email}`, 8, 15 * 60 * 1000));
+    (await rateLimit(`login-ip:${ip}`, 20, 15 * 60 * 1000)) &&
+    (await rateLimit(`login-email:${email}`, 8, 15 * 60 * 1000)) &&
+    // Codes à 4 caractères : plafond quotidien par email contre les essais répartis sur plusieurs adresses IP.
+    (await rateLimit(`login-email-day:${email}`, 20, 24 * 60 * 60 * 1000));
   if (!allowed) {
     return NextResponse.json({ error: "Trop de tentatives. Patientez 15 minutes avant de réessayer." }, { status: 429 });
   }

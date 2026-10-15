@@ -246,7 +246,7 @@ export const TOOLS: McpTool[] = [
       const member = await findMember(args.email);
       if (member.status !== "active") throw new Error("Ce membre est révoqué : utilisez grant_premium_access pour le réactiver.");
       const { code } = await rotateAccessCode(member.id);
-      const mail = accessCodeEmail({ name: member.name, email: member.email, code, isNewCode: true });
+      const mail = accessCodeEmail({ name: member.name, email: member.email, code, kind: "new_code" });
       const sent = await sendEmail({ to: member.email, ...mail, template: "access_code_reset", memberId: member.id });
       return { email: member.email, code_emailed: sent.ok };
     },

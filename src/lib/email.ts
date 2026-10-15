@@ -86,26 +86,56 @@ function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#F08A2E;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
 }
 
-/** Phrase d'accueil de l'email d'accès (réutilisée par l'import des anciens acheteurs). */
-export const ACCESS_EMAIL_INTRO =
-  "Merci pour votre achat ! Votre Catalogue Premium est prêt : connectez-vous à votre espace Premium pour consulter tous les modèles, les comparer et télécharger la fiche PDF de chacun (rendus, distributions cotées, devis). Les nouveaux modèles y sont ajoutés automatiquement.";
+type AccessEmailKind = "purchase" | "new_code" | "legacy";
 
-export function accessCodeEmail(params: { name?: string | null; email: string; code: string; isNewCode?: boolean }) {
+const ACCESS_EMAIL: Record<AccessEmailKind, { subject: string; intro: string }> = {
+  purchase: {
+    subject: "Votre accès au Catalogue Premium WOOPLANS",
+    intro: "Merci pour votre achat ! Votre Catalogue Premium est prêt : tout se passe dans votre espace Premium en ligne.",
+  },
+  new_code: {
+    subject: "Votre nouveau code d'accès WOOPLANS Premium",
+    intro: "Voici votre nouveau code d'accès à l'espace Premium. L'ancien code ne fonctionne plus.",
+  },
+  legacy: {
+    subject: "Nouveau : votre Catalogue Premium WOOPLANS est en ligne",
+    intro: "Vous avez acheté le Catalogue Premium WOOPLANS : il est désormais en ligne, dans un espace Premium qui vous est réservé. Voici vos accès personnels.",
+  },
+};
+
+const PREMIUM_FEATURES = [
+  "Tous les modèles de villas et duplex, avec rendus 3D, distributions cotées et devis détaillé par lot",
+  "La fiche PDF de chaque modèle, à télécharger une par une : bouton « Fiche PDF » sur la page du modèle, ou rubrique « Téléchargements »",
+  "Vos favoris et le comparateur de modèles",
+  "Les nouveaux modèles, ajoutés automatiquement",
+];
+
+/**
+ * Email des accès Premium. Le bouton ouvre la page de connexion déjà remplie :
+ * email dans l'adresse, code dans le fragment (#code=…), qui n'est jamais envoyé au serveur.
+ */
+export function accessCodeEmail(params: { name?: string | null; email: string; code: string; kind?: AccessEmailKind }) {
+  const { subject, intro } = ACCESS_EMAIL[params.kind ?? "purchase"];
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
-  const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}`);
-  const subject = params.isNewCode
-    ? "Votre nouveau code d'accès WOOPLANS Premium"
-    : "Votre accès au Catalogue Premium WOOPLANS";
-  const intro = params.isNewCode
-    ? "Voici votre nouveau code d'accès. L'ancien code ne fonctionne plus."
-    : ACCESS_EMAIL_INTRO;
-  const html = layout(subject, `<p>${hello}</p><p>${intro}</p>
+  const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}#code=${encodeURIComponent(params.code)}`);
+  const features = PREMIUM_FEATURES.map((f) => `<li style="margin:0 0 6px">${escape(f)}</li>`).join("");
+  const html = layout(subject, `<p>${hello}</p><p>${escape(intro)}</p>
+${button(loginUrl, "Ouvrir mon espace Premium")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Le bouton ouvre la page de connexion avec vos identifiants déjà remplis : il suffit d'appuyer sur « Se connecter ».</p>
 <p style="margin:20px 0 6px;color:#6B7280">Votre identifiant</p><p style="margin:0;font-weight:700">${escape(params.email)}</p>
 <p style="margin:16px 0 6px;color:#6B7280">Votre code d'accès</p>
-<p style="margin:0;font-size:28px;letter-spacing:4px;font-weight:800;color:#0F5B59">${escape(params.code)}</p>
-${button(loginUrl, "Accéder à mon espace Premium")}
-<p style="color:#6B7280;font-size:13px">Gardez ce code pour vous : il est personnel. Si vous le perdez, demandez-en un nouveau depuis la page de connexion.</p>`);
-  const text = `${hello}\n\n${intro}\n\nIdentifiant : ${params.email}\nCode d'accès : ${params.code}\n\nConnexion : ${loginUrl}`;
+<p style="margin:0;font-size:28px;letter-spacing:6px;font-weight:800;color:#0F5B59">${escape(params.code)}</p>
+<p style="margin:24px 0 8px;font-weight:700">Dans votre espace Premium</p>
+<ul style="margin:0;padding-left:20px">${features}</ul>
+<p style="color:#6B7280;font-size:13px;margin-top:24px">Ce code est personnel, gardez-le pour vous. Perdu ? Demandez-en un nouveau depuis la page de connexion.</p>`);
+  const text = [
+    `${hello}`,
+    intro,
+    `Ouvrir mon espace Premium (identifiants déjà remplis) : ${loginUrl}`,
+    `Identifiant : ${params.email}\nCode d'accès : ${params.code}`,
+    `Dans votre espace Premium :\n${PREMIUM_FEATURES.map((f) => `- ${f}`).join("\n")}`,
+    "Ce code est personnel. Perdu ? Demandez-en un nouveau depuis la page de connexion.",
+  ].join("\n\n");
   return { subject, html, text };
 }
 

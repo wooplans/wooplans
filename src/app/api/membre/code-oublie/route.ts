@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   if (!member || member.status !== "active") return generic;
 
   const { code } = await rotateAccessCode(member.id);
-  const mail = accessCodeEmail({ name: member.name, email, code, isNewCode: true });
+  const mail = accessCodeEmail({ name: member.name, email, code, kind: "new_code" });
   await sendEmail({ to: email, ...mail, template: "access_code_reset", memberId: member.id });
   return generic;
 }

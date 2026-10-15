@@ -8,17 +8,21 @@ export function randomId(bytes = 16) {
   return base64url(buf);
 }
 
-/** Code d'accès membre, ex. "K7PM-Q3XD". */
+/** Longueur des codes d'accès membres (les anciens codes à 8 caractères, « K7PM-Q3XD », restent valides). */
+export const ACCESS_CODE_LENGTH = 4;
+
+/** Code d'accès membre, ex. "46TE" : court à recopier depuis un téléphone. */
 export function randomAccessCode() {
   const chars: string[] = [];
   const max = 256 - (256 % CODE_ALPHABET.length);
-  while (chars.length < 8) {
+  while (chars.length < ACCESS_CODE_LENGTH) {
     const [byte] = crypto.getRandomValues(new Uint8Array(1));
     if (byte < max) chars.push(CODE_ALPHABET[byte % CODE_ALPHABET.length]);
   }
-  return `${chars.slice(0, 4).join("")}-${chars.slice(4).join("")}`;
+  return chars.join("");
 }
 
+/** Majuscules sans espaces ni tirets ; les anciens codes à 8 caractères gardent leur tiret (forme hachée en base). */
 export function normalizeAccessCode(input: string) {
   const compact = input.toUpperCase().replace(/[^A-Z0-9]/g, "");
   return compact.length === 8 ? `${compact.slice(0, 4)}-${compact.slice(4)}` : compact;

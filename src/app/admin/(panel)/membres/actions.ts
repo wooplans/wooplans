@@ -38,7 +38,7 @@ export async function addMember(form: FormData) {
 export async function newCode(memberId: string) {
   await requireAdmin();
   const { member, code } = await rotateAccessCode(memberId);
-  const mail = accessCodeEmail({ name: member.name, email: member.email, code, isNewCode: true });
+  const mail = accessCodeEmail({ name: member.name, email: member.email, code, kind: "new_code" });
   const emailed = (await sendEmail({ to: member.email, ...mail, template: "access_code_reset", memberId })).ok;
   await flashCode(member.email, code, emailed);
   revalidatePath("/admin/membres");
@@ -55,7 +55,7 @@ export async function reactivate(memberId: string) {
   const member = await getDb().query.members.findFirst({ where: eq(schema.members.id, memberId) });
   if (!member) return;
   const { code } = await grantAccess({ email: member.email, source: member.source });
-  const mail = accessCodeEmail({ name: member.name, email: member.email, code, isNewCode: true });
+  const mail = accessCodeEmail({ name: member.name, email: member.email, code, kind: "new_code" });
   const emailed = (await sendEmail({ to: member.email, ...mail, template: "access_code_reset", memberId })).ok;
   await flashCode(member.email, code, emailed);
   revalidatePath("/admin/membres");
