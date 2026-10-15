@@ -9,6 +9,8 @@ Changements appliqués :
 - suppression du formulaire MoneyFusion, de son retour de paiement et de l'analytics Supabase ;
 - suivi first-party du tunnel via /api/t ; balises SEO (canonical, Open Graph).
 
+Variante B : scripts/sales-page-b.py (appliquée à la page A générée).
+
 Usage : python3 scripts/build-sales-page.py
 """
 from pathlib import Path
@@ -62,7 +64,7 @@ replace_once(
 # 3. Bouton CTA → widget Snap Chariow (inchangé) + enregistrement de l'intention d'achat (UTM)
 replace_once(
     "function redirectToCheckout(ctaId) {\n",
-    "function redirectToCheckout(ctaId) {\n  wpTrack('cta_click',ctaId||'sales_page');\n  wpCheckoutIntent(ctaId||'sales_page');\n",
+    "function redirectToCheckout(ctaId) {\n  ctaId=(ctaId||'sales_page')+'@'+(window.WP_VARIANT||'a');\n  wpTrack('cta_click',ctaId);\n  wpCheckoutIntent(ctaId);\n",
 )
 
 # 4. Envoi du formulaire → /api/checkout
@@ -125,6 +127,7 @@ replace_between(
     "<!-- ══════════════════════════════════════════════════════════\n     ANALYTICS",
     "</script>\n</body>",
     """<script>
+var WP_VARIANT='a';
 function wpTrack(type,ctaId){
   try{
     var body=JSON.stringify({type:type,ctaId:ctaId||undefined,url:location.href,referrer:document.referrer||null});
@@ -135,10 +138,10 @@ function wpTrack(type,ctaId){
 function wpCheckoutIntent(ctaId){
   try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true});}catch(e){}
 }
-wpTrack('sales_page_view');
+wpTrack('sales_page_view','variant_'+WP_VARIANT);
 document.addEventListener('click',function(e){
   var wa=e.target.closest&&e.target.closest('a[href*="wa.me"]');
-  if(wa)wpTrack('whatsapp_click','sales_page');
+  if(wa)wpTrack('whatsapp_click',(wa.getAttribute('data-wa-id')||'sales_page')+'@'+WP_VARIANT);
 },true);
 </script>
 </body>""",
@@ -148,6 +151,20 @@ assert "moneyfusion" not in s.lower(), "référence MoneyFusion restante"
 assert "supabase" not in s.lower(), "référence Supabase restante"
 assert 'id="bonusSpecial"' in s
 
+# Numéro WhatsApp du support (unique pour tout le site)
+replace_once("const WHATSAPP_NUMBER='237653769998';", "const WHATSAPP_NUMBER='237694327885';")
+replace_once("const WHATSAPP_NUMBER_DISPLAY='+237 653 76 99 98';", "const WHATSAPP_NUMBER_DISPLAY='+237 694 32 78 85';")
+
 out = ROOT / "public" / "lp" / "catalogue-premium.html"
 out.write_text(s, encoding="utf-8")
 print(f"OK → {out.relative_to(ROOT)} ({len(s)} octets)")
+
+# Variante B (scripts/sales-page-b.py) : servie par /catalogue-premium selon SALES_PAGE_B_SHARE ou ?variante=b
+import importlib.util
+spec = importlib.util.spec_from_file_location("sales_page_b", ROOT / "scripts" / "sales-page-b.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+b = module.build(s)
+out_b = ROOT / "public" / "lp" / "catalogue-premium-b.html"
+out_b.write_text(b, encoding="utf-8")
+print(f"OK → {out_b.relative_to(ROOT)} ({len(b)} octets)")

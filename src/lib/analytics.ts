@@ -171,3 +171,46 @@ export async function getDailySeries(days: Period) {
   }
   return out;
 }
+
+/**
+ * Test A/B de la page de vente : la variante est portée par cta_id
+ * (« variant_a » pour la vue de page, suffixe « @a » / « @b » pour les clics, intentions et achats).
+ */
+export async function getSalesPageVariants(days: Period) {
+  const db = getDb();
+  const since = periodStart(days);
+  const ev = schema.events;
+  const variantOf = (col: typeof ev.ctaId | typeof schema.checkoutIntents.ctaId) =>
+    sql<string>`case when ${col} = 'variant_b' or ${col} like '%@b' then 'b' when ${col} = 'variant_a' or ${col} like '%@a' then 'a' end`;
+
+  const events = await db
+    .select({ variant: variantOf(ev.ctaId), type: ev.type, n: count(), visitors: countDistinct(ev.visitorId) })
+    .from(ev)
+    .where(and(gte(ev.createdAt, since), sql`${ev.type} in ('sales_page_view','cta_click','widget_ready','whatsapp_click','purchase')`))
+    .groupBy(variantOf(ev.ctaId), ev.type);
+  const intents = await db
+    .select({ variant: variantOf(schema.checkoutIntents.ctaId), status: schema.checkoutIntents.status, n: count() })
+    .from(schema.checkoutIntents)
+    .where(gte(schema.checkoutIntents.createdAt, since))
+    .groupBy(variantOf(schema.checkoutIntents.ctaId), schema.checkoutIntents.status);
+
+  return (["a", "b"] as const).map((variant) => {
+    const e = (type: string) => events.find((r) => r.variant === variant && r.type === type);
+    const i = (status?: string) =>
+      intents.filter((r) => r.variant === variant && (!status || r.status === status)).reduce((sum, r) => sum + r.n, 0);
+    const visitors = e("sales_page_view")?.visitors ?? 0;
+    const purchases = e("purchase")?.n ?? 0;
+    return {
+      variant,
+      visitors,
+      ctaVisitors: e("cta_click")?.visitors ?? 0,
+      widgetReady: e("widget_ready")?.n ?? 0,
+      checkouts: i(),
+      failed: i("failed"),
+      abandoned: i("abandoned"),
+      purchases,
+      whatsapp: e("whatsapp_click")?.n ?? 0,
+      conversion: visitors ? purchases / visitors : 0,
+    };
+  });
+}

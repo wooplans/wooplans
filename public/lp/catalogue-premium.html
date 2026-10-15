@@ -1360,8 +1360,9 @@ function ensureChariowWidget(){
 }
 
 function redirectToCheckout(ctaId) {
-  wpTrack('cta_click',ctaId||'sales_page');
-  wpCheckoutIntent(ctaId||'sales_page');
+  ctaId=(ctaId||'sales_page')+'@'+(window.WP_VARIANT||'a');
+  wpTrack('cta_click',ctaId);
+  wpCheckoutIntent(ctaId);
   if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:ctaId||'unknown'});
   var checkout=document.getElementById('chariowCheckout');
   checkout.classList.add('active');
@@ -1400,8 +1401,8 @@ function chk(id,ffId){
   if(!v){ff.classList.add('has-error');return false}
   ff.classList.remove('has-error');return true;
 }
-const WHATSAPP_NUMBER='237653769998';
-const WHATSAPP_NUMBER_DISPLAY='+237 653 76 99 98';
+const WHATSAPP_NUMBER='237694327885';
+const WHATSAPP_NUMBER_DISPLAY='+237 694 32 78 85';
 const CURRENT_DEVICE=window.innerWidth<768?'mobile':window.innerWidth<1024?'tablet':'desktop';
 let lastOrderMessage='';
 function getOrderData(){
@@ -1579,6 +1580,7 @@ window.addEventListener('DOMContentLoaded',checkReturnedPayment);
 </script>
 
 <script>
+var WP_VARIANT='a';
 function wpTrack(type,ctaId){
   try{
     var body=JSON.stringify({type:type,ctaId:ctaId||undefined,url:location.href,referrer:document.referrer||null});
@@ -1589,10 +1591,10 @@ function wpTrack(type,ctaId){
 function wpCheckoutIntent(ctaId){
   try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true});}catch(e){}
 }
-wpTrack('sales_page_view');
+wpTrack('sales_page_view','variant_'+WP_VARIANT);
 document.addEventListener('click',function(e){
   var wa=e.target.closest&&e.target.closest('a[href*="wa.me"]');
-  if(wa)wpTrack('whatsapp_click','sales_page');
+  if(wa)wpTrack('whatsapp_click',(wa.getAttribute('data-wa-id')||'sales_page')+'@'+WP_VARIANT);
 },true);
 </script>
 </body>

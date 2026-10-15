@@ -164,6 +164,7 @@ export const FUNNEL_EVENTS = [
   "purchase",
   "whatsapp_click",
   "custom_plan_request",
+  "widget_ready",
 ] as const;
 
 export const events = sqliteTable(

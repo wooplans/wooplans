@@ -65,6 +65,17 @@ ok("GET /catalogue-premium", sales.status === 200, String(sales.status));
 ok("widget Chariow présent", salesHtml.includes("chariow-widget"));
 ok("produit Snap prd_41k85hc0 présent", salesHtml.includes("prd_41k85hc0"));
 ok("Pixel Meta présent", salesHtml.includes("1025626273769966") || (await (await get("/")).text()).includes("1025626273769966"));
+ok("page de vente : variante A par défaut", sales.headers.get("x-page-variant") === "a", sales.headers.get("x-page-variant") || "absent");
+ok("page de vente : WhatsApp du support 237694327885", salesHtml.includes("237694327885") && !salesHtml.includes("237653769998"));
+const salesB = await get("/catalogue-premium?variante=b");
+const salesBHtml = await salesB.text();
+ok("page de vente B : aperçu ?variante=b", salesB.status === 200 && salesB.headers.get("x-page-variant") === "b", `${salesB.status} ${salesB.headers.get("x-page-variant")}`);
+ok("page de vente B : cookie d'aperçu posé", /wp_lp=b/.test(salesB.headers.get("set-cookie") || ""));
+const countB = salesBHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
+ok("page de vente B : nombre de modèles lu en base", Number(countB) > 0, countB || "absent");
+const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<div class="models-gallery-note/)?.[1] || "").match(/<article/g)?.length ?? 0;
+ok("page de vente B : galerie des modèles en vedette", galleryB > 0, `${galleryB} cartes`);
+ok("page de vente B : widget Chariow prd_41k85hc0", salesBHtml.includes('data-product-id="prd_41k85hc0"'));
 
 // Images (R2 MEDIA)
 const media = env.SMOKE_MEDIA ? JSON.parse(readFileSync(env.SMOKE_MEDIA, "utf8")) : [];
@@ -138,6 +149,8 @@ if (env.SMOKE_ADMIN_EMAIL) {
 // Espace Premium
 const premiumDenied = await get("/espace-premium");
 ok("premium : redirection sans session", [302, 303, 307, 308].includes(premiumDenied.status), String(premiumDenied.status));
+const pdfDenied = await get(`/api/premium/fiche-pdf/${slugs[0] || "villa-v3-037"}`);
+ok("premium : fiche PDF refusée sans session", pdfDenied.status === 401, String(pdfDenied.status));
 if (env.SMOKE_MEMBER_EMAIL) {
   const login = await get("/api/membre/connexion", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: env.SMOKE_MEMBER_EMAIL, code: env.SMOKE_MEMBER_CODE }) });
   ok("premium : connexion membre", login.status === 200, String(login.status));
@@ -146,6 +159,12 @@ if (env.SMOKE_MEMBER_EMAIL) {
     const res = await get(path, { headers: { cookie } });
     ok(`premium : GET ${path}`, res.status === 200, String(res.status));
   }
+  // Fiche PDF : assemblée à la demande (lecture seule : rien n'est écrit en D1 ni en R2)
+  const started = Date.now();
+  const pdf = await get(`/api/premium/fiche-pdf/${slugs[0]}`, { headers: { cookie } });
+  const pdfBytes = new Uint8Array(await pdf.arrayBuffer());
+  const pdfHead = new TextDecoder().decode(pdfBytes.subarray(0, 5));
+  ok("premium : fiche PDF générée", pdf.status === 200 && pdfHead === "%PDF-", `${pdf.status} ${Math.round(pdfBytes.length / 1024)} Ko en ${Date.now() - started} ms`);
   const privateKeys = media.filter((m) => m.visibility === "private");
   let privOk = 0;
   for (const { key } of privateKeys) {

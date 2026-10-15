@@ -13,6 +13,7 @@ const ALLOWED = new Set([
   "checkout_start",
   "whatsapp_click",
   "custom_plan_request",
+  "widget_ready",
 ]);
 
 type Body = { type?: string; url?: string; referrer?: string | null; ctaId?: string; planSlug?: string };

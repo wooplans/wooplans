@@ -1,6 +1,6 @@
 import { DailyBars } from "@/components/admin/DailyBars";
 import { PageTitle, PeriodTabs, pct, Stat, Table } from "@/components/admin/ui";
-import { getDailySeries, getFunnelKpis, getSourceBreakdown, getTopCtas, getTopPlans, type Period } from "@/lib/analytics";
+import { getDailySeries, getFunnelKpis, getSalesPageVariants, getSourceBreakdown, getTopCtas, getTopPlans, type Period } from "@/lib/analytics";
 import { formatFcfa } from "@/lib/plans";
 
 const PERIODS = [7, 30, 90, 365] as const;
@@ -8,12 +8,13 @@ const PERIODS = [7, 30, 90, 365] as const;
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ jours?: string }> }) {
   const requested = Number((await searchParams).jours);
   const days: Period = (PERIODS as readonly number[]).includes(requested) ? (requested as Period) : 30;
-  const [k, sources, ctas, plans, series] = await Promise.all([
+  const [k, sources, ctas, plans, series, variants] = await Promise.all([
     getFunnelKpis(days),
     getSourceBreakdown(days),
     getTopCtas(days),
     getTopPlans(days),
     getDailySeries(days),
+    getSalesPageVariants(days),
   ]);
   const n = (v: number) => v.toLocaleString("fr-FR");
   const funnel = [
@@ -73,6 +74,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <td className="px-4 py-2.5">{n(s.purchases)}</td>
               <td className="px-4 py-2.5">{formatFcfa(s.revenue)}</td>
               <td className="px-4 py-2.5">{s.visitors ? pct(s.purchases / s.visitors) : "—"}</td>
+            </tr>
+          ))}
+        </Table>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-1 text-lg font-semibold">Page de vente : variantes A / B</h2>
+        <p className="mb-3 text-sm text-muted">Part du trafic envoyée sur B : variable SALES_PAGE_B_SHARE. Aperçu de B : /catalogue-premium?variante=b. « Widget prêt » n&apos;est mesuré que sur B.</p>
+        <Table head={["Variante", "Visiteurs", "Ont cliqué", "Widget prêt", "Paiements démarrés", "Échoués", "Abandonnés", "Achats", "Conversion", "WhatsApp"]}>
+          {variants.map((v) => (
+            <tr key={v.variant}>
+              <td className="px-4 py-2.5 font-medium">{v.variant.toUpperCase()}</td>
+              <td className="px-4 py-2.5">{n(v.visitors)}</td>
+              <td className="px-4 py-2.5">{n(v.ctaVisitors)}{v.visitors ? ` (${pct(v.ctaVisitors / v.visitors)})` : ""}</td>
+              <td className="px-4 py-2.5">{v.variant === "b" ? n(v.widgetReady) : "—"}</td>
+              <td className="px-4 py-2.5">{n(v.checkouts)}</td>
+              <td className="px-4 py-2.5">{n(v.failed)}</td>
+              <td className="px-4 py-2.5">{n(v.abandoned)}</td>
+              <td className="px-4 py-2.5">{n(v.purchases)}</td>
+              <td className="px-4 py-2.5">{v.visitors ? pct(v.conversion) : "—"}</td>
+              <td className="px-4 py-2.5">{n(v.whatsapp)}</td>
             </tr>
           ))}
         </Table>

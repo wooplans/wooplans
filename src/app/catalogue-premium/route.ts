@@ -1,18 +1,65 @@
+import { and, asc, count, desc, eq } from "drizzle-orm";
+import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
+import { VARIANT_COOKIE, chooseVariant, galleryHtml, type GalleryPlan } from "@/lib/sales-page";
+
+const GALLERY_SIZE = 6;
+const DATA_TTL_MS = 5 * 60_000;
+let cached: { at: number; count: number; gallery: string } | null = null;
+
+/** Nombre de modèles publiés et galerie (modèles en vedette d'abord), gardés 5 min en mémoire. */
+async function salesPageData() {
+  if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached;
+  const db = getDb();
+  const published = eq(schema.plans.status, "published");
+  const [[total], plans] = await Promise.all([
+    db.select({ n: count() }).from(schema.plans).where(published),
+    db.query.plans.findMany({
+      columns: { name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true },
+      where: and(published),
+      orderBy: [desc(schema.plans.featured), asc(schema.plans.sortOrder), desc(schema.plans.publishedAt)],
+      limit: GALLERY_SIZE * 2,
+    }),
+  ]);
+  const withCover = (plans as GalleryPlan[]).filter((p) => p.coverImage).slice(0, GALLERY_SIZE);
+  cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover) };
+  return cached;
+}
 
 /**
- * Page de vente : HTML statique optimisé (public/lp/catalogue-premium.html),
- * servi depuis les assets Cloudflare sous l'URL canonique /catalogue-premium.
+ * Page de vente : HTML statique optimisé (public/lp/), servi sous l'URL canonique /catalogue-premium.
+ * Variante A : catalogue-premium.html. Variante B : catalogue-premium-b.html, complétée ici
+ * (nombre de modèles et galerie lus en base) par HTMLRewriter, en flux.
  */
 export async function GET(request: Request) {
-  const asset = await getEnv().ASSETS!.fetch(new URL("/lp/catalogue-premium", request.url));
+  const env = getEnv();
+  const url = new URL(request.url);
+  const cookie = request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${VARIANT_COOKIE}=([ab])`))?.[1];
+  const share = Number(env.SALES_PAGE_B_SHARE ?? "0");
+  const { variant, remember } = chooseVariant({ query: url.searchParams.get("variante"), cookie, share, random: Math.random() });
+
+  const asset = await env.ASSETS!.fetch(new URL(variant === "b" ? "/lp/catalogue-premium-b" : "/lp/catalogue-premium", request.url));
   if (!asset.ok) return new Response("Page indisponible", { status: 502 });
-  return new Response(asset.body, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=300, s-maxage=300",
-      "X-Content-Type-Options": "nosniff",
-    },
+
+  const headers = new Headers({
+    "Content-Type": "text/html; charset=utf-8",
+    // Réponse publique tant que tout le monde reçoit A ; privée dès qu'un tirage ou un aperçu intervient.
+    "Cache-Control": share === 0 && variant === "a" && !url.searchParams.has("variante") ? "public, max-age=300, s-maxage=300" : "private, max-age=300",
+    "X-Content-Type-Options": "nosniff",
+    "X-Page-Variant": variant,
   });
+  if (remember) headers.append("Set-Cookie", `${VARIANT_COOKIE}=${variant}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`);
+
+  if (variant === "a") return new Response(asset.body, { status: 200, headers });
+
+  const data = await salesPageData().catch((error) => {
+    console.error("Page de vente B : données indisponibles", error);
+    return null;
+  });
+  if (!data) return new Response(asset.body, { status: 200, headers });
+  const rewritten = new HTMLRewriter()
+    .on("[data-wp-count]", { element: (el) => void el.setInnerContent(String(data.count)) })
+    .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
+    .transform(new Response(asset.body, { status: 200, headers }));
+  return rewritten;
 }
