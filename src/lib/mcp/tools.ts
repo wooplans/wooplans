@@ -18,6 +18,7 @@ import {
   signUploadToken,
   sniffFileType,
   type ImageRole,
+  parsePremiumUpdate,
 } from "@/lib/plan-input";
 import { privateFileUrl } from "@/lib/premium";
 import { downloadFile, type IncomingFile } from "@/lib/remote-file";
@@ -716,7 +717,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "update_plan_content",
     description:
-      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, surfaces, terrain, budget, atouts, points d'attention, statut de publication. Publier (status « published ») rend la fiche visible de tous : ne le faire qu'après l'accord explicite du propriétaire. Les images se gèrent avec upload_plan_image, set_plan_cover, reorder_plan_images et remove_plan_image.",
+      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, chambres, niveaux, surfaces, terrain, budget, pièces, devis par lots, atouts, points d'attention, notes, statut de publication. Les listes fournies (pièces, lots, atouts…) remplacent les anciennes. Publier (status « published ») rend la fiche visible de tous : ne le faire qu'après l'accord explicite du propriétaire. Les images se gèrent avec upload_plan_image, set_plan_cover, reorder_plan_images et remove_plan_image.",
     inputSchema: obj(
       {
         code: str("Référence du modèle, ex. V3-037"),
@@ -736,10 +737,19 @@ export const TOOLS: McpTool[] = [
         strengths: { type: "array", items: { type: "string" }, description: "Atouts (remplace la liste)" },
         watchouts: { type: "array", items: { type: "string" }, description: "Points d'attention (remplace la liste)" },
         cost_assumptions: str("Hypothèses de coût"),
+        bedrooms: { type: "integer", minimum: 0, maximum: 50, description: "Chambres" },
+        bathrooms: { type: "integer", minimum: 0, maximum: 50, description: "Salles de bain / d'eau" },
+        levels: { type: "integer", minimum: 1, maximum: 30, description: "Niveaux (1 = plain-pied)" },
+        surface_total: { type: "integer", minimum: 10, maximum: 100000, description: "Surface totale habitable (m²)" },
+        rooms: { type: "array", maxItems: 150, items: roomSchema, description: "Premium : pièces avec surfaces (remplace la liste)" },
+        estimate_lots: { type: "array", maxItems: 80, items: lotSchema, description: "Premium : devis par lots (remplace la liste ; total = somme des lots si estimate_total absent)" },
+        estimate_total: { type: "integer", minimum: 0, description: "Premium : total du devis (FCFA)" },
+        premium_notes: str("Premium : notes"),
       },
       ["code"],
     ),
     handler: async (args) => {
+      const premium = parsePremiumUpdate(args);
       const code = asString(args.code)?.toUpperCase();
       const db = getDb();
       const plan = code ? await db.query.plans.findFirst({ where: eq(schema.plans.code, code) }) : null;
@@ -779,8 +789,14 @@ export const TOOLS: McpTool[] = [
         const v = args[key];
         if (Array.isArray(v)) u[key] = v.filter((x): x is string => typeof x === "string" && x.trim() !== "").map((x) => x.trim());
       }
+      Object.assign(u, premium.values);
       await db.update(schema.plans).set(u).where(eq(schema.plans.id, plan.id));
-      return { code: plan.code, updated: Object.keys(u).filter((k) => k !== "updatedAt"), url: `/catalogue/${plan.slug}` };
+      return {
+        code: plan.code,
+        updated: Object.keys(u).filter((k) => k !== "updatedAt"),
+        url: `/catalogue/${plan.slug}`,
+        ...(premium.warnings.length ? { warnings: premium.warnings } : {}),
+      };
     },
   },
 ];

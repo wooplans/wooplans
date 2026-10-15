@@ -3,7 +3,7 @@ import { eq, inArray, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomAccessCode, randomId } from "@/lib/crypto";
-import { accessCodeEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, sendEmail, ACCESS_EMAIL_INTRO } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { hashAccessCode, normalizeEmail, rotateAccessCode } from "@/lib/members";
 
@@ -136,7 +136,7 @@ export async function sendLegacyWelcomeBatch(limit = 25) {
       to: member.email,
       subject: "Nouveau : votre Catalogue Premium WOOPLANS est aussi en ligne",
       html: mail.html.replace(
-        "Merci pour votre achat ! Votre Catalogue Premium est prêt. Le PDF vous est envoyé par Chariow, et vous avez aussi accès à l'espace Premium en ligne.",
+        ACCESS_EMAIL_INTRO,
         "Vous avez acheté le Catalogue Premium WOOPLANS : il est désormais aussi consultable en ligne, avec les nouveaux modèles, vos favoris et un comparateur. Voici vos accès personnels.",
       ),
       text: mail.text,

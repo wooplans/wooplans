@@ -172,3 +172,23 @@ test("jeton du lien d'envoi : signature, expiration, falsification", async () =>
   assert.equal(await verifyUploadToken(secret, "n'importe quoi", now), null);
   await assert.rejects(() => signUploadToken("", { planId: "a", code: "b", expiresAt: now }), /Secret/);
 });
+
+test("parsePremiumUpdate : champs fournis seulement, total = somme des lots", async () => {
+  const { parsePremiumUpdate } = await import("../src/lib/plan-input.ts");
+  const { values, warnings } = parsePremiumUpdate({
+    code: "V4-001",
+    bedrooms: 4,
+    rooms: [{ name: " Séjour ", area: 30.456, level: "RDC" }],
+    estimate_lots: [{ label: "Fondation", amount: 4_000_000 }, { label: "Élévations", amount: 6_000_000 }],
+  });
+  assert.equal(values.bedrooms, 4);
+  assert.deepEqual(values.rooms, [{ name: "Séjour", area: 30.46, level: "RDC" }]);
+  assert.equal(values.estimateTotal, 10_000_000);
+  assert.equal(values.surfaceTotal, undefined);
+  assert.deepEqual(warnings, []);
+  const mismatch = parsePremiumUpdate({ estimate_lots: [{ label: "A", amount: 1 }], estimate_total: 5 });
+  assert.equal(mismatch.values.estimateTotal, 5);
+  assert.equal(mismatch.warnings.length, 1);
+  assert.throws(() => parsePremiumUpdate({ estimate_lots: [{ label: "A", amount: "2 M" }] }), PlanInputError);
+  assert.throws(() => parsePremiumUpdate({ surface_total: 5 }), PlanInputError);
+});

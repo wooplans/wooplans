@@ -86,6 +86,10 @@ function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#F08A2E;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
 }
 
+/** Phrase d'accueil de l'email d'accès (réutilisée par l'import des anciens acheteurs). */
+export const ACCESS_EMAIL_INTRO =
+  "Merci pour votre achat ! Votre Catalogue Premium est prêt : connectez-vous à votre espace Premium pour consulter tous les modèles, les comparer et télécharger la fiche PDF de chacun (rendus, distributions cotées, devis). Les nouveaux modèles y sont ajoutés automatiquement.";
+
 export function accessCodeEmail(params: { name?: string | null; email: string; code: string; isNewCode?: boolean }) {
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
   const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}`);
@@ -94,7 +98,7 @@ export function accessCodeEmail(params: { name?: string | null; email: string; c
     : "Votre accès au Catalogue Premium WOOPLANS";
   const intro = params.isNewCode
     ? "Voici votre nouveau code d'accès. L'ancien code ne fonctionne plus."
-    : "Merci pour votre achat ! Votre Catalogue Premium est prêt. Le PDF vous est envoyé par Chariow, et vous avez aussi accès à l'espace Premium en ligne.";
+    : ACCESS_EMAIL_INTRO;
   const html = layout(subject, `<p>${hello}</p><p>${intro}</p>
 <p style="margin:20px 0 6px;color:#6B7280">Votre identifiant</p><p style="margin:0;font-weight:700">${escape(params.email)}</p>
 <p style="margin:16px 0 6px;color:#6B7280">Votre code d'accès</p>

@@ -4,7 +4,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Que contient exactement le Catalogue Premium ?",
     answer:
-      "Plus de 50 modèles de villas et duplex. Pour chaque modèle : rendus 3D, caractéristiques, distributions cotées, surfaces (totale, emprise au sol, terrain nécessaire), devis estimatif détaillé par lot, hypothèses de coût, atouts et points d'attention. Vous le recevez en PDF et vous accédez aussi à l'espace Premium en ligne.",
+      "Tous les modèles de villas et duplex du catalogue. Pour chaque modèle : rendus 3D, caractéristiques, distributions cotées, surfaces (totale, emprise au sol, terrain nécessaire), devis estimatif détaillé par lot, hypothèses de coût, atouts et points d'attention. Tout est consultable dans votre espace Premium en ligne, et chaque modèle se télécharge en fiche PDF.",
   },
   {
     question: "Combien coûte le catalogue et combien de temps y ai-je accès ?",
@@ -13,7 +13,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Comment est-ce que je reçois le catalogue après le paiement ?",
     answer:
-      "Dès que le paiement Mobile Money ou carte est confirmé, vous recevez le PDF et votre code d'accès personnel par email. Le code s'affiche aussi à l'écran juste après l'achat. Avec votre email et ce code, vous vous connectez à l'espace Premium.",
+      "Dès que le paiement Mobile Money ou carte est confirmé, votre code d'accès personnel s'affiche à l'écran et vous est envoyé par email. Avec votre email et ce code, vous vous connectez à l'espace Premium, où vous téléchargez la fiche PDF de chaque modèle.",
   },
   {
     question: "Les plans du catalogue suffisent-ils pour construire ?",

@@ -10,7 +10,7 @@ export default function CgvPage() {
     <ContentPage title="Conditions générales de vente">
       <h2>1. Produit</h2>
       <p>
-        Le Catalogue Premium WOOPLANS est un produit numérique comprenant un catalogue PDF de plus de 50 modèles de villas et duplex et un accès personnel à l&apos;espace Premium en ligne, y compris les modèles ajoutés ultérieurement.
+        Le Catalogue Premium WOOPLANS est un produit numérique comprenant un accès personnel à l&apos;espace Premium en ligne (modèles de villas et duplex, y compris ceux ajoutés ultérieurement) et une fiche PDF téléchargeable pour chaque modèle, marquée au nom de l&apos;acheteur.
       </p>
       <h2>2. Prix et paiement</h2>
       <p>
@@ -18,7 +18,7 @@ export default function CgvPage() {
       </p>
       <h2>3. Livraison</h2>
       <p>
-        Après confirmation du paiement, le PDF et le code d&apos;accès personnel sont envoyés à l&apos;adresse email indiquée lors de la commande. Le code est aussi affiché à l&apos;écran après l&apos;achat.
+        Après confirmation du paiement, le code d&apos;accès personnel est affiché à l&apos;écran et envoyé à l&apos;adresse email indiquée lors de la commande. Les fiches PDF se téléchargent depuis l&apos;espace Premium.
       </p>
       <h2>4. Nature des documents</h2>
       <p>

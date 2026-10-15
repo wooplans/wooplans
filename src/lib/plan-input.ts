@@ -185,6 +185,51 @@ function checkValue(field: string, spec: Spec, value: unknown, problems: string[
   }
 }
 
+export const PREMIUM_UPDATE_FIELDS = ["bedrooms", "bathrooms", "levels", "surface_total", "rooms", "estimate_lots", "estimate_total", "premium_notes"] as const;
+
+export type PremiumUpdateValues = Partial<{
+  bedrooms: number;
+  bathrooms: number;
+  levels: number;
+  surfaceTotal: number;
+  rooms: PlanRoomInput[];
+  estimateLots: EstimateLotInput[];
+  estimateTotal: number | null;
+  premiumNotes: string;
+}>;
+
+/**
+ * Valide les champs Premium et chiffrés d'une mise à jour de fiche (update_plan_content) :
+ * seuls les champs fournis sont renvoyés. Un devis par lots sans total prend la somme des lots.
+ */
+export function parsePremiumUpdate(args: Record<string, unknown>): { values: PremiumUpdateValues; warnings: string[] } {
+  const problems: string[] = [];
+  const warnings: string[] = [];
+  const v: Record<string, unknown> = {};
+  for (const field of PREMIUM_UPDATE_FIELDS) {
+    if (args[field] === undefined || args[field] === null) continue;
+    const checked = checkValue(field, CREATE_PLAN_FIELDS[field], args[field], problems);
+    if (checked !== undefined) v[field] = checked;
+  }
+  if (problems.length) throw new PlanInputError(problems);
+  const values: PremiumUpdateValues = {};
+  if (v.bedrooms !== undefined) values.bedrooms = v.bedrooms as number;
+  if (v.bathrooms !== undefined) values.bathrooms = v.bathrooms as number;
+  if (v.levels !== undefined) values.levels = v.levels as number;
+  if (v.surface_total !== undefined) values.surfaceTotal = v.surface_total as number;
+  if (v.rooms !== undefined) values.rooms = v.rooms as PlanRoomInput[];
+  if (v.premium_notes !== undefined) values.premiumNotes = v.premium_notes as string;
+  if (v.estimate_lots !== undefined) {
+    const lots = v.estimate_lots as EstimateLotInput[];
+    values.estimateLots = lots;
+    const sum = lots.reduce((total, lot) => total + lot.amount, 0);
+    if (v.estimate_total === undefined) values.estimateTotal = sum || null;
+    else if (lots.length && sum !== v.estimate_total) warnings.push(`Somme des lots (${sum} FCFA) différente du total du devis (${v.estimate_total} FCFA).`);
+  }
+  if (v.estimate_total !== undefined) values.estimateTotal = v.estimate_total as number;
+  return { values, warnings };
+}
+
 /**
  * Valide strictement les arguments de create_plan (types, bornes, champs inconnus) et
  * renvoie les valeurs prêtes pour l'insertion, toujours en brouillon. Lève PlanInputError

@@ -15,7 +15,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
                               │
                               ▼
                    Espace Premium /espace-premium
-           (fiches complètes, favoris, comparateur, PDF, WhatsApp)
+     (fiches complètes, favoris, comparateur, fiche PDF par modèle, WhatsApp)
                               │  « Commander les plans complets »
                               ▼
                  CRM /admin/crm : demande → qualification → devis
@@ -28,7 +28,8 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 |---|---|
 | Application | Next.js 15 (App Router) compilé par **OpenNext** pour **Cloudflare Workers** |
 | Base de données | **Cloudflare D1** via Drizzle ORM (`src/db/schema.ts`, migrations dans `drizzle/`) |
-| Fichiers | **Cloudflare R2** : `MEDIA` (rendus publics, distributions et PDF privés), `VIDEOS` (vidéos de la page de vente) |
+| Fichiers | **Cloudflare R2** : `MEDIA` (rendus publics, distributions privées), `VIDEOS` (vidéos de la page de vente) |
+| Fiches PDF | **pdf-lib** dans le Worker + binding **Cloudflare Images** (`IMAGES`, conversion WebP → JPEG hors CPU du Worker) |
 | Paiement | **Chariow** (notifications « Pulse » signées HMAC) |
 | Emails | **Resend** (codes d'accès, relances CRM, récapitulatif quotidien) |
 | Mesure | Suivi first-party du tunnel (`/api/t`, UTM), Pixel Meta, Microsoft Clarity |
@@ -40,10 +41,10 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 |---|---|
 | `/` | Accueil, modèles mis en avant, étapes, témoignages, FAQ |
 | `/catalogue`, `/catalogue-villa`, `/catalogue-duplex`, `/catalogue/<slug>` | Catalogue public filtrable et fiches (rendus, chambres, niveaux, surfaces, dimensions, budget indicatif) |
-| `/catalogue-premium` | Page de vente (HTML optimisé, `public/lp/catalogue-premium.html`, généré par `scripts/build-sales-page.py`) |
+| `/catalogue-premium` | Page de vente, variantes A/B (HTML statique `public/lp/catalogue-premium.html` et `-b.html`, générés par `scripts/build-sales-page.py` et `scripts/sales-page-b.py`) |
 | `/merci` | Confirmation de paiement et affichage du code d'accès |
 | `/connexion` | Connexion membre (email + code), « code perdu » |
-| `/espace-premium/…` | Index et filtres, fiche complète, favoris, comparateur (3 modèles), téléchargements |
+| `/espace-premium/…` | Index et filtres, fiche complète, favoris, comparateur (3 modèles), fiches PDF |
 | `/plans-personnalises` | Offre et tarifs des plans complets, formulaire de demande (→ CRM) |
 | `/a-propos`, `/contact`, `/mentions-legales`, `/conditions-generales-de-vente`, `/confidentialite` | Pages institutionnelles |
 | `/admin/…` | Tableau de bord du tunnel, CRM, ventes, membres, modèles, emails, réglages |
@@ -55,7 +56,8 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 - **Contrôle du produit** : seuls les produits « Catalogue Premium » (`CHARIOW_CATALOGUE_PRODUCT_ID` + anciens produits) ouvrent un accès.
 - **Activation uniquement sur paiement confirmé** (`successful.sale`, statut `completed`) ; les événements de test n'activent rien.
 - **Codes d'accès** personnels, hachés en base, limités en tentatives ; **révocation immédiate** (les sessions ouvertes sont invalidées).
-- **Fichiers Premium** (distributions cotées, PDF) servis uniquement à un membre actif, jamais via une URL publique.
+- **Fichiers Premium** (distributions cotées) servis uniquement à un membre actif, jamais via une URL publique.
+- **Fiches PDF** (`/api/premium/fiche-pdf/<slug>`) assemblées à la demande pour un membre actif, filigranées à son nom et à son email, avec une empreinte `W-XXXXXX` propre au couple membre/modèle (`src/lib/watermark.ts`).
 - Le code n'est affiché sur `/merci` qu'au navigateur qui a lancé l'achat, pendant quelques heures.
 
 ## Mise en production
@@ -93,7 +95,8 @@ npx wrangler d1 execute DB --remote --file /tmp/admin.sql
 - **Plans de l'ancienne base** : déjà importés (`scripts/import/legacy-plans.sql`, regénérable avec `scripts/import/legacy-to-sql.mjs`).
 - **Anciens acheteurs** : Admin → Membres → « Importer les acheteurs Chariow », puis « Envoyer les codes » (par lots de 25).
 - **Nouveaux modèles** : Admin → Modèles → « Nouveau modèle » (rendus publics, distributions privées, devis par lot).
-- **PDF du catalogue** : Admin → Réglages.
+- **Fiches PDF** : rien à faire. Chaque fiche publiée a sa fiche PDF, générée au téléchargement depuis les données en ligne (toujours à jour). Admin → Réglages ne sert plus qu'à proposer l'ancien catalogue complet, s'il y en a un.
+- **Compléter les fiches Premium** (pièces, devis par lots, distributions) : prompt prêt à l'emploi pour Claude Cowork dans `docs/prompt-cowork-fiches-premium.md`.
 
 ### 4. Chariow
 
@@ -101,7 +104,7 @@ Dans Chariow → Automatisations → Pulses : créer un Pulse vers `https://www.
 
 ### 5. Déploiement automatique
 
-Chaque push sur `master` lance `.github/workflows/deploy.yml` : vérifications (types, lint, tests, build), migrations D1, déploiement. Secrets GitHub requis : `CLOUDFLARE_API_TOKEN` (permissions Workers, D1, R2) et `CLOUDFLARE_ACCOUNT_ID`.
+Chaque push sur `master` ou `ccr-03cfaad2-40szss` lance `.github/workflows/deploy.yml` : vérifications (types, lint, tests, build), migrations D1, déploiement. Secrets GitHub requis : `CLOUDFLARE_API_TOKEN` (permissions Workers, D1, R2) et `CLOUDFLARE_ACCOUNT_ID`.
 
 ### 6. Bascule du domaine (fin de Framer)
 
@@ -110,9 +113,18 @@ Chaque push sur `master` lance `.github/workflows/deploy.yml` : vérifications (
 3. Workers → `wooplans-web` → Domaines : ajouter `www.wooplans.com` et `wooplans.com` (redirection vers www).
 4. Soumettre `https://www.wooplans.com/sitemap.xml` dans Google Search Console.
 
+## Page de vente : variantes et test A/B
+
+- **A** (`public/lp/catalogue-premium.html`) : la page historique.
+- **B** (`public/lp/catalogue-premium-b.html`) : promesse alignée sur le livrable (accès en ligne immédiat, fiche PDF de chaque modèle, nouveaux modèles inclus automatiquement), aide au paiement Mobile Money et lien WhatsApp dans la fenêtre de paiement, widget Chariow en français et préchargé pendant les temps morts, vidéos chargées seulement au clic, images allégées, nombre de modèles et galerie (rendus de couverture des modèles en vedette) lus en base par `src/app/catalogue-premium/route.ts` (HTMLRewriter, cache mémoire de 5 min).
+- Les deux pages se régénèrent avec `python3 scripts/build-sales-page.py`.
+- **Répartition** : variable `SALES_PAGE_B_SHARE` de `wrangler.jsonc` (0 à 100, en %). À 0, tout le monde voit A et B n'est visible qu'en aperçu avec `/catalogue-premium?variante=b` (`?variante=a` pour revenir). Le visiteur garde sa variante 30 jours (cookie `wp_lp`).
+- **Mesure** : la variante voyage dans `cta_id` (`variant_a`/`variant_b` pour la vue de page, suffixe `@a`/`@b` pour les clics, les intentions de paiement, les échecs/abandons et les achats). Tableau de bord → « Page de vente : variantes A / B » : visiteurs, clics, widget prêt (B), paiements démarrés, échoués, abandonnés, achats, conversion, clics WhatsApp.
+- Avec 1 à 2 ventes par jour, comparer d'abord le taux de clic et les paiements démarrés ; il faut plusieurs semaines pour conclure sur les achats.
+
 ## Pilotage par un agent (MCP)
 
-Le site expose un serveur MCP (`/api/mcp`, transport HTTP) protégé par `MCP_TOKEN`. Outils : résumé du tunnel par source/campagne, ventes, membres (donner, renvoyer ou révoquer un accès), CRM (lister, créer, faire avancer une demande, noter, encaisser, relancer par email), catalogue (lister, consulter une fiche complète, créer un modèle en brouillon, ajouter et organiser rendus et distributions, mettre à jour textes/SEO/caractéristiques, publier).
+Le site expose un serveur MCP (`/api/mcp`, transport HTTP) protégé par `MCP_TOKEN`. Outils : résumé du tunnel par source/campagne, ventes, membres (donner, renvoyer ou révoquer un accès), CRM (lister, créer, faire avancer une demande, noter, encaisser, relancer par email), catalogue (lister, consulter une fiche complète, créer un modèle en brouillon, ajouter et organiser rendus et distributions, mettre à jour textes/SEO/caractéristiques/pièces/devis par lots, publier).
 
 ```bash
 # Claude Code
