@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getFunnelAnalytics, type FunnelAnalytics } from "@/lib/funnel-db";
 import {
   getEdgeAnalyticsDashboard,
   listRecentEdgePlans,
@@ -156,6 +157,7 @@ function SubscriberStatus({ isActive }: { isActive: boolean }) {
 export default async function AdminDashboardPage() {
   let analytics = emptyAnalytics;
   let recentPlans: RecentPlan[] = [];
+  let funnel: FunnelAnalytics | null = null;
   let loadError = false;
 
   try {
@@ -166,6 +168,12 @@ export default async function AdminDashboardPage() {
   } catch (error) {
     console.error("Failed to load admin analytics dashboard:", error);
     loadError = true;
+  }
+
+  try {
+    funnel = await getFunnelAnalytics(30);
+  } catch (error) {
+    console.error("Failed to load funnel sales for dashboard:", error);
   }
 
   const maxSurfaceBucket = Math.max(
@@ -184,7 +192,7 @@ export default async function AdminDashboardPage() {
             Dashboard admin
           </h1>
           <p className="mt-2 max-w-2xl text-sm font-medium text-foreground/60">
-            Suivi des plans, publications, abonnes Premium et tendances recentes.
+            Ventes, plans, publications, abonnés Premium et tendances récentes.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -192,7 +200,7 @@ export default async function AdminDashboardPage() {
             href="/admin/subscribers"
             className="border-2 border-outline bg-surface px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-foreground hover:text-surface"
           >
-            Abonnes
+            Abonnés
           </Link>
           <Link
             href="/admin/plans/new"
@@ -211,13 +219,23 @@ export default async function AdminDashboardPage() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Plans publies"
+          label="Ventes 30 jours"
+          value={funnel ? formatMoney(funnel.totals.revenue) : "-"}
+          detail={
+            funnel
+              ? `${formatNumber(funnel.totals.salesCompleted)} achat(s) / ${formatNumber(funnel.totals.sessions)} visite(s)`
+              : "Données du tunnel indisponibles"
+          }
+          accentClass="border-t-highlight"
+        />
+        <MetricCard
+          label="Plans publiés"
           value={`${formatNumber(analytics.publishedPlans)} / ${formatNumber(analytics.totalPlans)}`}
           detail={`${analytics.publicationRate}% du catalogue visible`}
           accentClass="border-t-primary"
         />
         <MetricCard
-          label="Abonnes actifs"
+          label="Abonnés actifs"
           value={`${formatNumber(analytics.activeSubscribers)} / ${formatNumber(analytics.totalSubscribers)}`}
           detail={`${analytics.activeSubscriberRate}% du parc Premium`}
           accentClass="border-t-secondary"
@@ -225,14 +243,8 @@ export default async function AdminDashboardPage() {
         <MetricCard
           label="Nouveaux 30 jours"
           value={formatNumber(analytics.newSubscribers30d)}
-          detail={`${formatNumber(analytics.newPlans30d)} nouveau(x) plan(s) ajoute(s)`}
+          detail={`abonné(s) · ${formatNumber(analytics.newPlans30d)} plan(s) ajouté(s)`}
           accentClass="border-t-accent"
-        />
-        <MetricCard
-          label="Cout moyen"
-          value={formatMoney(analytics.averageEstimatedCost)}
-          detail={`${formatNumber(analytics.averageSurface)} m2 de surface moyenne`}
-          accentClass="border-t-highlight"
         />
       </section>
 
@@ -244,7 +256,7 @@ export default async function AdminDashboardPage() {
                 Croissance Premium
               </h2>
               <p className="mt-1 text-sm font-medium text-foreground/55">
-                Nouveaux abonnes sur les 6 derniers mois
+                Nouveaux abonnés sur les 6 derniers mois
               </p>
             </div>
             <span className="border-2 border-outline px-3 py-1 text-xs font-black uppercase tracking-wider text-foreground/60">
@@ -255,22 +267,22 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="bg-surface border-2 border-outline p-5">
-          <h2 className="text-lg font-black tracking-tight text-foreground">Etat du catalogue</h2>
+          <h2 className="text-lg font-black tracking-tight text-foreground">État du catalogue</h2>
           <div className="mt-5 space-y-5">
             <ProgressRow
-              label="Plans publies"
+              label="Plans publiés"
               value={analytics.publishedPlans}
               total={analytics.totalPlans}
-              caption={`${analytics.draftPlans} brouillon(s) restent a publier`}
+              caption={`${analytics.draftPlans} brouillon(s) restent à publier`}
             />
             <ProgressRow
               label="Plans mis en avant"
               value={analytics.featuredPlans}
               total={analytics.totalPlans}
-              caption="Plans prioritaires dans les zones de selection"
+              caption="Plans prioritaires dans les zones de sélection"
             />
             <ProgressRow
-              label="Abonnes actifs"
+              label="Abonnés actifs"
               value={analytics.activeSubscribers}
               total={analytics.totalSubscribers}
               caption={`${analytics.inactiveSubscribers} compte(s) inactif(s)`}
@@ -291,7 +303,7 @@ export default async function AdminDashboardPage() {
                 {formatNumber(analytics.expiredSubscribers)}
               </p>
               <p className="mt-1 text-xs font-bold uppercase tracking-wider text-foreground/50">
-                Deja expires
+                Déjà expirés
               </p>
             </div>
           </div>
@@ -302,7 +314,7 @@ export default async function AdminDashboardPage() {
         <div className="bg-surface border-2 border-outline p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
             <h2 className="text-lg font-black tracking-tight text-foreground">
-              Repartition par categorie
+              Répartition par catégorie
             </h2>
             <Link href="/admin/plans" className="text-sm font-black text-primary hover:text-primary-dark">
               Voir les plans
@@ -311,18 +323,18 @@ export default async function AdminDashboardPage() {
 
           {analytics.categoryBreakdown.length === 0 ? (
             <div className="border-2 border-dashed border-outline/40 p-8 text-center text-sm font-semibold text-foreground/50">
-              Aucune categorie disponible.
+              Aucune catégorie disponible.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-outline text-left text-xs font-black uppercase tracking-wider text-foreground/50">
-                    <th className="pb-3">Categorie</th>
+                    <th className="pb-3">Catégorie</th>
                     <th className="pb-3 text-right">Plans</th>
-                    <th className="pb-3 text-right">Publies</th>
+                    <th className="pb-3 text-right">Publiés</th>
                     <th className="pb-3 text-right">Surface moy.</th>
-                    <th className="pb-3 text-right">Cout moy.</th>
+                    <th className="pb-3 text-right">Coût moy.</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -336,7 +348,7 @@ export default async function AdminDashboardPage() {
                         {formatNumber(category.published)}
                       </td>
                       <td className="py-3 text-right font-semibold text-foreground/70">
-                        {formatNumber(category.averageSurface)} m2
+                        {formatNumber(category.averageSurface)} m²
                       </td>
                       <td className="py-3 text-right font-semibold text-foreground/70">
                         {formatMoney(category.averageEstimatedCost)}
@@ -363,13 +375,23 @@ export default async function AdminDashboardPage() {
               />
             ))}
           </div>
-          <div className="mt-6 border-2 border-outline bg-foreground/5 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-foreground/50">
-              Valeur estimee totale
-            </p>
-            <p className="mt-2 text-2xl font-black text-foreground">
-              {formatMoney(analytics.totalEstimatedCost)}
-            </p>
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="border-2 border-outline bg-foreground/5 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-foreground/50">
+                Coût moyen
+              </p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatMoney(analytics.averageEstimatedCost)}
+              </p>
+            </div>
+            <div className="border-2 border-outline bg-foreground/5 p-4">
+              <p className="text-xs font-black uppercase tracking-wider text-foreground/50">
+                Surface moyenne
+              </p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatNumber(analytics.averageSurface)} m²
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -377,7 +399,7 @@ export default async function AdminDashboardPage() {
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
         <div>
           <div className="mb-4 flex items-center justify-between gap-4">
-            <h2 className="text-lg font-black tracking-tight text-foreground">Plans recents</h2>
+            <h2 className="text-lg font-black tracking-tight text-foreground">Plans récents</h2>
             <Link href="/admin/plans" className="text-sm font-black text-primary hover:text-primary-dark">
               Voir tout
             </Link>
@@ -387,7 +409,7 @@ export default async function AdminDashboardPage() {
             <div className="border-2 border-outline bg-surface p-10 text-center">
               <p className="text-sm font-semibold text-foreground/50">Aucun plan pour le moment.</p>
               <Link href="/admin/plans/new" className="mt-3 inline-block text-sm font-black text-primary">
-                Creer un plan
+                Créer un plan
               </Link>
             </div>
           ) : (
@@ -423,7 +445,7 @@ export default async function AdminDashboardPage() {
                             : "border-foreground/20 bg-foreground/5 text-foreground/45"
                         }`}
                       >
-                        {plan.published ? "Publie" : "Brouillon"}
+                        {plan.published ? "Publié" : "Brouillon"}
                       </span>
                       {plan.featured && (
                         <span className="border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
@@ -433,10 +455,10 @@ export default async function AdminDashboardPage() {
                     </div>
                     <h3 className="truncate text-sm font-black text-foreground">{plan.name}</h3>
                     <p className="mt-1 text-xs font-semibold capitalize text-foreground/55">
-                      {plan.category} / {plan.surface} m2 / {plan.bedrooms} ch.
+                      {plan.category} / {plan.surface} m² / {plan.bedrooms} ch.
                     </p>
                     <p className="mt-3 text-[11px] font-semibold text-foreground/40">
-                      Modifie le {formatDate(plan.updatedAt)}
+                      Modifié le {formatDate(plan.updatedAt)}
                     </p>
                   </div>
                 </Link>
@@ -447,18 +469,18 @@ export default async function AdminDashboardPage() {
 
         <div className="bg-surface border-2 border-outline p-5">
           <div className="mb-5 flex items-center justify-between gap-4">
-            <h2 className="text-lg font-black tracking-tight text-foreground">Abonnes recents</h2>
+            <h2 className="text-lg font-black tracking-tight text-foreground">Abonnés récents</h2>
             <Link
               href="/admin/subscribers"
               className="text-sm font-black text-primary hover:text-primary-dark"
             >
-              Gerer
+              Gérer
             </Link>
           </div>
 
           {analytics.recentSubscribers.length === 0 ? (
             <div className="border-2 border-dashed border-outline/40 p-8 text-center text-sm font-semibold text-foreground/50">
-              Aucun abonne recent.
+              Aucun abonné récent.
             </div>
           ) : (
             <div className="divide-y divide-outline/30">

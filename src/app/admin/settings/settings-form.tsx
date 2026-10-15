@@ -52,16 +52,16 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
         setDuplex(toInputValue(data.rates.duplex));
       }
 
-      setMessage("Prix au m2 enregistres.");
+      setMessage("Prix au m² enregistrés.");
     } catch {
-      setError("Erreur reseau lors de l'enregistrement.");
+      setError("Erreur réseau lors de l'enregistrement.");
     } finally {
       setSaving(false);
     }
   }
 
   const inputClass =
-    "w-full px-3 py-2 border-2 border-outline text-sm focus:outline-none focus:border-primary";
+    "w-full px-3 py-2 border-2 border-outline bg-surface text-foreground text-sm focus:outline-none focus:border-primary";
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
@@ -80,14 +80,14 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
         <div>
           <h2 className="font-semibold text-foreground">Prix de construction</h2>
           <p className="text-xs text-foreground/40 mt-1">
-            Montants globaux en FCFA par m2. Les regions seront ajoutees plus tard.
+            Montants globaux en FCFA par m². Les régions seront ajoutées plus tard.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-1">
-              Villa (FCFA / m2)
+              Villa (FCFA / m²)
             </label>
             <input
               type="number"
@@ -101,7 +101,7 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-1">
-              Duplex (FCFA / m2)
+              Duplex (FCFA / m²)
             </label>
             <input
               type="number"
@@ -121,7 +121,7 @@ export function SettingsForm({ initialRates }: SettingsFormProps) {
         disabled={saving}
         className="px-6 py-2.5 bg-primary text-white text-sm font-bold border-2 border-primary hover:bg-primary-dark transition-colors disabled:opacity-50"
       >
-        {saving ? "Enregistrement..." : "Enregistrer les reglages"}
+        {saving ? "Enregistrement..." : "Enregistrer les réglages"}
       </button>
     </form>
   );

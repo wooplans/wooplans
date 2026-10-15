@@ -34,6 +34,12 @@ function MetricCard({
   );
 }
 
+const SEVERITY_LABELS = {
+  info: "Info",
+  warning: "Attention",
+  critical: "Critique",
+} as const;
+
 function InsightCard({
   title,
   description,
@@ -52,7 +58,7 @@ function InsightCard({
 
   return (
     <article className={`border-2 p-5 ${classes}`}>
-      <p className="text-xs font-black uppercase tracking-[0.24em] opacity-70">{severity}</p>
+      <p className="text-xs font-black uppercase tracking-[0.24em] opacity-70">{SEVERITY_LABELS[severity]}</p>
       <h3 className="mt-2 text-base font-black tracking-tight">{title}</h3>
       <p className="mt-2 text-sm font-medium leading-relaxed opacity-90">{description}</p>
     </article>
@@ -310,7 +316,7 @@ export default async function AdminTunnelPage({
                 </h3>
                 {analytics.behavior.topSections.length === 0 ? (
                   <div className="mt-4 border-2 border-dashed border-outline/40 p-6 text-center text-sm font-semibold text-foreground/50">
-                    Pas encore de donnees de sections.
+                    Pas encore de données de sections.
                   </div>
                 ) : (
                   <div className="mt-4 space-y-3">

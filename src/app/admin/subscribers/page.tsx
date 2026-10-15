@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 type Subscriber = {
   id: string;
@@ -11,6 +11,21 @@ type Subscriber = {
   premiumCode: string | null;
   createdAt: string;
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type ExpiryState = "none" | "expired" | "soon" | "valid";
+
+function getExpiryState(expiresAt: string | null, now: number): ExpiryState {
+  if (!expiresAt) return "none";
+  const time = new Date(expiresAt).getTime();
+  if (time < now) return "expired";
+  if (time - now <= 30 * DAY_MS) return "soon";
+  return "valid";
+}
+
+const filterClass =
+  "px-3 py-2 border-2 border-outline bg-surface text-sm text-foreground focus:outline-none focus:border-primary";
 
 export default function SubscribersPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -28,6 +43,40 @@ export default function SubscribersPage() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [expiryFilter, setExpiryFilter] = useState("");
+  const [now] = useState(() => Date.now());
+
+  const filteredSubscribers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return subscribers.filter((subscriber) => {
+      if (
+        query &&
+        !subscriber.email.toLowerCase().includes(query) &&
+        !(subscriber.premiumCode ?? "").toLowerCase().includes(query) &&
+        !(subscriber.chariowCustomerId ?? "").toLowerCase().includes(query)
+      ) {
+        return false;
+      }
+      if (statusFilter === "active" && !subscriber.isActive) return false;
+      if (statusFilter === "inactive" && subscriber.isActive) return false;
+      if (expiryFilter && getExpiryState(subscriber.expiresAt, now) !== expiryFilter) return false;
+      return true;
+    });
+  }, [subscribers, search, statusFilter, expiryFilter, now]);
+
+  const hasActiveFilters = Boolean(search || statusFilter || expiryFilter);
+
+  useEffect(() => {
+    if (!showAddModal) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setShowAddModal(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showAddModal]);
+
   const loadSubscribers = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/subscribers", { cache: "no-store" });
@@ -41,7 +90,7 @@ export default function SubscribersPage() {
       setError("");
     } catch (err) {
       console.error("Failed to load subscribers:", err);
-      setError("Erreur lors du chargement des abonnes");
+      setError("Erreur lors du chargement des abonnés");
     } finally {
       setLoading(false);
     }
@@ -67,7 +116,11 @@ export default function SubscribersPage() {
       setError("");
     } catch (err) {
       console.error("Failed to update subscriber:", err);
-      alert("Erreur lors de la mise a jour du statut");
+      setError(
+        err instanceof Error && err.message !== "update_failed"
+          ? err.message
+          : "Erreur lors de la mise à jour du statut",
+      );
     } finally {
       setUpdatingId(null);
     }
@@ -80,9 +133,10 @@ export default function SubscribersPage() {
       if (!response.ok) throw new Error("delete_failed");
       setSubscribers((cur) => cur.filter((s) => s.id !== id));
       setConfirmDeleteId(null);
+      setError("");
     } catch (err) {
       console.error("Failed to delete subscriber:", err);
-      alert("Erreur lors de la suppression");
+      setError("Erreur lors de la suppression");
     } finally {
       setDeletingId(null);
     }
@@ -117,7 +171,13 @@ export default function SubscribersPage() {
       setAddExpiresAt("");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur lors de la création";
-      setAddError(msg === "create_failed" ? "Erreur lors de la création de l'abonné" : msg);
+      setAddError(
+        msg === "create_failed"
+          ? "Erreur lors de la création de l'abonné"
+          : msg === "Failed to fetch"
+            ? "Erreur réseau"
+            : msg,
+      );
     } finally {
       setAddLoading(false);
     }
@@ -129,11 +189,11 @@ export default function SubscribersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">Abonnes Premium</h1>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Abonnés Premium</h1>
           <p className="text-sm text-foreground/60 mt-1">
-            Gere les abonnes et leur statut
+            Gère les abonnés et leur statut
           </p>
         </div>
         <button
@@ -144,21 +204,66 @@ export default function SubscribersPage() {
             setAddExpiresAt(defaultExpiry);
             setShowAddModal(true);
           }}
-          className="px-4 py-2.5 bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors"
+          className="px-4 py-2 bg-primary text-white text-sm font-bold border-2 border-primary hover:bg-primary-dark transition-colors"
         >
-          + Ajouter un abonne
+          + Ajouter un abonné
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-950 border-2 border-red-700 text-red-700 dark:text-red-300 px-4 py-3 text-sm font-semibold">
-          {error}
+        <div className="flex items-start justify-between gap-4 bg-red-50 dark:bg-red-950 border-2 border-red-700 text-red-700 dark:text-red-300 px-4 py-3 text-sm font-semibold">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError("")} className="font-black" aria-label="Fermer">
+            ×
+          </button>
+        </div>
+      )}
+
+      {!loading && subscribers.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher (email, code, client Chariow)..."
+              className={`${filterClass} w-full sm:w-auto sm:flex-1 sm:min-w-[220px]`}
+            />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={filterClass}>
+              <option value="">Tous statuts</option>
+              <option value="active">Actifs</option>
+              <option value="inactive">Inactifs</option>
+            </select>
+            <select value={expiryFilter} onChange={(e) => setExpiryFilter(e.target.value)} className={filterClass}>
+              <option value="">Toutes expirations</option>
+              <option value="soon">Expire sous 30 jours</option>
+              <option value="expired">Expiré</option>
+              <option value="valid">Valide (+30 jours)</option>
+              <option value="none">Sans date</option>
+            </select>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setStatusFilter("");
+                  setExpiryFilter("");
+                }}
+                className="px-3 py-2 text-sm font-bold text-primary hover:underline"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-foreground/50 font-semibold">
+            {filteredSubscribers.length} / {subscribers.length} abonné{subscribers.length > 1 ? "s" : ""}
+          </p>
         </div>
       )}
 
       <div className="bg-surface border-2 border-outline overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[760px]">
             <thead className="bg-foreground/5 dark:bg-foreground/10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-black text-foreground/60 uppercase tracking-widest">
@@ -182,20 +287,26 @@ export default function SubscribersPage() {
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
-                    <p className="text-sm">Chargement des abonnes...</p>
+                    <p className="text-sm">Chargement des abonnés...</p>
                   </td>
                 </tr>
               ) : subscribers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-foreground/60">
-                    <p className="text-sm">Aucun abonne trouve</p>
+                    <p className="text-sm">Aucun abonné trouvé</p>
                     <p className="text-primary text-sm mt-2 inline-block font-bold">
-                      Cliquez sur &quot;Ajouter un abonne&quot; pour en creer un manuellement
+                      Cliquez sur &quot;Ajouter un abonné&quot; pour en créer un manuellement
                     </p>
                   </td>
                 </tr>
+              ) : filteredSubscribers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-foreground/60">
+                    Aucun abonné ne correspond aux filtres
+                  </td>
+                </tr>
               ) : (
-                subscribers.map((subscriber, index) => (
+                filteredSubscribers.map((subscriber, index) => (
                   <tr
                     key={subscriber.id}
                     className={`hover:bg-foreground/5 ${index > 0 ? "border-t border-outline" : ""}`}
@@ -218,13 +329,25 @@ export default function SubscribersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-foreground/70">
-                      {subscriber.expiresAt
-                        ? new Date(subscriber.expiresAt).toLocaleDateString("fr-FR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })
-                        : "-"}
+                      <div>
+                        {subscriber.expiresAt
+                          ? new Date(subscriber.expiresAt).toLocaleDateString("fr-FR", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : "-"}
+                      </div>
+                      {getExpiryState(subscriber.expiresAt, now) === "expired" && (
+                        <span className="mt-1 inline-flex px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border-2 border-red-700 text-red-700 bg-red-50 dark:border-red-500 dark:text-red-300 dark:bg-red-950">
+                          Expiré
+                        </span>
+                      )}
+                      {getExpiryState(subscriber.expiresAt, now) === "soon" && (
+                        <span className="mt-1 inline-flex px-2 py-0.5 text-[10px] font-black uppercase tracking-wider border-2 border-amber-700 text-amber-700 bg-amber-50 dark:border-amber-500 dark:text-amber-300 dark:bg-amber-950">
+                          Expire bientôt
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-mono font-bold text-foreground/70">
@@ -245,7 +368,7 @@ export default function SubscribersPage() {
                           {updatingId === subscriber.id
                             ? "..."
                             : subscriber.isActive
-                              ? "Desactiver"
+                              ? "Désactiver"
                               : "Activer"}
                         </button>
                         {confirmDeleteId === subscriber.id ? (
@@ -283,10 +406,20 @@ export default function SubscribersPage() {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-surface border-2 border-outline w-full max-w-md mx-4 p-6">
-            <h2 className="text-lg font-black text-foreground tracking-tight mb-4">
-              Ajouter un abonne
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddModal(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-subscriber-title"
+            className="bg-surface border-2 border-outline w-full max-w-md mx-4 p-6"
+          >
+            <h2 id="add-subscriber-title" className="text-lg font-black text-foreground tracking-tight mb-4">
+              Ajouter un abonné
             </h2>
 
             {addError && (
@@ -303,6 +436,7 @@ export default function SubscribersPage() {
                 <input
                   type="email"
                   required
+                  autoFocus
                   value={addEmail}
                   onChange={(e) => setAddEmail(e.target.value)}
                   placeholder="exemple@email.com"
@@ -321,7 +455,7 @@ export default function SubscribersPage() {
                   className="w-full px-3 py-2 border-2 border-outline bg-surface text-foreground text-sm focus:outline-none focus:border-primary"
                 />
                 <p className="text-xs text-foreground/40 mt-1">
-                  Par defaut : 1 an a partir d&apos;aujourd&apos;hui
+                  Par défaut : 1 an à partir d&apos;aujourd&apos;hui
                 </p>
               </div>
 
@@ -334,7 +468,7 @@ export default function SubscribersPage() {
                   className="w-4 h-4 accent-primary"
                 />
                 <label htmlFor="add-active" className="text-sm font-semibold text-foreground">
-                  Activer immediatement
+                  Activer immédiatement
                 </label>
               </div>
 
@@ -342,9 +476,9 @@ export default function SubscribersPage() {
                 <button
                   type="submit"
                   disabled={addLoading}
-                  className="flex-1 py-2.5 bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-primary text-white font-bold text-sm border-2 border-primary hover:bg-primary-dark transition-colors disabled:opacity-50"
                 >
-                  {addLoading ? "Creation..." : "Creer l'abonne"}
+                  {addLoading ? "Création..." : "Créer l'abonné"}
                 </button>
                 <button
                   type="button"

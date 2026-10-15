@@ -35,7 +35,7 @@ function LoginForm() {
       };
 
       if (!response.ok) {
-        setError(data.error || "Impossible d'acceder au dashboard");
+        setError(data.error || "Impossible d'accéder au dashboard");
         return;
       }
 
@@ -43,7 +43,7 @@ function LoginForm() {
       router.refresh();
     } catch (error) {
       console.error("Admin login failed:", error);
-      setError("Erreur reseau lors de la connexion.");
+      setError("Erreur réseau lors de la connexion.");
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full px-4 py-2.5 border-2 border-outline focus:border-primary outline-none transition-all text-sm"
+              className="w-full px-4 py-2.5 border-2 border-outline bg-surface text-foreground focus:border-primary outline-none transition-all text-sm"
               placeholder="admin@wooplans.com"
             />
           </div>
@@ -91,7 +91,7 @@ function LoginForm() {
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-2.5 border-2 border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {loading ? "Connexion..." : "Acceder au dashboard"}
+            {loading ? "Connexion..." : "Accéder au dashboard"}
           </button>
         </form>
 

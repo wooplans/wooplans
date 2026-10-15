@@ -27,9 +27,9 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground tracking-tight">Reglages</h1>
+        <h1 className="text-2xl font-black text-foreground tracking-tight">Réglages</h1>
         <p className="text-sm text-foreground/50 mt-1">
-          Configure les prix utilises pour generer les devis estimatifs.
+          Configure les prix utilisés pour generer les devis estimatifs.
         </p>
       </div>
 

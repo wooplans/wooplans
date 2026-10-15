@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageUploader, ThumbnailUploader } from "./components/ImageUploader";
@@ -141,6 +141,29 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
       : [],
   );
 
+  const snapshot = JSON.stringify({ form, rooms, images, distributionPlans });
+  const [initialSnapshot] = useState(snapshot);
+  const isDirty = snapshot !== initialSnapshot;
+  const skipUnloadGuard = useRef(false);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      if (skipUnloadGuard.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  // En édition, le slug ne suit plus le nom : le modifier casserait les liens existants.
+  const [slugTouched, setSlugTouched] = useState(mode === "edit");
+  const publicUrl = useMemo(
+    () => (mode === "edit" && initialData?.published && initialData.slug ? `/plans/${initialData.slug}` : ""),
+    [mode, initialData?.published, initialData?.slug],
+  );
+
   function handleAIExtracted(data: {
     name: string;
     category: string;
@@ -159,7 +182,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
     setForm((prev) => ({
       ...prev,
       name: data.name || prev.name,
-      slug: slug || prev.slug,
+      slug: slugTouched ? prev.slug : slug || prev.slug,
       category: data.category || prev.category,
       description: data.description || prev.description,
       surface: String(data.surface || prev.surface),
@@ -174,7 +197,10 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
   }
 
   function updateForm(field: string, value: string | boolean) {
-    if (field === "name" && typeof value === "string") {
+    if (field === "slug") {
+      setSlugTouched(true);
+    }
+    if (field === "name" && typeof value === "string" && !slugTouched) {
       const slug = value
         .toLowerCase()
         .replace(/\s+/g, "-")
@@ -210,7 +236,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
       const validDistPlans = distributionPlans.filter((i) => i.trim());
 
       if (validRooms.length === 0) {
-        setError("Ajoute au moins une piece au plan.");
+        setError("Ajoute au moins une pièce au plan.");
         return;
       }
 
@@ -260,18 +286,19 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         return;
       }
 
+      skipUnloadGuard.current = true;
       router.push("/admin/plans");
       router.refresh();
     } catch (error) {
       console.error("Plan form submission failed:", error);
-      setError("Erreur reseau lors de l'enregistrement du plan.");
+      setError("Erreur réseau lors de l'enregistrement du plan.");
     } finally {
       setLoading(false);
     }
   }
 
   const inputClass =
-    "w-full px-3 py-2 border-2 border-outline text-sm focus:outline-none focus:border-primary";
+    "w-full px-3 py-2 border-2 border-outline bg-surface text-foreground text-sm focus:outline-none focus:border-primary";
 
   const previewRooms = groupProcessedRooms(rooms.filter(r => r.name.trim()));
 
@@ -280,6 +307,19 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
       {error && (
         <div className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm px-4 py-3 border-2 border-red-700 dark:border-red-500 font-semibold">
           {error}
+        </div>
+      )}
+
+      {publicUrl && (
+        <div className="flex justify-end">
+          <a
+            href={publicUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-bold text-primary hover:underline"
+          >
+            Voir sur le site ↗
+          </a>
         </div>
       )}
 
@@ -316,6 +356,11 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
               className={inputClass}
               placeholder="villa-familiale"
             />
+            {mode === "edit" && (
+              <p className="text-xs text-foreground/40 mt-1">
+                Modifier le slug change l&apos;adresse de la fiche publique.
+              </p>
+            )}
           </div>
         </div>
 
@@ -361,7 +406,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground/70 mb-1">
               Chambres
@@ -423,12 +468,12 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
       <div className="bg-surface border-2 border-outline p-6 space-y-4">
         <h2 className="font-semibold text-foreground">Composition des pièces</h2>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/70">Édition</h3>
             {rooms.map((room, i) => (
-              <div key={i} className="grid grid-cols-[minmax(7rem,10rem)_minmax(0,1fr)_6rem_auto] gap-2 items-center">
-                <div className="px-3 py-2 border-2 border-outline bg-surface/60 text-sm font-medium text-foreground/70 truncate">
+              <div key={i} className="grid grid-cols-[minmax(0,1fr)_5rem_2rem] sm:grid-cols-[minmax(7rem,10rem)_minmax(0,1fr)_6rem_2rem] gap-2 items-center">
+                <div className="hidden sm:block px-3 py-2 border-2 border-outline bg-surface/60 text-sm font-medium text-foreground/70 truncate">
                   {room.name.trim() || `Pièce ${i + 1}`}
                 </div>
                 <input
@@ -451,6 +496,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
                     type="button"
                     onClick={() => removeRoom(i)}
                     className="text-red-400 hover:text-red-600 px-2 justify-self-center"
+                    aria-label="Supprimer la pièce"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -470,7 +516,7 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-foreground/70">Aperçu (Frontend)</h3>
-            <div className="border-2 border-outline/30 rounded-lg p-4 bg-surface/50">
+            <div className="border-2 border-outline/30 p-4 bg-surface/50">
               <h4 className="text-lg font-semibold text-foreground mb-3 tracking-tight">
                 Composition des pièces
               </h4>
@@ -492,41 +538,11 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </div>
       </div>
 
-      <div className="bg-surface border-2 border-outline p-6 space-y-3">
+      <div className="bg-surface border-2 border-outline p-6 space-y-2">
         <h2 className="font-semibold text-foreground">Devis estimatif</h2>
         <p className="text-sm text-foreground/50">
-          Le tableau est genere automatiquement avec la surface du plan et le prix au m2 defini dans les reglages.
+          Le tableau est généré automatiquement avec la surface du plan et le prix au m² défini dans les réglages.
         </p>
-
-        <div className="flex items-end gap-4 pt-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => updateForm("featured", e.target.checked)}
-              className="rounded border-outline/30 text-primary focus:ring-primary"
-            />
-            <span className="text-sm text-foreground/70">Mis en avant</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.cataloguePreview}
-              onChange={(e) => updateForm("cataloguePreview", e.target.checked)}
-              className="rounded border-outline/30 text-primary focus:ring-primary"
-            />
-            <span className="text-sm text-foreground/70">Afficher dans l&apos;aperçu du Catalogue</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.published}
-              onChange={(e) => updateForm("published", e.target.checked)}
-              className="rounded border-outline/30 text-primary focus:ring-primary"
-            />
-            <span className="text-sm text-foreground/70">Publie</span>
-          </label>
-        </div>
       </div>
 
       <div className="bg-surface border-2 border-outline p-6 space-y-5">
@@ -547,7 +563,33 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         />
       </div>
 
-      <div className="flex gap-3">
+      <div className="bg-surface border-2 border-outline p-6 space-y-4">
+        <h2 className="font-semibold text-foreground">Visibilité</h2>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-6">
+          {(
+            [
+              ["published", "Publié", "Visible sur le site public"],
+              ["featured", "Mis en avant", "Prioritaire dans les zones de sélection"],
+              ["cataloguePreview", "Aperçu du Catalogue", "Affiché dans l'aperçu gratuit du catalogue"],
+            ] as const
+          ).map(([field, label, hint]) => (
+            <label key={field} className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form[field]}
+                onChange={(e) => updateForm(field, e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-primary"
+              />
+              <span>
+                <span className="block text-sm font-bold text-foreground">{label}</span>
+                <span className="block text-xs text-foreground/50">{hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={loading}
@@ -563,10 +605,18 @@ export function PlanForm({ mode, planId, initialData }: PlanFormProps) {
         </button>
         <Link
           href="/admin/plans"
-          className="px-6 py-2.5 bg-surface text-foreground text-sm font-bold border-2 border-outline hover:bg-surface transition-colors"
+          onClick={(e) => {
+            if (isDirty && !confirm("Quitter sans enregistrer les modifications ?")) {
+              e.preventDefault();
+            }
+          }}
+          className="px-6 py-2.5 bg-surface text-foreground text-sm font-bold border-2 border-outline hover:bg-foreground/5 transition-colors"
         >
           Annuler
         </Link>
+        {isDirty && (
+          <span className="text-xs font-semibold text-foreground/50">Modifications non enregistrées</span>
+        )}
       </div>
     </form>
   );
