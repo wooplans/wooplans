@@ -156,3 +156,19 @@ test("réordonnancement : permutation exacte exigée", () => {
   assert.throws(() => reorderList(["a", "b"], ["a", "a"]), /exactement/);
   assert.throws(() => reorderList(["a", "b"], ["a", "z"]), /exactement/);
 });
+
+test("jeton du lien d'envoi : signature, expiration, falsification", async () => {
+  const { signUploadToken, verifyUploadToken } = await import("../src/lib/plan-input.ts");
+  const secret = "secret-de-test-assez-long";
+  const now = 1_700_000_000_000;
+  const token = await signUploadToken(secret, { planId: "abc", code: "V4-101", expiresAt: now + 3600_000 });
+  assert.deepEqual(await verifyUploadToken(secret, token, now), { planId: "abc", code: "V4-101", expiresAt: now + 3600_000 });
+  assert.equal(await verifyUploadToken(secret, token, now + 3600_001), null, "expiré");
+  assert.equal(await verifyUploadToken("autre-secret-assez-long", token, now), null, "mauvais secret");
+  const [body, sig] = token.split(".");
+  const forged = Buffer.from(JSON.stringify({ p: "autre", c: "V4-101", e: now + 3600_000 })).toString("base64url");
+  assert.equal(await verifyUploadToken(secret, `${forged}.${sig}`, now), null, "contenu modifié");
+  assert.equal(await verifyUploadToken(secret, `${body}.${sig}x`, now), null, "signature modifiée");
+  assert.equal(await verifyUploadToken(secret, "n'importe quoi", now), null);
+  await assert.rejects(() => signUploadToken("", { planId: "a", code: "b", expiresAt: now }), /Secret/);
+});

@@ -14,7 +14,9 @@ const INSTRUCTIONS =
   "Le revenu du catalogue (ventes Chariow) est distinct des encaissements des plans complets (CRM). " +
   "Avant toute action qui écrit à un client (send_lead_email, grant_premium_access, send_new_access_code) ou qui révoque un accès, confirmez avec le propriétaire. " +
   "Ajout d'un modèle au catalogue : 1) lire le PDF fourni (descriptif, surfaces, pièces, devis) ; 2) create_plan — la fiche est toujours créée en brouillon ; " +
-  "3) upload_plan_image avec role=render pour les rendus 3D (publics, le premier devient la couverture), puis role=floor_plan pour les distributions cotées (privées, réservées aux membres Premium, PDF accepté) ; " +
+  "3) ajouter les rendus 3D (role=render : publics, le premier devient la couverture) puis les distributions cotées (role=floor_plan : privées, réservées aux membres Premium, PDF accepté). " +
+  "Fichiers sur l'ordinateur du propriétaire : create_upload_link — sur claude.ai, lui donner le lien de la page où il dépose ses fichiers puis attendre qu'il confirme ; avec Claude Code, envoyer chaque fichier local avec la commande curl fournie (jamais en base64). " +
+  "Fichiers accessibles par une URL https directe : upload_plan_image ; " +
   "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
   "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
   "Conventions : référence en majuscules « V4-001 » (V = villa, D = duplex, chiffre = nombre de chambres), slug généré « villa-v4-001 », nom « Villa V4-001 » ou « Duplex D5-002 » ; " +

@@ -104,7 +104,7 @@ const list = await (await rpc({ jsonrpc: "2.0", id: 2, method: "tools/list" }, a
 const tools = list.result?.tools?.map((t) => t.name) || [];
 ok("MCP : tools/list", tools.length > 0, `${tools.length} outils`);
 // Outils de création de fiches : présence uniquement (aucune fiche ni fichier créé en production).
-const catalogueTools = ["create_plan", "get_plan", "upload_plan_image", "set_plan_cover", "reorder_plan_images", "remove_plan_image"];
+const catalogueTools = ["create_plan", "get_plan", "upload_plan_image", "create_upload_link", "set_plan_cover", "reorder_plan_images", "remove_plan_image"];
 const missingTools = catalogueTools.filter((t) => !tools.includes(t));
 ok("MCP : outils de création de fiches présents", missingTools.length === 0, missingTools.length ? `manquants : ${missingTools.join(", ")}` : catalogueTools.join(", "));
 ok("MCP : instructions de publication", /accord explicite/.test(init.result?.instructions || ""));
@@ -115,6 +115,12 @@ if (readTool) {
 }
 const mcpPath = await get(`/api/mcp/${env.MCP_TOKEN}`, { method: "POST", body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }), headers: { "content-type": "application/json", accept: "application/json, text/event-stream" } });
 ok("MCP : jeton dans l'URL", mcpPath.status === 200, String(mcpPath.status));
+
+// Lien d'envoi de fichiers : refus sans jeton valide (aucun fichier envoyé)
+const uploadDenied = await get("/api/televersement?role=render", { method: "PUT", body: "x", headers: { authorization: "Bearer faux.jeton" } });
+ok("envoi : jeton invalide refusé", uploadDenied.status === 401, String(uploadDenied.status));
+const uploadPage = await get("/televersement");
+ok("envoi : page /televersement", uploadPage.status === 200, String(uploadPage.status));
 
 // Admin
 const adminDenied = await get("/admin");

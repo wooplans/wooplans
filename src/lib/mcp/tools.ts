@@ -4,15 +4,18 @@ import { LEAD_STAGES, type LeadStage } from "@/db/schema";
 import { getFunnelKpis, getSourceBreakdown, type Period } from "@/lib/analytics";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
-import { deleteMedia, planMediaFolder, storeMedia } from "@/lib/media-store";
+import { requireSecret, siteUrl } from "@/lib/env";
+import { deleteMedia, planMediaFolder } from "@/lib/media-store";
+import { attachFileToPlan } from "@/lib/plan-media";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
 import {
   PLAN_CATEGORIES,
   PLAN_IMAGE_MAX_BYTES,
-  acceptedForRole,
+  UPLOAD_LINK_MAX_BYTES,
   decodeBase64File,
   parseCreatePlanInput,
   reorderList,
+  signUploadToken,
   sniffFileType,
   type ImageRole,
 } from "@/lib/plan-input";
@@ -561,7 +564,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "upload_plan_image",
     description:
-      "Ajoute un fichier à la galerie d'un modèle, depuis une URL https (téléchargée par le serveur) OU un contenu base64 (8 Mo max). role « render » : rendu 3D public (png, jpeg, webp), ajouté à la fin des rendus ; le premier devient la couverture s'il n'y en a pas. role « floor_plan » : distribution cotée PRIVÉE, visible des seuls membres Premium (png, jpeg, webp ou PDF). Le type réel du fichier est contrôlé.",
+      "Ajoute un fichier à la galerie d'un modèle, depuis une URL https (téléchargée par le serveur) OU un contenu base64 (8 Mo max). role « render » : rendu 3D public (png, jpeg, webp), ajouté à la fin des rendus ; le premier devient la couverture s'il n'y en a pas. role « floor_plan » : distribution cotée PRIVÉE, visible des seuls membres Premium (png, jpeg, webp ou PDF). Le type réel du fichier est contrôlé. Pour des fichiers qui sont sur l'ordinateur du propriétaire, utiliser plutôt create_upload_link.",
     inputSchema: obj(
       {
         code: str("Référence du modèle"),
@@ -588,44 +591,40 @@ export const TOOLS: McpTool[] = [
       } else {
         file = await downloadFile(url!, PLAN_IMAGE_MAX_BYTES);
       }
-      if (!acceptedForRole(file.type, role)) {
-        if (file.body instanceof ReadableStream) await file.body.cancel().catch(() => {});
-        throw new Error(
-          role === "render" ? "Type refusé : un rendu doit être une image png, jpeg ou webp." : "Type refusé : une distribution doit être une image png, jpeg, webp ou un PDF.",
-        );
-      }
-      if (file.size === 0) throw new Error("Fichier vide");
-
-      const visibility = role === "render" ? "public" : "private";
-      const label = (asString(args.filename) ?? (url ? new URL(url).pathname.split("/").pop() : undefined))?.slice(0, 200) || null;
-      const stored = await storeMedia({ body: file.body, size: file.size, contentType: file.type.contentType, ext: file.type.ext, visibility, folder: planMediaFolder(plan.code), label });
-
-      try {
-        const db = getDb();
-        const fresh = (await db.query.plans.findFirst({ where: eq(schema.plans.id, plan.id) }))!;
-        const update: Partial<typeof schema.plans.$inferInsert> = { updatedAt: new Date() };
-        if (role === "render") {
-          update.renders = [...fresh.renders, stored.url];
-          if (!fresh.coverImage || args.set_as_cover === true) update.coverImage = stored.url;
-        } else {
-          update.floorPlans = [...fresh.floorPlans, stored.key];
-        }
-        await db.update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
-        return {
-          code: plan.code,
-          role,
-          visibility,
-          content_type: file.type.contentType,
-          size: file.size,
-          key: stored.key,
-          url: role === "render" ? stored.url : privateFileUrl(stored.key),
-          is_cover: update.coverImage === stored.url || fresh.coverImage === stored.url,
-          count: role === "render" ? update.renders!.length : update.floorPlans!.length,
-        };
-      } catch (error) {
-        await deleteMedia(stored.key).catch(() => {});
-        throw error;
-      }
+      const label = asString(args.filename) ?? (url ? new URL(url).pathname.split("/").pop() : undefined);
+      return attachFileToPlan({ planId: plan.id, role, file, label, setAsCover: args.set_as_cover === true });
+    },
+  },
+  {
+    name: "create_upload_link",
+    description:
+      "Crée un lien d'envoi temporaire pour ajouter à un modèle des fichiers qui sont sur l'ordinateur du propriétaire (rendus 3D et distributions). " +
+      "Sur claude.ai : donner le lien « page » au propriétaire, qui y dépose ses fichiers depuis son navigateur. " +
+      "Avec Claude Code (accès aux fichiers locaux) : envoyer chaque fichier avec la commande curl fournie, sans passer son contenu dans la conversation. " +
+      "Le lien ne permet que d'ajouter des fichiers à ce modèle et expire (2 h par défaut). Ensuite, vérifier avec get_plan.",
+    inputSchema: obj(
+      {
+        code: str("Référence du modèle"),
+        hours: { type: "number", minimum: 0.25, maximum: 24, description: "Durée de validité en heures (défaut 2, max 24)" },
+      },
+      ["code"],
+    ),
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const hours = Math.min(24, Math.max(0.25, asNumber(args.hours) ?? 2));
+      const expiresAt = Date.now() + Math.round(hours * 3600_000);
+      const token = await signUploadToken(requireSecret("AUTH_SECRET"), { planId: plan.id, code: plan.code, expiresAt });
+      const endpoint = siteUrl("/api/televersement");
+      return {
+        code: plan.code,
+        expires_at: new Date(expiresAt).toISOString(),
+        page: siteUrl(`/televersement#${token}`),
+        curl_render: `curl -fsS -T "<chemin/rendu.jpg>" -H "Authorization: Bearer ${token}" "${endpoint}?role=render"`,
+        curl_floor_plan: `curl -fsS -T "<chemin/distribution.pdf>" -H "Authorization: Bearer ${token}" "${endpoint}?role=floor_plan"`,
+        notes:
+          "Un fichier par commande curl ; l'ordre d'envoi est l'ordre d'affichage. Ajouter &cover=1 pour faire d'un rendu la couverture. Taille max " +
+          `${UPLOAD_LINK_MAX_BYTES / 1048576} Mo par fichier ; png, jpeg, webp (et PDF pour les distributions). Ne pas publier ce lien.`,
+      };
     },
   },
   {

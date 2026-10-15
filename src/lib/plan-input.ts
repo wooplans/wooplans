@@ -270,6 +270,8 @@ export function parseCreatePlanInput(args: Record<string, unknown>): { values: N
 /* ─────────────────────────── Fichiers ─────────────────────────── */
 
 export const PLAN_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+/** Fichiers envoyés par le lien d'envoi (navigateur ou curl), transmis en flux vers R2. */
+export const UPLOAD_LINK_MAX_BYTES = 40 * 1024 * 1024;
 export type ImageRole = "render" | "floor_plan";
 export type SniffedType = { contentType: string; ext: string };
 
@@ -337,4 +339,48 @@ export function reorderList(current: string[], order: string[]): string[] {
     throw new Error(`L'ordre doit reprendre exactement les ${current.length} élément(s) actuel(s), chacun une fois : ${JSON.stringify(current)}`);
   }
   return order;
+}
+
+/* ─────────────────────────── Lien d'envoi de fichiers ─────────────────────────── */
+
+export type UploadTokenPayload = { planId: string; code: string; expiresAt: number };
+
+const tokenEncoder = new TextEncoder();
+const b64url = (bytes: Uint8Array) => {
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+const fromB64url = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4)), (c) => c.charCodeAt(0));
+
+async function uploadSignature(secret: string, body: string) {
+  const key = await crypto.subtle.importKey("raw", tokenEncoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return b64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, tokenEncoder.encode(`plan-upload:${body}`))));
+}
+
+/** Jeton d'envoi signé (HMAC) : donne le droit d'ajouter des fichiers à UNE fiche, jusqu'à son expiration. */
+export async function signUploadToken(secret: string, payload: UploadTokenPayload) {
+  if (!secret || secret.length < 16) throw new Error("Secret de signature manquant");
+  const body = b64url(tokenEncoder.encode(JSON.stringify({ p: payload.planId, c: payload.code, e: payload.expiresAt })));
+  return `${body}.${await uploadSignature(secret, body)}`;
+}
+
+/** Vérifie signature et expiration ; renvoie null si le jeton est invalide ou expiré. */
+export async function verifyUploadToken(secret: string, token: string, now = Date.now()): Promise<UploadTokenPayload | null> {
+  if (!secret || secret.length < 16 || typeof token !== "string" || token.length > 600) return null;
+  const [body, signature, extra] = token.split(".");
+  if (!body || !signature || extra !== undefined) return null;
+  const expected = await uploadSignature(secret, body);
+  if (expected.length !== signature.length) return null;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    const data = JSON.parse(new TextDecoder().decode(fromB64url(body))) as { p?: unknown; c?: unknown; e?: unknown };
+    if (typeof data.p !== "string" || typeof data.c !== "string" || typeof data.e !== "number") return null;
+    if (data.e <= now) return null;
+    return { planId: data.p, code: data.c, expiresAt: data.e };
+  } catch {
+    return null;
+  }
 }
