@@ -37,38 +37,40 @@ section{padding:56px 0}
 .stars{color:#F5B400;letter-spacing:1px}
 
 /* Barre d'urgence */
-.urgency{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;font-size:13px;font-weight:700;text-align:center;padding:8px 12px}
+.urgency{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:6px 10px}
 .urgency strong{font-variant-numeric:tabular-nums;color:#FFE1B8;margin-left:4px}
 
 /* Hero */
-.hero{background:radial-gradient(120% 80% at 50% 0%,#14706D 0%,var(--teal) 45%,var(--teal-dk) 100%);color:#fff;padding:22px 0 40px}
+.hero{background:radial-gradient(120% 80% at 50% 0%,#14706D 0%,var(--teal) 45%,var(--teal-dk) 100%);color:#fff;padding:16px 0 18px}
 .hero .logo{height:30px;width:auto;margin:0 auto 22px}
 .hero .eyebrow{color:var(--gold)}
-.hero h1{font-size:clamp(30px,8.4vw,46px);font-weight:900;margin-bottom:14px}
+.hero h1{font-size:clamp(25px,7.3vw,46px);font-weight:900;margin-bottom:8px}
 .hero h1 em{font-style:normal;color:var(--gold)}
-.hero .sub{font-size:16.5px;color:rgba(255,255,255,.86);margin-bottom:16px}
+.hero .sub{font-size:14.5px;line-height:1.4;color:rgba(255,255,255,.86);margin-bottom:12px}
 .rating{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:rgba(255,255,255,.85);margin-bottom:20px}
 .rating b{color:#fff}
-.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:22px}
+.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:10px}
 .vsl img,.vsl video{width:100%;height:100%;object-fit:cover}
 .vsl .play{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
 .vsl .play i{width:66px;height:66px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(240,138,46,.5)}
 .vsl .play i::after{content:"";margin-left:5px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
-.price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:10px;white-space:nowrap}
-.price s{color:rgba(255,255,255,.55);font-size:17px}
-.price .now{font-size:clamp(36px,11vw,46px);font-weight:900;letter-spacing:-.03em;white-space:nowrap}
-.price .now small{font-size:16px;font-weight:700;margin-left:4px}
+.price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:8px;white-space:nowrap;line-height:1.1}
+.price s{color:rgba(255,255,255,.55);font-size:14px}
+.price .now{font-size:clamp(30px,8.6vw,46px);font-weight:900;letter-spacing:-.03em;white-space:nowrap}
+.price .now small{font-size:14px;font-weight:700;margin-left:3px}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px}
 .cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:14px 20px;border-radius:14px;background:var(--orange);color:#fff;font-size:17.5px;font-weight:800;box-shadow:0 10px 26px rgba(240,138,46,.38);transition:transform .12s,background .2s}
 .cta:active{transform:scale(.98);background:var(--orange-dk)}
 .cta svg{width:20px;height:20px;fill:currentColor;flex-shrink:0}
-.pay{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:14px 0 12px}
-.pay span{font-size:12px;font-weight:700;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.pay{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px 0 8px}
+.pay span{font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
 .trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:13px;color:rgba(255,255,255,.82)}
 .trust span::before{content:"✓ ";color:var(--gold);font-weight:900}
-.social{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px;font-size:13.5px;color:rgba(255,255,255,.85)}
+.social{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;font-size:12.5px;color:rgba(255,255,255,.88)}
+.social .stars{font-size:11px;letter-spacing:0}
+.desk{display:none!important}
 .avatars{display:flex}
-.avatars img{width:30px;height:30px;border-radius:50%;border:2px solid var(--teal);margin-left:-8px;object-fit:cover}
+.avatars img{width:26px;height:26px;border-radius:50%;border:2px solid var(--teal);margin-left:-8px;object-fit:cover}
 .avatars img:first-child{margin-left:0}
 
 /* Aperçu réel */
@@ -112,8 +114,12 @@ section{padding:56px 0}
 /* Témoignages */
 .vids{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
 .vid{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#14706D,var(--teal-xdk));color:#fff;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
-.vid::before{content:"";position:absolute;top:50%;left:50%;width:52px;height:52px;margin:-38px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.7)}
-.vid::after{content:"";position:absolute;top:50%;left:50%;margin:-22px 0 0 -5px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.vid b,.vid small{position:relative;z-index:1;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.vid{isolation:isolate}
+.vid>video+b::before{content:"";position:absolute;left:-12px;right:-12px;bottom:-40px;height:110px;background:linear-gradient(transparent,rgba(0,0,0,.65));z-index:-1}
+.vid::before{content:"";position:absolute;z-index:1;top:50%;left:50%;width:52px;height:52px;margin:-38px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.7)}
+.vid::after{content:"";position:absolute;z-index:1;top:50%;left:50%;margin:-22px 0 0 -5px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
 .vid b{font-size:16px}
 .vid small{font-size:12px;opacity:.8}
 .reviews{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 20px 12px;margin:16px -20px 0;scrollbar-width:none}
@@ -189,8 +195,9 @@ footer a{color:rgba(255,255,255,.7)}
 .sticky .p b{font-size:18px}
 .sticky .p small{display:block;font-size:12px;color:var(--red);font-weight:700;font-variant-numeric:tabular-nums}
 .sticky .cta{width:auto;min-height:48px;font-size:15.5px;padding:10px 18px;box-shadow:none}
-.wa{position:fixed;right:14px;bottom:92px;z-index:65;width:52px;height:52px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.wa{position:fixed;right:14px;bottom:92px;z-index:65;opacity:0;pointer-events:none;transition:opacity .3s;width:52px;height:52px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .wa svg{width:28px;height:28px;fill:#fff}
+.wa.on{opacity:1;pointer-events:auto}
 
 /* Fenêtres */
 .ov{position:fixed;inset:0;z-index:100;background:rgba(7,22,22,.72);display:none;align-items:flex-end;justify-content:center}
@@ -214,13 +221,19 @@ footer a{color:rgba(255,255,255,.7)}
 @media(min-width:900px){
   body{padding-bottom:0}
   .hero{padding:28px 0 56px}
+  .desk{display:block!important}
+  .trust.desk{display:flex!important}
+  .hero h1{margin-bottom:14px}
+  .hero .sub{font-size:16.5px;margin-bottom:16px}
+  .vsl{margin-bottom:22px}
+  .social{margin-top:18px;font-size:13.5px}
   .hero .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:44px;align-items:center;text-align:left}
   .hero .grid .rating,.hero .grid .pay,.hero .grid .trust,.hero .grid .social,.hero .grid .price{justify-content:flex-start}
   .rail{margin:18px 0 0;padding:4px 0 14px}
   .model{flex-basis:31%}
   .vids{grid-template-columns:repeat(4,1fr)}
   .sticky{display:none}
-  .wa{bottom:24px}
+  .wa{bottom:24px;opacity:1;pointer-events:auto}
   .ov{align-items:center}
   .sheet{border-radius:22px}
 }
@@ -236,13 +249,12 @@ footer a{color:rgba(255,255,255,.7)}
 
 <header class="hero">
   <div class="wrap wide">
-    <img class="logo" src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width="100" height="30">
+    <img class="logo desk" src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width="100" height="30">
     <div class="grid center">
       <div>
-        <span class="eyebrow">Catalogue Premium 2026</span>
+        <span class="eyebrow desk">Catalogue Premium 2026</span>
         <h1>Choisissez votre maison. <em>Connaissez son vrai coût</em> avant de construire.</h1>
-        <p class="sub"><b><span data-wp-count>Nos</span> plans</b> de villas et duplex avec rendus 3D, plans cotés et devis détaillés poste par poste. Sur votre téléphone, dès le paiement.</p>
-        <div class="rating"><span class="stars">★★★★★</span><span><b>4,9</b> · +450 avis</span></div>
+        <p class="sub"><b><span data-wp-count>Nos</span> plans</b> de villas et duplex avec rendus 3D, plans cotés et devis détaillés. Sur votre téléphone.</p>
       </div>
       <div>
         <div class="vsl" id="vsl" onclick="playVsl()" role="button" aria-label="Regarder la vidéo de présentation">
@@ -251,11 +263,11 @@ footer a{color:rgba(255,255,255,.7)}
         </div>
         <div class="price"><s>500 000 FCFA</s><span class="now">39 000<small>FCFA</small></span><span class="badge">–92 %</span></div>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
-        <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span><span>Carte bancaire</span></div>
-        <div class="trust"><span>Accès immédiat</span><span>Paiement unique</span><span>Garantie 7 jours</span></div>
+        <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
+        <div class="trust desk"><span>Accès immédiat</span><span>Paiement unique</span><span>Garantie 7 jours</span></div>
         <div class="social">
-          <div class="avatars"><img src="/assets/avatars/avatar-1.jpeg" alt="" width="30" height="30"><img src="/assets/avatars/avatar-2.jpeg" alt="" width="30" height="30"><img src="/assets/avatars/avatar-3.jpeg" alt="" width="30" height="30"><img src="/assets/avatars/avatar-4.jpeg" alt="" width="30" height="30"></div>
-          <span>Déjà <b>+735 commandes</b></span>
+          <div class="avatars"><img src="/assets/avatars/avatar-1.jpeg" alt="" width="26" height="26"><img src="/assets/avatars/avatar-2.jpeg" alt="" width="26" height="26"><img src="/assets/avatars/avatar-3.jpeg" alt="" width="26" height="26"></div>
+          <span><span class="stars">★</span> <b>4,9</b> (+450 avis) · <b>+735</b> commandes</span>
         </div>
       </div>
     </div>
@@ -263,27 +275,7 @@ footer a{color:rgba(255,255,255,.7)}
 </header>
 
 <main>
-<section>
-  <div class="wrap">
-    <span class="eyebrow">Ce que vous débloquez</span>
-    <h2>Pour chaque modèle, tout ce qu'il faut pour décider.</h2>
-    <p class="lead">Voici un vrai modèle du catalogue, tel que vous le verrez dans votre espace.</p>
-    <div data-wp-preview></div>
-    <div style="margin-top:20px"><button class="cta" data-cta="preview" onclick="buy(this)">Débloquer tous les modèles</button></div>
-  </div>
-</section>
-
 <section class="alt">
-  <div class="wrap wide">
-    <span class="eyebrow">Le catalogue</span>
-    <h2>Villas et duplex, avec leur budget.</h2>
-    <p class="lead">Rendus 3D réels. Le budget indiqué est une fourchette ; le devis détaillé est dans le catalogue.</p>
-    <div class="rail" data-wp-gallery></div>
-    <p class="count-line"><b><span data-wp-count>Tous les</span> modèles</b> à comparer · de nouveaux ajoutés chaque mois</p>
-  </div>
-</section>
-
-<section>
   <div class="wrap wide">
     <div class="center">
       <span class="eyebrow">Ils ont commandé</span>
@@ -291,10 +283,10 @@ footer a{color:rgba(255,255,255,.7)}
       <div class="rating" style="color:var(--gray)"><span class="stars">★★★★★</span><span><b style="color:var(--dark)">4,9/5</b> · plus de 450 avis</span></div>
     </div>
     <div class="vids">
-      <button class="vid" onclick="openVideo('ibrahim','Ibrahim')"><b>Ibrahim</b><small>Témoignage vidéo</small></button>
-      <button class="vid" onclick="openVideo('bassirou','Bassirou')"><b>Bassirou</b><small>Témoignage vidéo</small></button>
-      <button class="vid" onclick="openVideo('francis','Francis')"><b>Francis</b><small>Témoignage vidéo</small></button>
-      <button class="vid" onclick="openVideo('renaud','Renaud')"><b>Renaud</b><small>Témoignage vidéo</small></button>
+      <button class="vid" onclick="openVideo('ibrahim','Ibrahim')"><video data-thumb="/videos/testimonials/ibrahim.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Ibrahim</b><small>Témoignage vidéo</small></button>
+      <button class="vid" onclick="openVideo('bassirou','Bassirou')"><video data-thumb="/videos/testimonials/bassirou.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Bassirou</b><small>Témoignage vidéo</small></button>
+      <button class="vid" onclick="openVideo('francis','Francis')"><video data-thumb="/videos/testimonials/francis.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Francis</b><small>Témoignage vidéo</small></button>
+      <button class="vid" onclick="openVideo('renaud','Renaud')"><video data-thumb="/videos/testimonials/renaud.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Renaud</b><small>Témoignage vidéo</small></button>
     </div>
     <div class="reviews">
       <article class="review"><header><img src="/assets/avatars/avatar-1.jpeg" alt="" width="40" height="40" loading="lazy"><div><b>M. Idriss</b><span>Abidjan, Côte d’Ivoire</span></div></header><span class="ok">✓ Achat vérifié</span> <span class="stars">★★★★★</span><blockquote>« Je cherchais plusieurs modèles avant de commencer les démarches. Les devis m'ont permis de comparer beaucoup plus facilement. »</blockquote></article>
@@ -306,7 +298,27 @@ footer a{color:rgba(255,255,255,.7)}
   </div>
 </section>
 
+<section>
+  <div class="wrap wide">
+    <span class="eyebrow">Le catalogue</span>
+    <h2>Villas et duplex, avec leur budget.</h2>
+    <p class="lead">Rendus 3D réels. Le budget indiqué est une fourchette ; le devis détaillé est dans le catalogue.</p>
+    <div class="rail" data-wp-gallery></div>
+    <p class="count-line"><b><span data-wp-count>Tous les</span> modèles</b> à comparer · de nouveaux ajoutés chaque mois</p>
+  </div>
+</section>
+
 <section class="alt">
+  <div class="wrap">
+    <span class="eyebrow">Ce que vous débloquez</span>
+    <h2>Pour chaque modèle, tout ce qu'il faut pour décider.</h2>
+    <p class="lead">Voici un vrai modèle du catalogue, tel que vous le verrez dans votre espace.</p>
+    <div data-wp-preview></div>
+    <div style="margin-top:20px"><button class="cta" data-cta="preview" onclick="buy(this)">Débloquer tous les modèles</button></div>
+  </div>
+</section>
+
+<section>
   <div class="wrap">
     <span class="eyebrow">Comment ça marche</span>
     <h2>Accès en 2 minutes, depuis votre téléphone.</h2>
@@ -318,7 +330,7 @@ footer a{color:rgba(255,255,255,.7)}
   </div>
 </section>
 
-<section>
+<section class="alt">
   <div class="wrap">
     <span class="eyebrow">Pour qui ?</span>
     <h2>Fait pour vous si…</h2>
@@ -452,14 +464,24 @@ document.addEventListener('click',function(e){
 /* Barre collante après le hero */
 (function(){
   var sticky=document.getElementById('sticky'),hero=document.querySelector('.hero'),offer=document.getElementById('offre');
-  if(!('IntersectionObserver' in window))return sticky.classList.add('on');
+  if(!('IntersectionObserver' in window)){sticky.classList.add('on');document.querySelector('.wa').classList.add('on');return;}
   var heroVisible=true,offerVisible=false;
-  function update(){sticky.classList.toggle('on',!heroVisible&&!offerVisible)}
+  var wa=document.querySelector('.wa');
+  function update(){sticky.classList.toggle('on',!heroVisible&&!offerVisible);wa.classList.toggle('on',!heroVisible)}
   new IntersectionObserver(function(e){heroVisible=e[0].isIntersecting;update()}).observe(hero);
   new IntersectionObserver(function(e){offerVisible=e[0].isIntersecting;update()},{threshold:.25}).observe(offer);
 })();
 
-/* Vidéos : rien n'est téléchargé avant le clic */
+/* Vignettes des témoignages : première image, chargée seulement quand la carte approche de l'écran */
+(function(){
+  var vids=document.querySelectorAll('video[data-thumb]');
+  function load(v){if(v.getAttribute('src'))return;v.preload='metadata';v.src=v.getAttribute('data-thumb');}
+  if(!('IntersectionObserver' in window)){for(var i=0;i<vids.length;i++)load(vids[i]);return;}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){load(e.target);io.unobserve(e.target);}})},{rootMargin:'200px 0px'});
+  for(var j=0;j<vids.length;j++)io.observe(vids[j]);
+})();
+
+/* Vidéos : la lecture ne démarre qu'au clic */
 function playVsl(){
   var box=document.getElementById('vsl');
   if(box.querySelector('video'))return;
