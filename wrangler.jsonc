@@ -22,7 +22,7 @@
     "WHATSAPP_NUMBER": "237653769998",
     "FB_PIXEL_ID": "1025626273769966",
     "CLARITY_PROJECT_ID": "y284dj587r",
-    "EMAIL_FROM": "WOOPLANS <bonjour@shop.wooplans.com>",
+    "EMAIL_FROM": "WOOPLANS <info@wooplans.com>",
     // Les réponses des clients arrivent sur la boîte info@wooplans.com (hébergée chez mailhostbox)
     "EMAIL_REPLY_TO": "info@wooplans.com",
     "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
