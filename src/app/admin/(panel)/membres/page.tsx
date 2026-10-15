@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { desc, like, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { Badge, fmtDate, PageTitle, Table } from "@/components/admin/ui";
+import { whatsappUrl } from "@/lib/phone";
 import { addMember, importFromChariow, newCode, reactivate, revoke, sendLegacyCodes } from "./actions";
 
 const SOURCES: Record<string, string> = { chariow: "Chariow", legacy_import: "Import", manual: "Manuel" };
@@ -44,22 +45,35 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           <input name="q" defaultValue={term} placeholder="Rechercher email, nom, téléphone" className="input" />
           <button className="btn-ghost">Chercher</button>
         </form>
-        <form action={addMember} className="card grid gap-2 p-4 sm:grid-cols-[1fr_1fr_auto]">
+        <form action={addMember} className="card grid gap-2 p-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
           <input name="email" type="email" required placeholder="Email du membre" className="input" />
           <input name="name" placeholder="Nom" className="input" />
+          <input name="phone" type="tel" placeholder="WhatsApp (+237…)" className="input" />
           <button className="btn-primary">Donner l&apos;accès</button>
-          <label className="flex items-center gap-2 text-sm sm:col-span-3">
+          <label className="flex items-center gap-2 text-sm sm:col-span-4">
             <input type="checkbox" name="sendEmail" defaultChecked /> Envoyer le code par email
           </label>
         </form>
       </div>
 
-      <Table head={["Membre", "Statut", "Source", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
+      <Table head={["Membre", "WhatsApp", "Statut", "Source", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
         {members.map((m) => (
           <tr key={m.id}>
             <td className="px-4 py-2.5">
               <p className="font-medium">{m.email}</p>
-              <p className="text-xs text-muted">{[m.name, m.phone].filter(Boolean).join(" · ")}</p>
+              {m.name ? <p className="text-xs text-muted">{m.name}</p> : null}
+            </td>
+            <td className="px-4 py-2.5">
+              {(() => {
+                const wa = whatsappUrl(m.phone, `Bonjour ${m.name || ""}, ici WOOPLANS. `.replace("  ", " "));
+                return wa ? (
+                  <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full bg-[#25D366] px-3 py-1 text-xs font-semibold text-white" title={`+${m.phone}`}>
+                    WhatsApp
+                  </a>
+                ) : (
+                  <span className="text-xs text-muted">—</span>
+                );
+              })()}
             </td>
             <td className="px-4 py-2.5">
               {m.status === "active" ? <Badge tone="good">Actif</Badge> : <Badge tone="bad">Révoqué</Badge>}

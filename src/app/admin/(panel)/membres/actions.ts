@@ -1,5 +1,6 @@
 "use server";
 
+import { normalizePhone } from "@/lib/phone";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -24,7 +25,7 @@ export async function addMember(form: FormData) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Email invalide");
   const name = String(form.get("name") || "").trim();
-  const { member, code } = await grantAccess({ email, name, phone: String(form.get("phone") || "") || null, source: "manual" });
+  const { member, code } = await grantAccess({ email, name, phone: normalizePhone(String(form.get("phone") || "")), source: "manual" });
   let emailed = false;
   if (form.get("sendEmail") === "on") {
     const mail = accessCodeEmail({ name, email, code });
@@ -64,7 +65,7 @@ export async function importFromChariow() {
   await requireAdmin();
   const { importChariowBuyers } = await import("@/lib/chariow-import");
   const result = await importChariowBuyers();
-  (await cookies()).set("wp_notice", `Import Chariow : ${result.scanned} ventes lues, ${result.salesAdded} ventes ajoutées, ${result.membersAdded} membres créés.`, {
+  (await cookies()).set("wp_notice", `Import Chariow : ${result.scanned} ventes lues, ${result.salesAdded} ventes ajoutées, ${result.membersAdded} membres créés, ${result.phonesAdded} numéros WhatsApp complétés.`, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",

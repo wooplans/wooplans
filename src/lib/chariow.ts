@@ -1,3 +1,4 @@
+import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
@@ -5,6 +6,11 @@ import { accessCodeEmail, adminSaleEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
+
+function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
+  const c = customer.country;
+  return (typeof c === "string" ? c : c?.code) || phoneCountry(customer.phone) || null;
+}
 
 export type ChariowSalePayload = {
   event?: string;
@@ -25,8 +31,8 @@ export type ChariowSalePayload = {
     first_name?: string;
     last_name?: string;
     email?: string;
-    phone?: string;
-    country?: string;
+    phone?: ChariowPhone;
+    country?: string | { code?: string } | null;
   } | null;
 };
 
@@ -128,8 +134,8 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
     currency,
     email,
     name,
-    phone: customer.phone || null,
-    country: customer.country || null,
+    phone: normalizePhone(customer.phone),
+    country: customerCountry(customer),
     intentId: intent?.id ?? existing?.intentId ?? null,
     visitorId: visitor?.id ?? existing?.visitorId ?? null,
     utmSource: visitor?.utmSource ?? existing?.utmSource ?? null,
@@ -172,8 +178,8 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
     granted = await grantAccess({
       email,
       name,
-      phone: customer.phone,
-      country: customer.country,
+      phone: normalizePhone(customer.phone),
+      country: customerCountry(customer),
       source: "chariow",
       chariowCustomerId: customer.id,
     });

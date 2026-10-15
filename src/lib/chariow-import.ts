@@ -1,3 +1,4 @@
+import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { eq, inArray, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
@@ -11,7 +12,7 @@ type ApiSale = {
   status: string;
   amount?: { value?: number; currency?: string } | null;
   product?: { id?: string; name?: string } | null;
-  customer?: { id?: string; email?: string; name?: string; phone?: string | { formatted?: string } | null; country?: string | { code?: string } | null } | null;
+  customer?: { id?: string; email?: string; name?: string; phone?: ChariowPhone; country?: string | { code?: string } | null } | null;
   created_at?: string;
   completed_at?: string | null;
 };
@@ -28,6 +29,7 @@ export async function importChariowBuyers(maxPages = 10) {
   const db = getDb();
   let salesAdded = 0;
   let membersAdded = 0;
+  let phonesAdded = 0;
   let scanned = 0;
 
   for (const status of ["completed", "settled"]) {
@@ -45,16 +47,27 @@ export async function importChariowBuyers(maxPages = 10) {
 
       if (sales.length) {
         const emails = [...new Set(sales.map((s) => normalizeEmail(s.customer!.email!)))];
-        const existing = await db.query.members.findMany({ where: inArray(schema.members.email, emails), columns: { id: true, email: true } });
+        const existing = await db.query.members.findMany({
+          where: inArray(schema.members.email, emails),
+          columns: { id: true, email: true, phone: true },
+        });
         const byEmail = new Map(existing.map((m) => [m.email, m.id]));
         const newMembers = [];
+        const phoneUpdates = [];
+        // Membres déjà présents sans numéro : on complète le WhatsApp depuis Chariow (relance de l'import).
+        for (const m of existing) {
+          if (m.phone) continue;
+          const s = sales.find((x) => normalizeEmail(x.customer!.email!) === m.email);
+          const phone = normalizePhone(s?.customer?.phone);
+          if (phone) phoneUpdates.push(db.update(schema.members).set({ phone }).where(eq(schema.members.id, m.id)));
+        }
         for (const email of emails) {
           if (byEmail.has(email)) continue;
           const s = sales.find((x) => normalizeEmail(x.customer!.email!) === email)!;
           const id = randomId();
           byEmail.set(email, id);
-          const phone = typeof s.customer?.phone === "string" ? s.customer.phone : s.customer?.phone?.formatted;
-          const country = typeof s.customer?.country === "string" ? s.customer.country : s.customer?.country?.code;
+          const phone = normalizePhone(s.customer?.phone);
+          const country = (typeof s.customer?.country === "string" ? s.customer.country : s.customer?.country?.code) || phoneCountry(s.customer?.phone);
           newMembers.push(
             db.insert(schema.members).values({
               id,
@@ -89,16 +102,19 @@ export async function importChariowBuyers(maxPages = 10) {
             .onConflictDoNothing()
             .returning({ id: schema.sales.id }),
         );
-        const statements = [...newMembers, ...saleInserts];
+        const statements = [...newMembers, ...saleInserts, ...phoneUpdates];
         const results = await db.batch(statements as [(typeof statements)[number], ...(typeof statements)[number][]]);
         membersAdded += newMembers.length;
-        salesAdded += results.slice(newMembers.length).filter((r) => Array.isArray(r) && r.length > 0).length;
+        phonesAdded += phoneUpdates.length;
+        salesAdded += results
+          .slice(newMembers.length, newMembers.length + saleInserts.length)
+          .filter((r) => Array.isArray(r) && r.length > 0).length;
       }
       cursor = body.pagination?.next_cursor ?? null;
       if (!cursor || body.pagination?.has_more === false) break;
     }
   }
-  return { scanned, salesAdded, membersAdded };
+  return { scanned, salesAdded, membersAdded, phonesAdded };
 }
 
 /** Envoie un code d'accès aux membres importés qui n'en ont pas encore reçu (par lots). */
