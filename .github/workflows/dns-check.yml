@@ -1,0 +1,66 @@
+name: Diagnostic (lecture seule)
+
+on:
+  push:
+    branches: [ccr-03cfaad2-40szss]
+    paths: [".github/workflows/dns-check.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CF: https://api.cloudflare.com/client/v4
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    defaults:
+      run:
+        shell: bash {0}
+    steps:
+      - name: Zone et enregistrements DNS de wooplans.com
+        run: |
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_API_TOKEN")
+          echo "== Zone"
+          curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq '{success, errors, zones: [.result[]? | {id, status, account: (.account.id == env.CLOUDFLARE_ACCOUNT_ID), name_servers, plan: .plan.name}]}'
+          zone=$(curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id // empty')
+          if [ -n "$zone" ]; then
+            echo "== DNS (apex et www)"
+            curl -sS "${auth[@]}" "$CF/zones/$zone/dns_records?per_page=100" | jq '{success, errors, records: [.result[]? | select(.name=="wooplans.com" or .name=="www.wooplans.com") | {type, name, content, proxied}]}'
+            echo "== Autres enregistrements (noms seulement)"
+            curl -sS "${auth[@]}" "$CF/zones/$zone/dns_records?per_page=100" | jq -r '.result[]? | "\(.type) \(.name)"' | sort
+          fi
+          echo "== Domaines personnalisés des Workers"
+          curl -sS "${auth[@]}" "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/domains" | jq '{success, errors, domains: [.result[]? | {hostname, service}]}'
+          echo "== Requêtes MCP reçues (24 h, jeton masqué)"
+          now=$(date +%s000); from=$(( now - 24*3600*1000 ))
+          curl -sS -X POST "${auth[@]}" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"mcp\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.event.request.url\",\"operation\":\"includes\",\"type\":\"string\",\"value\":\"mcp\"}]}}" \
+            | jq -c '.success, .errors, (.result.events.events[]? | {t: .timestamp, method: .["$workers"].event.request.method, url: .["$workers"].event.request.url, status: .["$workers"].event.response.status, ua: .["$workers"].event.request.headers["user-agent"]})' \
+            | sed -E 's#/api/mcp/[^"?]{6}[^"?]*#/api/mcp/<JETON>#g' | head -60
+          echo "== Pare-feu / Bot Fight Mode de la zone"
+          zone=$(curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id')
+          curl -sS "${auth[@]}" "$CF/zones/$zone/bot_management" | jq -c '{success, errors, r: .result}'
+          echo "== Requêtes du Worker en échec depuis la rebascule (90 min)"
+          now=$(date +%s000); from=$(( now - 90*60*1000 ))
+          curl -sS -X POST "${auth[@]}" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"post\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.outcome\",\"operation\":\"neq\",\"type\":\"string\",\"value\":\"ok\"}]}}" \
+            | jq -c '.result.events.events[]? | {outcome: .["$workers"].outcome, url: .["$workers"].event.request.url, cpu: .["$workers"].cpuTimeMs}' \
+            | sed -E 's#/api/mcp/[^"?]+#/api/mcp/<JETON>#g' | sort | uniq -c | sort -rn | head -30
+          echo "== Réponses 5xx (90 min)"
+          curl -sS -X POST "${auth[@]}" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"5xx\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.event.response.status\",\"operation\":\"gte\",\"type\":\"number\",\"value\":500}]}}" \
+            | jq -c '.result.events.events[]? | {status: .["$workers"].event.response.status, url: .["$workers"].event.request.url}' \
+            | sed -E 's#/api/mcp/[^"?]+#/api/mcp/<JETON>#g' | sort | uniq -c | sort -rn | head -30
+          echo "== Enregistrements Resend (domaine wooplans.com)"
+          echo "DKIM  : $(dig +short TXT resend._domainkey.wooplans.com | cut -c1-40)"
+          echo "MX send : $(dig +short MX send.wooplans.com)"
+          echo "TXT send : $(dig +short TXT send.wooplans.com)"
+          echo "CNAME rsend : $(dig +short CNAME rsend.wooplans.com)"
+          echo "MX wooplans.com (réception info@) : $(dig +short MX wooplans.com | tr '\n' ' ')"
+          echo "TXT wooplans.com (SPF) : $(dig +short TXT wooplans.com | tr '\n' ' ')"
+          echo "DMARC : $(dig +short TXT _dmarc.wooplans.com)"
+          echo "== Résolution publique"
+          dig +short www.wooplans.com; dig +short wooplans.com; dig +short NS wooplans.com

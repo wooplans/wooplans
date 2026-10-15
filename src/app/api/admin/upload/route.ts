@@ -1,85 +1,32 @@
 import { NextResponse } from "next/server";
-import { requireRole } from "@/lib/auth";
-import { randomObjectKey, uploadR2Object } from "@/lib/r2";
+import { getCurrentAdmin } from "@/lib/auth";
+import { storeMedia } from "@/lib/media-store";
 
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
+const ALLOWED = new Map([
+  ["image/webp", "webp"],
+  ["image/jpeg", "jpg"],
+  ["image/png", "png"],
+  ["image/avif", "avif"],
+  ["application/pdf", "pdf"],
 ]);
+const MAX_BYTES = 95 * 1024 * 1024;
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-export const runtime = "edge";
-
+/** Téléversement admin vers R2. visibility=private pour les distributions cotées et le PDF. */
 export async function POST(request: Request) {
-  const session = await requireRole(request, "admin");
-  if (!session) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!(await getCurrentAdmin())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const form = await request.formData();
+  const visibility = form.get("visibility") === "private" ? "private" : "public";
+  const folder = String(form.get("folder") || "plans");
+  const files = form.getAll("files").filter((f): f is File => f instanceof File);
+  if (files.length === 0) return NextResponse.json({ error: "Aucun fichier" }, { status: 400 });
+
+  const uploaded: { key: string; url: string; name: string }[] = [];
+  for (const file of files) {
+    const ext = ALLOWED.get(file.type);
+    if (!ext) return NextResponse.json({ error: `Type non autorisé : ${file.type}` }, { status: 400 });
+    if (file.size > MAX_BYTES) return NextResponse.json({ error: `${file.name} dépasse 95 Mo` }, { status: 400 });
+    const { key, url } = await storeMedia({ body: file.stream(), size: file.size, contentType: file.type, ext, visibility, folder, label: file.name });
+    uploaded.push({ key, name: file.name, url });
   }
-
-  try {
-    const formData = await request.formData();
-    const files = [
-      ...formData.getAll("files"),
-      ...formData.getAll("file"),
-    ];
-
-    if (!files || files.length === 0) {
-      return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 });
-    }
-
-    if (files.length > 20) {
-      return NextResponse.json({ error: "Maximum 20 fichiers par envoi" }, { status: 400 });
-    }
-
-    const results: { url: string; filename: string; originalName: string }[] = [];
-
-    for (const file of files) {
-      if (!(file instanceof File)) continue;
-
-      if (!ALLOWED_TYPES.has(file.type)) {
-        return NextResponse.json(
-          { error: `Type non autorisé : ${file.name}` },
-          { status: 400 },
-        );
-      }
-
-      if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: `Fichier trop volumineux : ${file.name} (max 10 Mo)` },
-          { status: 400 },
-        );
-      }
-
-      const bytes = await file.arrayBuffer();
-      const ext = file.name.includes(".") ? `.${file.name.split(".").pop()}` : ".jpg";
-      const filename = randomObjectKey(ext);
-      await uploadR2Object({
-        key: filename,
-        contentType: file.type,
-        body: new Uint8Array(bytes),
-      });
-
-      results.push({
-        url: `/api/uploads/${encodeURIComponent(filename)}`,
-        filename,
-        originalName: file.name,
-      });
-    }
-
-    return NextResponse.json({ files: results }, { status: 201 });
-  } catch (error) {
-    console.error("Upload error:", error);
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erreur lors de l'upload",
-      },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json({ files: uploaded });
 }

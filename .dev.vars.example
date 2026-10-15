@@ -1,0 +1,7 @@
+# Copier en .dev.vars pour le développement local (jamais commité)
+AUTH_SECRET="une-longue-chaine-aleatoire"
+CHARIOW_PULSE_SECRET="whsec_..."
+CHARIOW_API_KEY=""
+RESEND_API_KEY=""
+MCP_TOKEN="une-autre-longue-chaine-aleatoire"
+CRON_SECRET=""

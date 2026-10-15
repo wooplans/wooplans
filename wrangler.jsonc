@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wooplans-web",
+  "main": "worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // Plan Workers Paid requis (le plan gratuit plafonne à 10 ms de CPU par requête : erreurs 1102)
+  "limits": { "cpu_ms": 30000 },
+  // Récapitulatif quotidien à 6 h UTC (7 h à Douala)
+  "triggers": { "crons": ["0 6 * * *"] },
+  "vars": {
+    "SITE_URL": "https://www.wooplans.com",
+    "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",
+    "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_41k85hc0",
+    "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx",
+    "CATALOGUE_PRICE_XAF": "39000",
+    // Part du trafic de /catalogue-premium envoyée sur la variante B (0 à 100).
+    // 0 = variante B visible seulement avec ?variante=b (aperçu).
+    "SALES_PAGE_B_SHARE": "100",
+    "WHATSAPP_NUMBER": "237694327885",
+    "FB_PIXEL_ID": "1025626273769966",
+    // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
+    "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",
+    "POSTHOG_HOST": "https://eu.i.posthog.com",
+    "EMAIL_FROM": "WOOPLANS <info@wooplans.com>",
+    // Les réponses des clients arrivent sur la boîte info@wooplans.com (hébergée chez mailhostbox)
+    "EMAIL_REPLY_TO": "info@wooplans.com",
+    "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com"
+  },
+  // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,
+  // RESEND_API_KEY, MCP_TOKEN, CRON_SECRET
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wooplans-platform",
+      "database_id": "af9ca7e1-af81-4fe1-b646-bb5cf41317e0",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  // Cloudflare Images : conversion WebP → JPEG des images des fiches PDF (hors CPU du Worker)
+  "images": { "binding": "IMAGES" },
+  "r2_buckets": [
+    // À confirmer : bucket qui contient les images « upload-… » de l'ancien site (R2_BUCKET_NAME du projet Pages woo-premium)
+    { "binding": "MEDIA", "bucket_name": "plans-catalogue-images" },
+    { "binding": "VIDEOS", "bucket_name": "cpbook-videos" },
+    { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "wooplans-next-cache" }
+  ]
+}

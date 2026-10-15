@@ -1,78 +1,57 @@
-import Image from "next/image";
 import Link from "next/link";
+import { CATEGORY_LABELS, formatBudgetRange, levelsLabel, type PublicPlan } from "@/lib/plans";
 
-type PlanCardProps = {
-  slug: string;
-  name: string;
-  category: string;
-  thumbnail: string;
-  surface: number;
-  bedrooms: number;
-  bathrooms: number;
-  estimatedTotalPrice: number;
-  featured?: boolean;
-};
-
-function formatPrice(value: number) {
-  return value.toLocaleString("fr-FR").replace(/\u202f/g, " ");
-}
-
-export function PlanCard({
-  slug,
-  name,
-  category,
-  thumbnail,
-  surface,
-  bedrooms,
-  bathrooms,
-  estimatedTotalPrice,
-  featured,
-}: PlanCardProps) {
+export function PlanCard({ plan, priority = false }: { plan: PublicPlan; priority?: boolean }) {
+  const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   return (
-    <Link href={`/plans/${slug}`} className="group block">
-      <div className="bg-surface overflow-hidden border border-outline/10 rounded-2xl transition-all duration-200 hover:shadow-sm hover:-translate-y-1">
-        <div className="aspect-[16/9] overflow-hidden bg-background relative">
-          <Image
-            src={thumbnail}
-            alt={name}
-            width={800}
-            height={600}
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            quality={55}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+    <Link
+      href={`/catalogue/${plan.slug}`}
+      className="group card flex flex-col overflow-hidden transition-shadow hover:shadow-xl hover:shadow-black/5"
+    >
+      <div className="relative aspect-video overflow-hidden bg-outline/40">
+        {plan.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={plan.coverImage}
+            alt={`${plan.name} — rendu 3D`}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {featured && (
-            <span className="absolute top-3 right-3 bg-highlight text-foreground text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full">
-              Populaire
-            </span>
-          )}
-        </div>
-        <div className="p-5 border-t border-outline/10">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[11px] font-semibold px-2 py-0.5 border border-primary/20 text-primary uppercase tracking-[0.15em]">
-              {category}
-            </span>
-          </div>
-          <h3 className="font-semibold text-foreground text-base mb-2 transition-colors">
-            {name}
-          </h3>
-          <div className="flex items-center gap-3 text-sm text-foreground/60 transition-colors">
-            <span>{surface} m²</span>
-            <span className="text-foreground/30">·</span>
-            <span>{bedrooms} ch.</span>
-            <span className="text-foreground/30">·</span>
-            <span>{bathrooms} SdB</span>
-          </div>
-          {estimatedTotalPrice > 0 && (
-            <p className="mt-3 text-sm font-semibold text-foreground">
-              À partir de{" "}
-              <span className="text-accent">
-                {formatPrice(estimatedTotalPrice)} FCFA
-              </span>
-            </p>
-          )}
-        </div>
+        ) : null}
+        <span className="absolute left-3 top-3 rounded-full bg-surface/95 px-3 py-1 text-xs font-semibold text-primary">
+          {CATEGORY_LABELS[plan.category]} · {plan.code}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="text-lg font-semibold tracking-tight">{plan.name}</h3>
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
+          <li>{plan.bedrooms} ch.</li>
+          <li>{plan.bathrooms} sdb</li>
+          <li>{plan.surfaceTotal} m²</li>
+          <li>{levelsLabel(plan.levels)}</li>
+        </ul>
+        {budget ? (
+          <p className="mt-4 text-sm">
+            <span className="text-muted">Budget indicatif : </span>
+            <span className="font-semibold text-foreground">{budget}</span>
+          </p>
+        ) : null}
+        <p className="mt-auto pt-4 text-sm font-semibold text-primary group-hover:underline">Voir le modèle →</p>
       </div>
     </Link>
+  );
+}
+
+export function PlanGrid({ plans }: { plans: PublicPlan[] }) {
+  if (plans.length === 0) {
+    return <p className="card p-8 text-center text-muted">Aucun modèle ne correspond à ces critères pour le moment.</p>;
+  }
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {plans.map((plan, i) => (
+        <PlanCard key={plan.id} plan={plan} priority={i < 3} />
+      ))}
+    </div>
   );
 }
