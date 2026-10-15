@@ -19,6 +19,12 @@ const INSTRUCTIONS =
   "Fichiers accessibles par une URL https directe : upload_plan_image ; " +
   "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
   "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
+  "Dossier local de plusieurs modèles (agent avec accès aux fichiers : Cowork, Claude Code) : en général un sous-dossier par modèle contenant le PDF et les images. " +
+  "Commencer par list_plans pour écarter les références déjà au catalogue, puis traiter les modèles un par un : lire le PDF, create_plan, create_upload_link, " +
+  "puis envoyer chaque image avec la commande curl fournie (curl -T, jamais de base64) : les rendus d'abord, la plus belle vue de façade en premier (couverture), puis les distributions dans l'ordre des niveaux. " +
+  "Classer chaque fichier en regardant l'image (rendu 3D ou plan coté) et son nom ; en cas de doute, demander. Ignorer les fichiers sans rapport (vidéos, fichiers de travail). " +
+  "Si curl est bloqué par le réseau de l'agent, donner au propriétaire le lien « page » à la place. " +
+  "À la fin, présenter un tableau récapitulatif (référence, nom, chambres, surface, budget, nombre de rendus et de distributions, avertissements, éléments manquants) et ne publier que les modèles que le propriétaire valide. " +
   "Conventions : référence en majuscules « V4-001 » (V = villa, D = duplex, chiffre = nombre de chambres), slug généré « villa-v4-001 », nom « Villa V4-001 » ou « Duplex D5-002 » ; " +
   "surfaces en m², dimensions en m, montants entiers en FCFA (XAF, sans séparateur ni unité). N'inventez aucune valeur absente du PDF : laissez le champ vide et signalez-le.";
 
