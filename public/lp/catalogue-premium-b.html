@@ -42,7 +42,14 @@ section{padding:56px 0}
 
 /* Hero */
 .hero{background:radial-gradient(120% 80% at 50% 0%,#14706D 0%,var(--teal) 45%,var(--teal-dk) 100%);color:#fff;padding:clamp(12px,2.2svh,28px) 0 clamp(14px,2.4svh,28px)}
-@media(max-width:899px){.hero{min-height:calc(100svh - 33px);display:flex;flex-direction:column;justify-content:center}}
+@media(max-width:899px){
+  .hero{min-height:calc(100svh - 33px);display:flex;flex-direction:column;padding:clamp(12px,3svh,36px) 0}
+  .hero .wrap{flex:1;display:flex;flex-direction:column}
+  .hero .grid{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;gap:6px}
+  .hero .grid>div{display:contents}
+  .hero h1,.hero .sub,.vsl,.hero .price,.hero .pay,.hero .social{margin-top:0;margin-bottom:0}
+  .hero .cta{flex-shrink:0}
+}
 .hero .logo{height:30px;width:auto;margin:0 auto 22px}
 .hero .eyebrow{color:var(--gold)}
 .hero h1{font-size:clamp(25px,7.1vw,46px);font-weight:900;margin-bottom:clamp(8px,1.6svh,14px)}
@@ -358,7 +365,7 @@ footer a{color:rgba(255,255,255,.7)}
           <img src="/assets/digital/hero-video-poster.webp" alt="" width="640" height="360" fetchpriority="high">
           <div class="play"><i></i>Voir la présentation</div>
         </div>
-        <div class="price"><s>500 000 FCFA</s><span class="now">39 000<small>FCFA</small></span><span class="badge">–92 %</span></div>
+        <div class="price"><s>60 000 FCFA</s><span class="now">39 000<small>FCFA</small></span><span class="badge">–35 %</span></div>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
         <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
         <div class="trust desk"><span>Accès immédiat</span><span>Paiement unique</span><span>Garantie 7 jours</span></div>
@@ -453,8 +460,8 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap">
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
-      <div class="price"><s>500 000 FCFA</s><span class="now">39 000<small>FCFA</small></span></div>
-      <span class="save">Vous économisez 461 000 FCFA</span>
+      <div class="price"><s>60 000 FCFA</s><span class="now">39 000<small>FCFA</small></span><span class="badge">–35 %</span></div>
+      <span class="save">Vous économisez 21 000 FCFA aujourd'hui · valeur du catalogue : 500 000 FCFA</span>
       <ul class="incl">
         <li>Accès immédiat à l'espace Premium, à vie</li>
         <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex</span></li>
@@ -464,7 +471,7 @@ footer a{color:rgba(255,255,255,.7)}
         <li>Favoris et comparateur de modèles</li>
         <li class="bonus"><span><b>Bonus du jour :</b> les nouveaux modèles ajoutés automatiquement, sans rien payer de plus</span></li>
       </ul>
-      <div class="timer">Prix spécial encore <strong data-countdown>--:--:--</strong></div>
+      <div class="timer">Prix spécial encore <strong data-countdown>--:--:--</strong>, puis 60 000 FCFA</div>
       <button class="cta" data-cta="offer" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
       <div class="guar"><div class="seal">7<small>JOURS</small></div><div><b>Satisfait ou remboursé</b>Un simple message WhatsApp dans les 7 jours suffit. Aucune question posée.</div></div>
     </div>
@@ -483,7 +490,7 @@ footer a{color:rgba(255,255,255,.7)}
       <details><summary>Comment vais-je recevoir les nouveaux modèles ?</summary><p>Ils apparaissent automatiquement dans votre espace Premium, avec leur fiche PDF, à vie et sans frais supplémentaires.</p></details>
       <details><summary>Les devis sont-ils fiables ?</summary><p>Ils reposent sur 10 ans d'expérience dans le BTP et des prix actualisés. Ils vous donnent une base solide pour négocier avec votre entrepreneur, à ajuster selon votre ville et vos finitions.</p></details>
       <details><summary>Le catalogue suffit-il pour construire ?</summary><p>Il sert à choisir le bon modèle et à connaître son budget. L'adaptation à votre terrain et les plans d'exécution sont une prestation à part, sur devis ; le prix du catalogue est alors déduit de nos honoraires.</p></details>
-      <details><summary>Le prix va augmenter ?</summary><p>Oui. Le tarif spécial de 39 000 FCFA est valable jusqu'à la fin du compte à rebours du jour. Les campagnes peuvent être reconduites, mais le tarif et les conditions peuvent changer.</p></details>
+      <details><summary>Le prix va augmenter ?</summary><p>Oui. Le tarif spécial de 39 000 FCFA est valable jusqu'à la fin du compte à rebours du jour. Ensuite, le catalogue revient à son prix normal de 60 000 FCFA.</p></details>
       <details><summary>Et si je ne suis pas satisfait ?</summary><p>Un simple message WhatsApp dans les 7 jours et on vous rembourse intégralement. Aucune question posée.</p></details>
     </div>
   </div>
