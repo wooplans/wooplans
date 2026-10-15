@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -18,6 +18,27 @@ type Plan = {
   thumbnail: string;
 };
 
+type Filters = {
+  search: string;
+  category: string;
+  status: string;
+  bedrooms: string;
+  featured: string;
+  cataloguePreview: string;
+};
+
+const EMPTY_FILTERS: Filters = {
+  search: "",
+  category: "",
+  status: "",
+  bedrooms: "",
+  featured: "",
+  cataloguePreview: "",
+};
+
+const filterClass =
+  "px-3 py-2 border-2 border-outline bg-surface text-sm text-foreground focus:outline-none focus:border-primary";
+
 type PlanMutationResponse = {
   error?: string;
   published?: boolean;
@@ -30,6 +51,36 @@ export default function AdminPlansPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+
+  const bedroomOptions = useMemo(
+    () => Array.from(new Set(plans.map((p) => p.bedrooms))).sort((a, b) => a - b),
+    [plans],
+  );
+
+  const filteredPlans = useMemo(() => {
+    const query = filters.search.trim().toLowerCase();
+    return plans.filter((plan) => {
+      if (query && !plan.name.toLowerCase().includes(query) && !plan.slug.toLowerCase().includes(query)) {
+        return false;
+      }
+      if (filters.category && plan.category !== filters.category) return false;
+      if (filters.status === "published" && !plan.published) return false;
+      if (filters.status === "draft" && plan.published) return false;
+      if (filters.bedrooms && plan.bedrooms !== Number(filters.bedrooms)) return false;
+      if (filters.featured === "yes" && !plan.featured) return false;
+      if (filters.featured === "no" && plan.featured) return false;
+      if (filters.cataloguePreview === "yes" && !plan.cataloguePreview) return false;
+      if (filters.cataloguePreview === "no" && plan.cataloguePreview) return false;
+      return true;
+    });
+  }, [plans, filters]);
+
+  const hasActiveFilters = Object.values(filters).some(Boolean);
+
+  function updateFilter(key: keyof Filters, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }
 
   useEffect(() => {
     fetch("/api/admin/plans")
@@ -169,6 +220,81 @@ export default function AdminPlansPage() {
           </Link>
         </div>
       ) : (
+        <>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <input
+            type="search"
+            value={filters.search}
+            onChange={(e) => updateFilter("search", e.target.value)}
+            placeholder="Rechercher (nom, slug)..."
+            className={`${filterClass} flex-1 min-w-[200px]`}
+          />
+          <select
+            value={filters.category}
+            onChange={(e) => updateFilter("category", e.target.value)}
+            className={filterClass}
+          >
+            <option value="">Toutes catégories</option>
+            <option value="villa">Villa</option>
+            <option value="duplex">Duplex</option>
+          </select>
+          <select
+            value={filters.status}
+            onChange={(e) => updateFilter("status", e.target.value)}
+            className={filterClass}
+          >
+            <option value="">Tous statuts</option>
+            <option value="published">Publié</option>
+            <option value="draft">Brouillon</option>
+          </select>
+          <select
+            value={filters.bedrooms}
+            onChange={(e) => updateFilter("bedrooms", e.target.value)}
+            className={filterClass}
+          >
+            <option value="">Toutes chambres</option>
+            {bedroomOptions.map((n) => (
+              <option key={n} value={n}>
+                {n} chambre{n > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filters.featured}
+            onChange={(e) => updateFilter("featured", e.target.value)}
+            className={filterClass}
+          >
+            <option value="">Vedette : tous</option>
+            <option value="yes">En vedette</option>
+            <option value="no">Pas en vedette</option>
+          </select>
+          <select
+            value={filters.cataloguePreview}
+            onChange={(e) => updateFilter("cataloguePreview", e.target.value)}
+            className={filterClass}
+          >
+            <option value="">Aperçu : tous</option>
+            <option value="yes">Dans l&apos;aperçu catalogue</option>
+            <option value="no">Hors aperçu catalogue</option>
+          </select>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="px-3 py-2 text-sm font-bold text-primary hover:underline"
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-foreground/50 font-semibold mb-2">
+          {filteredPlans.length} / {plans.length} plan{plans.length > 1 ? "s" : ""}
+        </p>
+        {filteredPlans.length === 0 ? (
+          <div className="bg-surface border-2 border-outline p-12 text-center text-foreground/50">
+            Aucun plan ne correspond aux filtres
+          </div>
+        ) : (
         <div className="bg-surface border-2 border-outline overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -178,12 +304,12 @@ export default function AdminPlansPage() {
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Surface</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Statut</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Vedette</th>
-                <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">AperÃ§u</th>
+                <th className="px-5 py-3 font-black uppercase tracking-wider text-xs">Aperçu</th>
                 <th className="px-5 py-3 font-black uppercase tracking-wider text-xs text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {plans.map((plan) => (
+              {filteredPlans.map((plan) => (
                 <tr key={plan.id} className="hover:bg-surface/50 border-b-2 border-outline last:border-b-0">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -266,6 +392,8 @@ export default function AdminPlansPage() {
             </tbody>
           </table>
         </div>
+        )}
+        </>
       )}
     </div>
   );
