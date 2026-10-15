@@ -1,5 +1,6 @@
 # Bascule de www.wooplans.com et wooplans.com (Framer) vers le Worker wooplans-web.
-# Validée par le propriétaire le 14/10/2026. Méthode : routes du Worker (DNS inchangé).
+# Validée par le propriétaire le 14/10/2026 ; retour arrière le 14/10 (plan gratuit, erreurs 1102) ;
+# rebascule validée le 15/10/2026 après passage au plan Workers Paid. Méthode : routes du Worker (DNS inchangé).
 # Retour arrière : supprimer les routes www.wooplans.com/* et wooplans.com/* (Workers Routes).
 # Enregistrements DNS d'origine (Framer), à conserver :
 #   wooplans.com      A      31.43.161.6 (proxied)
@@ -21,6 +22,10 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Routes du Worker (les enregistrements DNS proxied restent en place)
         run: |
           zone=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id')
@@ -43,3 +48,19 @@ jobs:
             echo "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$u") $u"
           done
           echo "Serveur : $(curl -sI https://www.wooplans.com/ | grep -i -E '^(server|x-powered|x-opennext)' | tr -d '\r' | tr '\n' ' ')"
+      - name: Tests de production complets sur www.wooplans.com
+        run: BASE_URL=https://www.wooplans.com node scripts/smoke-prod.mjs
+        env:
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+          CHARIOW_PULSE_SECRET: ${{ secrets.CHARIOW_PULSE_SECRET }}
+      - name: Erreurs du Worker depuis la bascule
+        if: always()
+        run: |
+          sleep 30
+          now=$(date +%s000); from=$(( now - 15*60*1000 ))
+          curl -sS -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"cutover\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.outcome\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"exceededCpu\"}]}}" > /tmp/cpu.json
+          n=$(jq '[.result.events.events[]?] | length' /tmp/cpu.json)
+          echo "Requêtes arrêtées pour dépassement CPU (15 dernières minutes) : $n"
+          [ "$n" = "0" ]
