@@ -1,21 +1,17 @@
-import Script from "next/script";
+import { BehaviorAnalytics } from "@/components/BehaviorAnalytics";
+import { POSTHOG_DEFAULT_HOST } from "@/lib/behavior";
 
-/** Pixel Meta et Microsoft Clarity (identifiants configurés dans wrangler.jsonc). */
+/**
+ * Mesure du site public : Pixel Meta et PostHog (identifiants dans wrangler.jsonc).
+ * Rendu uniquement dans la mise en page du site public : jamais sur /admin, /espace-premium ni /televersement ;
+ * /connexion et /merci sont exclus côté navigateur (voir isPrivatePath).
+ */
 export function Analytics() {
-  const pixel = process.env.FB_PIXEL_ID;
-  const clarity = process.env.CLARITY_PROJECT_ID;
   return (
-    <>
-      {pixel ? (
-        <Script id="fb-pixel" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixel}');fbq('track','PageView');`}
-        </Script>
-      ) : null}
-      {clarity ? (
-        <Script id="clarity" strategy="lazyOnload">
-          {`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${clarity}");`}
-        </Script>
-      ) : null}
-    </>
+    <BehaviorAnalytics
+      posthogKey={process.env.POSTHOG_KEY || undefined}
+      posthogHost={process.env.POSTHOG_HOST || POSTHOG_DEFAULT_HOST}
+      pixelId={process.env.FB_PIXEL_ID || undefined}
+    />
   );
 }

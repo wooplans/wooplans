@@ -77,6 +77,18 @@ const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<div cla
 ok("page de vente B : galerie des modèles en vedette", galleryB > 0, `${galleryB} cartes`);
 ok("page de vente B : widget Chariow prd_41k85hc0", salesBHtml.includes('data-product-id="prd_41k85hc0"'));
 
+// Mesure du comportement : PostHog sur le site public, jamais sur l'administration ; plus de Microsoft Clarity
+const posthogKey = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"POSTHOG_KEY"\s*:\s*"([^"]*)"/)?.[1] || "";
+const homeHtml = await (await get("/")).text();
+const adminLoginHtml = await (await get("/admin/connexion")).text();
+ok("Clarity absent (vitrine, page de vente)", !/clarity\.ms/.test(homeHtml) && !/clarity\.ms/.test(salesHtml));
+ok("PostHog configuré sur la vitrine", homeHtml.includes("eu.i.posthog.com") && (!posthogKey || homeHtml.includes(posthogKey)));
+ok("PostHog configuré sur la page de vente", salesHtml.includes("eu.i.posthog.com") && (!posthogKey || salesHtml.includes(posthogKey)));
+ok("PostHog absent de l'administration", !/posthog/i.test(adminLoginHtml) && (!posthogKey || !adminLoginHtml.includes(posthogKey)));
+ok("page de vente : widget de paiement exclu des enregistrements", salesHtml.includes('id="chariow-widget" class="ph-no-capture"'));
+ok("page de vente : bandeau de consentement (Europe)", salesHtml.includes("wpConsent"));
+if (!posthogKey) console.log("Note : POSTHOG_KEY vide dans wrangler.jsonc, PostHog n'est pas encore activé.");
+
 // Images (R2 MEDIA)
 const media = env.SMOKE_MEDIA ? JSON.parse(readFileSync(env.SMOKE_MEDIA, "utf8")) : [];
 let publicOk = 0;
@@ -119,6 +131,7 @@ const catalogueTools = ["create_plan", "get_plan", "upload_plan_image", "create_
 const missingTools = catalogueTools.filter((t) => !tools.includes(t));
 ok("MCP : outils de création de fiches présents", missingTools.length === 0, missingTools.length ? `manquants : ${missingTools.join(", ")}` : catalogueTools.join(", "));
 ok("MCP : instructions de publication", /accord explicite/.test(init.result?.instructions || ""));
+ok("MCP : instructions d'analyse du comportement (PostHog)", /PostHog/.test(init.result?.instructions || "") && /impact attendu/.test(init.result?.instructions || ""));
 const readTool = tools.find((t) => /funnel|summary|resume|list_plans/.test(t));
 if (readTool) {
   const call = await (await rpc({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: readTool, arguments: {} } }, auth)).json().catch(() => ({}));

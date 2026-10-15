@@ -12,5 +12,4 @@ interface CloudflareEnv {
 
 interface Window {
   fbq?: (...args: unknown[]) => void;
-  clarity?: (...args: unknown[]) => void;
 }

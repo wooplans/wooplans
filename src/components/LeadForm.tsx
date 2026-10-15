@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { track } from "@/components/Tracker";
+import { FUNNEL_EVENTS, pageType } from "@/lib/behavior";
+import { phCapture } from "@/lib/posthog-browser";
 
 export function LeadForm({ defaultPlan = "" }: { defaultPlan?: string }) {
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
@@ -24,6 +26,8 @@ export function LeadForm({ defaultPlan = "" }: { defaultPlan?: string }) {
       return;
     }
     track({ type: "cta_click", ctaId: "lead_form_submitted" });
+    // Aucune saisie transmise : seulement l'étape franchie et le modèle demandé.
+    phCapture(FUNNEL_EVENTS.planRequest, { page_type: pageType(window.location.pathname), plan: defaultPlan || null });
     setState("sent");
   }
 

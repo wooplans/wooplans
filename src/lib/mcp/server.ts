@@ -26,7 +26,19 @@ const INSTRUCTIONS =
   "Si curl est bloqué par le réseau de l'agent, donner au propriétaire le lien « page » à la place. " +
   "À la fin, présenter un tableau récapitulatif (référence, nom, chambres, surface, budget, nombre de rendus et de distributions, avertissements, éléments manquants) et ne publier que les modèles que le propriétaire valide. " +
   "Conventions : référence en majuscules « V4-001 » (V = villa, D = duplex, chiffre = nombre de chambres), slug généré « villa-v4-001 », nom « Villa V4-001 » ou « Duplex D5-002 » ; " +
-  "surfaces en m², dimensions en m, montants entiers en FCFA (XAF, sans séparateur ni unité). N'inventez aucune valeur absente du PDF : laissez le champ vide et signalez-le.";
+  "surfaces en m², dimensions en m, montants entiers en FCFA (XAF, sans séparateur ni unité). N'inventez aucune valeur absente du PDF : laissez le champ vide et signalez-le. " +
+  "Analyse du comportement des visiteurs (où ils cliquent, bloquent, jusqu'où ils lisent, ce qui les frustre) : les données détaillées sont dans PostHog (serveur MCP officiel PostHog, projet wooplans.com, région UE), " +
+  "les chiffres de vente font foi ici (get_business_summary, list_sales). Événements PostHog : $pageview (propriétés page_type = vitrine | catalogue | fiche_modele | page_vente | demande_plans | contenu, plan = slug du modèle), " +
+  "cta_click (cta_id ; suffixe @a/@b = variante A/B de la page de vente), checkout_open (ouverture du paiement, mode widget ou redirect), purchase_success (paiement confirmé, envoyé par le serveur), " +
+  "plan_request_submit, whatsapp_click, promo_popup_view/click/dismiss, $rageclick, $dead_click, $pageleave (défilement : $prev_pageview_max_scroll_percentage). " +
+  "Propriétés de provenance : wp_source (social_ads, social, search, search_ads, email, referral, direct…) et wp_campaign (utm_campaign), identiques à celles du tableau de bord /admin ; variant sur la page de vente. " +
+  "Les visiteurs européens sans accord et les pages privées (/admin, /espace-premium, /connexion, /merci) ne sont pas mesurés : les volumes PostHog sont donc inférieurs à ceux du suivi first-party, comparez des taux, pas des totaux. " +
+  "Méthode : 1) préciser la période (7 ou 30 jours par défaut) ; 2) tunnel page_vente → cta_click → checkout_open → purchase_success, ventilé par appareil ($device_type), wp_source, wp_campaign et variant, pour trouver l'étape qui perd le plus ; " +
+  "3) sur les pages et segments concernés : clics de rage et clics morts (élément visé, texte), profondeur de défilement, temps passé, sorties ; cartes de chaleur de /catalogue-premium et des fiches modèle ; " +
+  "4) relier frictions et abandons (ex. clics morts sur un visuel non cliquable, abandon après ouverture du paiement sur mobile Android) en vous appuyant sur des chiffres, échantillons de taille indiquée ; " +
+  "5) recommandations priorisées dans un tableau : problème observé, preuve chiffrée, recommandation concrète, impact attendu (élevé/moyen/faible), effort (faible/moyen/élevé), en commençant par impact élevé et effort faible ; " +
+  "6) pour chaque problème, 2 à 5 liens vers des enregistrements PostHog précis (sessions avec clic de rage, abandon après checkout_open…) que le propriétaire peut regarder. " +
+  "Ne concluez pas sur moins de 30 visiteurs par segment : dites-le et proposez d'attendre ou d'élargir la période.";
 
 type RpcRequest = { jsonrpc: "2.0"; id?: string | number | null; method: string; params?: Record<string, unknown> };
 

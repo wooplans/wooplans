@@ -32,7 +32,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 | Fiches PDF | **pdf-lib** dans le Worker + binding **Cloudflare Images** (`IMAGES`, conversion WebP → JPEG hors CPU du Worker) |
 | Paiement | **Chariow** (notifications « Pulse » signées HMAC) |
 | Emails | **Resend** (codes d'accès, relances CRM, récapitulatif quotidien) |
-| Mesure | Suivi first-party du tunnel (`/api/t`, UTM), Pixel Meta, Microsoft Clarity |
+| Mesure | Suivi first-party du tunnel (`/api/t`, UTM, fait foi pour les ventes), Pixel Meta, **PostHog** UE (comportement : enregistrements masqués, cartes de chaleur, tunnel) |
 | Pilotage par agent | Serveur **MCP** intégré (`/api/mcp`) |
 
 ## Pages
@@ -81,7 +81,7 @@ npx wrangler secret put MCP_TOKEN              # jeton du serveur MCP (32+ carac
 npx wrangler secret put CRON_SECRET            # jeton interne du récapitulatif quotidien
 ```
 
-Variables publiques : `wrangler.jsonc` (`vars`) — URL du site, produit Chariow, prix, WhatsApp, Pixel, Clarity, expéditeur des emails.
+Variables publiques : `wrangler.jsonc` (`vars`) — URL du site, produit Chariow, prix, WhatsApp, Pixel, PostHog (`POSTHOG_KEY`, clé publique `phc_…`, et `POSTHOG_HOST`), expéditeur des emails.
 
 ### 2. Compte admin
 
@@ -121,6 +121,22 @@ Chaque push sur `master` ou `ccr-03cfaad2-40szss` lance `.github/workflows/deplo
 - **Répartition** : variable `SALES_PAGE_B_SHARE` de `wrangler.jsonc` (0 à 100, en %). À 0, tout le monde voit A et B n'est visible qu'en aperçu avec `/catalogue-premium?variante=b` (`?variante=a` pour revenir). Le visiteur garde sa variante 30 jours (cookie `wp_lp`).
 - **Mesure** : la variante voyage dans `cta_id` (`variant_a`/`variant_b` pour la vue de page, suffixe `@a`/`@b` pour les clics, les intentions de paiement, les échecs/abandons et les achats). Tableau de bord → « Page de vente : variantes A / B » : visiteurs, clics, widget prêt (B), paiements démarrés, échoués, abandonnés, achats, conversion, clics WhatsApp.
 - Avec 1 à 2 ventes par jour, comparer d'abord le taux de clic et les paiements démarrés ; il faut plusieurs semaines pour conclure sur les achats.
+
+## Analyse du comportement des visiteurs (PostHog)
+
+Objectif : demander à l'agent Claude, à tout moment, où les visiteurs cliquent, bloquent, jusqu'où ils lisent et ce qui les frustre (par page, appareil, source), avec des recommandations priorisées.
+
+- **Collecte** : PostHog, région UE (`eu.i.posthog.com`), chargé après interaction ou inactivité (page rapide). Site Next : `src/components/BehaviorAnalytics.tsx` (rendu seulement dans `src/app/(site)/layout.tsx`) ; page de vente statique : `scripts/lp-measure.js`, inséré par `scripts/build-sales-page.py` (relancer le script après avoir changé `POSTHOG_KEY`). Règles communes : `src/lib/behavior.ts`.
+- **Jamais mesuré** : `/admin`, `/espace-premium`, `/connexion`, `/merci`, `/televersement` (non chargé, puis événements filtrés et enregistrement arrêté en navigation interne).
+- **Aucune donnée personnelle** : saisies masquées (`maskAllInputs`), widget Chariow exclu (`ph-no-capture`), texte marqué `data-ph-mask` masqué, paramètres d'URL retirés sauf UTM/filtres, pas de profil de personne. L'identifiant PostHog est l'identifiant anonyme first-party `wp_vid` (renvoyé par `/api/t`).
+- **Consentement** : visiteurs en Europe (fuseau horaire `Europe/…`) : bandeau, rien n'est chargé (PostHog, Pixel) avant « Accepter ». Ailleurs : mesure par défaut, refus possible sur `/confidentialite`. Cookie `wp_consent` (13 mois).
+- **Événements** : `$pageview` (`page_type`, `plan`), `cta_click` (`cta_id`, suffixe `@a`/`@b`), `checkout_open`, `purchase_success` (envoyé par le serveur depuis le webhook Chariow, vente reliée avec certitude à la visite, hors Europe), `plan_request_submit`, `whatsapp_click`, `promo_popup_*`, plus clics de rage, clics morts, défilement et sorties. Provenance : `wp_source` / `wp_campaign` (mêmes valeurs que `/admin`), `variant` sur la page de vente.
+- **Accès de l'agent** : serveur MCP officiel PostHog connecté à l'agent (requêtes, tunnels, cartes de chaleur, recherche et résumés d'enregistrements). Les instructions du serveur MCP WOOPLANS décrivent la méthode d'analyse (tunnel par segment, frictions, recommandations impact/effort, liens d'enregistrements). Les ventes font foi dans `get_business_summary` / `list_sales`.
+
+Mise en place (une fois) :
+1. Créer un compte sur https://eu.posthog.com (région **EU**), projet « wooplans.com » ; copier la **Project API key** (`phc_…`, publique) dans `POSTHOG_KEY` de `wrangler.jsonc`, puis `python3 scripts/build-sales-page.py` et pousser.
+2. Réglages du projet PostHog : Session replay activé (masquage des saisies : par défaut), Heatmaps et Autocapture activés ; « Authorized URLs » : `https://www.wooplans.com` ; échantillonnage des enregistrements si le volume dépasse le plan gratuit.
+3. Connecter l'agent : sur claude.ai, Réglages → Connecteurs → ajouter un connecteur personnalisé `https://mcp-eu.posthog.com/mcp` et se connecter à PostHog (OAuth). Pour un client sans OAuth : clé API personnelle PostHog (préréglage « MCP Server », limitée au projet). Aucune clé PostHog privée ne va dans le dépôt ni dans le Worker.
 
 ## Pilotage par un agent (MCP)
 

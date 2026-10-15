@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Analytics } from "@/components/Analytics";
 import { Tracker } from "@/components/Tracker";
 import { siteUrl } from "@/lib/env";
 import { SITE } from "@/lib/site";
@@ -37,7 +36,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <Tracker />
         </Suspense>
-        <Analytics />
       </body>
     </html>
   );
