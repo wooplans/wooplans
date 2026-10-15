@@ -6,6 +6,8 @@ import { accessCodeEmail, adminSaleEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
+import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
+import { captureServerEvents } from "@/lib/posthog";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -206,6 +208,25 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   }
   if (visitor) {
     await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: intent?.ctaId ?? null });
+    // PostHog : seulement si la vente est reliée avec certitude à la visite, et hors Europe
+    // (le consentement n'est pas connu ici). Aucune donnée personnelle : identifiant anonyme du visiteur.
+    if (matched && !countryRequiresConsent(visitor.country)) {
+      captureServerEvents([
+        {
+          event: FUNNEL_EVENTS.purchase,
+          distinctId: visitor.id,
+          properties: {
+            amount,
+            currency,
+            cta_id: intent?.ctaId ?? null,
+            variant: variantFromCta(intent?.ctaId),
+            page_type: "page_vente",
+            wp_source: visitor.source,
+            wp_campaign: visitor.utmCampaign,
+          },
+        },
+      ]);
+    }
   }
 
   const mail = accessCodeEmail({ name, email, code });

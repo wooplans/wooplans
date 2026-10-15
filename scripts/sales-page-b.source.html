@@ -226,23 +226,9 @@ footer a{color:rgba(255,255,255,.7)}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
-<script>
-(function(){
-  var loaded=false;
-  function load(){
-    if(loaded)return;loaded=true;
-    var q=(window.fbq&&window.fbq.queue)||[];
-    !function(f,b,e,v,n,t,s){if(f.fbq&&f.fbq.callMethod)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=q;t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    var c=document.createElement('script');c.async=true;c.src='https://www.clarity.ms/tag/y284dj587r';document.head.appendChild(c);
-  }
-  window.fbq=window.fbq||function(){(window.fbq.queue=window.fbq.queue||[]).push(arguments)};
-  window.clarity=window.clarity||function(){(window.clarity.q=window.clarity.q||[]).push(arguments)};
-  fbq('init','1025626273769966');fbq('track','PageView');
-  fbq('track','ViewContent',{content_name:'Catalogue Premium Wooplans',content_category:'Catalogue',value:39000,currency:'XAF'});
-  ['pointerdown','keydown','touchstart'].forEach(function(n){window.addEventListener(n,load,{once:true,passive:true})});
-  window.addEventListener('load',function(){('requestIdleCallback' in window)?requestIdleCallback(load,{timeout:8000}):setTimeout(load,8000)},{once:true});
-})();
-</script>
+<script>var WP_VARIANT='b';</script>
+<!-- MESURE -->
+<script>fbq('track','ViewContent',{content_name:'Catalogue Premium Wooplans',content_category:'Catalogue',value:39000,currency:'XAF'});</script>
 </head>
 <body>
 
@@ -425,7 +411,7 @@ footer a{color:rgba(255,255,255,.7)}
       <li>Validez la demande de paiement (notification ou code USSD) <b>dans les 2 minutes</b>.</li>
       <li>Prévoyez <b>39 000 FCFA + frais</b> sur votre compte Mobile Money.</li>
     </ol></div>
-    <div id="chariow-widget" data-product-id="prd_41k85hc0" data-store-domain="wooplans.mychariow.shop" data-style="frame" data-border-style="rounded" data-cta-width="xs" data-cta-animation="none" data-locale="fr" data-primary-color="#f08b2f" data-background-color="#FFFFFF"></div>
+    <div id="chariow-widget" class="ph-no-capture" data-product-id="prd_41k85hc0" data-store-domain="wooplans.mychariow.shop" data-style="frame" data-border-style="rounded" data-cta-width="xs" data-cta-animation="none" data-locale="fr" data-primary-color="#f08b2f" data-background-color="#FFFFFF"></div>
     <p class="wahelp">Un souci pour payer ? <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="payment_help" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>
   </div>
 </div>
@@ -435,7 +421,6 @@ footer a{color:rgba(255,255,255,.7)}
 </div>
 
 <script>
-var WP_VARIANT='b';
 function wpTrack(type,ctaId){
   try{
     var body=JSON.stringify({type:type,ctaId:ctaId||undefined,url:location.href,referrer:document.referrer||null});
@@ -443,10 +428,13 @@ function wpTrack(type,ctaId){
     else fetch('/api/t',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true});
   }catch(e){}
 }
-wpTrack('sales_page_view','variant_b');
+// Vue de la page : la réponse donne l'identifiant anonyme du visiteur, repris par PostHog.
+window.wpVid=fetch('/api/t',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
+  body:JSON.stringify({type:'sales_page_view',ctaId:'variant_b',url:location.href,referrer:document.referrer||null})})
+  .then(function(r){return r.json()}).then(function(d){return d.vid||null}).catch(function(){return null});
 document.addEventListener('click',function(e){
   var wa=e.target.closest&&e.target.closest('a[href*="wa.me"]');
-  if(wa)wpTrack('whatsapp_click',(wa.getAttribute('data-wa')||'sales_page')+'@b');
+  if(wa){var id=(wa.getAttribute('data-wa')||'sales_page')+'@b';wpTrack('whatsapp_click',id);wpCapture('whatsapp_click',{cta_id:id});}
 },true);
 
 /* Compte à rebours jusqu'à minuit (heure locale du visiteur) */
@@ -476,11 +464,11 @@ function playVsl(){
   var box=document.getElementById('vsl');
   if(box.querySelector('video'))return;
   box.innerHTML='<video src="/videos/vsl-cpbook-digital.mp4" poster="/assets/digital/hero-video-poster.webp" controls playsinline autoplay></video>';
-  wpTrack('cta_click','vsl_play@b');
+  wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
 }
 function openVideo(name){
   var v=document.getElementById('modalVideo');
-  v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});
+  v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});wpCapture('video_play',{video:name});
   document.getElementById('videoModal').classList.add('on');
 }
 function closeVideo(){
@@ -505,12 +493,12 @@ window.addEventListener('load',function(){
 },{once:true});
 function reportWidget(){
   var w=document.getElementById('chariow-widget');
-  if(!widgetReported&&w.children.length&&document.getElementById('checkout').classList.contains('on')){widgetReported=true;wpTrack('widget_ready','checkout@b');}
+  if(!widgetReported&&w.children.length&&document.getElementById('checkout').classList.contains('on')){widgetReported=true;wpTrack('widget_ready','checkout@b');wpCapture('widget_ready',{});}
 }
 if('MutationObserver' in window)new MutationObserver(reportWidget).observe(document.getElementById('chariow-widget'),{childList:true,subtree:true});
 function buy(btn){
   var ctaId=(btn&&btn.getAttribute('data-cta')||'sales_page')+'@b';
-  wpTrack('cta_click',ctaId);
+  wpTrack('cta_click',ctaId);wpCapture('cta_click',{cta_id:ctaId});wpCapture('checkout_open',{cta_id:ctaId,mode:'widget'});
   try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true})}catch(e){}
   fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF'});
   var ov=document.getElementById('checkout');ov.classList.add('on');ov.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';

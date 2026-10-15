@@ -51,7 +51,9 @@ export async function POST(request: NextRequest) {
     })(),
   );
 
-  const response = NextResponse.json({ ok: true });
+  // L'identifiant (anonyme) est renvoyé au navigateur pour que PostHog utilise le même : les achats
+  // enregistrés côté serveur (webhook Chariow) se rattachent ainsi à la visite.
+  const response = NextResponse.json({ ok: true, vid: id });
   if (isNew) {
     response.cookies.set(VISITOR_COOKIE, id, {
       httpOnly: true,

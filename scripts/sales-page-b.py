@@ -23,15 +23,21 @@ REQUIRED = [
     "data-wp-preview",
     "widget_ready",
     "237694327885",
+    'id="chariow-widget" class="ph-no-capture"',
+    "wpCapture",
 ]
 
 
-def build(_page_a: str = "") -> str:
+def build(_page_a: str = "", measure: str = "") -> str:
+    """measure : script de mesure (Pixel Meta + PostHog, scripts/lp-measure.js) déjà configuré."""
     s = SOURCE.read_text(encoding="utf-8")
+    if "<!-- MESURE -->" not in s:
+        raise SystemExit("[variante B] emplacement <!-- MESURE --> introuvable")
+    s = s.replace("<!-- MESURE -->", "<!-- Mesure : Pixel Meta et PostHog chargés après interaction ou inactivité, avec consentement en Europe. -->\n<script>\n" + measure + "</script>")
     for marker in REQUIRED:
         if marker not in s:
             raise SystemExit(f"[variante B] élément manquant : {marker}")
-    for forbidden in ("50+", "237653769998", "Télécharger le Catalogue"):
+    for forbidden in ("50+", "237653769998", "Télécharger le Catalogue", "clarity.ms"):
         if forbidden in s:
             raise SystemExit(f"[variante B] mention interdite : {forbidden}")
     return s
