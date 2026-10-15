@@ -41,6 +41,19 @@ jobs:
           echo "== Pare-feu / Bot Fight Mode de la zone"
           zone=$(curl -sS "${auth[@]}" "$CF/zones?name=wooplans.com" | jq -r '.result[0].id')
           curl -sS "${auth[@]}" "$CF/zones/$zone/bot_management" | jq -c '{success, errors, r: .result}'
+          echo "== Requêtes du Worker en échec depuis la rebascule (90 min)"
+          now=$(date +%s000); from=$(( now - 90*60*1000 ))
+          curl -sS -X POST "${auth[@]}" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"post\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.outcome\",\"operation\":\"neq\",\"type\":\"string\",\"value\":\"ok\"}]}}" \
+            | jq -c '.result.events.events[]? | {outcome: .["$workers"].outcome, url: .["$workers"].event.request.url, cpu: .["$workers"].cpuTimeMs}' \
+            | sed -E 's#/api/mcp/[^"?]+#/api/mcp/<JETON>#g' | sort | uniq -c | sort -rn | head -30
+          echo "== Réponses 5xx (90 min)"
+          curl -sS -X POST "${auth[@]}" -H "Content-Type: application/json" \
+            "$CF/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/observability/telemetry/query" \
+            --data "{\"queryId\":\"5xx\",\"timeframe\":{\"from\":$from,\"to\":$now},\"view\":\"events\",\"limit\":100,\"parameters\":{\"filters\":[{\"key\":\"\$metadata.service\",\"operation\":\"eq\",\"type\":\"string\",\"value\":\"wooplans-web\"},{\"key\":\"\$workers.event.response.status\",\"operation\":\"gte\",\"type\":\"number\",\"value\":500}]}}" \
+            | jq -c '.result.events.events[]? | {status: .["$workers"].event.response.status, url: .["$workers"].event.request.url}' \
+            | sed -E 's#/api/mcp/[^"?]+#/api/mcp/<JETON>#g' | sort | uniq -c | sort -rn | head -30
           echo "== Enregistrements Resend (domaine wooplans.com)"
           echo "DKIM  : $(dig +short TXT resend._domainkey.wooplans.com | cut -c1-40)"
           echo "MX send : $(dig +short MX send.wooplans.com)"
