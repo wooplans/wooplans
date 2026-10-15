@@ -150,7 +150,7 @@ export default async function PlanDetailPage({ params }: Props) {
           <span>{plan.floors} niveau{plan.floors > 1 ? "x" : ""}</span>
         </div>
 
-        <div className="aspect-[16/9] md:aspect-[16/10] overflow-hidden bg-surface mt-6 mb-6 md:mb-8 border border-outline/10 rounded-2xl">
+        <div className="aspect-[16/9] overflow-hidden bg-surface mt-6 mb-6 md:mb-8 border border-outline/10 rounded-2xl">
           <Image
             src={plan.thumbnail}
             alt={plan.name}
