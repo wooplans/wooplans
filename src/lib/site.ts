@@ -4,7 +4,7 @@ export const SITE = {
   description:
     "Plus de 50 modèles de villas et duplex conçus pour l'Afrique francophone, avec rendus 3D, distributions cotées et devis estimatifs. Choisissez la maison adaptée à votre famille, votre terrain et votre budget.",
   locale: "fr_FR",
-  email: "bonjour@wooplans.com",
+  email: "info@wooplans.com",
   catalogueUrl: "/catalogue-premium",
   catalogueCta: "Obtenir le Catalogue Premium",
   social: [

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
+import { saveEmailBudget } from "@/lib/email-budget";
 import { setSetting, type CustomPlanPricing } from "@/lib/settings";
 
 export async function savePricing(form: FormData) {
@@ -31,4 +32,11 @@ export async function saveCatalogueFiles(form: FormData) {
   await setSetting("catalogue_files", files);
   revalidatePath("/admin/reglages");
   revalidatePath("/espace-premium/telechargements");
+}
+
+export async function saveBudget(form: FormData) {
+  await requireAdmin();
+  const n = (name: string) => Math.max(0, Math.round(Number(form.get(name) || 0)));
+  await saveEmailBudget({ dailyLimit: n("dailyLimit"), monthlyLimit: n("monthlyLimit"), dailyReserve: n("dailyReserve") });
+  revalidatePath("/admin/reglages");
 }

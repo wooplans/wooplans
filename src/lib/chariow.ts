@@ -8,6 +8,7 @@ import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
 import { captureServerEvents } from "@/lib/posthog";
+import { recordProspectEvent } from "@/lib/prospects";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -160,6 +161,23 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
         .update(schema.checkoutIntents)
         .set({ status, saleId: sale.id, updatedAt: new Date() })
         .where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    // CRM prospects : paiement abandonné ou échoué → séquence de relance (sauf si la vente est déjà payée).
+    if (email && nextStatus !== "completed") {
+      await recordProspectEvent({
+        email,
+        name,
+        phone: values.phone,
+        country: values.country,
+        event: status,
+        occurredAt: values.occurredAt,
+        saleId: sale.id,
+        amount,
+        source: "webhook",
+        utmSource: values.utmSource,
+        utmCampaign: values.utmCampaign,
+        startSequence: true,
+      }).catch((error) => console.error("CRM prospects : enregistrement impossible", error));
     }
     return "recorded";
   }

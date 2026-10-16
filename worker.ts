@@ -46,9 +46,11 @@ export default {
     }
     return nextWorker.fetch(request, env, ctx);
   },
-  async scheduled(_event: ScheduledController, env: CloudflareEnv, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledController, env: CloudflareEnv, ctx: ExecutionContext) {
     if (!env.CRON_SECRET) return;
-    const request = new Request(`${env.SITE_URL}/api/cron`, {
+    // « 0 6 * * * » : récapitulatif quotidien ; les autres déclenchements (toutes les 15 min) : relances prospects.
+    const path = event.cron === "0 6 * * *" ? "/api/cron" : "/api/cron/relances";
+    const request = new Request(`${env.SITE_URL}${path}`, {
       method: "POST",
       headers: { "x-cron-secret": env.CRON_SECRET },
     });

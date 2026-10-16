@@ -117,6 +117,12 @@ ok("webhook : signature valide acceptée (événement de test)", good.status ===
 // Cron (mauvais secret uniquement : le vrai appel enverrait le récapitulatif)
 const cron = await get("/api/cron", { method: "POST", headers: { "x-cron-secret": "mauvais" } });
 ok("cron : mauvais secret refusé", cron.status === 401, String(cron.status));
+const relances = await get("/api/cron/relances", { method: "POST", headers: { "x-cron-secret": "mauvais" } });
+ok("cron relances : mauvais secret refusé", relances.status === 401, String(relances.status));
+
+// Désinscription : un lien non signé est refusé
+const optout = await get("/api/desinscription?e=test%40example.com&s=prospects&t=faux", { method: "POST" });
+ok("désinscription : signature invalide refusée", optout.status === 400, String(optout.status));
 
 // MCP
 const rpc = (body, headers = {}) =>

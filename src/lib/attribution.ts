@@ -18,14 +18,20 @@ const clean = (value: string | null | undefined, max = 200) => {
 const SOCIAL = /facebook|fb|meta|instagram|ig|tiktok|youtube|whatsapp/i;
 const SEARCH = /google\.|bing\.|duckduckgo\.|yahoo\.|ecosia\./i;
 
-/** Classe la provenance d'une visite : UTM d'abord, puis identifiants de clic, puis référent. */
+/**
+ * Classe la provenance d'une visite : UTM d'abord, puis identifiants de clic, puis référent.
+ * Facebook ajoute fbclid à TOUS les liens cliqués (publications gratuites comme publicités) :
+ * sans UTM, on ne peut pas savoir si c'est payant → « social ». Les publicités se reconnaissent
+ * à leurs UTM (utm_medium=paid_social…) ou aux identifiants propres aux régies (ttclid, gclid).
+ */
 export function classifySource(input: {
   utmSource: string | null;
   utmMedium: string | null;
   fbclid: boolean;
   referrer: string | null;
+  adClick?: "social" | "search" | null;
 }) {
-  const { utmSource, utmMedium, fbclid, referrer } = input;
+  const { utmSource, utmMedium, fbclid, referrer, adClick } = input;
   if (utmSource) {
     const paid = utmMedium && /^(cpc|ppc|paid|paid_social|ads?)$/i.test(utmMedium);
     if (SOCIAL.test(utmSource)) return paid ? "social_ads" : "social";
@@ -33,7 +39,9 @@ export function classifySource(input: {
     if (/mail|newsletter|resend/i.test(utmSource)) return "email";
     return utmSource.toLowerCase().slice(0, 40);
   }
-  if (fbclid) return "social_ads";
+  if (adClick === "social") return "social_ads";
+  if (adClick === "search") return "search_ads";
+  if (fbclid) return "social";
   if (referrer) {
     try {
       const host = new URL(referrer).hostname;
@@ -54,9 +62,10 @@ export function parseAttribution(url: string, referrer: string | null): Attribut
   const utmSource = clean(p.get("utm_source"));
   const utmMedium = clean(p.get("utm_medium"));
   const fbclid = p.has("fbclid");
+  const adClick = p.has("ttclid") ? "social" : p.has("gclid") || p.has("gbraid") || p.has("wbraid") ? "search" : null;
   const ref = clean(referrer, 500);
   return {
-    source: classifySource({ utmSource, utmMedium, fbclid, referrer: ref }),
+    source: classifySource({ utmSource, utmMedium, fbclid, referrer: ref, adClick }),
     landingPath: parsed.pathname.slice(0, 300),
     referrer: ref,
     utmSource,

@@ -1,33 +1,63 @@
 import { cookies } from "next/headers";
 import { desc, like, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import Link from "next/link";
 import { Badge, fmtDate, PageTitle, Table } from "@/components/admin/ui";
+import { codeStatusByMember, getDigestCampaign, getMemberDigestSettings } from "@/lib/member-mailing";
 import { whatsappUrl } from "@/lib/phone";
-import { addMember, importFromChariow, newCode, reactivate, revoke, sendLegacyCodes } from "./actions";
+import { addMember, importFromChariow, newCode, reactivate, revoke, saveDigest, sendLegacyCodes } from "./actions";
 
 const SOURCES: Record<string, string> = { chariow: "Chariow", legacy_import: "Import", manual: "Manuel" };
 
-export default async function MembersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const { q } = await searchParams;
+const CODE_VIEWS = [
+  { id: "", label: "Tous" },
+  { id: "envoye", label: "Code reçu" },
+  { id: "jamais", label: "Code jamais envoyé" },
+  { id: "echec", label: "Envoi échoué" },
+] as const;
+
+export default async function MembersPage({ searchParams }: { searchParams: Promise<{ q?: string; code?: string }> }) {
+  const { q, code = "" } = await searchParams;
   const flashRaw = (await cookies()).get("wp_flash")?.value;
   const flash = flashRaw ? (JSON.parse(flashRaw) as { email: string; code: string; emailed: boolean }) : null;
   const notice = (await cookies()).get("wp_notice")?.value;
   const term = (q || "").trim();
-  const members = await getDb().query.members.findMany({
-    where: term ? or(like(schema.members.email, `%${term}%`), like(schema.members.name, `%${term}%`), like(schema.members.phone, `%${term}%`)) : undefined,
-    orderBy: desc(schema.members.createdAt),
-    limit: 200,
-  });
+  const [allMembers, codes, digest, campaign] = await Promise.all([
+    getDb().query.members.findMany({
+      where: term ? or(like(schema.members.email, `%${term}%`), like(schema.members.name, `%${term}%`), like(schema.members.phone, `%${term}%`)) : undefined,
+      orderBy: desc(schema.members.createdAt),
+    }),
+    codeStatusByMember(),
+    getMemberDigestSettings(),
+    getDigestCampaign(),
+  ]);
+  const stateOf = (id: string) => codes.get(id)?.state ?? "never";
+  const counts = { envoye: 0, jamais: 0, echec: 0 };
+  for (const m of allMembers) {
+    if (m.status !== "active") continue;
+    const st = stateOf(m.id);
+    counts[st === "sent" ? "envoye" : st === "failed" ? "echec" : "jamais"]++;
+  }
+  const waiting = allMembers.filter((m) => m.status === "active" && !m.lastLoginAt && stateOf(m.id) !== "sent").length;
+  const members = allMembers
+    .filter((m) =>
+      code === "envoye" ? stateOf(m.id) === "sent" : code === "jamais" ? stateOf(m.id) === "never" : code === "echec" ? stateOf(m.id) === "failed" : true,
+    )
+    .slice(0, 300);
 
   return (
     <>
       <PageTitle
         title="Membres Premium"
-        subtitle={`${members.length} affiché(s). La révocation coupe l'accès immédiatement.`}
+        subtitle={`${members.length} affiché(s) · code reçu : ${counts.envoye} · jamais envoyé : ${counts.jamais} · échec : ${counts.echec}. La révocation coupe l'accès immédiatement.`}
         actions={
           <>
             <form action={importFromChariow}><button className="btn-ghost py-2">Importer les acheteurs Chariow</button></form>
-            <form action={sendLegacyCodes}><button className="btn-ghost py-2">Envoyer les codes (25 suivants)</button></form>
+            <form action={sendLegacyCodes}>
+              <button className="btn-ghost py-2" disabled={waiting === 0} title="Membres actifs sans code reçu et jamais connectés">
+                Envoyer les codes (25 suivants · {waiting} en attente)
+              </button>
+            </form>
           </>
         }
       />
@@ -56,7 +86,19 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         </form>
       </div>
 
-      <Table head={["Membre", "WhatsApp", "Statut", "Source", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
+      <div className="mb-4 flex flex-wrap gap-1 rounded-full border border-outline bg-surface p-1 text-sm sm:w-fit">
+        {CODE_VIEWS.map((v) => (
+          <Link
+            key={v.id}
+            href={`/admin/membres?${new URLSearchParams({ ...(term ? { q: term } : {}), ...(v.id ? { code: v.id } : {}) })}`}
+            className={`rounded-full px-3 py-1 ${code === v.id ? "bg-primary text-white" : "text-foreground/70 hover:text-primary"}`}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </div>
+
+      <Table head={["Membre", "WhatsApp", "Statut", "Code d'accès", "Source", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
         {members.map((m) => (
           <tr key={m.id}>
             <td className="px-4 py-2.5">
@@ -79,6 +121,14 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               {m.status === "active" ? <Badge tone="good">Actif</Badge> : <Badge tone="bad">Révoqué</Badge>}
               {m.revokedReason ? <p className="mt-1 text-xs text-muted">{m.revokedReason}</p> : null}
             </td>
+            <td className="px-4 py-2.5">
+              {(() => {
+                const c = codes.get(m.id);
+                if (c?.state === "sent") return <><Badge tone="good">Reçu</Badge><p className="mt-1 text-xs text-muted">{fmtDate(c.at)}</p></>;
+                if (c?.state === "failed") return <><Badge tone="bad">Échec</Badge><p className="mt-1 text-xs text-muted">{fmtDate(c.at)}</p></>;
+                return <Badge tone="warn">Jamais envoyé</Badge>;
+              })()}
+            </td>
             <td className="px-4 py-2.5">{SOURCES[m.source]}</td>
             <td className="px-4 py-2.5">{fmtDate(m.createdAt)}</td>
             <td className="px-4 py-2.5">{fmtDate(m.lastLoginAt)}</td>
@@ -100,6 +150,35 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           </tr>
         ))}
       </Table>
+
+      <section className="card mt-8 p-5">
+        <h2 className="font-semibold">Actualités mensuelles aux membres</h2>
+        <p className="mt-1 text-sm text-muted">
+          Chaque mois, à partir du jour choisi, un email présente les modèles publiés depuis le mois précédent, avec le
+          bouton de connexion. Pas de nouveau modèle, pas d&apos;email. Envoyé aux membres actifs qui ont reçu leur code ou
+          se sont déjà connectés, par lots quotidiens (7 h), hors désinscrits.
+        </p>
+        {campaign ? (
+          <p className="mt-2 text-sm">
+            Dernière campagne : <strong>{campaign.month}</strong> · {campaign.planIds.length} nouveau(x) modèle(s) ·{" "}
+            {campaign.done ? "terminée" : "en cours d'envoi"}
+          </p>
+        ) : null}
+        <form action={saveDigest} className="mt-4 flex flex-wrap items-end gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="enabled" defaultChecked={digest.enabled} /> Envoi automatique actif
+          </label>
+          <label className="text-sm">
+            <span className="label">Jour du mois</span>
+            <input name="dayOfMonth" type="number" min={1} max={28} defaultValue={digest.dayOfMonth} className="input w-24" />
+          </label>
+          <label className="text-sm">
+            <span className="label">Emails par jour</span>
+            <input name="perRun" type="number" min={1} max={200} defaultValue={digest.perRun} className="input w-24" />
+          </label>
+          <button className="btn-primary">Enregistrer</button>
+        </form>
+      </section>
     </>
   );
 }

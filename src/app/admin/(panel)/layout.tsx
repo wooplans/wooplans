@@ -10,9 +10,11 @@ const NAV = [
   { href: "/admin", label: "Tableau de bord" },
   { href: "/admin/crm", label: "CRM plans complets" },
   { href: "/admin/ventes", label: "Ventes catalogue" },
+  { href: "/admin/prospects", label: "Prospects catalogue" },
   { href: "/admin/membres", label: "Membres" },
   { href: "/admin/plans", label: "Modèles" },
   { href: "/admin/emails", label: "Emails" },
+  { href: "/admin/liens", label: "Liens UTM" },
   { href: "/admin/reglages", label: "Réglages" },
 ];
 

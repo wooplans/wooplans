@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { normalizeAccessCode, randomAccessCode, randomId, sha256Hex } from "@/lib/crypto";
 import { requireSecret } from "@/lib/env";
@@ -29,6 +29,11 @@ export async function grantAccess(input: GrantInput) {
   const email = normalizeEmail(input.email);
   const code = randomAccessCode();
   const codeHash = await hashAccessCode(code);
+  // CRM prospects : devenu membre (Chariow, ajout manuel, outil MCP) → plus aucune relance d'achat.
+  await db
+    .update(schema.prospects)
+    .set({ status: "converted", convertedAt: new Date(), nextEmailAt: null, updatedAt: new Date() })
+    .where(and(eq(schema.prospects.email, email), inArray(schema.prospects.status, ["open", "lost"])));
   const existing = await db.query.members.findFirst({ where: eq(schema.members.email, email) });
 
   if (existing) {

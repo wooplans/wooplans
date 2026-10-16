@@ -4,7 +4,7 @@
  */
 
 /** Pages jamais mesurées : codes d'accès, emails, espace membre, administration. */
-const PRIVATE_PREFIXES = ["/admin", "/espace-premium", "/connexion", "/merci", "/televersement", "/api"];
+const PRIVATE_PREFIXES = ["/admin", "/espace-premium", "/connexion", "/merci", "/televersement", "/desinscription", "/api"];
 
 export function isPrivatePath(pathname: string) {
   return PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
