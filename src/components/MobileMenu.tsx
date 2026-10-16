@@ -26,14 +26,20 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
       {open ? (
         <div className="fixed inset-0 z-50 bg-black/40 lg:hidden" onClick={() => setOpen(false)}>
           <div
-            className="absolute right-0 top-0 flex h-full w-[84%] max-w-sm flex-col gap-1 bg-surface p-6 shadow-2xl"
+            // Le menu est rendu dans l'en-tête (texte blanc) : couleur du texte remise explicitement.
+            className="absolute right-0 top-0 flex h-full w-[84%] max-w-sm flex-col gap-1 bg-surface p-6 text-foreground shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button type="button" className="mb-4 self-end p-2 text-2xl leading-none" aria-label="Fermer" onClick={() => setOpen(false)}>
+            <button type="button" className="mb-4 flex h-11 w-11 items-center justify-center self-end rounded-full text-2xl leading-none hover:bg-background" aria-label="Fermer" onClick={() => setOpen(false)}>
               ×
             </button>
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-xl px-3 py-3 text-base font-medium hover:bg-background">
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={pathname === link.href ? "page" : undefined}
+                className={`rounded-xl px-3 py-3 text-base font-medium hover:bg-background ${pathname === link.href ? "bg-primary/10 font-semibold text-primary" : ""}`}
+              >
                 {link.label}
               </Link>
             ))}
