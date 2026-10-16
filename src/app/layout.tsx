@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import { Suspense } from "react";
 import { ImageGuard } from "@/components/ImageGuard";
 import { Tracker } from "@/components/Tracker";
@@ -22,8 +22,17 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
 };
 
-// Police auto-hébergée (téléchargée au build) : plus de feuille de style Google bloquante au premier affichage.
-const montserrat = Montserrat({ subsets: ["latin"], weight: ["600", "700", "800"], display: "swap", variable: "--font-heading" });
+// Montserrat (sous-ensemble latin, licence OFL) versionnée dans le dépôt : pas de feuille de style Google bloquante
+// et pas de téléchargement au build (Google Fonts renvoie parfois des fichiers sans extension, ce qui cassait le build).
+const montserrat = localFont({
+  src: [
+    { path: "./fonts/montserrat-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/montserrat-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/montserrat-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-heading",
+});
 
 export const viewport: Viewport = { themeColor: "#0F5B59", width: "device-width", initialScale: 1 };
 
