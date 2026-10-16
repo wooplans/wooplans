@@ -21,7 +21,7 @@ const NAV = [
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[220px_1fr]">
+    <div className="admin-shell min-h-screen lg:grid lg:grid-cols-[220px_1fr]">
       <aside className="border-b border-outline bg-primary text-white lg:min-h-screen lg:border-b-0">
         <div className="flex items-center justify-between p-4 lg:block">
           <Logo href="/admin" height={34} />

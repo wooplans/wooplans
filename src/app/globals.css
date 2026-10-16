@@ -87,3 +87,10 @@ body {
     @apply mb-4 list-disc space-y-1 pl-5 text-foreground/80;
   }
 }
+
+/* Images du catalogue : pas de glisser-déposer ni de menu d'appui long (iOS) ; l'admin garde le comportement normal. */
+body:not(:has(.admin-shell)) img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}

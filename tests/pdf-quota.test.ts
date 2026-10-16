@@ -4,7 +4,7 @@ import { DAY_MS, evaluatePdfQuota, quotaLimits, type PdfDownloadRow } from "../s
 
 const now = new Date("2026-10-16T12:00:00Z");
 const ago = (ms: number) => new Date(now.getTime() - ms);
-const limits = { perDay: 3, perMonth: 10, maxPerDay: 15 };
+const limits = { perDay: 3, perMonth: 10, maxPerDay: 15, lifetime: 20 };
 const rows = (slugs: string[], at: (i: number) => Date): PdfDownloadRow[] => slugs.map((planSlug, i) => ({ planSlug, createdAt: at(i) }));
 
 test("quota : nouvelle fiche autorisée tant que les limites ne sont pas atteintes", () => {
@@ -53,5 +53,30 @@ test("garde-fou : trop de téléchargements en 24 h, même déjà obtenus", () =
 });
 
 test("quotaLimits : valeurs d'environnement, défauts si invalides", () => {
-  assert.deepEqual(quotaLimits({ PDF_QUOTA_DAY: "5", PDF_QUOTA_MONTH: "x" }), { perDay: 5, perMonth: 10, maxPerDay: 15 });
+  assert.deepEqual(quotaLimits({ PDF_QUOTA_DAY: "5", PDF_QUOTA_MONTH: "x" }), { perDay: 5, perMonth: 10, maxPerDay: 15, lifetime: 20 });
+});
+
+test("blocage définitif : 20 modèles obtenus, plus aucun téléchargement", () => {
+  const slugs = Array.from({ length: 20 }, (_, i) => `m${i}`);
+  const history = rows(slugs, (i) => ago((i * 4 + 31) * DAY_MS));
+  const q = evaluatePdfQuota(history, "nouveau", limits, now);
+  assert.equal(q.allowed, false);
+  assert.equal(q.reason, "lifetime");
+  assert.equal(q.remainingLifetime, 0);
+  // Même une fiche déjà obtenue n'est plus servie.
+  assert.equal(evaluatePdfQuota(history, "m3", limits, now).reason, "lifetime");
+  // À 19, le 20e modèle passe encore.
+  assert.equal(evaluatePdfQuota(history.slice(1), "nouveau", limits, now).allowed, true);
+});
+
+test("fiches obtenues il y a plus de 30 jours : re-téléchargement gratuit et listées, plus récentes d'abord", () => {
+  const history: PdfDownloadRow[] = [
+    { planSlug: "ancien", createdAt: ago(90 * DAY_MS) },
+    { planSlug: "recent", createdAt: ago(2 * DAY_MS) },
+  ];
+  const q = evaluatePdfQuota(history, "ancien", limits, now);
+  assert.equal(q.allowed, true);
+  assert.equal(q.alreadyOwned, true);
+  assert.deepEqual(q.ownedSlugs, ["recent", "ancien"]);
+  assert.equal(q.remainingMonth, 9);
 });

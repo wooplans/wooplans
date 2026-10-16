@@ -32,10 +32,12 @@
     "EMAIL_REPLY_TO": "info@wooplans.com",
     "ADMIN_NOTIFY_EMAIL": "wooplans237@gmail.com",
     // Quota de fiches PDF par membre : modèles différents par 24 h et par 30 jours glissants
-    // (re-télécharger une fiche déjà obtenue ne compte pas), et plafond total par 24 h.
+    // (re-télécharger une fiche déjà obtenue ne compte pas), plafond total par 24 h, et
+    // blocage définitif des téléchargements une fois PDF_QUOTA_LIFETIME modèles obtenus.
     "PDF_QUOTA_DAY": "3",
     "PDF_QUOTA_MONTH": "10",
-    "PDF_QUOTA_MAX_PER_DAY": "15"
+    "PDF_QUOTA_MAX_PER_DAY": "15",
+    "PDF_QUOTA_LIFETIME": "20"
   },
   // Secrets (wrangler secret put): AUTH_SECRET, CHARIOW_PULSE_SECRET, CHARIOW_API_KEY,
   // RESEND_API_KEY, MCP_TOKEN, CRON_SECRET

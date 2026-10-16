@@ -36,8 +36,9 @@ export default function CgvPage() {
         identifiant unique permettant d&apos;en retrouver l&apos;origine.
       </p>
       <p>
-        Pour prévenir la copie du catalogue, le nombre de nouvelles fiches téléchargeables est limité sur 24 heures et sur 30 jours ; re-télécharger une
-        fiche déjà obtenue n&apos;est pas décompté. Tous les modèles restent consultables en ligne dans l&apos;espace Premium.
+        Pour prévenir la copie du catalogue, le téléchargement des fiches est limité à 3 nouveaux modèles par jour et 10 par période de 30 jours ;
+        re-télécharger une fiche déjà obtenue n&apos;est pas décompté. Au-delà de 20 fiches téléchargées au total, les téléchargements sont bloqués
+        définitivement. Tous les modèles restent consultables en ligne dans l&apos;espace Premium.
       </p>
       <h2>6. Rétractation</h2>
       <p>

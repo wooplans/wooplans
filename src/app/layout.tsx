@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat } from "next/font/google";
 import { Suspense } from "react";
+import { ImageGuard } from "@/components/ImageGuard";
 import { Tracker } from "@/components/Tracker";
 import { siteUrl } from "@/lib/env";
 import { SITE } from "@/lib/site";
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr" className={montserrat.variable}>
       <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         {children}
+        <ImageGuard />
         <Suspense fallback={null}>
           <Tracker />
         </Suspense>

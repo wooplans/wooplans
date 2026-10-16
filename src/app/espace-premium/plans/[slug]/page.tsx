@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { FavoriteButton } from "@/components/premium/FavoriteButton";
+import { FloorPlanViewer } from "@/components/premium/FloorPlanViewer";
 import { requireMember } from "@/lib/auth";
 import { CATEGORY_LABELS, formatFcfa, getPremiumPlan } from "@/lib/plans";
 import { getFavoriteIds, privateFileUrl } from "@/lib/premium";
@@ -59,11 +60,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
                   <span className="text-sm text-muted">Ouvrir</span>
                 </a>
               ) : (
-                <a key={key} href={privateFileUrl(key)} target="_blank" rel="noopener noreferrer" className="card block overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={privateFileUrl(key)} alt={`${plan.name} — distribution ${i + 1}`} loading="lazy" className="w-full bg-white object-contain" />
-                  <p className="border-t border-outline px-4 py-2 text-sm text-muted">Toucher pour agrandir</p>
-                </a>
+                <FloorPlanViewer key={key} src={privateFileUrl(key)} alt={`${plan.name} — distribution ${i + 1}`} />
               ),
             )}
           </div>
