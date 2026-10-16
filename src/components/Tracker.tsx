@@ -42,9 +42,14 @@ export function Tracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const firstView = useRef(true);
+  const lastPathname = useRef<string | null>(null);
 
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
+    // Filtres du catalogue : l'URL change sur place, ce n'est pas une nouvelle page (mesuré par catalogue_filter).
+    const filterChange = lastPathname.current === pathname && pageType(pathname) === "catalogue";
+    lastPathname.current = pathname;
+    if (filterChange) return;
     const planSlug = planSlugFromPath(pathname) ?? undefined;
     const type = pathname === "/catalogue-premium" ? "sales_page_view" : planSlug ? "plan_view" : "page_view";
     if (firstView.current) trackAndIdentify({ type, planSlug });

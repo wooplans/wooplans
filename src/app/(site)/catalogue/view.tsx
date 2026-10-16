@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
-import { PlanGrid } from "@/components/PlanCard";
-import { PlanFiltersForm } from "@/components/PlanFiltersForm";
-import { applyPlanFilters, type PlanFilters } from "@/lib/plan-filters";
+import { CatalogueBrowser } from "@/components/CatalogueBrowser";
+import { PlanCard } from "@/components/PlanCard";
+import type { PlanFilters } from "@/lib/plan-filters";
 import { listPublicPlans } from "@/lib/plans";
 
 /** Adresse canonique : /catalogue, /catalogue-villa, /catalogue-duplex (URL héritées du site Framer). */
@@ -24,23 +24,26 @@ export function catalogueMetadata(params: PlanFilters): Metadata {
 }
 
 export async function CatalogueView({ filters }: { filters: PlanFilters }) {
-  const plans = applyPlanFilters(await listPublicPlans(), filters);
+  // Tous les modèles sont rendus ; le filtre s'applique ensuite dans le navigateur, sans aller-retour serveur.
+  const items = (await listPublicPlans()).map((p, i) => ({
+    plan: { id: p.id, code: p.code, name: p.name, category: p.category, bedrooms: p.bedrooms, levels: p.levels, budgetMin: p.budgetMin, budgetMax: p.budgetMax, landArea: p.landArea },
+    card: <PlanCard plan={p} priority={i < 3} />,
+  }));
   const title =
     filters.categorie === "villa" ? "Plans de villas" : filters.categorie === "duplex" ? "Plans de duplex" : "Tous nos modèles de maisons";
 
   return (
     <>
-      <section className="container-page py-12">
-        <p className="eyebrow">Catalogue WOOPLANS</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-        <p className="mt-3 max-w-2xl text-foreground/70">
+      <section className="container-page pb-12 pt-5 md:pt-12">
+        <p className="eyebrow hidden md:block">Catalogue WOOPLANS</p>
+        <h1 className="text-2xl font-bold tracking-tight md:mt-2 md:text-4xl">{title}</h1>
+        <p className="mt-1 text-sm text-foreground/70 md:hidden">Rendus 3D, surfaces et budget indicatif de chaque modèle.</p>
+        <p className="mt-3 hidden max-w-2xl text-foreground/70 md:block">
           Rendus, chambres, niveaux, surfaces et budget indicatif de chaque modèle. Tous ces modèles sont inclus dans le Catalogue Premium, avec leurs distributions cotées et leurs devis détaillés.
         </p>
-        <div className="mt-8">
-          <PlanFiltersForm filters={filters} action="/catalogue" />
+        <div className="mt-4 md:mt-8">
+          <CatalogueBrowser items={items} initialFilters={filters} />
         </div>
-        <p className="mb-6 mt-6 text-sm text-muted">{plans.length} modèle{plans.length > 1 ? "s" : ""}</p>
-        <PlanGrid plans={plans} />
       </section>
       <CtaCatalogue ctaId="plans_list" />
     </>
