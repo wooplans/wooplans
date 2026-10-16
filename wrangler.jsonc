@@ -11,8 +11,8 @@
   "observability": { "enabled": true },
   // Plan Workers Paid requis (le plan gratuit plafonne à 10 ms de CPU par requête : erreurs 1102)
   "limits": { "cpu_ms": 30000 },
-  // Récapitulatif quotidien à 6 h UTC (7 h à Douala)
-  "triggers": { "crons": ["0 6 * * *"] },
+  // Récapitulatif quotidien à 6 h UTC (7 h à Douala) ; relances des prospects toutes les 15 min
+  "triggers": { "crons": ["0 6 * * *", "*/15 * * * *"] },
   "vars": {
     "SITE_URL": "https://www.wooplans.com",
     "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",

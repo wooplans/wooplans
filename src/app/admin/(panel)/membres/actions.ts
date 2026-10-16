@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { accessCodeEmail, sendEmail } from "@/lib/email";
+import { saveMemberDigestSettings } from "@/lib/member-mailing";
 import { grantAccess, revokeAccess, rotateAccessCode } from "@/lib/members";
 
 /** Le code en clair est montré une seule fois à l'admin via un cookie éphémère. */
@@ -79,12 +80,22 @@ export async function sendLegacyCodes() {
   await requireAdmin();
   const { sendLegacyWelcomeBatch } = await import("@/lib/chariow-import");
   const result = await sendLegacyWelcomeBatch(25);
-  (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining}.`, {
+  (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining} (les membres qui ont déjà reçu leur code ou se sont connectés sont exclus).`, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
     path: "/admin",
     maxAge: 120,
+  });
+  revalidatePath("/admin/membres");
+}
+
+export async function saveDigest(form: FormData) {
+  await requireAdmin();
+  await saveMemberDigestSettings({
+    enabled: form.get("enabled") === "on",
+    dayOfMonth: Math.min(28, Math.max(1, Number(form.get("dayOfMonth") || 1))),
+    perRun: Math.min(200, Math.max(1, Number(form.get("perRun") || 80))),
   });
   revalidatePath("/admin/membres");
 }

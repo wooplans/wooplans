@@ -244,6 +244,63 @@ export const webhookDeliveries = sqliteTable("webhook_deliveries", {
   receivedAt: createdAt(),
 });
 
+/* ─────────────────────────── CRM prospects du catalogue ─────────────────────────── */
+
+export const PROSPECT_STATUSES = ["open", "converted", "unsubscribed", "lost"] as const;
+export type ProspectStatus = (typeof PROSPECT_STATUSES)[number];
+
+/**
+ * Personnes qui ont commencé l'achat du Catalogue Premium sans le payer (paiement abandonné ou échoué,
+ * ou email laissé sur le site). Une ligne par email ; passe à « converted » dès qu'un paiement arrive.
+ */
+export const prospects = sqliteTable(
+  "prospects",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    name: text("name"),
+    phone: text("phone"),
+    country: text("country"),
+    status: text("status", { enum: PROSPECT_STATUSES }).notNull().default("open"),
+    /** Dernier évènement connu : paiement abandonné, échoué, ou email laissé sur le site. */
+    lastEvent: text("last_event", { enum: ["abandoned", "failed", "started"] }).notNull(),
+    lastEventAt: integer("last_event_at", { mode: "timestamp_ms" }).notNull(),
+    lastSaleId: text("last_sale_id"),
+    amount: integer("amount"),
+    source: text("source", { enum: ["webhook", "chariow_import", "site"] }).notNull(),
+    utmSource: text("utm_source"),
+    utmCampaign: text("utm_campaign"),
+    /** Séquence de relance : nombre d'emails déjà envoyés, début et prochain envoi (null = arrêtée). */
+    sequenceStep: integer("sequence_step").notNull().default(0),
+    sequenceStartedAt: integer("sequence_started_at", { mode: "timestamp_ms" }),
+    nextEmailAt: integer("next_email_at", { mode: "timestamp_ms" }),
+    lastEmailAt: integer("last_email_at", { mode: "timestamp_ms" }),
+    convertedAt: integer("converted_at", { mode: "timestamp_ms" }),
+    notes: text("notes").notNull().default(""),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    uniqueIndex("prospects_email_idx").on(t.email),
+    index("prospects_status_idx").on(t.status, t.lastEventAt),
+    index("prospects_next_email_idx").on(t.nextEmailAt),
+  ],
+);
+
+/** Désinscriptions des emails automatiques (relances prospects, actualités membres). */
+export const EMAIL_OPTOUT_SCOPES = ["prospects", "members"] as const;
+export type EmailOptoutScope = (typeof EMAIL_OPTOUT_SCOPES)[number];
+
+export const emailOptouts = sqliteTable(
+  "email_optouts",
+  {
+    email: text("email").notNull(),
+    scope: text("scope", { enum: EMAIL_OPTOUT_SCOPES }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.email, t.scope] })],
+);
+
 /* ─────────────────────────── CRM plans complets ─────────────────────────── */
 
 export const LEAD_STAGES = [
@@ -352,7 +409,7 @@ export const emailLog = sqliteTable(
     leadId: text("lead_id"),
     createdAt: createdAt(),
   },
-  (t) => [index("email_log_created_idx").on(t.createdAt)],
+  (t) => [index("email_log_created_idx").on(t.createdAt), index("email_log_member_idx").on(t.memberId, t.template)],
 );
 
 /** Réglages modifiables depuis l'admin (ex. textes, grille de prix des plans complets). */

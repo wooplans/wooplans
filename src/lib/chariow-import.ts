@@ -1,11 +1,12 @@
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
-import { eq, inArray, notInArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomAccessCode, randomId } from "@/lib/crypto";
 import { accessCodeEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { hashAccessCode, normalizeEmail, rotateAccessCode } from "@/lib/members";
+import { codeStatusByMember } from "@/lib/member-mailing";
 
 type ApiSale = {
   id: string;
@@ -117,34 +118,30 @@ export async function importChariowBuyers(maxPages = 10) {
   return { scanned, salesAdded, membersAdded, phonesAdded };
 }
 
-/** Envoie un code d'accès aux membres importés qui n'en ont pas encore reçu (par lots). */
+/**
+ * Envoie un code d'accès, par lots, aux membres actifs qui n'en ont jamais reçu (aucun envoi RÉUSSI
+ * d'un email de code) et ne se sont jamais connectés. Les envois échoués sont donc retentés.
+ */
 export async function sendLegacyWelcomeBatch(limit = 25) {
   const db = getDb();
-  const alreadySent = db
-    .select({ id: schema.emailLog.memberId })
-    .from(schema.emailLog)
-    .where(inArray(schema.emailLog.template, ["legacy_welcome", "access_code", "access_code_reset"]));
-  const pending = await db.query.members.findMany({
-    where: (m, { and }) => and(eq(m.source, "legacy_import"), eq(m.status, "active"), notInArray(m.id, alreadySent)),
-    limit,
-  });
+  const [members, codes] = await Promise.all([
+    db.query.members.findMany({ where: (m, { and, isNull }) => and(eq(m.status, "active"), isNull(m.lastLoginAt)) }),
+    codeStatusByMember(),
+  ]);
+  const waiting = members.filter((m) => codes.get(m.id)?.state !== "sent");
+  const pending = waiting.slice(0, limit);
   let sent = 0;
   for (const member of pending) {
     const { code } = await rotateAccessCode(member.id);
-    const mail = accessCodeEmail({ name: member.name, email: member.email, code, kind: "legacy" });
-    const result = await sendEmail({
-      to: member.email,
-      ...mail,
-      template: "legacy_welcome",
-      memberId: member.id,
+    const mail = accessCodeEmail({
+      name: member.name,
+      email: member.email,
+      code,
+      kind: member.source === "legacy_import" ? "legacy" : "purchase",
     });
+    const result = await sendEmail({ to: member.email, ...mail, template: "legacy_welcome", memberId: member.id });
     if (result.ok) sent++;
+    await new Promise((resolve) => setTimeout(resolve, 400));
   }
-  const remaining = (
-    await db.query.members.findMany({
-      where: (m, { and }) => and(eq(m.source, "legacy_import"), eq(m.status, "active"), notInArray(m.id, alreadySent)),
-      columns: { id: true },
-    })
-  ).length;
-  return { sent, attempted: pending.length, remaining };
+  return { sent, attempted: pending.length, remaining: waiting.length - sent };
 }
