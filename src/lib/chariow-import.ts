@@ -7,6 +7,7 @@ import { accessCodeEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
 import { hashAccessCode, normalizeEmail, rotateAccessCode } from "@/lib/members";
 import { codeStatusByMember } from "@/lib/member-mailing";
+import { automatedEmailAllowance } from "@/lib/email-budget";
 
 type ApiSale = {
   id: string;
@@ -129,7 +130,9 @@ export async function sendLegacyWelcomeBatch(limit = 25) {
     codeStatusByMember(),
   ]);
   const waiting = members.filter((m) => codes.get(m.id)?.state !== "sent");
-  const pending = waiting.slice(0, limit);
+  // Quota Resend : jamais plus que ce qui reste aujourd'hui pour les envois groupés.
+  const allowance = await automatedEmailAllowance();
+  const pending = waiting.slice(0, Math.min(limit, allowance));
   let sent = 0;
   for (const member of pending) {
     const { code } = await rotateAccessCode(member.id);
@@ -143,5 +146,5 @@ export async function sendLegacyWelcomeBatch(limit = 25) {
     if (result.ok) sent++;
     await new Promise((resolve) => setTimeout(resolve, 400));
   }
-  return { sent, attempted: pending.length, remaining: waiting.length - sent };
+  return { sent, attempted: pending.length, remaining: waiting.length - sent, quotaReached: pending.length < Math.min(limit, waiting.length) };
 }

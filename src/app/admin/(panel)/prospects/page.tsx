@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { Badge, fmtDate, fmtDateTime, PageTitle, pct, Stat, Table } from "@/components/admin/ui";
 import { whatsappUrl } from "@/lib/phone";
 import { formatFcfa } from "@/lib/plans";
+import { automatedEmailAllowance } from "@/lib/email-budget";
 import { getProspectSettings } from "@/lib/prospects";
 import { importProspects, markLost, saveSettings, startOne, startRecent, stopOne } from "./actions";
 
@@ -29,7 +30,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const { vue = "ouverts", q } = await searchParams;
   const notice = (await cookies()).get("wp_notice")?.value;
   const db = getDb();
-  const settings = await getProspectSettings();
+  const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
   const total = settings.delaysHours.length;
 
   const filters: SQL[] = [];
@@ -74,6 +75,11 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         }
       />
       {notice ? <p className="mb-4 rounded-xl bg-primary/10 px-4 py-3 text-sm text-primary">{notice}</p> : null}
+      {settings.enabled && allowance === 0 ? (
+        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Quota d&apos;emails automatiques atteint pour aujourd&apos;hui : les relances dues partiront dès que le quota se libère (Réglages).
+        </p>
+      ) : null}
       {!settings.enabled ? (
         <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Les emails de relance sont en pause (réglages en bas de page).

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
@@ -6,6 +6,7 @@ import { prospectEmail, sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
+import { automatedEmailAllowance } from "@/lib/email-budget";
 import { formatFcfa } from "@/lib/plans";
 import {
   DEFAULT_PROSPECT_SEQUENCE,
@@ -47,19 +48,53 @@ type ProspectEventInput = {
   startSequence: boolean;
 };
 
-async function isActiveMember(email: string) {
-  const m = await getDb().query.members.findFirst({
-    where: and(eq(schema.members.email, email), eq(schema.members.status, "active")),
+/**
+ * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
+ * (une même personne paie parfois avec un autre email que celui de sa tentative abandonnée).
+ */
+async function isCustomer(email: string, phone: string | null | undefined) {
+  const db = getDb();
+  const member = await db.query.members.findFirst({
+    where: and(eq(schema.members.status, "active"), phone ? or(eq(schema.members.email, email), eq(schema.members.phone, phone)) : eq(schema.members.email, email)),
     columns: { id: true },
   });
-  return Boolean(m);
+  if (member) return true;
+  const sale = await db.query.sales.findFirst({
+    where: and(eq(schema.sales.status, "completed"), phone ? or(eq(schema.sales.email, email), eq(schema.sales.phone, phone)) : eq(schema.sales.email, email)),
+    columns: { id: true },
+  });
+  return Boolean(sale);
+}
+
+/** Passe en « converti » tous les prospects ouverts qui sont devenus clients (email ou téléphone). */
+export async function reconcileProspects() {
+  const db = getDb();
+  const open = await db.query.prospects.findMany({
+    where: inArray(schema.prospects.status, ["open", "lost"]),
+    columns: { id: true, email: true, phone: true },
+  });
+  if (open.length === 0) return 0;
+  const [members, sales] = await Promise.all([
+    db.query.members.findMany({ where: eq(schema.members.status, "active"), columns: { email: true, phone: true } }),
+    db.query.sales.findMany({ where: eq(schema.sales.status, "completed"), columns: { email: true, phone: true } }),
+  ]);
+  const emails = new Set([...members, ...sales].map((c) => c.email).filter(Boolean));
+  const phones = new Set([...members, ...sales].map((c) => c.phone).filter(Boolean));
+  const ids = open.filter((p) => emails.has(p.email) || (p.phone && phones.has(p.phone))).map((p) => p.id);
+  for (let i = 0; i < ids.length; i += 50) {
+    await db
+      .update(schema.prospects)
+      .set({ status: "converted", convertedAt: new Date(), nextEmailAt: null, updatedAt: new Date() })
+      .where(inArray(schema.prospects.id, ids.slice(i, i + 50)));
+  }
+  return ids.length;
 }
 
 /** Enregistre un paiement abandonné / échoué (ou un email laissé) ; ignore les personnes déjà membres. */
 export async function recordProspectEvent(input: ProspectEventInput) {
   const db = getDb();
   const email = normalizeEmail(input.email);
-  if (!email || (await isActiveMember(email))) return "member";
+  if (!email || (await isCustomer(email, input.phone))) return "customer";
 
   const settings = await getProspectSettings();
   const existing = await db.query.prospects.findFirst({ where: eq(schema.prospects.email, email) });
@@ -126,14 +161,6 @@ export async function recordProspectEvent(input: ProspectEventInput) {
   return start ? "restarted" : "updated";
 }
 
-/** Paiement confirmé : le prospect devient client et ne reçoit plus de relance. */
-export async function markProspectConverted(email: string) {
-  await getDb()
-    .update(schema.prospects)
-    .set({ status: "converted", convertedAt: new Date(), nextEmailAt: null, updatedAt: new Date() })
-    .where(and(eq(schema.prospects.email, normalizeEmail(email)), inArray(schema.prospects.status, ["open", "lost"])));
-}
-
 /** Démarre (ou relance depuis le début) la séquence pour un prospect, depuis l'admin. */
 export async function startProspectSequence(id: string) {
   const settings = await getProspectSettings();
@@ -169,33 +196,34 @@ const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export async function runProspectSequence(now = new Date()) {
   const settings = await getProspectSettings();
-  const result = { sent: 0, failed: 0, converted: 0, unsubscribed: 0, finished: 0 };
+  const result = { sent: 0, failed: 0, converted: 0, unsubscribed: 0, finished: 0, budgetLeft: 0 };
   if (!settings.enabled) return result;
   const db = getDb();
 
+  // Quota Resend : au-delà, les emails dus attendent le prochain passage (aucun n'est perdu).
+  const allowance = await automatedEmailAllowance(now);
+  result.budgetLeft = allowance;
+  if (allowance <= 0) return result;
   const due = await db.query.prospects.findMany({
     where: and(eq(schema.prospects.status, "open"), isNotNull(schema.prospects.nextEmailAt), lte(schema.prospects.nextEmailAt, now)),
     orderBy: asc(schema.prospects.nextEmailAt),
-    limit: settings.perRun,
+    limit: Math.min(settings.perRun, allowance),
   });
   if (due.length === 0) return result;
 
   const emails = due.map((p) => p.email);
-  const [members, optedOut, planCount] = await Promise.all([
-    db.query.members.findMany({
-      where: and(inArray(schema.members.email, emails), eq(schema.members.status, "active")),
-      columns: { email: true },
-    }),
-    optedOutEmails(emails, "prospects"),
-    publishedPlanCount(),
-  ]);
-  const memberEmails = new Set(members.map((m) => m.email));
+  const [optedOut, planCount] = await Promise.all([optedOutEmails(emails, "prospects"), publishedPlanCount()]);
+  const customers = new Set<string>();
+  for (const p of due) if (await isCustomer(p.email, p.phone)) customers.add(p.email);
   const total = settings.delaysHours.length;
   const price = formatFcfa(cataloguePrice());
 
   for (const p of due) {
-    if (memberEmails.has(p.email)) {
-      await markProspectConverted(p.email);
+    if (customers.has(p.email)) {
+      await db
+        .update(schema.prospects)
+        .set({ status: "converted", convertedAt: now, nextEmailAt: null, updatedAt: now })
+        .where(eq(schema.prospects.id, p.id));
       result.converted++;
       continue;
     }
@@ -327,6 +355,7 @@ export async function importChariowProspects(maxPages = 10) {
   const products = catalogueProductIds();
   let scanned = 0;
   let added = 0;
+  let customers = 0;
   for (const status of ["abandoned", "failed"] as const) {
     let cursor: string | null = null;
     for (let page = 0; page < maxPages; page++) {
@@ -354,12 +383,15 @@ export async function importChariowProspects(maxPages = 10) {
           startSequence: false,
         });
         if (outcome === "created") added++;
+        if (outcome === "customer") customers++;
       }
       cursor = body.pagination?.next_cursor ?? null;
       if (!cursor || body.pagination?.has_more === false) break;
     }
   }
-  return { scanned, added };
+  // Filet de sécurité : un prospect importé qui a payé plus tard (autre tentative) passe en « converti ».
+  const reconciled = await reconcileProspects();
+  return { scanned, added, customers, reconciled };
 }
 
 /** Lance la séquence pour les prospects importés récents qui n'en ont jamais reçu (depuis l'admin). */

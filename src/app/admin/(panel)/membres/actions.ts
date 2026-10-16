@@ -66,6 +66,8 @@ export async function importFromChariow() {
   await requireAdmin();
   const { importChariowBuyers } = await import("@/lib/chariow-import");
   const result = await importChariowBuyers();
+  const { reconcileProspects } = await import("@/lib/prospects");
+  await reconcileProspects();
   (await cookies()).set("wp_notice", `Import Chariow : ${result.scanned} ventes lues, ${result.salesAdded} ventes ajoutées, ${result.membersAdded} membres créés, ${result.phonesAdded} numéros WhatsApp complétés.`, {
     httpOnly: true,
     secure: true,
@@ -80,7 +82,8 @@ export async function sendLegacyCodes() {
   await requireAdmin();
   const { sendLegacyWelcomeBatch } = await import("@/lib/chariow-import");
   const result = await sendLegacyWelcomeBatch(25);
-  (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining} (les membres qui ont déjà reçu leur code ou se sont connectés sont exclus).`, {
+  const quota = result.quotaReached ? " Quota d'emails du jour atteint : reprenez demain." : "";
+  (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining} (les membres qui ont déjà reçu leur code ou se sont connectés sont exclus).${quota}`, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",

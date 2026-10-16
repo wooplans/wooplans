@@ -18,7 +18,9 @@ async function notice(text: string) {
 export async function importProspects() {
   await requireAdmin();
   const r = await importChariowProspects();
-  await notice(`Import Chariow : ${r.scanned} paiements abandonnés ou échoués lus, ${r.added} nouveaux prospects (aucun email envoyé).`);
+  await notice(
+    `Import Chariow : ${r.scanned} paiements abandonnés ou échoués lus, ${r.added} nouveaux prospects, ${r.customers} ignorés car déjà clients (même email ou même téléphone), ${r.reconciled} passés en « converti ». Aucun email envoyé.`,
+  );
   revalidatePath("/admin/prospects");
 }
 

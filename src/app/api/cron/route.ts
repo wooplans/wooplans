@@ -4,6 +4,7 @@ import { timingSafeEqual } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { runMemberDigest } from "@/lib/member-mailing";
+import { reconcileProspects } from "@/lib/prospects";
 import { formatFcfa } from "@/lib/plans";
 
 /**
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     .where(and(isNotNull(schema.checkoutIntents.revealCode), lt(schema.checkoutIntents.revealUntil, now)));
   await db.delete(schema.rateLimits).where(lt(schema.rateLimits.windowStart, new Date(now.getTime() - 86400_000)));
 
+  await reconcileProspects().catch((error) => console.error("CRM prospects : rapprochement impossible", error));
   const digest = await runMemberDigest(now).catch((error) => {
     console.error("Actualités membres : échec", error);
     return null;

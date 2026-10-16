@@ -1,6 +1,7 @@
 import { and, desc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { memberDigestEmail, sendEmail, type DigestPlan } from "@/lib/email";
+import { automatedEmailAllowance } from "@/lib/email-budget";
 import { siteUrl } from "@/lib/env";
 import { formatBudgetRange, levelsLabel } from "@/lib/plans";
 import { getSetting, setSetting } from "@/lib/settings";
@@ -118,7 +119,9 @@ export async function runMemberDigest(now = new Date()) {
     budget: formatBudgetRange(p.budgetMin, p.budgetMax),
   }));
 
-  const batch = eligible.slice(0, settings.perRun);
+  // Quota Resend : on laisse de la place aux relances prospects de la journée (plus urgentes).
+  const allowance = Math.max(0, (await automatedEmailAllowance(now)) - 15);
+  const batch = eligible.slice(0, Math.min(settings.perRun, allowance));
   for (const m of batch) {
     const mail = memberDigestEmail({
       name: m.name,
