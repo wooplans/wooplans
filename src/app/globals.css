@@ -94,3 +94,25 @@ body:not(:has(.admin-shell)) img {
   -webkit-touch-callout: none;
   user-select: none;
 }
+
+/* Catalogue filtrable : retour visible à chaque tap sur un filtre (nombre de résultats et grille). */
+@keyframes catalogue-refresh-a {
+  from { opacity: 0.35; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes catalogue-refresh-b {
+  from { opacity: 0.35; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes catalogue-pop {
+  from { transform: scale(1.15); color: var(--accent); }
+  to { transform: none; }
+}
+.catalogue-refresh-a { animation: catalogue-refresh-a 280ms ease-out; }
+.catalogue-refresh-b { animation: catalogue-refresh-b 280ms ease-out; }
+.catalogue-pop { animation: catalogue-pop 300ms ease-out; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .catalogue-refresh-a, .catalogue-refresh-b, .catalogue-pop { animation: none; }
+}

@@ -1,7 +1,14 @@
 import Link from "next/link";
-import { CATEGORY_LABELS, formatBudgetRange, levelsLabel, type PublicPlan } from "@/lib/plans";
+import { CATEGORY_LABELS, formatBudgetRange, levelsLabel } from "@/lib/plan-format";
+import type { PublicPlan } from "@/lib/plans";
 
-export function PlanCard({ plan, priority = false }: { plan: PublicPlan; priority?: boolean }) {
+/** Champs affichés sur une carte : seuls ceux-ci sont envoyés au navigateur par le catalogue filtrable. */
+export type PlanCardData = Pick<
+  PublicPlan,
+  "id" | "slug" | "code" | "name" | "category" | "bedrooms" | "bathrooms" | "levels" | "surfaceTotal" | "landArea" | "budgetMin" | "budgetMax" | "coverImage"
+>;
+
+export function PlanCard({ plan, priority = false }: { plan: PlanCardData; priority?: boolean }) {
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   return (
     <Link
@@ -43,7 +50,7 @@ export function PlanCard({ plan, priority = false }: { plan: PublicPlan; priorit
   );
 }
 
-export function PlanGrid({ plans }: { plans: PublicPlan[] }) {
+export function PlanGrid({ plans }: { plans: PlanCardData[] }) {
   if (plans.length === 0) {
     return <p className="card p-8 text-center text-muted">Aucun modèle ne correspond à ces critères pour le moment.</p>;
   }
