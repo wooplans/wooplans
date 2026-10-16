@@ -1,42 +1,33 @@
-import { PlanFiltersForm } from "@/components/PlanFiltersForm";
+import { CatalogueBrowser } from "@/components/CatalogueBrowser";
 import { PremiumPlanCard } from "@/components/premium/PremiumPlanCard";
 import { requireMember } from "@/lib/auth";
-import { applyPlanFilters, type PlanFilters } from "@/lib/plan-filters";
+import type { PlanFilters } from "@/lib/plan-filters";
 import { listPremiumPlans } from "@/lib/plans";
 import { getFavoriteIds, isNewPlan } from "@/lib/premium";
 
-type Props = { searchParams: Promise<PlanFilters & { q?: string }> };
+type Props = { searchParams: Promise<PlanFilters> };
 
 export default async function PremiumIndexPage({ searchParams }: Props) {
   const member = await requireMember();
   const filters = await searchParams;
   const [allPlans, favorites] = await Promise.all([listPremiumPlans(), getFavoriteIds(member.id)]);
-  const q = (filters.q || "").trim().toLowerCase();
-  const plans = applyPlanFilters(allPlans, filters).filter(
-    (p) => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
-  );
+  const items = allPlans.map((p) => ({
+    plan: { id: p.id, code: p.code, name: p.name, category: p.category, bedrooms: p.bedrooms, levels: p.levels, budgetMin: p.budgetMin, budgetMax: p.budgetMax, landArea: p.landArea },
+    card: <PremiumPlanCard plan={p} favorite={favorites.has(p.id)} />,
+  }));
   const newCount = allPlans.filter((p) => isNewPlan(p.publishedAt)).length;
 
   return (
-    <div className="container-page py-8">
+    <div className="container-page pb-8 pt-5 md:pt-8">
       <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
         Bonjour{member.name ? ` ${member.name.split(" ")[0]}` : ""}, choisissez votre future maison
       </h1>
-      <p className="mt-2 text-foreground/70">
+      <p className="mt-2 text-sm text-foreground/70 md:text-base">
         {allPlans.length} modèles avec distributions cotées et devis détaillés.
         {newCount > 0 ? ` ${newCount} nouveau${newCount > 1 ? "x" : ""} modèle${newCount > 1 ? "s" : ""} récemment.` : ""} Ajoutez vos préférés aux favoris pour les comparer.
       </p>
-      <form action="/espace-premium" className="mt-6">
-        <input name="q" defaultValue={filters.q} placeholder="Rechercher une référence (ex. V3-037)" className="input" />
-      </form>
-      <div className="mt-3">
-        <PlanFiltersForm filters={filters} action="/espace-premium" />
-      </div>
-      <p className="mb-5 mt-5 text-sm text-muted">{plans.length} résultat{plans.length > 1 ? "s" : ""}</p>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <PremiumPlanCard key={plan.id} plan={plan} favorite={favorites.has(plan.id)} />
-        ))}
+      <div className="mt-5">
+        <CatalogueBrowser items={items} initialFilters={filters} basePath="/espace-premium" search />
       </div>
     </div>
   );

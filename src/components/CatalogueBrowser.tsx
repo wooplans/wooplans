@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
-import { PlanCard, type PlanCardData } from "@/components/PlanCard";
 import {
   BUDGET_OPTIONS,
   TYPE_OPTIONS,
@@ -10,6 +9,7 @@ import {
   bedroomOptions,
   catalogueHref,
   cleanFilters,
+  type PlanFilterData,
   type PlanFilters,
 } from "@/lib/plan-filters";
 import { phCapture } from "@/lib/posthog-browser";
@@ -17,10 +17,24 @@ import { phCapture } from "@/lib/posthog-browser";
 const plural = (n: number) => (n === 0 ? "Aucun plan" : `${n} plan${n > 1 ? "s" : ""}`);
 
 /**
- * Catalogue filtrable : chaque choix s'applique au tap, sans rechargement (les modèles sont déjà dans la page).
+ * Catalogue filtrable (vitrine et espace Premium) : chaque choix s'applique au tap, sans rechargement
+ * (les cartes, rendues par le serveur, sont déjà dans la page).
  * Chaque option reste un vrai lien vers l'URL filtrée : sans JavaScript, le serveur applique le même filtre.
  */
-export function CatalogueBrowser({ plans, initialFilters }: { plans: PlanCardData[]; initialFilters: PlanFilters }) {
+export function CatalogueBrowser({
+  items,
+  initialFilters,
+  basePath = "/catalogue",
+  search = false,
+}: {
+  items: { plan: PlanFilterData; card: ReactNode }[];
+  initialFilters: PlanFilters;
+  basePath?: string;
+  /** Champ de recherche par référence (espace Premium). */
+  search?: boolean;
+}) {
+  const plans = useMemo(() => items.map((item) => item.plan), [items]);
+  const cards = useMemo(() => new Map(items.map((item) => [item.plan.id, item.card])), [items]);
   const [filters, setFilters] = useState(() => cleanFilters(initialFilters));
   const [bedroomsOpen, setBedroomsOpen] = useState(Boolean(initialFilters.chambres));
   // Change à chaque tap, même sur l'option déjà active : relance l'animation des résultats (retour visible).
@@ -35,15 +49,16 @@ export function CatalogueBrowser({ plans, initialFilters }: { plans: PlanCardDat
     setFilters(cleaned);
     setTick((t) => t + 1);
     // Adresse partageable, sans nouvelle entrée d'historique ni rechargement.
-    window.history.replaceState(null, "", catalogueHref(cleaned));
-    phCapture("catalogue_filter", { control, ...cleaned, results: applyPlanFilters(plans, cleaned).length });
+    window.history.replaceState(null, "", catalogueHref(cleaned, basePath));
+    // La saisie de la recherche n'est pas mesurée lettre par lettre.
+    if (control !== "recherche") phCapture("catalogue_filter", { control, ...cleaned, results: applyPlanFilters(plans, cleaned).length });
   }
 
   const set = (key: keyof PlanFilters, value: string | undefined, control: string = key) => ({
-    href: catalogueHref({ ...filters, [key]: value }),
+    href: catalogueHref({ ...filters, [key]: value }, basePath),
     onSelect: () => apply({ ...filters, [key]: value }, control),
   });
-  const reset = { href: "/catalogue", onSelect: () => apply({}, "effacer") };
+  const reset = { href: basePath, onSelect: () => apply({}, "effacer") };
 
   // Suggestion pour l'état « aucun résultat » : le premier filtre dont le retrait redonne des modèles.
   const relaxed =
@@ -55,6 +70,23 @@ export function CatalogueBrowser({ plans, initialFilters }: { plans: PlanCardDat
 
   return (
     <div>
+      {search ? (
+        <form action={basePath} onSubmit={(event) => event.preventDefault()} className="mb-3" role="search">
+          {Object.entries(filters).map(([key, value]) =>
+            key === "q" ? null : <input key={key} type="hidden" name={key} value={value} />,
+          )}
+          <input
+            type="search"
+            name="q"
+            value={filters.q ?? ""}
+            onChange={(event) => apply({ ...filters, q: event.target.value }, "recherche")}
+            placeholder="Rechercher (ex. V3-037)"
+            aria-label="Rechercher une référence ou un nom de modèle"
+            enterKeyHint="search"
+            className="input"
+          />
+        </form>
+      ) : null}
       <div role="group" aria-label="Type de plan" className="grid grid-cols-3 gap-1 rounded-2xl bg-outline/60 p-1">
         {TYPE_OPTIONS.map((o) => (
           <FilterLink
@@ -153,8 +185,10 @@ export function CatalogueBrowser({ plans, initialFilters }: { plans: PlanCardDat
       <div className={`mt-5 ${tick === 0 ? "" : tick % 2 ? "catalogue-refresh-a" : "catalogue-refresh-b"}`}>
         {results.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((plan, i) => (
-              <PlanCard key={plan.id} plan={plan} priority={i < 3} />
+            {results.map((plan) => (
+              <div key={plan.id} className="flex flex-col [&>*]:flex-1">
+                {cards.get(plan.id)}
+              </div>
             ))}
           </div>
         ) : (
@@ -169,7 +203,7 @@ export function CatalogueBrowser({ plans, initialFilters }: { plans: PlanCardDat
                   className="btn-primary min-h-11"
                   idleClassName=""
                 >
-                  Voir {plural(relaxed.count)} sans « {relaxed.chip.label} »
+                  Voir {plural(relaxed.count)} sans {relaxed.chip.key === "q" ? "cette recherche" : `« ${relaxed.chip.label} »`}
                 </FilterLink>
               ) : null}
               <FilterLink {...reset} active={false} className={relaxed ? "btn-ghost min-h-11" : "btn-primary min-h-11"} idleClassName="">

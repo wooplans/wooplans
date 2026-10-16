@@ -6,7 +6,12 @@ export type PlanFilters = {
   niveaux?: string;
   budget?: string;
   terrain?: string;
+  /** Recherche par référence ou nom (espace Premium). */
+  q?: string;
 };
+
+/** Champs nécessaires au filtrage, envoyés au navigateur avec chaque carte. */
+export type PlanFilterData = Pick<PublicPlan, "id" | "code" | "name" | "category" | "bedrooms" | "levels" | "budgetMin" | "budgetMax" | "landArea">;
 
 export const BUDGET_OPTIONS = [
   { value: "20", label: "Jusqu'à 20 millions" },
@@ -22,11 +27,12 @@ export const LAND_OPTIONS = [
   { value: "800", label: "Terrain ≤ 800 m²" },
 ];
 
-export function applyPlanFilters<T extends Pick<PublicPlan, "category" | "bedrooms" | "levels" | "budgetMin" | "budgetMax" | "landArea">>(
-  plans: T[],
-  f: PlanFilters,
-) {
+export function applyPlanFilters<
+  T extends Pick<PublicPlan, "category" | "bedrooms" | "levels" | "budgetMin" | "budgetMax" | "landArea"> & Partial<Pick<PublicPlan, "code" | "name">>,
+>(plans: T[], f: PlanFilters) {
+  const q = f.q?.trim().toLowerCase();
   return plans.filter((p) => {
+    if (q && !(p.code ?? "").toLowerCase().includes(q) && !(p.name ?? "").toLowerCase().includes(q)) return false;
     if (f.categorie && p.category !== f.categorie) return false;
     if (f.chambres) {
       const n = Number(f.chambres);
@@ -50,7 +56,7 @@ export function applyPlanFilters<T extends Pick<PublicPlan, "category" | "bedroo
 
 /* ─── Filtres de la vitrine (/catalogue) ─── */
 
-export const FILTER_KEYS = ["categorie", "budget", "chambres", "niveaux", "terrain"] as const;
+export const FILTER_KEYS = ["q", "categorie", "budget", "chambres", "niveaux", "terrain"] as const;
 
 /** Type de plan : la catégorie dit déjà le nombre de niveaux (villa = plain-pied, duplex = à étage). */
 export const TYPE_OPTIONS = [
@@ -66,9 +72,9 @@ export function cleanFilters(f: PlanFilters): PlanFilters {
   return out;
 }
 
-export function catalogueHref(f: PlanFilters) {
+export function catalogueHref(f: PlanFilters, basePath = "/catalogue") {
   const query = new URLSearchParams(cleanFilters(f) as Record<string, string>).toString();
-  return query ? `/catalogue?${query}` : "/catalogue";
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 /** Options de chambres présentes dans le catalogue (5 = « 5 et plus »), pour ne jamais proposer un choix vide. */
@@ -80,6 +86,7 @@ export function bedroomOptions(plans: { bedrooms: number }[]) {
 /** Puces des filtres actifs, chacune avec le libellé affiché et la clé à retirer. */
 export function activeFilterChips(f: PlanFilters) {
   const chips: { key: keyof PlanFilters; label: string }[] = [];
+  if (f.q?.trim()) chips.push({ key: "q", label: `« ${f.q.trim()} »` });
   if (f.categorie) chips.push({ key: "categorie", label: f.categorie === "villa" ? "Villas" : f.categorie === "duplex" ? "Duplex" : f.categorie });
   if (f.budget) chips.push({ key: "budget", label: `Budget ≤ ${f.budget} M FCFA` });
   if (f.chambres) chips.push({ key: "chambres", label: Number(f.chambres) >= 5 ? "5 chambres et +" : `${f.chambres} chambres` });

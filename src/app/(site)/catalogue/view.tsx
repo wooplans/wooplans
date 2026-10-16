@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { CatalogueBrowser } from "@/components/CatalogueBrowser";
+import { PlanCard } from "@/components/PlanCard";
 import type { PlanFilters } from "@/lib/plan-filters";
 import { listPublicPlans } from "@/lib/plans";
 
@@ -23,21 +24,10 @@ export function catalogueMetadata(params: PlanFilters): Metadata {
 }
 
 export async function CatalogueView({ filters }: { filters: PlanFilters }) {
-  // Tous les modèles sont envoyés (champs des cartes uniquement) : le filtre s'applique ensuite sans aller-retour serveur.
-  const plans = (await listPublicPlans()).map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    code: p.code,
-    name: p.name,
-    category: p.category,
-    bedrooms: p.bedrooms,
-    bathrooms: p.bathrooms,
-    levels: p.levels,
-    surfaceTotal: p.surfaceTotal,
-    landArea: p.landArea,
-    budgetMin: p.budgetMin,
-    budgetMax: p.budgetMax,
-    coverImage: p.coverImage,
+  // Tous les modèles sont rendus ; le filtre s'applique ensuite dans le navigateur, sans aller-retour serveur.
+  const items = (await listPublicPlans()).map((p, i) => ({
+    plan: { id: p.id, code: p.code, name: p.name, category: p.category, bedrooms: p.bedrooms, levels: p.levels, budgetMin: p.budgetMin, budgetMax: p.budgetMax, landArea: p.landArea },
+    card: <PlanCard plan={p} priority={i < 3} />,
   }));
   const title =
     filters.categorie === "villa" ? "Plans de villas" : filters.categorie === "duplex" ? "Plans de duplex" : "Tous nos modèles de maisons";
@@ -52,7 +42,7 @@ export async function CatalogueView({ filters }: { filters: PlanFilters }) {
           Rendus, chambres, niveaux, surfaces et budget indicatif de chaque modèle. Tous ces modèles sont inclus dans le Catalogue Premium, avec leurs distributions cotées et leurs devis détaillés.
         </p>
         <div className="mt-4 md:mt-8">
-          <CatalogueBrowser plans={plans} initialFilters={filters} />
+          <CatalogueBrowser items={items} initialFilters={filters} />
         </div>
       </section>
       <CtaCatalogue ctaId="plans_list" />
