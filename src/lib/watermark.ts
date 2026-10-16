@@ -1,19 +1,23 @@
-import { degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-
 /**
- * Filigrane des documents Premium.
- *
- * Interface stable : le reste du code ne connaît que `Watermark`, `watermarkForMember`
- * et `drawWatermark`. Une implémentation plus poussée (marquage invisible, empreinte
- * unique, PDF existants) peut remplacer `drawWatermark` sans toucher aux appelants.
+ * Filigrane des documents Premium, en trois couches complémentaires :
+ * 1. texte diagonal répété sur toute la page, par-dessus le contenu (`label` et `brand`,
+ *    dessinés par plan-pdf) ;
+ * 2. même marquage incrusté dans les pixels des images (`rasterLines`, voir watermark-raster) :
+ *    supprimer le texte du PDF ne nettoie pas les images ;
+ * 3. mention d'exemplaire et de licence en bas de chaque page (`footer`).
+ * L'identifiant `id` (membre + modèle) permet de retrouver l'origine d'une fuite.
  */
 export type Watermark = {
   /** Texte répété en diagonale, ex. « Exemplaire de Awa Diallo · awa@exemple.com ». */
   label: string;
-  /** Mention de bas de page, ex. « Document personnel — awa@… — 15/10/2026 — W-3F9A2C ». */
+  /** Mention de bas de page, ex. « Exemplaire personnel de awa@… — 15/10/2026 — W-3F9A2C — … ». */
   footer: string;
   /** Identifiant court et stable de l'exemplaire (membre + modèle), pour retrouver une fuite. */
   id: string;
+  /** Ligne « marque » alternée avec `label` dans le filigrane. */
+  brand: string;
+  /** Lignes incrustées dans les images. */
+  rasterLines: string[];
 };
 
 type MemberLike = { id: string; email: string; name?: string | null };
@@ -28,32 +32,24 @@ export function fingerprint(...parts: string[]) {
   return `W-${hash.toString(16).toUpperCase().padStart(8, "0").slice(0, 6)}`;
 }
 
-export function watermarkForMember(member: MemberLike, planCode: string, date = new Date()): Watermark {
+export function watermarkForMember(member: MemberLike, planCode: string, date = new Date(), site = "www.wooplans.com"): Watermark {
   const who = member.name?.trim() ? `${member.name.trim()} · ${member.email}` : member.email;
   const id = fingerprint(member.id, planCode);
   const day = date.toLocaleDateString("fr-FR", { timeZone: "Africa/Douala" });
+  const host = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return {
-    label: `Exemplaire de ${who}`,
-    footer: `Document personnel, ne pas diffuser — ${member.email} — ${day} — ${id}`,
+    label: `Exemplaire de ${who} · ${id}`,
+    brand: `© WOOPLANS · ${host} · Plan ${planCode} · Reproduction et diffusion interdites`,
+    footer: `Exemplaire personnel de ${member.email} — ${day} — ${id} — Diffusion publique et usage commercial interdits`,
     id,
+    rasterLines: [`${host} · Plan WOOPLANS ${planCode} · Reproduction interdite`, `Exemplaire de ${who} · ${id}`],
   };
 }
 
-/** Filigrane visible : texte diagonal discret répété sur la page. */
-export function drawWatermark(page: PDFPage, mark: Watermark, font: PDFFont) {
-  const { width, height } = page.getSize();
-  const size = 15;
-  const textWidth = font.widthOfTextAtSize(mark.label, size);
-  for (let i = 0; i < 4; i++) {
-    const y = height * (0.18 + i * 0.22);
-    page.drawText(mark.label, {
-      x: Math.max(20, (width - textWidth * 0.82) / 2),
-      y,
-      size,
-      font,
-      color: rgb(0.06, 0.36, 0.35),
-      opacity: 0.11,
-      rotate: degrees(28),
-    });
-  }
+/** Marquage des distributions affichées dans l'espace Premium (hors fiche PDF). */
+export function imageMarkForMember(member: MemberLike, site = "www.wooplans.com") {
+  const who = member.name?.trim() ? `${member.name.trim()} · ${member.email}` : member.email;
+  const id = fingerprint(member.id, "espace-premium");
+  const host = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return { id, lines: [`${host} · Plan WOOPLANS · Reproduction interdite`, `Exemplaire de ${who} · ${id}`] };
 }

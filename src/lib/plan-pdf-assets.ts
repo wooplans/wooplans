@@ -1,11 +1,16 @@
 import { getEnv } from "@/lib/env";
 import type { PdfFloorPlan, PdfImage } from "@/lib/plan-pdf";
 import { sniffFileType } from "@/lib/plan-input";
+import { fingerprint } from "@/lib/watermark";
+import { imageSize, watermarkOverlayPng, type OverlayStrength } from "@/lib/watermark-raster";
 
 /**
  * Images de la fiche PDF : lues dans R2 (MEDIA), converties en JPEG redimensionné
  * par le binding Cloudflare Images (hors CPU du Worker), mises en cache Cloudflare.
  * Sans le binding, seuls les JPEG/PNG d'origine sont utilisables (le WebP est ignoré).
+ *
+ * `burnWatermark` incruste ensuite le filigrane du membre dans les pixels : l'image
+ * extraite du PDF le conserve. Le résultat est mis en cache par membre et par image.
  */
 
 const CACHE_VERSION = "v1";
@@ -85,5 +90,46 @@ export async function loadLogo(): Promise<Uint8Array | null> {
     return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
   } catch {
     return null;
+  }
+}
+
+/** Lignes de texte incrustées dans les images d'un exemplaire. */
+export type RasterMark = { id: string; lines: string[] };
+
+/**
+ * Image filigranée au nom du membre (fusion par Cloudflare Images, hors CPU du Worker).
+ * Les distributions au format PDF passent telles quelles (filigrane texte seulement).
+ * En cas d'échec, l'image est servie sans incrustation plutôt que de bloquer la fiche :
+ * le filigrane vectoriel du PDF reste en place, et l'erreur est journalisée.
+ */
+export async function burnWatermark<T extends PdfFloorPlan>(asset: T, mark: RasterMark, strength: OverlayStrength, cacheId: string): Promise<T> {
+  if (asset.type === "pdf") return asset;
+  const images = getEnv().IMAGES;
+  const size = imageSize(asset.bytes);
+  if (!images || !size) {
+    console.error("Filigrane incrusté impossible : binding IMAGES absent ou image illisible", cacheId);
+    return asset;
+  }
+  const cache = typeof caches !== "undefined" ? (caches as unknown as { default?: Cache }).default : undefined;
+  const variant = fingerprint(mark.id, ...mark.lines, strength, String(asset.bytes.length));
+  const cacheKey = new Request(`https://www.wooplans.com/__fiche-pdf/${CACHE_VERSION}/marked/${variant}/${encodeURIComponent(cacheId)}`);
+  const hit = await cache?.match(cacheKey).catch(() => undefined);
+  if (hit) return { ...asset, bytes: new Uint8Array(await hit.arrayBuffer()), type: "jpg" };
+
+  try {
+    const overlay = await watermarkOverlayPng(size.width, size.height, mark.lines, strength);
+    const result = await images
+      .input(new Response(asset.bytes).body!)
+      .draw(images.input(new Response(overlay.png).body!).transform({ width: size.width, height: size.height, fit: "squeeze" }), { top: 0, left: 0 })
+      .output({ format: "image/jpeg", quality: 80 });
+    const bytes = new Uint8Array(await result.response().arrayBuffer());
+    if (cache) {
+      const response = new Response(bytes, { headers: { "Cache-Control": "private, max-age=2592000", "Content-Type": "image/jpeg" } });
+      await cache.put(cacheKey, response).catch(() => {});
+    }
+    return { ...asset, bytes, type: "jpg" };
+  } catch (error) {
+    console.error("Filigrane incrusté impossible", cacheId, error);
+    return asset;
   }
 }

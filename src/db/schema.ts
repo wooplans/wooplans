@@ -132,6 +132,25 @@ export const favorites = sqliteTable(
   (t) => [primaryKey({ columns: [t.memberId, t.planId] })],
 );
 
+/** Fiches PDF téléchargées : quota par membre et traçabilité des exemplaires (identifiant W-…). */
+export const pdfDownloads = sqliteTable(
+  "pdf_downloads",
+  {
+    id: text("id").primaryKey(),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    planSlug: text("plan_slug").notNull(),
+    planCode: text("plan_code").notNull(),
+    /** Identifiant imprimé sur l'exemplaire, pour retrouver le compte d'origine d'une copie. */
+    markId: text("mark_id").notNull(),
+    ip: text("ip"),
+    country: text("country"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("pdf_downloads_member_idx").on(t.memberId, t.createdAt), index("pdf_downloads_mark_idx").on(t.markId)],
+);
+
 /* ─────────────────────────── Tunnel & ventes ─────────────────────────── */
 
 export const visitors = sqliteTable(

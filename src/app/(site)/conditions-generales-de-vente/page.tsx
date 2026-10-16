@@ -28,6 +28,17 @@ export default function CgvPage() {
       <p>
         L&apos;accès est personnel et non cessible. En cas de partage abusif ou de remboursement, WOOPLANS peut désactiver l&apos;accès à l&apos;espace Premium.
       </p>
+      <p>
+        Les plans, distributions cotées, rendus 3D, devis et textes sont la propriété de WOOPLANS et protégés par le droit d&apos;auteur. Les fiches PDF sont
+        destinées à un usage personnel : l&apos;acheteur peut les imprimer et les transmettre en privé à un proche ou à l&apos;entrepreneur qu&apos;il consulte pour son
+        propre projet. Sont interdits la publication sur les réseaux sociaux ou sur internet, la revente, l&apos;usage commercial ou publicitaire, la
+        reproduction ou la modification des plans, ainsi que la suppression des filigranes. Chaque fiche est marquée au nom de l&apos;acheteur avec un
+        identifiant unique permettant d&apos;en retrouver l&apos;origine.
+      </p>
+      <p>
+        Pour prévenir la copie du catalogue, le nombre de nouvelles fiches téléchargeables est limité sur 24 heures et sur 30 jours ; re-télécharger une
+        fiche déjà obtenue n&apos;est pas décompté. Tous les modèles restent consultables en ligne dans l&apos;espace Premium.
+      </p>
       <h2>6. Rétractation</h2>
       <p>
         S&apos;agissant d&apos;un contenu numérique fourni immédiatement après le paiement, l&apos;acheteur accepte que la livraison commence dès la confirmation du paiement. Pour toute réclamation, écrivez à {SITE.email}.

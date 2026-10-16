@@ -21,6 +21,9 @@ interface __BaseEnv_CloudflareEnv {
 	EMAIL_FROM: "WOOPLANS <info@wooplans.com>";
 	EMAIL_REPLY_TO: "info@wooplans.com";
 	ADMIN_NOTIFY_EMAIL: "wooplans237@gmail.com";
+	PDF_QUOTA_DAY: "3";
+	PDF_QUOTA_MONTH: "10";
+	PDF_QUOTA_MAX_PER_DAY: "15";
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -33,7 +36,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SITE_URL" | "CHARIOW_STORE_DOMAIN" | "CHARIOW_CATALOGUE_PRODUCT_ID" | "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS" | "CATALOGUE_PRICE_XAF" | "SALES_PAGE_B_SHARE" | "WHATSAPP_NUMBER" | "FB_PIXEL_ID" | "POSTHOG_KEY" | "POSTHOG_HOST" | "EMAIL_FROM" | "EMAIL_REPLY_TO" | "ADMIN_NOTIFY_EMAIL">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SITE_URL" | "CHARIOW_STORE_DOMAIN" | "CHARIOW_CATALOGUE_PRODUCT_ID" | "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS" | "CATALOGUE_PRICE_XAF" | "SALES_PAGE_B_SHARE" | "WHATSAPP_NUMBER" | "FB_PIXEL_ID" | "POSTHOG_KEY" | "POSTHOG_HOST" | "EMAIL_FROM" | "EMAIL_REPLY_TO" | "ADMIN_NOTIFY_EMAIL" | "PDF_QUOTA_DAY" | "PDF_QUOTA_MONTH" | "PDF_QUOTA_MAX_PER_DAY">> {}
 }
 declare module "*.txt" {
 	const value: string;

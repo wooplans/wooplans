@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { PDFDocument } from "pdf-lib";
-import { buildPlanPdf, fcfa, fileName, pdfSafe, planSpecs, type PlanPdfData } from "../src/lib/plan-pdf.ts";
-import { fingerprint, watermarkForMember } from "../src/lib/watermark.ts";
+import { buildPlanPdf, fcfa, fileName, pdfSafe, planSpecs, usageTerms, type PlanPdfData } from "../src/lib/plan-pdf.ts";
+import { fingerprint, imageMarkForMember, watermarkForMember } from "../src/lib/watermark.ts";
+import { encodePng, imageSize, rasterText, renderOverlay, watermarkOverlayPng } from "../src/lib/watermark-raster.ts";
 
 const plan: PlanPdfData = {
   code: "V3-037",
@@ -59,8 +60,12 @@ test("filigrane : empreinte stable par membre et par modèle", () => {
   assert.equal(fingerprint("m1", "V3-037"), fingerprint("m1", "V3-037"));
   assert.notEqual(fingerprint("m1", "V3-037"), fingerprint("m2", "V3-037"));
   const mark = watermarkForMember({ id: "m1", email: "awa@exemple.com", name: "Awa" }, "V3-037", new Date("2026-10-15T10:00:00Z"));
-  assert.equal(mark.label, "Exemplaire de Awa · awa@exemple.com");
-  assert.match(mark.footer, /awa@exemple\.com — 15\/10\/2026 — W-[0-9A-F]{6}$/);
+  assert.equal(mark.label, `Exemplaire de Awa · awa@exemple.com · ${mark.id}`);
+  assert.match(mark.footer, /awa@exemple\.com — 15\/10\/2026 — W-[0-9A-F]{6} — /);
+  assert.match(mark.brand, /www\.wooplans\.com · Plan V3-037/);
+  assert.ok(mark.rasterLines.every((l) => l.length > 10));
+  assert.ok(mark.rasterLines.some((l) => l.includes(mark.id)));
+  assert.notEqual(imageMarkForMember({ id: "m1", email: "a@b.c" }).id, mark.id);
 });
 
 test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", async () => {
@@ -70,7 +75,6 @@ test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", asy
   annex.addPage([400, 300]);
   const annexBytes = await annex.save();
   const mark = watermarkForMember({ id: "m1", email: "awa@exemple.com" }, plan.code);
-  let stamped = 0;
   const bytes = await buildPlanPdf({
     plan,
     cover: { bytes: jpg, type: "jpg" },
@@ -78,17 +82,55 @@ test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", asy
     floorPlans: [{ bytes: jpg, type: "jpg" }, { bytes: annexBytes, type: "pdf" }, { bytes: new Uint8Array([1, 2, 3]), type: "jpg" }],
     logo,
     footer: mark.footer,
-    stamp: () => stamped++,
+    watermarkLines: [mark.label, mark.brand],
+    licensee: { name: "Awa (awa@exemple.com)", id: mark.id },
+    sourceUrl: "https://www.wooplans.com/catalogue/villa-v3-037",
   });
   assert.equal(new TextDecoder().decode(bytes.subarray(0, 5)), "%PDF-");
   const doc = await PDFDocument.load(bytes);
-  // couverture + distribution image + distribution PDF + pièces/devis + 2 pages de rendus
-  assert.equal(doc.getPageCount(), 6);
-  assert.equal(stamped, 6);
+  // couverture + distribution image + distribution PDF + pièces/devis + 2 pages de rendus + conditions
+  assert.equal(doc.getPageCount(), 7);
   assert.match(doc.getSubject() || "", /awa@exemple\.com/);
+  assert.match(doc.getKeywords() || "", new RegExp(mark.id));
+  // Lien « Source » cliquable sur chaque page.
+  for (const page of doc.getPages()) assert.ok(page.node.Annots()?.size());
 });
 
 test("fileName : nom de fichier sûr", () => {
   assert.equal(fileName("V3-037"), "Fiche-WOOPLANS-V3-037.pdf");
   assert.equal(fileName('D4"/../x'), "Fiche-WOOPLANS-D4x.pdf");
+});
+
+test("usageTerms : interdictions et identifiant de l'exemplaire", () => {
+  const terms = usageTerms("www.wooplans.com", { name: "Awa", id: "W-ABC123" });
+  assert.match(terms.intro, /délivré à Awa/);
+  assert.ok(terms.forbidden.some((t) => /réseaux sociaux/.test(t)));
+  assert.ok(terms.forbidden.some((t) => /commerciales ou publicitaires/.test(t)));
+  assert.match(terms.tracing, /W-ABC123/);
+});
+
+test("filigrane incrusté : texte normalisé pour la police matricielle", () => {
+  assert.equal(rasterText("Éloïse · awa@exemple.com — ok"), "ELOISE · AWA@EXEMPLE.COM - OK");
+  assert.equal(rasterText("日本"), "??");
+});
+
+test("filigrane incrusté : calque couvert de texte, PNG valide aux bonnes dimensions", async () => {
+  const rgba = renderOverlay(300, 200, { lines: ["WOOPLANS.COM", "W-ABC123"] });
+  let inked = 0;
+  for (let i = 3; i < rgba.length; i += 4) if (rgba[i] > 0) inked++;
+  const ratio = inked / (300 * 200);
+  assert.ok(ratio > 0.03 && ratio < 0.5, `couverture ${ratio}`);
+  const png = await encodePng(rgba, 300, 200);
+  assert.deepEqual([...png.subarray(1, 4)], [0x50, 0x4e, 0x47]);
+  assert.deepEqual(imageSize(png), { width: 300, height: 200 });
+  const overlay = await watermarkOverlayPng(1800, 1200, ["A", "B"], "plan");
+  assert.equal(overlay.width, 900);
+  assert.equal(overlay.height, 600);
+});
+
+test("imageSize : lit les dimensions d'un JPEG", () => {
+  const jpg = new Uint8Array(readFileSync(new URL("../public/assets/digital/floor-plan.jpg", import.meta.url)));
+  const size = imageSize(jpg);
+  assert.ok(size && size.width > 0 && size.height > 0);
+  assert.equal(imageSize(new Uint8Array([1, 2, 3])), null);
 });

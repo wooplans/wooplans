@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
+import { PDFDocument, PDFString, StandardFonts, degrees, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 
 /**
  * Fiche PDF d'un modèle, assemblée à la volée depuis les données de la fiche.
@@ -44,10 +44,15 @@ export type PlanPdfInput = {
   floorPlans?: PdfFloorPlan[];
   /** Logo blanc (PNG) affiché sur le bandeau vert. */
   logo?: Uint8Array | null;
-  /** Mention de bas de page (filigrane texte) et dessin du filigrane sur chaque page. */
+  /** Mention de bas de page : titulaire de l'exemplaire, date, identifiant. */
   footer: string;
-  stamp?: (page: PDFPage, font: PDFFont) => void;
+  /** Lignes du filigrane diagonal, répétées en alternance sur toute la page. */
+  watermarkLines?: string[];
+  /** Titulaire et identifiant de l'exemplaire, repris dans les conditions d'utilisation. */
+  licensee?: { name: string; id: string };
   siteUrl?: string;
+  /** Page publique du modèle : lien « Source » cliquable en bas de chaque page. */
+  sourceUrl?: string;
   date?: Date;
 };
 
@@ -59,6 +64,7 @@ const DARK = rgb(30 / 255, 41 / 255, 51 / 255);
 const GRAY = rgb(107 / 255, 114 / 255, 128 / 255);
 const LIGHT = rgb(245 / 255, 247 / 255, 249 / 255);
 const LINE = rgb(0.88, 0.9, 0.92);
+const CREAM = rgb(1, 0.97, 0.93);
 
 const CATEGORY: Record<string, string> = { villa: "Villa", duplex: "Duplex", immeuble: "Immeuble", autre: "Autre" };
 
@@ -237,12 +243,116 @@ function drawFitted(page: PDFPage, image: PDFImage, x: number, top: number, maxW
   return h;
 }
 
+/** Encadré d'avertissement sur la couverture. */
+function notice(ctx: Ctx, site: string) {
+  const width = A4[0] - 2 * M;
+  const text = `Document personnel. Partage sur les réseaux sociaux, revente et usage commercial ou publicitaire interdits. Cet exemplaire est identifié à votre nom : toute diffusion est traçable. Conditions complètes en dernière page. Source officielle : ${site}`;
+  const lines = wrapText(text, ctx.font, 8.5, width - 24);
+  const h = lines.length * 12 + 26;
+  ctx.y -= 6;
+  ensure(ctx, h + 6);
+  const top = ctx.y + 4;
+  ctx.page.drawRectangle({ x: M, y: top - h, width, height: h, color: CREAM, borderColor: ORANGE, borderWidth: 0.8 });
+  ctx.page.drawText(pdfSafe("USAGE PERSONNEL UNIQUEMENT"), { x: M + 12, y: top - 15, size: 8.5, font: ctx.bold, color: ORANGE });
+  lines.forEach((line, i) => ctx.page.drawText(line, { x: M + 12, y: top - 29 - i * 12, size: 8.5, font: ctx.font, color: DARK }));
+  ctx.y = top - h - 12;
+}
+
+function termsPage(ctx: Ctx, site: string) {
+  const terms = usageTerms(site, ctx.input.licensee);
+  newPage(ctx, "Conditions d'utilisation de cette fiche");
+  paragraph(ctx, terms.intro);
+  ctx.y -= 8;
+  ctx.page.drawText(pdfSafe("Vous pouvez"), { x: M, y: ctx.y, size: 11, font: ctx.bold, color: TEAL });
+  ctx.y -= 18;
+  bullets(ctx, terms.allowed, "+");
+  ctx.y -= 8;
+  ensure(ctx, 30);
+  ctx.page.drawText(pdfSafe("Il est strictement interdit de"), { x: M, y: ctx.y, size: 11, font: ctx.bold, color: ORANGE });
+  ctx.y -= 18;
+  bullets(ctx, terms.forbidden, "x", ORANGE);
+  ctx.y -= 8;
+  heading(ctx, "Exemplaire tracé");
+  paragraph(ctx, terms.tracing);
+  ctx.y -= 10;
+  paragraph(ctx, terms.contact, 10, TEAL);
+}
+
 async function embed(doc: PDFDocument, image: PdfImage) {
   try {
     return image.type === "png" ? await doc.embedPng(image.bytes) : await doc.embedJpg(image.bytes);
   } catch {
     return null;
   }
+}
+
+/**
+ * Filigrane visible : lignes diagonales couvrant toute la page, en alternance, dessinées
+ * par-dessus le contenu. Chaque ligne est décalée pour ne pas former de colonnes nettes.
+ */
+export function drawWatermarkGrid(page: PDFPage, lines: string[], font: PDFFont) {
+  if (!lines.length) return;
+  const { width, height } = page.getSize();
+  const size = 10.5;
+  const rad = (30 * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const span = Math.hypot(width, height) * 1.4;
+  const step = 58;
+  const count = Math.ceil(Math.hypot(width, height) / step);
+  const texts = lines.map((line) => {
+    const unit = `${pdfSafe(line)}        `;
+    return unit.repeat(Math.max(1, Math.ceil(span / font.widthOfTextAtSize(unit, size))));
+  });
+  for (let i = -count; i <= count; i++) {
+    // Origine sur la droite perpendiculaire au texte passant par le centre, reculée d'une demi-longueur.
+    const cx = width / 2 - i * step * sin;
+    const cy = height / 2 + i * step * cos;
+    const back = span / 2 + ((i * 137) % 220);
+    page.drawText(texts[((i % texts.length) + texts.length) % texts.length], {
+      x: cx - back * cos,
+      y: cy - back * sin,
+      size,
+      font,
+      color: TEAL,
+      opacity: 0.13,
+      rotate: degrees(30),
+    });
+  }
+}
+
+/** Zone cliquable ouvrant une adresse web. */
+function addLink(doc: PDFDocument, page: PDFPage, url: string, rect: [number, number, number, number]) {
+  const annot = doc.context.register(
+    doc.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: rect,
+      Border: [0, 0, 0],
+      A: { Type: "Action", S: "URI", URI: PDFString.of(url) },
+    }),
+  );
+  page.node.addAnnot(annot);
+}
+
+/** Texte des conditions d'utilisation imprimées dans chaque fiche. */
+export function usageTerms(site: string, licensee?: { name: string; id: string }) {
+  const who = licensee ? ` à ${licensee.name}` : "";
+  return {
+    intro: `Cette fiche est un exemplaire personnel délivré${who} dans le cadre du Catalogue Premium WOOPLANS. Les plans, distributions cotées, rendus 3D, devis et textes qu'elle contient sont la propriété de WOOPLANS et sont protégés par le droit d'auteur.`,
+    allowed: [
+      "La consulter et l'imprimer pour votre propre projet de construction.",
+      "La montrer ou l'envoyer en privé à un proche ou à l'entrepreneur que vous consultez pour ce projet.",
+    ],
+    forbidden: [
+      "La publier ou la partager sur les réseaux sociaux (Facebook, WhatsApp Statut, groupes, TikTok, Instagram...), sur un site internet ou une plateforme de partage.",
+      "L'utiliser à des fins commerciales ou publicitaires : revente, catalogue, annonces, démarchage de clients, portfolio.",
+      "Reproduire, modifier ou présenter ces plans comme votre propre travail.",
+      "Retirer, masquer ou modifier les filigranes, les mentions WOOPLANS ou l'identifiant de l'exemplaire.",
+    ],
+    tracing: `Chaque exemplaire est marqué, sur les pages et dans les images, au nom de son titulaire avec un identifiant unique${licensee ? ` (${licensee.id})` : ""}. Toute copie retrouvée en ligne ou chez un tiers permet d'identifier le compte d'origine. En cas d'usage non autorisé, WOOPLANS peut désactiver l'accès Premium et engager des poursuites.`,
+    contact: `Source officielle et plans complets : ${site}`,
+  };
 }
 
 export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
@@ -252,6 +362,10 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
   doc.setTitle(pdfSafe(`${plan.name} — fiche WOOPLANS`));
   doc.setAuthor("WOOPLANS");
   doc.setSubject(pdfSafe(input.footer));
+  const site = (input.siteUrl ?? "www.wooplans.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  doc.setKeywords([plan.code, "WOOPLANS", site, ...(input.licensee ? [input.licensee.id] : [])]);
+  doc.setCreator(`WOOPLANS - ${site}`);
+  doc.setProducer(`WOOPLANS - ${site}`);
   doc.setCreationDate(date);
   doc.setModificationDate(date);
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -292,6 +406,7 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
     heading(ctx, "Présentation");
     paragraph(ctx, plan.description);
   }
+  notice(ctx, site);
 
   /* 2. Distributions cotées : une page chacune, la plus grande possible. */
   for (const [i, fp] of (input.floorPlans ?? []).entries()) {
@@ -375,19 +490,27 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
     }
   }
 
-  /* Pied de page et filigrane sur toutes les pages. */
+  /* 5. Conditions d'utilisation. */
+  termsPage(ctx, site);
+
+  /* Pied de page (source cliquable, exemplaire) et filigrane sur toutes les pages. */
   const pages = doc.getPages();
-  const site = (input.siteUrl ?? "www.wooplans.com").replace(/^https?:\/\//, "");
+  const source = input.sourceUrl ?? `https://${site}`;
+  const sourceLabel = pdfSafe(`Source : ${source.replace(/^https?:\/\//, "")}`);
   pages.forEach((page, i) => {
     const { width } = page.getSize();
-    input.stamp?.(page, bold);
-    const footer = pdfSafe(input.footer);
-    const fsize = 7;
-    const fw = font.widthOfTextAtSize(footer, fsize);
-    page.drawLine({ start: { x: M, y: M - 6 }, end: { x: width - M, y: M - 6 }, thickness: 0.5, color: LINE });
-    page.drawText(fw > width - 2 * M - 70 ? footer.slice(0, 120) : footer, { x: M, y: M - 18, size: fsize, font, color: GRAY });
-    const right = pdfSafe(`${site} · ${i + 1}/${pages.length}`);
-    page.drawText(right, { x: width - M - font.widthOfTextAtSize(right, fsize), y: M - 18, size: fsize, font, color: GRAY });
+    drawWatermarkGrid(page, input.watermarkLines ?? [], bold);
+    page.drawRectangle({ x: 0, y: 0, width, height: 58, color: rgb(1, 1, 1), opacity: 0.92 });
+    page.drawLine({ start: { x: M, y: 50 }, end: { x: width - M, y: 50 }, thickness: 0.5, color: LINE });
+    page.drawRectangle({ x: M, y: 33, width: 3, height: 10, color: ORANGE });
+    page.drawText(sourceLabel, { x: M + 9, y: 35, size: 8.5, font: bold, color: TEAL });
+    addLink(doc, page, source, [M, 31, M + 9 + bold.widthOfTextAtSize(sourceLabel, 8.5), 45]);
+    const right = pdfSafe(`© WOOPLANS · ${i + 1}/${pages.length}`);
+    page.drawText(right, { x: width - M - font.widthOfTextAtSize(right, 7.5), y: 35, size: 7.5, font, color: GRAY });
+    const fsize = 6.5;
+    let footer = pdfSafe(input.footer);
+    while (font.widthOfTextAtSize(footer, fsize) > width - 2 * M && footer.length > 20) footer = `${footer.slice(0, -4)}...`;
+    page.drawText(footer, { x: M, y: 22, size: fsize, font, color: GRAY });
   });
 
   return doc.save({ useObjectStreams: true });

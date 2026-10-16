@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { desc, like, or } from "drizzle-orm";
+import { countDistinct, desc, eq, gte, inArray, like, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import Link from "next/link";
 import { Badge, fmtDate, PageTitle, Table } from "@/components/admin/ui";
@@ -22,15 +22,30 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   const flash = flashRaw ? (JSON.parse(flashRaw) as { email: string; code: string; emailed: boolean }) : null;
   const notice = (await cookies()).get("wp_notice")?.value;
   const term = (q || "").trim();
-  const [allMembers, codes, digest, campaign] = await Promise.all([
+  // Identifiant imprimé sur une fiche (W-XXXXXX) : retrouve le membre à l'origine d'une copie.
+  const markId = /^W-[0-9A-F]{6}$/i.test(term) ? term.toUpperCase() : null;
+  const markOwners = markId
+    ? (await getDb().selectDistinct({ id: schema.pdfDownloads.memberId }).from(schema.pdfDownloads).where(eq(schema.pdfDownloads.markId, markId))).map((r) => r.id)
+    : [];
+  const [allMembers, codes, digest, campaign, pdfCounts] = await Promise.all([
     getDb().query.members.findMany({
-      where: term ? or(like(schema.members.email, `%${term}%`), like(schema.members.name, `%${term}%`), like(schema.members.phone, `%${term}%`)) : undefined,
+      where: markId
+        ? inArray(schema.members.id, markOwners.length ? markOwners : [""])
+        : term
+          ? or(like(schema.members.email, `%${term}%`), like(schema.members.name, `%${term}%`), like(schema.members.phone, `%${term}%`))
+          : undefined,
       orderBy: desc(schema.members.createdAt),
     }),
     codeStatusByMember(),
     getMemberDigestSettings(),
     getDigestCampaign(),
+    getDb()
+      .select({ memberId: schema.pdfDownloads.memberId, n: countDistinct(schema.pdfDownloads.planSlug) })
+      .from(schema.pdfDownloads)
+      .where(gte(schema.pdfDownloads.createdAt, new Date(Date.now() - 30 * 86_400_000)))
+      .groupBy(schema.pdfDownloads.memberId),
   ]);
+  const pdfByMember = new Map(pdfCounts.map((r) => [r.memberId, r.n]));
   const stateOf = (id: string) => codes.get(id)?.state ?? "never";
   const counts = { envoye: 0, jamais: 0, echec: 0 };
   for (const m of allMembers) {
@@ -72,7 +87,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         <form className="card flex gap-2 p-4">
-          <input name="q" defaultValue={term} placeholder="Rechercher email, nom, téléphone" className="input" />
+          <input name="q" defaultValue={term} placeholder="Email, nom, téléphone ou identifiant W-… d'une fiche" className="input" />
           <button className="btn-ghost">Chercher</button>
         </form>
         <form action={addMember} className="card grid gap-2 p-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
@@ -98,7 +113,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         ))}
       </div>
 
-      <Table head={["Membre", "WhatsApp", "Statut", "Code d'accès", "Source", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
+      <Table head={["Membre", "WhatsApp", "Statut", "Code d'accès", "Source", "Fiches PDF (30 j)", "Depuis", "Dernière connexion", "Actions"]} empty={members.length === 0}>
         {members.map((m) => (
           <tr key={m.id}>
             <td className="px-4 py-2.5">
@@ -130,6 +145,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
               })()}
             </td>
             <td className="px-4 py-2.5">{SOURCES[m.source]}</td>
+            <td className="px-4 py-2.5">{pdfByMember.get(m.id) ?? 0}</td>
             <td className="px-4 py-2.5">{fmtDate(m.createdAt)}</td>
             <td className="px-4 py-2.5">{fmtDate(m.lastLoginAt)}</td>
             <td className="px-4 py-2.5">

@@ -15,6 +15,13 @@
       "when": 1792146849360,
       "tag": "0001_crm_prospects",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792152485040,
+      "tag": "0002_pdf_downloads",
+      "breakpoints": true
     }
   ]
 }
