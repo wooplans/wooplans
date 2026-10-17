@@ -245,7 +245,7 @@ export function memberDigestEmail(p: { name?: string | null; email: string; plan
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table>${more}
 ${button(p.loginUrl, "Voir les nouveaux modèles")}
 <p style="color:#6B7280;font-size:13px">Connectez-vous avec ${escape(p.email)} et votre code d'accès. Code perdu ? Demandez-en un nouveau sur la page de connexion.</p>
-<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Un modèle vous plaît ?</p><p style="margin:6px 0 0;font-size:14px">Nos architectes l'adaptent à votre terrain et réalisent le dossier complet. Le prix du catalogue est déduit. <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">En savoir plus</a></p></div>`;
+<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Un modèle vous plaît ?</p><p style="margin:6px 0 0;font-size:14px">Nos architectes l'adaptent à votre terrain et réalisent le dossier complet, à prix fixe : 150 000 FCFA pour une villa, 250 000 FCFA pour un duplex, prix du catalogue déduit. <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">En savoir plus</a></p></div>`;
   const text = `${p.name ? `Bonjour ${p.name},` : "Bonjour,"}\n\nNouveaux modèles dans votre Catalogue Premium :\n${p.plans
     .map((pl) => `- ${pl.name} (${pl.details}) : ${pl.url}`)
     .join("\n")}\n\nConnexion : ${p.loginUrl}\n\nNe plus recevoir ces emails : ${p.unsubscribe}`;
