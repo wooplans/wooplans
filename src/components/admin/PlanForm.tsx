@@ -1,5 +1,7 @@
 import type { PlanRow } from "@/lib/plans";
+import { DerivedValuesPreview } from "@/components/admin/DerivedValuesPreview";
 import { MediaField } from "@/components/admin/MediaField";
+import { STANDINGS, STANDING_LABELS, type CostSettings } from "@/lib/plan-pricing";
 
 const field = "input";
 
@@ -22,7 +24,7 @@ function F({ label, children, wide }: { label: string; children: React.ReactNode
   );
 }
 
-export function PlanForm({ plan, action }: { plan?: PlanRow; action: (form: FormData) => Promise<void> }) {
+export function PlanForm({ plan, action, cost }: { plan?: PlanRow; action: (form: FormData) => Promise<void>; cost: CostSettings }) {
   const p = plan;
   const folder = (p?.code || "nouveau").toLowerCase();
   return (
@@ -52,14 +54,22 @@ export function PlanForm({ plan, action }: { plan?: PlanRow; action: (form: Form
         <F label="Salles de bain"><input name="bathrooms" type="number" defaultValue={p?.bathrooms ?? 2} className={field} /></F>
         <F label="Niveaux (1 = plain-pied)"><input name="levels" type="number" min={1} defaultValue={p?.levels ?? 1} className={field} /></F>
         <F label="Surface totale (m²)"><input name="surfaceTotal" inputMode="decimal" defaultValue={p?.surfaceTotal ?? ""} className={field} /></F>
+        <F label="Standing (coefficient du devis)">
+          <select name="standing" defaultValue={p?.standing ?? "standard"} className={field}>
+            {STANDINGS.map((st) => (
+              <option key={st} value={st}>{STANDING_LABELS[st]} (× {String(cost.standingCoef[st]).replace(".", ",")})</option>
+            ))}
+          </select>
+        </F>
         <F label="Emprise au sol (m²)"><input name="footprint" inputMode="decimal" defaultValue={p?.footprint ?? ""} className={field} /></F>
         <F label="Largeur bâtiment (m)"><input name="buildingWidth" inputMode="decimal" defaultValue={p?.buildingWidth ?? ""} className={field} /></F>
         <F label="Profondeur bâtiment (m)"><input name="buildingDepth" inputMode="decimal" defaultValue={p?.buildingDepth ?? ""} className={field} /></F>
-        <F label="Terrain nécessaire (m²)"><input name="landArea" inputMode="decimal" defaultValue={p?.landArea ?? ""} className={field} /></F>
-        <F label="Largeur terrain (m)"><input name="landWidth" inputMode="decimal" defaultValue={p?.landWidth ?? ""} className={field} /></F>
-        <F label="Profondeur terrain (m)"><input name="landDepth" inputMode="decimal" defaultValue={p?.landDepth ?? ""} className={field} /></F>
-        <F label="Budget indicatif min (FCFA)"><input name="budgetMin" inputMode="numeric" defaultValue={p?.budgetMin ?? ""} placeholder="auto : devis −10 %" className={field} /></F>
-        <F label="Budget indicatif max (FCFA)"><input name="budgetMax" inputMode="numeric" defaultValue={p?.budgetMax ?? ""} placeholder="auto : devis +10 %" className={field} /></F>
+        <F label="Terrain nécessaire (m², auto)"><input name="landArea" inputMode="decimal" defaultValue={p?.landArea ?? ""} className={field} /></F>
+        <F label="Largeur terrain (m, auto)"><input name="landWidth" inputMode="decimal" defaultValue={p?.landWidth ?? ""} className={field} /></F>
+        <F label="Profondeur terrain (m, auto)"><input name="landDepth" inputMode="decimal" defaultValue={p?.landDepth ?? ""} className={field} /></F>
+        <F label="Budget indicatif min (FCFA)"><input name="budgetMin" inputMode="numeric" defaultValue={p?.budgetMin ?? ""} placeholder="auto : devis −10 %" readOnly={p?.category === "villa" || p?.category === "duplex"} className={field} /></F>
+        <F label="Budget indicatif max (FCFA)"><input name="budgetMax" inputMode="numeric" defaultValue={p?.budgetMax ?? ""} placeholder="auto : devis +10 %" readOnly={p?.category === "villa" || p?.category === "duplex"} className={field} /></F>
+        <DerivedValuesPreview cost={cost} />
         <F label="Titre SEO (facultatif)" wide><input name="seoTitle" defaultValue={p?.seoTitle ?? ""} className={field} /></F>
         <F label="Description SEO (facultatif)" wide><input name="seoDescription" defaultValue={p?.seoDescription ?? ""} className={field} /></F>
         <div className="sm:col-span-2 lg:col-span-4">
@@ -74,11 +84,10 @@ export function PlanForm({ plan, action }: { plan?: PlanRow; action: (form: Form
         <F label="Pièces : « Nom | surface | niveau » (une par ligne)" wide>
           <textarea name="rooms" rows={6} defaultValue={(p?.rooms ?? []).map((r) => [r.name, r.area, r.level].filter((x) => x !== undefined && x !== "").join(" | ")).join("\n")} placeholder={"Séjour | 32 | RDC\nChambre parentale | 16 | Étage"} className={`${field} font-mono text-sm`} />
         </F>
-        <F label="Devis par lot : « Libellé | montant » (une ligne par lot)" wide>
+        <F label="Devis par lot : « Libellé | montant » (calculé automatiquement pour les villas et duplex ; saisie utilisée pour immeuble / autre)" wide>
           <textarea name="estimateLots" rows={8} defaultValue={(p?.estimateLots ?? []).map((l) => `${l.label} | ${l.amount}`).join("\n")} className={`${field} font-mono text-sm`} />
         </F>
-        <F label="Pré-remplir le devis : prix au m² (si lots vides)"><input name="ratePerM2" inputMode="numeric" placeholder="villa 150000 · duplex 180000" className={field} /></F>
-        <F label="Total devis (FCFA, sinon somme des lots)"><input name="estimateTotal" inputMode="numeric" defaultValue={p?.estimateTotal ?? ""} className={field} /></F>
+        <F label="Total devis (FCFA ; auto pour villa et duplex)"><input name="estimateTotal" inputMode="numeric" defaultValue={p?.estimateTotal ?? ""} className={field} /></F>
         <F label="Hypothèses de coût" wide><textarea name="costAssumptions" rows={3} defaultValue={p?.costAssumptions} placeholder="Prix 2026, Douala/Yaoundé, finitions standard, hors terrain et VRD…" className={field} /></F>
         <F label="Atouts (un par ligne)" wide><textarea name="strengths" rows={4} defaultValue={(p?.strengths ?? []).join("\n")} className={field} /></F>
         <F label="Points d'attention (un par ligne)" wide><textarea name="watchouts" rows={4} defaultValue={(p?.watchouts ?? []).join("\n")} className={field} /></F>

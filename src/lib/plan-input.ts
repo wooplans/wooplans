@@ -49,6 +49,7 @@ export type NewPlanValues = {
   landDepth: number | null;
   budgetMin: number | null;
   budgetMax: number | null;
+  standing: "bas" | "standard" | "eleve";
   featured: boolean;
   sortOrder: number;
   rooms: PlanRoomInput[];
@@ -92,6 +93,7 @@ export const CREATE_PLAN_FIELDS: Record<string, Spec> = {
   land_depth: { kind: "number", min: 1, max: 2_000 },
   budget_min: { kind: "int", min: 0, max: MAX_FCFA },
   budget_max: { kind: "int", min: 0, max: MAX_FCFA },
+  standing: { kind: "enum", values: ["bas", "standard", "eleve"] },
   estimate_total: { kind: "int", min: 0, max: MAX_FCFA },
   rooms: { kind: "rooms" },
   estimate_lots: { kind: "lots" },
@@ -298,6 +300,7 @@ export function parseCreatePlanInput(args: Record<string, unknown>): { values: N
       landDepth: num("land_depth"),
       budgetMin: num("budget_min") ?? around(0.9),
       budgetMax: num("budget_max") ?? around(1.1),
+      standing: (v.standing as NewPlanValues["standing"] | undefined) ?? "standard",
       featured: (v.featured as boolean | undefined) ?? false,
       sortOrder: num("sort_order") ?? 0,
       rooms,

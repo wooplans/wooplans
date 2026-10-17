@@ -6,9 +6,10 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { EstimateLot, PlanRoom } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
-import { buildCostEstimate, isPlanCategory } from "@/lib/cost-estimate";
 import { randomId } from "@/lib/crypto";
 import { slugify } from "@/lib/plan-input";
+import { derivedPlanFields, isStanding, type CostSettings } from "@/lib/plan-pricing";
+import { getCostSettings } from "@/lib/settings";
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const n = (f: FormData, k: string) => {
@@ -51,23 +52,20 @@ function parseLots(f: FormData): EstimateLot[] {
     .filter((l) => l.label);
 }
 
-function readPlan(f: FormData) {
+function readPlan(f: FormData, cost: CostSettings) {
   const name = s(f, "name");
   const code = s(f, "code").toUpperCase();
   const category = s(f, "category");
   if (!name || !code) throw new Error("Nom et référence obligatoires");
   if (!["villa", "duplex", "immeuble", "autre"].includes(category)) throw new Error("Catégorie invalide");
   const surfaceTotal = Math.round(n(f, "surfaceTotal") ?? 0);
-  let estimateLots = parseLots(f);
-  let estimateTotal = n(f, "estimateTotal");
-  const rate = n(f, "ratePerM2");
-  if (estimateLots.length === 0 && rate && surfaceTotal && isPlanCategory(category)) {
-    const estimate = buildCostEstimate(category, surfaceTotal, rate);
-    estimateLots = estimate.lines.map((l) => ({ label: l.label.charAt(0) + l.label.slice(1).toLowerCase(), amount: l.amount }));
-    estimateTotal = estimate.total;
-  }
-  const lotsTotal = estimateLots.reduce((sum, l) => sum + l.amount, 0);
-  estimateTotal = estimateTotal || lotsTotal || null;
+  const standing = isStanding(s(f, "standing")) ? (s(f, "standing") as "bas" | "standard" | "eleve") : "standard";
+  // Saisie manuelle (immeuble, autre, ou bâtiment sans dimensions) ; remplacée ci-dessous par les valeurs calculées.
+  const estimateLots = parseLots(f);
+  const estimateTotal = n(f, "estimateTotal") || estimateLots.reduce((sum, l) => sum + l.amount, 0) || null;
+  const buildingWidth = n(f, "buildingWidth");
+  const buildingDepth = n(f, "buildingDepth");
+  const derived = derivedPlanFields({ category, surfaceTotal, standing, buildingWidth, buildingDepth }, cost);
   const renders = json(f, "renders");
   return {
     name,
@@ -84,8 +82,8 @@ function readPlan(f: FormData) {
     levels: Math.max(1, Math.round(n(f, "levels") ?? 1)),
     surfaceTotal,
     footprint: n(f, "footprint") !== null ? Math.round(n(f, "footprint")!) : null,
-    buildingWidth: n(f, "buildingWidth"),
-    buildingDepth: n(f, "buildingDepth"),
+    buildingWidth,
+    buildingDepth,
     landArea: n(f, "landArea") !== null ? Math.round(n(f, "landArea")!) : null,
     landWidth: n(f, "landWidth"),
     landDepth: n(f, "landDepth"),
@@ -99,16 +97,18 @@ function readPlan(f: FormData) {
     floorPlans: json(f, "floorPlans"),
     estimateTotal,
     estimateLots,
+    standing,
     costAssumptions: s(f, "costAssumptions"),
     strengths: lines(f, "strengths"),
     watchouts: lines(f, "watchouts"),
     premiumNotes: s(f, "premiumNotes"),
+    ...derived,
   };
 }
 
 export async function createPlan(form: FormData) {
   await requireAdmin();
-  const data = readPlan(form);
+  const data = readPlan(form, await getCostSettings());
   const id = randomId();
   await getDb()
     .insert(schema.plans)
@@ -122,7 +122,7 @@ export async function updatePlan(id: string, form: FormData) {
   const db = getDb();
   const existing = await db.query.plans.findFirst({ where: eq(schema.plans.id, id) });
   if (!existing) throw new Error("Modèle introuvable");
-  const data = readPlan(form);
+  const data = readPlan(form, await getCostSettings());
   await db
     .update(schema.plans)
     .set({
