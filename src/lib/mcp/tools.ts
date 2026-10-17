@@ -7,6 +7,8 @@ import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
 import { requireSecret, siteUrl } from "@/lib/env";
 import { deleteMedia, planMediaFolder } from "@/lib/media-store";
 import { attachFileToPlan } from "@/lib/plan-media";
+import { derivedPlanFields, isStanding } from "@/lib/plan-pricing";
+import { getCostSettings } from "@/lib/settings";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
 import {
   PLAN_CATEGORIES,
@@ -122,6 +124,7 @@ function planDetails(p: typeof schema.plans.$inferSelect) {
     land_depth: p.landDepth,
     budget_min: p.budgetMin,
     budget_max: p.budgetMax,
+    standing: p.standing,
     featured: p.featured,
     sort_order: p.sortOrder,
     cover_image: p.coverImage,
@@ -507,7 +510,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "create_plan",
     description:
-      "Crée une nouvelle fiche du catalogue, toujours en BROUILLON (invisible du public). Slug généré automatiquement : catégorie + référence (villa + V4-001 → villa-v4-001). Refus si la référence ou le slug existe déjà. Nombres en valeurs numériques (pas de texte ni d'unité) : surfaces en m², dimensions en m, montants entiers en FCFA. Si budget_min/budget_max manquent, ils sont déduits du devis (± 10 %). Les images s'ajoutent ensuite avec upload_plan_image.",
+      "Crée une nouvelle fiche du catalogue, toujours en BROUILLON (invisible du public). Slug généré automatiquement : catégorie + référence (villa + V4-001 → villa-v4-001). Refus si la référence ou le slug existe déjà. Nombres en valeurs numériques (pas de texte ni d'unité) : surfaces en m², dimensions en m, montants entiers en FCFA. Villas et duplex : le devis (total et lots) et le budget indicatif sont calculés automatiquement (surface_total × prix au m² des réglages × coefficient de standing) ; les valeurs envoyées pour ces champs sont remplacées. Terrain : si building_width et building_depth sont fournis, land_width = largeur + 3, land_depth = profondeur + 7 et land_area = leur produit arrondi au multiple de 50 m² inférieur. Les images s'ajoutent ensuite avec upload_plan_image.",
     inputSchema: obj(
       {
         code: str("Référence commerciale en majuscules, ex. V4-001, D4-034"),
@@ -529,6 +532,7 @@ export const TOOLS: McpTool[] = [
         land_depth: { type: "number", minimum: 1, description: "Profondeur du terrain (m)" },
         budget_min: { type: "integer", minimum: 0, description: "Budget de construction indicatif min (FCFA)" },
         budget_max: { type: "integer", minimum: 0, description: "Budget de construction indicatif max (FCFA)" },
+        standing: str("Standing : bas | standard | eleve (défaut standard) ; coefficient appliqué au devis", { enum: ["bas", "standard", "eleve"] }),
         rooms: { type: "array", maxItems: 150, items: roomSchema, description: "Premium : pièces avec surfaces" },
         estimate_lots: { type: "array", maxItems: 80, items: lotSchema, description: "Premium : devis par lots" },
         estimate_total: { type: "integer", minimum: 0, description: "Premium : total du devis (FCFA, défaut = somme des lots)" },
@@ -550,6 +554,7 @@ export const TOOLS: McpTool[] = [
       });
       if (existing) throw new Error(`Déjà au catalogue : ${existing.code} (${existing.slug}, ${existing.status}). Utilisez update_plan_content ou une autre référence.`);
       const id = randomId();
+      Object.assign(values, derivedPlanFields(values, await getCostSettings()));
       await db.insert(schema.plans).values({ id, ...values, coverImage: "", renders: [], floorPlans: [], publishedAt: null });
       return {
         id,
@@ -717,7 +722,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "update_plan_content",
     description:
-      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, chambres, niveaux, surfaces, terrain, budget, pièces, devis par lots, atouts, points d'attention, notes, statut de publication. Les listes fournies (pièces, lots, atouts…) remplacent les anciennes. Publier (status « published ») rend la fiche visible de tous : ne le faire qu'après l'accord explicite du propriétaire. Les images se gèrent avec upload_plan_image, set_plan_cover, reorder_plan_images et remove_plan_image.",
+      "Met à jour les textes et caractéristiques d'un modèle (identifié par sa référence) : accroche, description, SEO, chambres, niveaux, surfaces, terrain, budget, pièces, devis par lots, atouts, points d'attention, notes, statut de publication. Les listes fournies (pièces, lots, atouts…) remplacent les anciennes. Publier (status « published ») rend la fiche visible de tous : ne le faire qu'après l'accord explicite du propriétaire. Villas et duplex : devis, lots et budget indicatif sont recalculés automatiquement (surface × prix au m² × coefficient de standing) ; le terrain l'est aussi dès que les dimensions du bâtiment sont connues. Les images se gèrent avec upload_plan_image, set_plan_cover, reorder_plan_images et remove_plan_image.",
     inputSchema: obj(
       {
         code: str("Référence du modèle, ex. V3-037"),
@@ -734,6 +739,7 @@ export const TOOLS: McpTool[] = [
         building_depth: num("Profondeur bâtiment (m)"),
         budget_min: num("Budget indicatif min (FCFA)"),
         budget_max: num("Budget indicatif max (FCFA)"),
+        standing: str("Standing : bas | standard | eleve (coefficient du devis)", { enum: ["bas", "standard", "eleve"] }),
         strengths: { type: "array", items: { type: "string" }, description: "Atouts (remplace la liste)" },
         watchouts: { type: "array", items: { type: "string" }, description: "Points d'attention (remplace la liste)" },
         cost_assumptions: str("Hypothèses de coût"),
@@ -790,6 +796,24 @@ export const TOOLS: McpTool[] = [
         if (Array.isArray(v)) u[key] = v.filter((x): x is string => typeof x === "string" && x.trim() !== "").map((x) => x.trim());
       }
       Object.assign(u, premium.values);
+      if (args.standing !== undefined) {
+        if (!isStanding(args.standing)) throw new Error("standing : bas, standard ou eleve");
+        u.standing = args.standing;
+      }
+      // Terrain et devis recalculés à partir des valeurs finales (les valeurs envoyées pour ces champs sont remplacées).
+      Object.assign(
+        u,
+        derivedPlanFields(
+          {
+            category: plan.category,
+            surfaceTotal: u.surfaceTotal ?? plan.surfaceTotal,
+            standing: u.standing ?? plan.standing,
+            buildingWidth: u.buildingWidth !== undefined ? u.buildingWidth : plan.buildingWidth,
+            buildingDepth: u.buildingDepth !== undefined ? u.buildingDepth : plan.buildingDepth,
+          },
+          await getCostSettings(),
+        ),
+      );
       await db.update(schema.plans).set(u).where(eq(schema.plans.id, plan.id));
       return {
         code: plan.code,

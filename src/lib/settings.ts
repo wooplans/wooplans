@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { normalizeCostSettings } from "@/lib/plan-pricing";
 
 export type CustomPlanOffer = {
   title: string;
@@ -52,3 +53,5 @@ export async function setSetting(key: string, value: unknown) {
 }
 
 export const getCustomPlanPricing = () => getSetting("custom_plan_pricing", DEFAULT_CUSTOM_PLAN_PRICING);
+
+export const getCostSettings = async () => normalizeCostSettings(await getSetting<unknown>("cost_settings", null));

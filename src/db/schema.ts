@@ -51,6 +51,8 @@ export const plans = sqliteTable(
     /** Budget de construction indicatif (FCFA) */
     budgetMin: integer("budget_min"),
     budgetMax: integer("budget_max"),
+    /** Standing : coefficient appliqué au devis (réglages admin) ; « standard » par défaut */
+    standing: text("standing", { enum: ["bas", "standard", "eleve"] }).notNull().default("standard"),
     coverImage: text("cover_image").notNull().default(""),
     renders: text("renders", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
     featured: integer("featured", { mode: "boolean" }).notNull().default(false),
