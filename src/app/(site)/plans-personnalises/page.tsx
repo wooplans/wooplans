@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Plans de maison complets et personnalisés",
   description:
-    "Faites adapter un modèle WOOPLANS à votre terrain : plans architecturaux complets, façades, coupes et fondations. Prix fixe : 150 000 FCFA pour une villa, 250 000 FCFA pour un duplex, prix du catalogue déduit.",
+    "Faites adapter un modèle WOOPLANS à votre terrain : plans architecturaux complets, façades, coupes et fondations. Prix fixe : 149 000 FCFA pour une villa, 249 000 FCFA pour un duplex, prix du catalogue déduit.",
   alternates: { canonical: "/plans-personnalises" },
 };
 
