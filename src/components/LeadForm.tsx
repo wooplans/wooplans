@@ -70,7 +70,7 @@ export function LeadForm({ defaultPlan = "" }: { defaultPlan?: string }) {
       </div>
       {error ? <p className="text-sm text-secondary">{error}</p> : null}
       <button type="submit" disabled={state === "sending"} className="btn-primary py-3.5">
-        {state === "sending" ? "Envoi…" : "Demander un devis pour mes plans complets"}
+        {state === "sending" ? "Envoi…" : "Envoyer ma demande de plans complets"}
       </button>
     </form>
   );
