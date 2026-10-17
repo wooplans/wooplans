@@ -401,9 +401,45 @@ const b64url = (bytes: Uint8Array) => {
 };
 const fromB64url = (value: string) => Uint8Array.from(atob(value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4)), (c) => c.charCodeAt(0));
 
-async function uploadSignature(secret: string, body: string) {
+async function uploadSignature(secret: string, body: string, purpose = "plan-upload") {
   const key = await crypto.subtle.importKey("raw", tokenEncoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return b64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, tokenEncoder.encode(`plan-upload:${body}`))));
+  return b64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, tokenEncoder.encode(`${purpose}:${body}`))));
+}
+
+/** Décode un jeton « corps.signature » si la signature est valide pour cet usage. */
+async function readSignedToken(secret: string, token: string, purpose: string): Promise<Record<string, unknown> | null> {
+  if (!secret || secret.length < 16 || typeof token !== "string" || token.length > 1200) return null;
+  const [body, signature, extra] = token.split(".");
+  if (!body || !signature || extra !== undefined) return null;
+  const expected = await uploadSignature(secret, body, purpose);
+  if (expected.length !== signature.length) return null;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  if (diff !== 0) return null;
+  try {
+    return JSON.parse(new TextDecoder().decode(fromB64url(body))) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/* ─────────────────────────── Lien de lecture d'un fichier Premium ─────────────────────────── */
+
+export type FileTokenPayload = { key: string; expiresAt: number };
+
+/** Jeton de lecture signé (HMAC) : ouvre UN fichier privé (outil MCP get_premium_file), jusqu'à son expiration. */
+export async function signFileToken(secret: string, payload: FileTokenPayload) {
+  if (!secret || secret.length < 16) throw new Error("Secret de signature manquant");
+  const body = b64url(tokenEncoder.encode(JSON.stringify({ k: payload.key, e: payload.expiresAt })));
+  return `${body}.${await uploadSignature(secret, body, "premium-file")}`;
+}
+
+/** Vérifie signature, expiration et clé ; renvoie null si le jeton ne permet pas d'ouvrir ce fichier. */
+export async function verifyFileToken(secret: string, token: string, key: string, now = Date.now()): Promise<FileTokenPayload | null> {
+  const data = await readSignedToken(secret, token, "premium-file");
+  if (!data || typeof data.k !== "string" || typeof data.e !== "number") return null;
+  if (data.k !== key || data.e <= now) return null;
+  return { key: data.k, expiresAt: data.e };
 }
 
 /** Jeton d'envoi signé (HMAC) : donne le droit d'ajouter des fichiers à UNE fiche, jusqu'à son expiration. */
@@ -415,20 +451,9 @@ export async function signUploadToken(secret: string, payload: UploadTokenPayloa
 
 /** Vérifie signature et expiration ; renvoie null si le jeton est invalide ou expiré. */
 export async function verifyUploadToken(secret: string, token: string, now = Date.now()): Promise<UploadTokenPayload | null> {
-  if (!secret || secret.length < 16 || typeof token !== "string" || token.length > 600) return null;
-  const [body, signature, extra] = token.split(".");
-  if (!body || !signature || extra !== undefined) return null;
-  const expected = await uploadSignature(secret, body);
-  if (expected.length !== signature.length) return null;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
-  if (diff !== 0) return null;
-  try {
-    const data = JSON.parse(new TextDecoder().decode(fromB64url(body))) as { p?: unknown; c?: unknown; e?: unknown };
-    if (typeof data.p !== "string" || typeof data.c !== "string" || typeof data.e !== "number") return null;
-    if (data.e <= now) return null;
-    return { planId: data.p, code: data.c, expiresAt: data.e };
-  } catch {
-    return null;
-  }
+  if (typeof token !== "string" || token.length > 600) return null;
+  const data = await readSignedToken(secret, token, "plan-upload");
+  if (!data || typeof data.p !== "string" || typeof data.c !== "string" || typeof data.e !== "number") return null;
+  if (data.e <= now) return null;
+  return { planId: data.p, code: data.c, expiresAt: data.e };
 }

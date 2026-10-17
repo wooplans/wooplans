@@ -1,14 +1,14 @@
-import { and, asc, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, like, lte, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
 import { getFunnelKpis, getSourceBreakdown, type Period } from "@/lib/analytics";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
-import { requireSecret, siteUrl } from "@/lib/env";
+import { getEnv, requireSecret, siteUrl } from "@/lib/env";
 import { deleteMedia, planMediaFolder } from "@/lib/media-store";
 import { attachFileToPlan } from "@/lib/plan-media";
 import { derivedPlanFields, isStanding } from "@/lib/plan-pricing";
-import { getCostSettings } from "@/lib/settings";
+import { getCostSettings, getSetting } from "@/lib/settings";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
 import {
   PLAN_CATEGORIES,
@@ -17,6 +17,7 @@ import {
   decodeBase64File,
   parseCreatePlanInput,
   reorderList,
+  signFileToken,
   signUploadToken,
   sniffFileType,
   type ImageRole,
@@ -33,6 +34,14 @@ export type McpTool = {
   annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; idempotentHint?: boolean };
   handler: (args: Record<string, unknown>) => Promise<unknown>;
 };
+
+/** Résultat d'outil accompagné de contenus MCP (image, document) en plus du JSON. */
+export class ToolContent {
+  constructor(
+    readonly structured: Record<string, unknown>,
+    readonly content: Record<string, unknown>[],
+  ) {}
+}
 
 const obj = (properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema => ({
   type: "object",
@@ -97,6 +106,38 @@ function matchImage(list: string[], image: unknown) {
 }
 
 const mediaKeyOf = (ref: string) => ref.replace(/^\/media\//, "");
+
+type CatalogueFile = { key: string; label: string; updatedAt?: string };
+
+/** Taille maximale d'un fichier renvoyé dans la réponse (au-delà : lien temporaire seulement). */
+const INLINE_IMAGE_MAX_BYTES = 3_750_000;
+const INLINE_PDF_MAX_BYTES = 10_000_000;
+
+function toBase64(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+/** Fichiers Premium : distributions des modèles et catalogue PDF complet (réglages). */
+async function premiumFileIndex() {
+  const db = getDb();
+  const [plans, catalogue] = await Promise.all([
+    db.query.plans.findMany({ columns: { code: true, name: true, status: true, floorPlans: true }, orderBy: [asc(schema.plans.category), asc(schema.plans.code)] }),
+    getSetting<CatalogueFile[]>("catalogue_files", []),
+  ]);
+  const keys = [...plans.flatMap((p) => p.floorPlans), ...catalogue.map((f) => f.key)].filter((k) => !/^https?:\/\//.test(k) && !k.startsWith("/"));
+  const entries = keys.length ? await db.query.media.findMany({ where: inArray(schema.media.key, keys) }) : [];
+  const byKey = new Map(entries.map((m) => [m.key, m]));
+  const describe = (key: string) => {
+    const m = byKey.get(key);
+    return { key, label: m?.label ?? null, content_type: m?.contentType ?? null, size: m?.size ?? null };
+  };
+  return {
+    plans: plans.map((p) => ({ code: p.code, name: p.name, status: p.status, floor_plans: p.floorPlans.map((key, i) => ({ position: i + 1, ...describe(key) })) })),
+    catalogue_files: catalogue.map((f) => ({ ...describe(f.key), label: f.label, updated_at: f.updatedAt ?? null })),
+  };
+}
 
 function planDetails(p: typeof schema.plans.$inferSelect) {
   return {
@@ -821,6 +862,93 @@ export const TOOLS: McpTool[] = [
         url: `/catalogue/${plan.slug}`,
         ...(premium.warnings.length ? { warnings: premium.warnings } : {}),
       };
+    },
+  },
+
+  /* ─────────── Fichiers Premium ─────────── */
+  {
+    name: "list_premium_files",
+    description:
+      "Liste les fichiers réservés à l'espace Premium : distributions cotées de chaque modèle (images ou PDF, dans l'ordre d'affichage) et catalogue complet en PDF. Renvoie pour chacun la clé R2, le nom, le type et la taille ; lire un fichier avec get_premium_file.",
+    inputSchema: obj({ code: str("Référence du modèle (vide = tous les modèles ayant des distributions)") }),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => {
+      const index = await premiumFileIndex();
+      const code = asString(args.code);
+      if (code) {
+        const plan = await findPlan(code);
+        return { plans: index.plans.filter((p) => p.code === plan.code), catalogue_files: index.catalogue_files };
+      }
+      return { plans: index.plans.filter((p) => p.floor_plans.length > 0), catalogue_files: index.catalogue_files };
+    },
+  },
+  {
+    name: "get_premium_file",
+    description:
+      "Ouvre un fichier réservé à l'espace Premium (fichier d'origine, sans filigrane) : une distribution d'un modèle (code + position, ou clé) ou le catalogue PDF (clé, voir list_premium_files). " +
+      `Les images de moins de ${INLINE_IMAGE_MAX_BYTES / 1_000_000} Mo sont renvoyées pour être regardées directement, les PDF de moins de ${INLINE_PDF_MAX_BYTES / 1_000_000} Mo comme document joint. ` +
+      "Renvoie aussi un lien de téléchargement temporaire (30 min par défaut) : avec Claude Code, le récupérer avec curl -fsSLo <fichier> \"<lien>\". Ce lien ouvre le fichier sans connexion : ne le donner qu'au propriétaire, jamais à un client.",
+    inputSchema: obj({
+      code: str("Référence du modèle (avec position)"),
+      position: { type: "integer", minimum: 1, description: "Position de la distribution (1 = première, défaut 1)" },
+      key: str("Clé R2 du fichier (au lieu de code + position), voir list_premium_files"),
+      inline: { type: "boolean", description: "Joindre le contenu du fichier à la réponse (défaut true)" },
+      minutes: { type: "number", minimum: 5, maximum: 1440, description: "Validité du lien de téléchargement en minutes (défaut 30, max 1440)" },
+    }),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => {
+      const index = await premiumFileIndex();
+      let key = asString(args.key);
+      let plan: string | null = null;
+      if (key) {
+        key = mediaKeyOf(key.replace(/^\/api\/premium\/fichier\//, "").split("?")[0]).split("/").map(decodeURIComponent).join("/");
+        const owner = index.plans.find((p) => p.floor_plans.some((f) => f.key === key));
+        if (!owner && !index.catalogue_files.some((f) => f.key === key)) throw new Error(`Fichier Premium introuvable : ${key}. Voir list_premium_files.`);
+        plan = owner?.code ?? null;
+      } else {
+        const found = await findPlan(args.code);
+        const position = asNumber(args.position) ?? 1;
+        if (found.floorPlans.length === 0) throw new Error(`${found.code} n'a aucune distribution.`);
+        key = found.floorPlans[position - 1];
+        if (!key) throw new Error(`Position ${position} invalide : ${found.code} a ${found.floorPlans.length} distribution(s).`);
+        plan = found.code;
+      }
+      if (/^https?:\/\//.test(key) || key.startsWith("/")) return { plan, key, url: key, note: "Fichier externe : ouvrir l'URL directement." };
+
+      const entry = await getDb().query.media.findFirst({ where: eq(schema.media.key, key) });
+      const object = await getEnv().MEDIA.get(key);
+      if (!entry || !object) throw new Error(`Fichier absent du stockage : ${key}`);
+      const contentType = entry.contentType || object.httpMetadata?.contentType || "application/octet-stream";
+
+      const minutes = Math.min(1440, Math.max(5, asNumber(args.minutes) ?? 30));
+      const expiresAt = Date.now() + Math.round(minutes * 60_000);
+      const token = await signFileToken(requireSecret("AUTH_SECRET"), { key, expiresAt });
+      const info: Record<string, unknown> = {
+        plan,
+        key,
+        label: entry.label,
+        content_type: contentType,
+        size: object.size,
+        download_url: siteUrl(`${privateFileUrl(key, true)}&jeton=${encodeURIComponent(token)}`),
+        download_expires_at: new Date(expiresAt).toISOString(),
+      };
+
+      const isImage = /^image\/(png|jpeg|webp|gif)$/.test(contentType);
+      const isPdf = contentType === "application/pdf";
+      const limit = isImage ? INLINE_IMAGE_MAX_BYTES : isPdf ? INLINE_PDF_MAX_BYTES : 0;
+      if (args.inline === false || object.size > limit) {
+        await object.body.cancel().catch(() => {});
+        info.inline = false;
+        if (args.inline !== false) info.note = limit ? "Fichier trop lourd pour être joint : utiliser download_url." : "Type non joignable : utiliser download_url.";
+        return info;
+      }
+      const data = toBase64(new Uint8Array(await object.arrayBuffer()));
+      info.inline = true;
+      return new ToolContent(info, [
+        isImage
+          ? { type: "image", data, mimeType: contentType }
+          : { type: "resource", resource: { uri: `wooplans://premium/${key}`, mimeType: contentType, blob: data } },
+      ]);
     },
   },
 ];
