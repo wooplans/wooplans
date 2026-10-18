@@ -18,6 +18,8 @@ export const legacyRedirects: Redirect[] = [
   // Espace membre
   r("/espace-membre", "/espace-premium"),
   r("/login", "/connexion"),
+  // Page de retour après paiement des anciens produits Chariow (prd_kufwer, prd_icqox6 : « redirect_url »)
+  r("/achat-cp", "/merci"),
   // Fiches
   r("/plan/:slug", "/catalogue/:slug"),
   r("/modeles", "/catalogue"),

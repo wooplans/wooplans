@@ -47,6 +47,7 @@ const redirects = {
   "/plans/villa-v3-018": "/catalogue/villa-v3-018",
   "/premium-wooplans": "/catalogue-premium",
   "/contacter-nous": "/contact",
+  "/achat-cp": "/merci",
   "/arnaques-foncieres": "https://wooplans.mychariow.shop/prd_bri6ow",
   "/conditions-g%C3%A9n%C3%A9rales-de-vente": "/conditions-generales-de-vente",
   "/mention-l%C3%A9gales": "/mentions-legales",
