@@ -114,6 +114,9 @@ export const members = sqliteTable(
     revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
     revokedReason: text("revoked_reason"),
     lastLoginAt: integer("last_login_at", { mode: "timestamp_ms" }),
+    /** Demande de témoignage envoyée par WhatsApp depuis l'admin : dernière date et nombre de demandes. */
+    testimonialAskedAt: integer("testimonial_asked_at", { mode: "timestamp_ms" }),
+    testimonialAskCount: integer("testimonial_ask_count").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -151,6 +154,31 @@ export const pdfDownloads = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index("pdf_downloads_member_idx").on(t.memberId, t.createdAt), index("pdf_downloads_mark_idx").on(t.markId)],
+);
+
+/** Témoignages vidéo ou audio envoyés depuis la page /temoignage (fichiers dans le bucket VIDEOS). */
+export const testimonialSubmissions = sqliteTable(
+  "testimonial_submissions",
+  {
+    id: text("id").primaryKey(),
+    /** Membre identifié par son lien personnel ; null pour le lien général. */
+    memberId: text("member_id"),
+    name: text("name").notNull(),
+    location: text("location").notNull().default(""),
+    kind: text("kind", { enum: ["video", "audio"] }).notNull(),
+    mediaKey: text("media_key").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull().default(0),
+    durationSec: integer("duration_sec"),
+    /** Avis en une phrase, facultatif. */
+    quote: text("quote").notNull().default(""),
+    /** Accord de diffusion (site, réseaux sociaux) : obligatoire pour envoyer. */
+    consent: integer("consent", { mode: "boolean" }).notNull().default(false),
+    firstNameOnly: integer("first_name_only", { mode: "boolean" }).notNull().default(false),
+    status: text("status", { enum: ["new", "kept", "rejected"] }).notNull().default("new"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("testimonial_submissions_status_idx").on(t.status, t.createdAt), index("testimonial_submissions_member_idx").on(t.memberId)],
 );
 
 /* ─────────────────────────── Tunnel & ventes ─────────────────────────── */
