@@ -5,6 +5,7 @@ import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
+import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
 import { siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
@@ -36,11 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const PREMIUM_CONTENT = [
-  "Distributions cotées de chaque niveau",
+  "Plans de distribution cotés de tous les modèles",
   "Tableau des pièces et de leurs surfaces",
-  "Devis estimatif détaillé par lot (gros œuvre, finitions…)",
-  "Hypothèses de coût utilisées",
-  "Atouts et points d'attention du modèle",
+  "Devis estimatif détaillé par lot (fondation, élévation, etc.)",
 ];
 
 export default async function PlanPage({ params }: Props) {
@@ -48,6 +47,7 @@ export default async function PlanPage({ params }: Props) {
   if (!plan) notFound();
   const similar = await getSimilarPublicPlans(plan);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
+  const offer = customPlanOffer(plan.category);
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
 
   const breadcrumb = {
@@ -133,8 +133,16 @@ export default async function PlanPage({ params }: Props) {
           <div className="card p-6">
             <h2 className="text-lg font-semibold">Plans complets personnalisés</h2>
             <p className="mt-2 text-sm text-foreground/70">
-              Ce modèle vous plaît ? Nos architectes l&apos;adaptent à votre terrain et réalisent le dossier complet. Le prix du catalogue est déduit de la commande.
+              Ce modèle vous plaît ? Nos architectes l&apos;adaptent à votre terrain et réalisent le dossier complet.
             </p>
+            {offer ? (
+              <p className="mt-3 text-sm">
+                Prix fixe : <strong>{formatFcfa(offer.price)}</strong>. Avec le Catalogue Premium, vous payez seulement{" "}
+                <strong className="text-primary">{formatFcfa(memberBalance(offer))}</strong>.
+              </p>
+            ) : (
+              <p className="mt-3 text-sm">Le prix du catalogue est déduit de la commande.</p>
+            )}
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link href="/plans-personnalises" className="btn-ghost">En savoir plus</Link>
               <a

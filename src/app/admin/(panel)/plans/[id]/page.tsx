@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { PlanForm } from "@/components/admin/PlanForm";
 import { PageTitle } from "@/components/admin/ui";
+import { getCostSettings } from "@/lib/settings";
 import { deletePlan, updatePlan } from "../actions";
 
 export default async function EditPlanPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string }> }) {
@@ -22,7 +23,7 @@ export default async function EditPlanPage({ params, searchParams }: { params: P
         }
       />
       {ok ? <p className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">Modèle enregistré ✓</p> : null}
-      <PlanForm plan={plan} action={updatePlan.bind(null, id)} />
+      <PlanForm plan={plan} action={updatePlan.bind(null, id)} cost={await getCostSettings()} />
     </>
   );
 }

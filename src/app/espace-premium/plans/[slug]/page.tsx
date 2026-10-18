@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/premium/FavoriteButton";
 import { FloorPlanViewer } from "@/components/premium/FloorPlanViewer";
 import { requireMember } from "@/lib/auth";
 import { CATEGORY_LABELS, formatFcfa, getPremiumPlan } from "@/lib/plans";
+import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
 import { getFavoriteIds, privateFileUrl } from "@/lib/premium";
 import { whatsappLink } from "@/lib/site";
 
@@ -22,6 +23,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
     (acc[level] ||= []).push(room);
     return acc;
   }, {});
+  const offer = customPlanOffer(plan.category);
   const orderMessage = `Bonjour WOOPLANS, je suis membre Premium (${member.email}) et je souhaite commander les plans complets du modèle ${plan.code} (${plan.name}).`;
 
   return (
@@ -149,14 +151,17 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
       <section className="mt-12 rounded-2xl bg-primary-dark p-6 text-white md:p-8">
         <h2 className="text-xl font-semibold">Ce modèle est le bon ?</h2>
         <p className="mt-2 max-w-2xl text-white/75">
-          Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets. En tant que membre, le prix du catalogue est déduit de la commande.
+          Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets.{" "}
+          {offer
+            ? <>Prix fixe {formatFcfa(offer.price)} : en tant que membre, vous payez seulement <strong className="text-white">{formatFcfa(memberBalance(offer))}</strong>.</>
+            : "En tant que membre, le prix du catalogue est déduit de la commande."}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <a href={whatsappLink(orderMessage)} target="_blank" rel="noopener noreferrer" data-whatsapp={`premium_order_${plan.slug}`} className="btn bg-[#25D366] text-white hover:bg-[#1eb457]">
             Commander sur WhatsApp
           </a>
           <Link href={`/plans-personnalises?modele=${plan.code}`} className="btn border border-white/30 text-white hover:bg-white/10">
-            Voir les honoraires
+            Voir les tarifs
           </Link>
         </div>
       </section>

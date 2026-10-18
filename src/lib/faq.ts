@@ -23,7 +23,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Le prix du catalogue est-il déduit si je commande des plans complets ?",
     answer:
-      "Oui. Si vous commandez ensuite vos plans complets personnalisés, le prix du catalogue est déduit de nos honoraires.",
+      "Oui. Les plans complets personnalisés ont un prix fixe : 149 000 FCFA pour une villa, 249 000 FCFA pour un duplex. Le prix du catalogue est déduit : vous payez seulement la différence, soit 110 000 FCFA pour une villa et 210 000 FCFA pour un duplex.",
   },
   {
     question: "Les devis estimatifs sont-ils fiables ?",

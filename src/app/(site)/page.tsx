@@ -20,7 +20,7 @@ const STEPS = [
   },
   {
     title: "Passez aux plans complets",
-    text: "Quand votre choix est fait, nos architectes adaptent le modèle à votre terrain et réalisent le dossier complet. Le prix du catalogue est déduit.",
+    text: "Quand votre choix est fait, nos architectes adaptent le modèle à votre terrain et réalisent le dossier complet, à prix fixe. Le prix du catalogue est déduit : vous payez seulement la différence.",
   },
 ];
 

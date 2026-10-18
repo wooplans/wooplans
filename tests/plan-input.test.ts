@@ -173,6 +173,21 @@ test("jeton du lien d'envoi : signature, expiration, falsification", async () =>
   await assert.rejects(() => signUploadToken("", { planId: "a", code: "b", expiresAt: now }), /Secret/);
 });
 
+test("jeton de lecture d'un fichier Premium : lié à une clé, expire, distinct du lien d'envoi", async () => {
+  const { signFileToken, verifyFileToken, signUploadToken, verifyUploadToken } = await import("../src/lib/plan-input.ts");
+  const secret = "secret-de-test-assez-long";
+  const now = 1_700_000_000_000;
+  const key = "private/v4-101/1700000000000-abc123.pdf";
+  const token = await signFileToken(secret, { key, expiresAt: now + 1800_000 });
+  assert.deepEqual(await verifyFileToken(secret, token, key, now), { key, expiresAt: now + 1800_000 });
+  assert.equal(await verifyFileToken(secret, token, "private/v4-101/autre.pdf", now), null, "autre fichier");
+  assert.equal(await verifyFileToken(secret, token, key, now + 1800_001), null, "expiré");
+  assert.equal(await verifyFileToken("autre-secret-assez-long", token, key, now), null, "mauvais secret");
+  assert.equal(await verifyUploadToken(secret, token, now), null, "pas un jeton d'envoi");
+  const upload = await signUploadToken(secret, { planId: "abc", code: "V4-101", expiresAt: now + 3600_000 });
+  assert.equal(await verifyFileToken(secret, upload, key, now), null, "pas un jeton de lecture");
+});
+
 test("parsePremiumUpdate : champs fournis seulement, total = somme des lots", async () => {
   const { parsePremiumUpdate } = await import("../src/lib/plan-input.ts");
   const { values, warnings } = parsePremiumUpdate({

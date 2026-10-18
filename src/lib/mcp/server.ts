@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
-import { TOOLS } from "@/lib/mcp/tools";
+import { TOOLS, ToolContent } from "@/lib/mcp/tools";
 
 /**
  * Serveur MCP « Streamable HTTP » sans état (réponses JSON) pour piloter WOOPLANS
@@ -19,6 +19,7 @@ const INSTRUCTIONS =
   "Fichiers accessibles par une URL https directe : upload_plan_image ; " +
   "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
   "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
+  "Fichiers réservés à l'espace Premium (distributions cotées, catalogue PDF) : list_premium_files puis get_premium_file pour les regarder ou les télécharger (lien temporaire, à ne jamais transmettre à un client). " +
   "Dossier local de plusieurs modèles (agent avec accès aux fichiers : Cowork, Claude Code) : en général un sous-dossier par modèle contenant le PDF et les images. " +
   "Commencer par list_plans pour écarter les références déjà au catalogue, puis traiter les modèles un par un : lire le PDF, create_plan, create_upload_link, " +
   "puis envoyer chaque image avec la commande curl fournie (curl -T, jamais de base64) : les rendus d'abord, la plus belle vue de façade en premier (couverture), puis les distributions dans l'ordre des niveaux. " +
@@ -76,6 +77,13 @@ async function handle(message: RpcRequest) {
       if (!tool) return rpcError(id, -32602, `Outil inconnu : ${String(params.name)}`);
       try {
         const output = await tool.handler((params.arguments as Record<string, unknown>) ?? {});
+        if (output instanceof ToolContent) {
+          return rpcResult(id, {
+            content: [{ type: "text", text: JSON.stringify(output.structured, null, 2) }, ...output.content],
+            structuredContent: output.structured,
+            isError: false,
+          });
+        }
         return rpcResult(id, {
           content: [{ type: "text", text: JSON.stringify(output, null, 2) }],
           structuredContent: Array.isArray(output) ? { items: output } : (output as Record<string, unknown>),
