@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LeadForm } from "@/components/LeadForm";
 import { CUSTOM_PLAN_OFFERS, memberBalance } from "@/lib/custom-plans";
-import { formatFcfa } from "@/lib/plans";
+import { countPublishedPlans, formatFcfa, withPlanCount } from "@/lib/plans";
 import { cataloguePrice, SITE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 export default async function CustomPlansPage({ searchParams }: { searchParams: Promise<{ modele?: string }> }) {
   const { modele } = await searchParams;
   const catalogue = formatFcfa(cataloguePrice());
+  const plans = withPlanCount(await countPublishedPlans(), "villas et duplex", "tous nos modèles de");
   return (
     <div className="container-page py-12">
       <p className="eyebrow">Plans complets</p>
@@ -82,7 +83,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Vous n&apos;avez pas encore choisi votre modèle ?</h2>
           <p className="mt-3 text-foreground/75">
-            Commencez par le Catalogue Premium : comparez plus de 50 villas et duplex avec leurs distributions et leurs devis. Son prix est
+            Commencez par le Catalogue Premium : comparez {plans} avec leurs distributions et leurs devis. Son prix est
             entièrement déduit de vos plans complets.
           </p>
           <Link href={SITE.catalogueUrl} data-cta="custom_plans" className="btn-cta mt-6">

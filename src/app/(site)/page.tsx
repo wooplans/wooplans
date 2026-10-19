@@ -1,13 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanGrid } from "@/components/PlanCard";
 import { Testimonials } from "@/components/Testimonials";
 import { CATALOGUE_FAQ } from "@/lib/faq";
-import { listPublicPlans } from "@/lib/plans";
+import { countPublishedPlans, listPublicPlans, withPlanCount } from "@/lib/plans";
 import { SITE } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const n = await countPublishedPlans();
+  return { description: n ? SITE.description.replace("Des modèles", `${n} modèles`) : SITE.description };
+}
 
 const STEPS = [
   {
@@ -25,7 +31,7 @@ const STEPS = [
 ];
 
 export default async function HomePage() {
-  const featured = await listPublicPlans({ limit: 6 });
+  const [featured, planCount] = await Promise.all([listPublicPlans({ limit: 6 }), countPublishedPlans()]);
   const organization = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -53,7 +59,7 @@ export default async function HomePage() {
             Choisissez la maison adaptée à votre famille, votre terrain et votre budget
           </h1>
           <p className="mt-5 max-w-xl text-lg text-white/80">
-            Plus de 50 modèles avec rendus 3D, distributions cotées et devis estimatifs, pour décider en toute confiance avant de construire.
+            {withPlanCount(planCount, "modèles", "Des")} avec rendus 3D, distributions cotées et devis estimatifs, pour décider en toute confiance avant de construire.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href={SITE.catalogueUrl} data-cta="home_hero" className="btn-cta px-8 py-4 text-base">

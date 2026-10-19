@@ -9,11 +9,13 @@ import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
 import { siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
+  countPublishedPlans,
   formatBudgetRange,
   formatFcfa,
   getPublicPlan,
   getSimilarPublicPlans,
   levelsLabel,
+  withPlanCount,
 } from "@/lib/plans";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
 
@@ -45,7 +47,7 @@ const PREMIUM_CONTENT = [
 export default async function PlanPage({ params }: Props) {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const similar = await getSimilarPublicPlans(plan);
+  const [similar, planCount] = await Promise.all([getSimilarPublicPlans(plan), countPublishedPlans()]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
@@ -103,7 +105,7 @@ export default async function PlanPage({ params }: Props) {
                 {SITE.catalogueCta}
               </Link>
               <p className="mt-2 text-center text-xs text-muted">
-                {formatFcfa(cataloguePrice())} · paiement unique · plus de 50 modèles · accès à vie
+                {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · accès à vie
               </p>
             </div>
           </div>
