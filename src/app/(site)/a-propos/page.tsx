@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContentPage } from "@/components/ContentPage";
+import { countPublishedPlans, withPlanCount } from "@/lib/plans";
 import { SITE } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "À propos de WOOPLANS",
@@ -9,14 +12,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/a-propos" },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const plans = withPlanCount(await countPublishedPlans(), "modèles", "des dizaines de");
   return (
     <ContentPage eyebrow="À propos" title="Aider chaque famille à choisir la bonne maison">
       <p>
         WOOPLANS est né d&apos;un constat simple : avant de construire, la plupart des familles n&apos;ont ni plans à comparer ni idée claire du budget. On choisit souvent trop tard, ou sur la base d&apos;une seule image.
       </p>
       <p>
-        Nous avons donc réuni plus de 50 modèles de villas et de duplex pensés pour l&apos;Afrique francophone : climat, modes de vie, tailles de terrains et coûts de construction locaux. Chaque modèle est présenté avec ses rendus 3D, sa distribution cotée et un devis estimatif détaillé.
+        Nous avons donc réuni {plans} de villas et de duplex pensés pour l&apos;Afrique francophone : climat, modes de vie, tailles de terrains et coûts de construction locaux. Chaque modèle est présenté avec ses rendus 3D, sa distribution cotée et un devis estimatif détaillé.
       </p>
       <h2>Notre approche</h2>
       <ul>

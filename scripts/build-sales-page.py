@@ -182,6 +182,14 @@ assert 'id="bonusSpecial"' in s
 replace_once("const WHATSAPP_NUMBER='237653769998';", "const WHATSAPP_NUMBER='237694327885';")
 replace_once("const WHATSAPP_NUMBER_DISPLAY='+237 653 76 99 98';", "const WHATSAPP_NUMBER_DISPLAY='+237 694 32 78 85';")
 
+# Nombre de modèles : rempli par src/app/catalogue-premium/route.ts (HTMLRewriter, nombre de modèles publiés en base).
+# « 50+ » reste affiché si la base est indisponible ; titre et balises meta sont réécrits par la route.
+replace_once("<h1>OBTENEZ 50+ PLANS<br>", "<h1>OBTENEZ <span data-wp-count>50+</span> PLANS<br>")
+replace_once("<strong>50+ modèles</strong>", "<strong><span data-wp-count>50+</span> modèles</strong>")
+replace_once("<td>Sélection de 50+ plans</td>", "<td>Sélection de <span data-wp-count>50+</span> plans</td>")
+replace_once('<div class="pinc">50+ plans', '<div class="pinc"><span data-wp-count>50+</span> plans')
+replace_once("Catalogue Premium Wooplans — 50 Plans de Maison", "Catalogue Premium Wooplans — Plans de Maison")
+
 out = ROOT / "public" / "lp" / "catalogue-premium.html"
 out.write_text(s, encoding="utf-8")
 print(f"OK → {out.relative_to(ROOT)} ({len(s)} octets)")

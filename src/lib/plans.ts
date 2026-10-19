@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 export type PlanRow = typeof schema.plans.$inferSelect;
@@ -76,6 +76,27 @@ export async function listPublicPlans(filter?: { category?: string; featured?: b
     orderBy: order,
     limit: filter?.limit,
   }) as Promise<PublicPlan[]>;
+}
+
+const COUNT_TTL_MS = 5 * 60_000;
+let publishedCount: { at: number; n: number } | null = null;
+
+/** Nombre de modèles publiés, gardé 5 min en mémoire ; null si la base est indisponible. */
+export async function countPublishedPlans(): Promise<number | null> {
+  if (publishedCount && Date.now() - publishedCount.at < COUNT_TTL_MS) return publishedCount.n;
+  try {
+    const [row] = await getDb().select({ n: count() }).from(schema.plans).where(published);
+    publishedCount = { at: Date.now(), n: row?.n ?? 0 };
+    return publishedCount.n;
+  } catch (error) {
+    console.error("Nombre de modèles publiés indisponible", error);
+    return null;
+  }
+}
+
+/** « 55 villas et duplex » ; sans nombre connu, la formule de repli (« tous nos modèles de villas et duplex »). */
+export function withPlanCount(n: number | null, noun: string, fallback: string) {
+  return n ? `${n} ${noun}` : `${fallback} ${noun}`;
 }
 
 export async function getPublicPlan(slug: string) {
