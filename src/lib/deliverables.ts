@@ -81,3 +81,9 @@ export const CUSTOMIZATION_STEPS = [
   { title: "Nous adaptons le modèle", text: "Nos architectes modifient les plans selon votre convenance." },
   { title: "Vous recevez votre dossier", text: "Les 10 plans, à jour de vos modifications." },
 ];
+
+export const TECHNICIAN_POINTS = [
+  "Vous le remettez tel quel à votre technicien (maçon, chef de chantier, entrepreneur).",
+  "Il n'a qu'à suivre les plans pour construire la maison.",
+  "Fondations, murs, façades, hauteurs, toiture et assainissement : tout est présenté dans le même dossier.",
+];

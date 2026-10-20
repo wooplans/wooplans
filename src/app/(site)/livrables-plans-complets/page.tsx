@@ -5,13 +5,14 @@ import {
   CUSTOMIZATION_STEPS,
   DELIVERABLE_GROUPS,
   DELIVERABLES,
+  TECHNICIAN_POINTS,
   type DeliverableIcon,
 } from "@/lib/deliverables";
 import { whatsappLink } from "@/lib/site";
 
 const TITLE = "Ce que contiennent vos plans complets";
 const DESCRIPTION =
-  "Le détail des 10 plans livrés pour votre villa ou votre duplex : fondations, distribution, façades, coupes, toiture et fosses septiques. Chaque modèle peut être personnalisé selon vos exigences.";
+  "Le dossier à remettre à votre technicien pour construire : le détail des 10 plans livrés pour votre villa ou votre duplex : fondations, distribution, façades, coupes, toiture et fosses septiques. Chaque modèle peut être personnalisé selon vos exigences.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -77,8 +78,8 @@ export default function DeliverablesPage() {
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-highlight">Plans complets WOOPLANS</p>
           <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight md:text-5xl">Ce que contient votre dossier de plans complets</h1>
           <p className="mt-4 max-w-2xl text-base text-white/85 md:text-lg">
-            Un dossier clair pour comprendre l&apos;implantation, l&apos;organisation, les façades, les coupes, la toiture, les fondations et le principe
-            d&apos;assainissement de votre maison.
+            Le document que vous remettez à votre technicien : il n&apos;a qu&apos;à le suivre pour construire votre maison. Il couvre
+            l&apos;implantation, l&apos;organisation, les façades, les coupes, la toiture, les fondations et le principe d&apos;assainissement.
           </p>
           <dl className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
             {[
@@ -141,6 +142,23 @@ export default function DeliverablesPage() {
           ))}
         </div>
       </div>
+
+      <section className="container-page pb-12">
+        <div className="card flex flex-col gap-6 border-primary/30 p-6 md:flex-row md:items-center md:p-8">
+          <div className="md:w-2/5">
+            <p className="eyebrow">Pour construire</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight">Un dossier prêt à remettre à votre technicien</h2>
+          </div>
+          <ul className="space-y-2.5 text-sm md:w-3/5">
+            {TECHNICIAN_POINTS.map((t) => (
+              <li key={t} className="flex gap-2.5">
+                <span className="text-primary" aria-hidden>✓</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <section className="bg-primary/5">
         <div className="container-page py-12">

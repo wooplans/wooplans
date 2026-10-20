@@ -54,7 +54,7 @@ footer strong{font-family:M;font-weight:700;font-size:26px}
 footer span{font-size:20px;color:#ffffffd9}
 .cta{background:#F08A2E;color:#fff;font-family:M;font-weight:700;font-size:22px;padding:14px 26px;border-radius:99px}
 </style><body>
-<header><img src="data:image/png;base64,${logo}" alt=""><h1>Ce que contiennent vos plans complets</h1><p>Le dossier livré pour votre villa ou votre duplex</p><span class="tag">${DELIVERABLES.length} plans livrés pour chaque projet</span></header>
+<header><img src="data:image/png;base64,${logo}" alt=""><h1>Ce que contiennent vos plans complets</h1><p>Le document à remettre à votre technicien : il n'a qu'à le suivre pour construire</p><span class="tag">${DELIVERABLES.length} plans livrés pour chaque projet</span></header>
 <main><ul>${items}</ul><p class="note">Livrés pour chacun de vos projets : villa et duplex.</p></main>
 <section class="custom"><h2>Vos plans sont personnalisables</h2><p>Donnez-nous vos exigences : nous modifions le modèle de votre choix selon votre convenance.</p></section>
 <footer><div><strong>wooplans.com</strong><br><span>Détails : wooplans.com/livrables-plans-complets</span></div><div class="cta">Écrivez-nous sur WhatsApp</div></footer>
