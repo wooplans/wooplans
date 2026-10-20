@@ -150,14 +150,6 @@ export function adminSaleEmail(params: { email: string; name?: string | null; am
   return { subject, html, text: `${subject}\n${params.name || ""} ${params.email}` };
 }
 
-export function adminTestimonialEmail(params: { name: string; location: string; kind: "video" | "audio"; quote: string; email?: string | null }) {
-  const subject = `Nouveau témoignage ${params.kind === "video" ? "vidéo" : "audio"} : ${params.name}`;
-  const who = [params.name, params.location, params.email].filter(Boolean).map((v) => escape(v!)).join(" — ");
-  const quote = params.quote ? `<p style="font-style:italic">« ${escape(params.quote)} »</p>` : "";
-  const html = layout(subject, `<p>${who}</p>${quote}${button(siteUrl("/admin/temoignages"), "Voir et télécharger")}`);
-  return { subject, html, text: `${subject}\n${params.name} ${params.location} ${params.email || ""}\n${params.quote}\n${siteUrl("/admin/temoignages")}` };
-}
-
 export function leadFollowUpEmail(params: { name: string; subject: string; message: string }) {
   const paragraphs = params.message
     .split(/\n{2,}/)

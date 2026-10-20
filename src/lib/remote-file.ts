@@ -13,14 +13,9 @@ const tooBig = (size: number | null, maxBytes: number) =>
  * Prépare un flux entrant pour R2 sans le garder en mémoire quand sa taille est connue :
  * on lit seulement les premiers octets (type réel), puis le reste est retransmis via un FixedLengthStream,
  * qui coupe le transfert si la taille réelle diffère de la taille annoncée. Sans taille fiable,
- * le fichier est lu en mémoire dans la limite maxBytes. `sniff` reconnaît les types acceptés (images et PDF par défaut).
+ * le fichier est lu en mémoire dans la limite maxBytes.
  */
-export async function prepareIncomingFile(
-  stream: ReadableStream<Uint8Array>,
-  knownSize: number | null,
-  maxBytes: number,
-  sniff: (head: Uint8Array) => SniffedType | null = sniffFileType,
-): Promise<IncomingFile> {
+export async function prepareIncomingFile(stream: ReadableStream<Uint8Array>, knownSize: number | null, maxBytes: number): Promise<IncomingFile> {
   if (knownSize !== null && knownSize > maxBytes) {
     await stream.cancel();
     throw tooBig(knownSize, maxBytes);
@@ -40,7 +35,7 @@ export async function prepareIncomingFile(
     return true;
   };
   while (received < HEAD_BYTES && (await readChunk()));
-  const type = sniff(concat(chunks, Math.min(received, HEAD_BYTES)));
+  const type = sniffFileType(concat(chunks, Math.min(received, HEAD_BYTES)));
   if (!type) {
     await reader.cancel();
     return { body: new Uint8Array(), size: received, type: null };
