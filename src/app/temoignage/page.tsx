@@ -31,7 +31,7 @@ export default async function TestimonialPage() {
       <main className="mx-auto w-full max-w-md flex-1 space-y-6 px-4 pb-16 pt-6">
         <section>
           <h1 className="text-[26px] font-extrabold leading-tight">2 minutes pour nous donner votre avis ? 🙏</h1>
-          <p className="mt-2 text-foreground/80">Un simple vocal WhatsApp suffit. Votre avis aidera d&apos;autres familles à se lancer dans leur projet de maison.</p>
+          <p className="mt-2 text-foreground/80">Un simple vocal WhatsApp suffit. Beaucoup de familles hésitent encore à payer en ligne : votre expérience les aidera à se lancer en confiance.</p>
         </section>
 
         {introAudio ? (
@@ -51,7 +51,7 @@ export default async function TestimonialPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-sm text-muted">Parlez naturellement, comme à un ami. 1 minute, c&apos;est parfait.</p>
+          <p className="mt-3 text-sm text-muted">Parlez naturellement, comme à un ami. 1 à 2 minutes, c&apos;est parfait.</p>
         </section>
 
         <section className="space-y-2">

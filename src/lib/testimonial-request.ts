@@ -7,11 +7,15 @@
 /** Délai avant de proposer une relance à un membre déjà sollicité. */
 export const TESTIMONIAL_RELAUNCH_DAYS = 4;
 
-/** Structure de l'avis, affichée sur la page. */
+/**
+ * Structure de l'avis : pensée pour lever les doutes de l'acheteur qui hésite à payer en ligne
+ * (paiement réel, code d'accès reçu, qualité des plans, recommandation).
+ */
 export const TESTIMONIAL_QUESTIONS = [
-  "Présentez-vous : votre prénom et votre pays.",
-  "Qu'est-ce que le Catalogue Premium vous a apporté ?",
-  "Le recommanderiez-vous ? Pourquoi ?",
+  "Présentez-vous : votre prénom, votre ville et votre pays.",
+  "Confirmez que vous avez payé le Catalogue Premium en ligne et que vous avez bien reçu votre code d'accès.",
+  "Dites ce que vous pensez de la qualité des plans.",
+  "Le recommanderiez-vous à quelqu'un qui hésite encore ? Pourquoi ?",
 ];
 
 /** Texte prérempli quand le client ouvre WhatsApp depuis la page, juste avant d'enregistrer son vocal. */
