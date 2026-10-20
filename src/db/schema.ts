@@ -114,6 +114,9 @@ export const members = sqliteTable(
     revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
     revokedReason: text("revoked_reason"),
     lastLoginAt: integer("last_login_at", { mode: "timestamp_ms" }),
+    /** Demande de témoignage envoyée par WhatsApp depuis l'admin : dernière date et nombre de demandes. */
+    testimonialAskedAt: integer("testimonial_asked_at", { mode: "timestamp_ms" }),
+    testimonialAskCount: integer("testimonial_ask_count").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

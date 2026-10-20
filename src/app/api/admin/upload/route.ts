@@ -8,10 +8,18 @@ const ALLOWED = new Map([
   ["image/png", "png"],
   ["image/avif", "avif"],
   ["application/pdf", "pdf"],
+  // Message audio de la page /temoignage
+  ["audio/mpeg", "mp3"],
+  ["audio/mp4", "m4a"],
+  ["audio/x-m4a", "m4a"],
+  ["audio/aac", "aac"],
+  ["audio/ogg", "ogg"],
+  ["audio/wav", "wav"],
+  ["audio/webm", "webm"],
 ]);
 const MAX_BYTES = 95 * 1024 * 1024;
 
-/** Téléversement admin vers R2. visibility=private pour les distributions cotées et le PDF. */
+/** Téléversement admin vers R2 (images, PDF, audio). visibility=private pour les distributions cotées et le PDF. */
 export async function POST(request: Request) {
   if (!(await getCurrentAdmin())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const form = await request.formData();
