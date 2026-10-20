@@ -41,8 +41,8 @@ async function salesPageData() {
 
 /**
  * Page de vente : HTML statique optimisé (public/lp/), servi sous l'URL canonique /catalogue-premium.
- * Variante A : catalogue-premium.html. Variante B : catalogue-premium-b.html, complétée ici
- * (nombre de modèles et galerie lus en base) par HTMLRewriter, en flux.
+ * Variante A : catalogue-premium.html. Variante B : catalogue-premium-b.html. Les deux sont complétées ici
+ * par HTMLRewriter, en flux : nombre de modèles publiés (A et B), galerie et aperçu (B).
  */
 export async function GET(request: Request) {
   const env = getEnv();
@@ -63,17 +63,24 @@ export async function GET(request: Request) {
   });
   if (remember) headers.append("Set-Cookie", `${VARIANT_COOKIE}=${variant}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`);
 
-  if (variant === "a") return new Response(asset.body, { status: 200, headers });
-
   const data = await salesPageData().catch((error) => {
-    console.error("Page de vente B : données indisponibles", error);
+    console.error(`Page de vente ${variant.toUpperCase()} : données indisponibles`, error);
     return null;
   });
-  if (!data) return new Response(asset.body, { status: 200, headers });
-  const rewritten = new HTMLRewriter()
-    .on("[data-wp-count]", { element: (el) => void el.setInnerContent(String(data.count)) })
-    .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
-    .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) })
-    .transform(new Response(asset.body, { status: 200, headers }));
-  return rewritten;
+  if (!data || data.count === 0) return new Response(asset.body, { status: 200, headers });
+  const count = String(data.count);
+  const rewriter = new HTMLRewriter().on("[data-wp-count]", { element: (el) => void el.setInnerContent(count) });
+  if (variant === "a") {
+    // Titre et balises meta de la page A : « 50+ » remplacé par le nombre de modèles publiés.
+    rewriter
+      .on("title", { text: (t) => void (t.text.includes("50+") && t.replace(t.text.replaceAll("50+", count))) })
+      .on('meta[name="description"], meta[property="og:title"]', {
+        element: (el) => void el.setAttribute("content", (el.getAttribute("content") ?? "").replaceAll("50+", count)),
+      });
+  } else {
+    rewriter
+      .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
+      .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) });
+  }
+  return rewriter.transform(new Response(asset.body, { status: 200, headers }));
 }
