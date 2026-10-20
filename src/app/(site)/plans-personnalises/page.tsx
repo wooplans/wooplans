@@ -51,6 +51,12 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
         ))}
       </div>
 
+      <p className="mt-6 text-sm">
+        <Link href="/livrables-plans-complets" data-cta="custom_plans_livrables" className="font-semibold text-primary hover:underline">
+          Voir le détail des 10 plans livrés et la personnalisation →
+        </Link>
+      </p>
+
       <section className="mt-12 rounded-2xl bg-primary/5 p-6 md:p-8">
         <h2 className="text-2xl font-semibold tracking-tight">Le Catalogue Premium vous revient à 0 FCFA</h2>
         <div className="mt-6 grid gap-6 md:grid-cols-2">
