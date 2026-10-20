@@ -11,6 +11,7 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/catalogue-villa", priority: 0.7 },
   { path: "/catalogue-duplex", priority: 0.7 },
   { path: "/plans-personnalises", priority: 0.6 },
+  { path: "/livrables-plans-complets", priority: 0.6 },
   { path: "/a-propos", priority: 0.4 },
   { path: "/contact", priority: 0.4 },
   { path: "/conditions-generales-de-vente", priority: 0.2 },
