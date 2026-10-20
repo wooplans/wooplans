@@ -1,6 +1,6 @@
 /**
  * Demande d'avis audio par WhatsApp : le client ouvre la page /temoignage, écoute le message de WOOPLANS,
- * puis laisse un vocal WhatsApp en suivant 3 questions. Messages préremplis envoyés depuis l'admin.
+ * puis laisse un vocal WhatsApp en suivant 4 points. Messages préremplis envoyés depuis l'admin.
  * Module sans dépendance pour pouvoir être testé isolément.
  */
 
