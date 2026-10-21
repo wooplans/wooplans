@@ -7,7 +7,15 @@
 
 export const PAGE_CACHE_TTL_SECONDS = 300;
 
-const CACHEABLE_PATHS = [/^\/$/, /^\/catalogue$/, /^\/catalogue-villa$/, /^\/catalogue-duplex$/, /^\/catalogue\/[a-z0-9-]+$/];
+const CACHEABLE_PATHS = [
+  /^\/$/,
+  /^\/catalogue$/,
+  /^\/catalogue-villa$/,
+  /^\/catalogue-duplex$/,
+  /^\/catalogue\/[a-z0-9-]+$/,
+  // Pages thématiques (src/lib/plan-seo.ts)
+  /^\/(plan-duplex-[45]-chambres|petit-duplex|facade-duplex-moderne|plan-villa-[34]-chambres)$/,
+];
 
 /** Paramètres de suivi : ignorés dans la clé (chaque clic Facebook a son fbclid) ; la page ne les lit pas côté serveur. */
 const TRACKING_PARAM = /^(utm_[a-z]+|fbclid|gclid|gbraid|wbraid|ttclid|msclkid|igshid)$/i;

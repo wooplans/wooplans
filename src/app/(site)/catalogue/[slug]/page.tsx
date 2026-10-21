@@ -17,7 +17,9 @@ import {
   levelsLabel,
   withPlanCount,
 } from "@/lib/plans";
+import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
+import { cataloguePath } from "../view";
 
 export const dynamic = "force-dynamic";
 
@@ -26,15 +28,13 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) return { title: "Modèle introuvable", robots: { index: false } };
-  const title = plan.seoTitle || `${plan.name} : ${CATEGORY_LABELS[plan.category].toLowerCase()} ${plan.bedrooms} chambres, ${plan.surfaceTotal} m²`;
-  const description =
-    plan.seoDescription ||
-    `${plan.name} : ${CATEGORY_LABELS[plan.category].toLowerCase()} ${levelsLabel(plan.levels).toLowerCase()} de ${plan.bedrooms} chambres et ${plan.surfaceTotal} m². Rendus 3D, surfaces et budget de construction indicatif.`;
+  const title = plan.seoTitle || planSeoTitle(plan);
+  const description = plan.seoDescription || planSeoDescription(plan);
   return {
     title,
     description,
     alternates: { canonical: `/catalogue/${plan.slug}` },
-    openGraph: { title, description, images: plan.coverImage ? [{ url: plan.coverImage }] : undefined },
+    openGraph: { title, description, images: plan.coverImage ? [{ url: plan.coverImage, alt: planImageAlt(plan) }] : undefined },
   };
 }
 
@@ -51,13 +51,17 @@ export default async function PlanPage({ params }: Props) {
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
+  const categoryPath = cataloguePath(plan.category);
+  const categoryLabel = plan.category === "villa" ? "Villas" : plan.category === "duplex" ? "Duplex" : "Modèles";
+  const themes = landingPagesFor(plan.category, plan.bedrooms).filter((p) => !p.select.maxSurface || plan.surfaceTotal <= p.select.maxSurface);
+  const description = plan.description || planFallbackDescription(plan);
 
   const breadcrumb = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Accueil", item: siteUrl("/") },
-      { "@type": "ListItem", position: 2, name: "Modèles", item: siteUrl("/catalogue") },
+      { "@type": "ListItem", position: 2, name: categoryLabel, item: siteUrl(categoryPath) },
       { "@type": "ListItem", position: 3, name: plan.name, item: siteUrl(`/catalogue/${plan.slug}`) },
     ],
   };
@@ -68,15 +72,20 @@ export default async function PlanPage({ params }: Props) {
       <div className="container-page py-8 md:py-12">
         <nav className="mb-6 text-sm text-muted" aria-label="Fil d'Ariane">
           <Link href="/" className="hover:text-primary">Accueil</Link> /{" "}
-          <Link href="/catalogue" className="hover:text-primary">Modèles</Link> / <span className="text-foreground">{plan.name}</span>
+          <Link href={categoryPath} className="hover:text-primary">{categoryLabel}</Link> / <span className="text-foreground">{plan.name}</span>
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr]">
-          <PlanGallery images={images} alt={plan.name} />
+          <PlanGallery images={images} alt={planImageAlt(plan)} />
 
           <div>
             <p className="eyebrow">{CATEGORY_LABELS[plan.category]} · Réf. {plan.code}</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{plan.name}</h1>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+              {plan.name}
+              <span className="mt-1 block text-base font-medium text-foreground/60 md:text-lg">
+                Plan de {CATEGORY_LABELS[plan.category].toLowerCase()} moderne {plan.bedrooms} chambres · {plan.surfaceTotal} m² · {levelsLabel(plan.levels)}
+              </span>
+            </h1>
             {plan.summary ? <p className="mt-3 text-lg text-foreground/75">{plan.summary}</p> : null}
 
             {budget ? (
@@ -111,16 +120,25 @@ export default async function PlanPage({ params }: Props) {
           </div>
         </div>
 
-        {plan.description ? (
-          <section className="mt-12 max-w-3xl">
-            <h2 className="text-xl font-semibold">À propos de ce modèle</h2>
-            <div className="prose-wp mt-3">
-              {plan.description.split(/\n{2,}/).map((p) => (
-                <p key={p.slice(0, 40)}>{p}</p>
+        <section className="mt-12 max-w-3xl">
+          <h2 className="text-xl font-semibold">À propos de ce modèle</h2>
+          <div className="prose-wp mt-3">
+            {description.split(/\n{2,}/).map((p) => (
+              <p key={p.slice(0, 40)}>{p}</p>
+            ))}
+          </div>
+          {themes.length > 0 ? (
+            <p className="mt-4 text-sm text-foreground/75">
+              Voir aussi :{" "}
+              {themes.map((t, i) => (
+                <span key={t.path}>
+                  {i > 0 ? " · " : null}
+                  <Link href={t.path} className="font-medium text-primary hover:underline">{t.h1.replace(/^./, (c) => c.toLowerCase())}</Link>
+                </span>
               ))}
-            </div>
-          </section>
-        ) : null}
+            </p>
+          ) : null}
+        </section>
 
         <section className="mt-12 grid gap-6 md:grid-cols-2">
           <div className="card relative overflow-hidden p-6">
