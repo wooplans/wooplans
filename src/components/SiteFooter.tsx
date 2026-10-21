@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { LANDING_PAGES } from "@/lib/plan-seo";
 import { SITE, whatsappLink } from "@/lib/site";
 
 export function SiteFooter() {
@@ -19,6 +20,9 @@ export function SiteFooter() {
             <li><Link href="/catalogue" className="hover:text-white">Tous les modèles</Link></li>
             <li><Link href="/catalogue-villa" className="hover:text-white">Villas</Link></li>
             <li><Link href="/catalogue-duplex" className="hover:text-white">Duplex</Link></li>
+            {LANDING_PAGES.map((p) => (
+              <li key={p.path}><Link href={p.path} className="hover:text-white">{p.label}</Link></li>
+            ))}
             <li><Link href={SITE.catalogueUrl} data-cta="footer" className="hover:text-white">Catalogue Premium</Link></li>
           </ul>
         </div>

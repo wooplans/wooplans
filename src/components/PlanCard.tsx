@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, formatBudgetRange, levelsLabel } from "@/lib/plan-format";
+import { planImageAlt } from "@/lib/plan-seo";
 import type { PublicPlan } from "@/lib/plans";
 
 /** Champs affichés sur une carte : seuls ceux-ci sont envoyés au navigateur par le catalogue filtrable. */
@@ -20,7 +21,7 @@ export function PlanCard({ plan, priority = false }: { plan: PlanCardData; prior
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={plan.coverImage}
-            alt={`${plan.name} — rendu 3D`}
+            alt={planImageAlt(plan)}
             loading={priority ? "eager" : "lazy"}
             decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

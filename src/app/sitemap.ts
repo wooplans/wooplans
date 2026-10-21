@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/env";
+import { LANDING_PAGES } from "@/lib/plan-seo";
 import { listPublicPlans } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
@@ -8,8 +9,9 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/", priority: 1 },
   { path: "/catalogue-premium", priority: 0.9 },
   { path: "/catalogue", priority: 0.9 },
-  { path: "/catalogue-villa", priority: 0.7 },
-  { path: "/catalogue-duplex", priority: 0.7 },
+  { path: "/catalogue-villa", priority: 0.8 },
+  { path: "/catalogue-duplex", priority: 0.8 },
+  ...LANDING_PAGES.map((p) => ({ path: p.path, priority: 0.8 })),
   { path: "/plans-personnalises", priority: 0.6 },
   { path: "/livrables-plans-complets", priority: 0.6 },
   { path: "/a-propos", priority: 0.4 },
