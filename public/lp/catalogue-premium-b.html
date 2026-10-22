@@ -129,10 +129,10 @@ section{padding:56px 0}
 /* Témoignages */
 .vids{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
 .vid{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:linear-gradient(160deg,#14706D,var(--teal-xdk));color:#fff;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
-.vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.vid video,.vid img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .vid b,.vid small{position:relative;z-index:1;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .vid{isolation:isolate}
-.vid>video+b::before{content:"";position:absolute;left:-12px;right:-12px;bottom:-40px;height:110px;background:linear-gradient(transparent,rgba(0,0,0,.65));z-index:-1}
+.vid>video+b::before,.vid>img+b::before{content:"";position:absolute;left:-12px;right:-12px;bottom:-40px;height:110px;background:linear-gradient(transparent,rgba(0,0,0,.65));z-index:-1}
 .vid::before{content:"";position:absolute;z-index:1;top:50%;left:50%;width:52px;height:52px;margin:-38px 0 0 -26px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.7)}
 .vid::after{content:"";position:absolute;z-index:1;top:50%;left:50%;margin:-22px 0 0 -5px;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
 .vid b{font-size:16px}
@@ -463,7 +463,7 @@ footer a{color:rgba(255,255,255,.7)}
       <button class="vid" onclick="openVideo('ibrahim','Ibrahim')"><video data-thumb="/videos/testimonials/ibrahim.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Ibrahim</b><small>Témoignage vidéo</small></button>
       <button class="vid" onclick="openVideo('bassirou','Bassirou')"><video data-thumb="/videos/testimonials/bassirou.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Bassirou</b><small>Témoignage vidéo</small></button>
       <button class="vid" onclick="openVideo('francis','Francis')"><video data-thumb="/videos/testimonials/francis.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Francis</b><small>Témoignage vidéo</small></button>
-      <button class="vid" onclick="openVideo('renaud','Renaud')"><video data-thumb="/videos/testimonials/renaud.mp4#t=0.5" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video><b>Renaud</b><small>Témoignage vidéo</small></button>
+      <button class="vid" onclick="openVideo('renaud','Renaud','/assets/digital/temoignage-renaud.webp')"><img src="/assets/digital/temoignage-renaud.webp" alt="" width="720" height="1280" loading="lazy"><b>Renaud</b><small>Témoignage audio</small></button>
     </div>
     <div class="reviews">
       <article class="review"><header><img src="/assets/avatars/avatar-1.jpeg" alt="" width="40" height="40" loading="lazy"><div><b>M. Idriss</b><span>Abidjan, Côte d’Ivoire</span></div></header><span class="ok">✓ Achat vérifié</span> <span class="stars">★★★★★</span><blockquote>« Je cherchais plusieurs modèles avant de commencer les démarches. Les devis m'ont permis de comparer beaucoup plus facilement. »</blockquote></article>
@@ -707,8 +707,10 @@ function trackVideo(v,name){
   v.addEventListener('error',function(){wpCapture('video_error',{video:name,wait_ms:Date.now()-t0});});
   window.addEventListener('pagehide',function(){if(!started)wpCapture('video_start_abandoned',{video:name,wait_ms:Date.now()-t0});},{once:true});
 }
-function openVideo(name){
+/* poster : image affichée pendant la lecture d'un témoignage audio (fichier sans piste vidéo). */
+function openVideo(name,label,poster){
   var v=document.getElementById('modalVideo');
+  if(poster)v.poster=poster;else v.removeAttribute('poster');
   v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});wpCapture('video_play',{video:name});
   document.getElementById('videoModal').classList.add('on');
 }

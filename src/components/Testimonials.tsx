@@ -17,7 +17,12 @@ export function Testimonials() {
             className="group relative aspect-[9/16] overflow-hidden rounded-2xl bg-black text-left"
             aria-label={`Voir le témoignage de ${t.name}`}
           >
-            <video src={`${t.video}#t=1`} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-85" />
+            {t.poster ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={t.poster} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <video src={`${t.video}#t=1`} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-85" />
+            )}
             <span className="absolute inset-0 flex items-center justify-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur transition-transform group-hover:scale-110">
                 <svg viewBox="0 0 24 24" className="h-6 w-6 translate-x-0.5" fill="currentColor" aria-hidden>
@@ -37,7 +42,7 @@ export function Testimonials() {
           <button type="button" className="absolute right-4 top-4 text-3xl text-white" aria-label="Fermer" onClick={() => setActive(null)}>
             ×
           </button>
-          <video src={current.video} controls autoPlay playsInline className="max-h-[85vh] w-full max-w-sm rounded-2xl" onClick={(e) => e.stopPropagation()} />
+          <video src={current.video} poster={current.poster} controls autoPlay playsInline className="max-h-[85vh] w-full max-w-sm rounded-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       ) : null}
     </>
