@@ -65,7 +65,7 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
   assert.match(b, /data-wp-preview/);
-  assert.match(b, /Fiche PDF/);
+  assert.match(b, /Fiches PDF de chaque modèle en téléchargement/);
   assert.doesNotMatch(b, /50\+|Télécharger le Catalogue|b-cdn\.net/);
   assert.match(b, /data-locale="fr"/);
   assert.match(b, /widget_ready/);
