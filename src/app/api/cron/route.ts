@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   });
 
   const since = new Date(now.getTime() - 86400_000);
-  const [sales, abandoned, due, prospectEmails] = await Promise.all([
+  const [sales, abandoned, due, prospectEmails, legacyCodes] = await Promise.all([
     db.query.sales.findMany({ where: and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, since)) }),
     db.query.sales.findMany({ where: and(eq(schema.sales.status, "abandoned"), gte(schema.sales.occurredAt, since)) }),
     db.query.leads.findMany({
@@ -41,6 +41,10 @@ export async function POST(request: Request) {
     }),
     db.query.emailLog.findMany({
       where: and(like(schema.emailLog.template, "prospect_%"), eq(schema.emailLog.status, "sent"), gte(schema.emailLog.createdAt, since)),
+      columns: { id: true },
+    }),
+    db.query.emailLog.findMany({
+      where: and(like(schema.emailLog.template, "legacy_%"), eq(schema.emailLog.status, "sent"), gte(schema.emailLog.createdAt, since)),
       columns: { id: true },
     }),
   ]);
@@ -54,6 +58,8 @@ export async function POST(request: Request) {
 <p><strong>${sales.length} vente(s)</strong> du catalogue sur 24 h : ${formatFcfa(revenue)}.</p>
 <h3>Paniers abandonnés (relancés automatiquement par email ; WhatsApp depuis l'onglet Prospects)</h3>${li(abandoned.map((a) => `${esc(a.name) || "Client"} — ${esc(a.phone) || esc(a.email)}`))}
 <p>${prospectEmails.length} email(s) de relance envoyé(s) sur 24 h. <a href="${siteUrl("/admin/prospects")}">Voir les prospects</a></p>${
+      legacyCodes.length ? `<p>Codes d'accès envoyés aux anciens abonnés sur 24 h : ${legacyCodes.length}. <a href="${siteUrl("/admin/membres")}">Voir la file</a></p>` : ""
+    }${
       digest?.sent ? `<p>Actualités membres (${digest.campaign}) : ${digest.sent} email(s) envoyé(s), ${digest.remaining} restant(s).</p>` : ""
     }
 <h3>Relances CRM du jour</h3>${li(due.map((l) => `<a href="${siteUrl(`/admin/crm/${l.id}`)}">${esc(l.name)}</a> (${l.stage}) — ${esc(l.phone)}`))}

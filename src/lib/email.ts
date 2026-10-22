@@ -91,7 +91,7 @@ function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#F08A2E;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
 }
 
-type AccessEmailKind = "purchase" | "new_code" | "legacy";
+type AccessEmailKind = "purchase" | "new_code" | "legacy" | "legacy_reminder";
 
 const ACCESS_EMAIL: Record<AccessEmailKind, { subject: string; intro: string }> = {
   purchase: {
@@ -105,6 +105,10 @@ const ACCESS_EMAIL: Record<AccessEmailKind, { subject: string; intro: string }> 
   legacy: {
     subject: "Nouveau : votre Catalogue Premium WOOPLANS est en ligne",
     intro: "Vous avez acheté le Catalogue Premium WOOPLANS : il est désormais en ligne, dans un espace Premium qui vous est réservé. Voici vos accès personnels.",
+  },
+  legacy_reminder: {
+    subject: "Rappel : votre espace Premium WOOPLANS vous attend",
+    intro: "Vous n'avez pas encore ouvert votre espace Premium WOOPLANS, où se trouve désormais le Catalogue Premium que vous avez acheté. Voici un nouveau code d'accès (il remplace le précédent) : un clic sur le bouton suffit pour entrer.",
   },
 };
 

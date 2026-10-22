@@ -3,11 +3,8 @@ import { eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomAccessCode, randomId } from "@/lib/crypto";
-import { accessCodeEmail, sendEmail } from "@/lib/email";
 import { getEnv } from "@/lib/env";
-import { hashAccessCode, normalizeEmail, rotateAccessCode } from "@/lib/members";
-import { codeStatusByMember } from "@/lib/member-mailing";
-import { automatedEmailAllowance } from "@/lib/email-budget";
+import { hashAccessCode, normalizeEmail } from "@/lib/members";
 
 type ApiSale = {
   id: string;
@@ -22,7 +19,7 @@ type ApiSale = {
 /**
  * Importe les acheteurs historiques du catalogue depuis l'API Chariow :
  * ventes enregistrées (revenu) + membres créés avec un code inutilisable,
- * à qui l'on envoie ensuite un vrai code par lots (sendLegacyWelcomeBatch).
+ * à qui l'on envoie ensuite un vrai code par lots (envoi automatique quotidien, voir legacy-codes.ts).
  */
 export async function importChariowBuyers(maxPages = 10) {
   const apiKey = getEnv().CHARIOW_API_KEY;
@@ -117,34 +114,4 @@ export async function importChariowBuyers(maxPages = 10) {
     }
   }
   return { scanned, salesAdded, membersAdded, phonesAdded };
-}
-
-/**
- * Envoie un code d'accès, par lots, aux membres actifs qui n'en ont jamais reçu (aucun envoi RÉUSSI
- * d'un email de code) et ne se sont jamais connectés. Les envois échoués sont donc retentés.
- */
-export async function sendLegacyWelcomeBatch(limit = 25) {
-  const db = getDb();
-  const [members, codes] = await Promise.all([
-    db.query.members.findMany({ where: (m, { and, isNull }) => and(eq(m.status, "active"), isNull(m.lastLoginAt)) }),
-    codeStatusByMember(),
-  ]);
-  const waiting = members.filter((m) => codes.get(m.id)?.state !== "sent");
-  // Quota Resend : jamais plus que ce qui reste aujourd'hui pour les envois groupés.
-  const allowance = await automatedEmailAllowance();
-  const pending = waiting.slice(0, Math.min(limit, allowance));
-  let sent = 0;
-  for (const member of pending) {
-    const { code } = await rotateAccessCode(member.id);
-    const mail = accessCodeEmail({
-      name: member.name,
-      email: member.email,
-      code,
-      kind: member.source === "legacy_import" ? "legacy" : "purchase",
-    });
-    const result = await sendEmail({ to: member.email, ...mail, template: "legacy_welcome", memberId: member.id });
-    if (result.ok) sent++;
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  }
-  return { sent, attempted: pending.length, remaining: waiting.length - sent, quotaReached: pending.length < Math.min(limit, waiting.length) };
 }
