@@ -26,13 +26,11 @@ const tmp = path.join(here, "out", "voix", "blocs");
 fs.mkdirSync(tmp, { recursive: true });
 
 async function tts(text, file) {
-  const res = await fetch(URL, {
-    method: "POST",
-    headers: { "x-api-key": KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text, voice_id: VOICE, output_format: "wav", only_audio: true }),
-  });
-  if (!res.ok) throw new Error(`Gradium ${res.status} : ${(await res.text()).slice(0, 300)}`);
-  fs.writeFileSync(file, Buffer.from(await res.arrayBuffer()));
+  // curl plutôt que fetch : il passe par le proxy HTTPS de l'environnement.
+  const body = JSON.stringify({ text, voice_id: VOICE, output_format: "wav", only_audio: true });
+  const code = execFileSync("curl", ["-sS", "-L", "-X", "POST", URL, "-H", `x-api-key: ${KEY}`, "-H", "Content-Type: application/json",
+    "--data-binary", "@-", "-o", file, "-w", "%{http_code}"], { input: body }).toString().trim();
+  if (code !== "200") throw new Error(`Gradium ${code} : ${fs.readFileSync(file, "utf8").slice(0, 300)}`);
   // Normalisation en WAV mono 44,1 kHz, silences de début et de fin retirés.
   const clean = file.replace(/\.raw\.wav$/, ".wav");
   execFileSync("ffmpeg", ["-v", "error", "-y", "-i", file, "-af",
