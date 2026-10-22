@@ -103,8 +103,8 @@
 
   // 4. Étape 1 : téléphone + arguments
   const MODELS = [
+    ["Duplex D4-040", "4 ch · 155 m²", "house-model-03-720.webp"],
     ["Villa V3-001", "3 ch · 92 m²", "house-model-01-720.webp"],
-    ["Duplex D4-002", "4 ch · 168 m²", "house-model-03-720.webp"],
     ["Villa V4-005", "4 ch · 140 m²", "house-model-02.webp"],
     ["Villa V3-018", "3 ch · 105 m²", "house-model-01-720.webp"],
     ["Duplex D5-001", "5 ch · 210 m²", "house-model-03-720.webp"],
@@ -112,7 +112,7 @@
     ["Villa V3-022", "3 ch · 98 m²", "house-model-01-720.webp"],
     ["Duplex D4-009", "4 ch · 176 m²", "house-model-03-720.webp"],
   ];
-  const LOTS = [["Fondation", 1483800], ["Élévations", 2172700], ["Charpente et toiture", 1642800], ["Crépissage et antivols", 1554400], ["Portes et fenêtres", 1165800], ["Plomberie et électricité", 971500], ["Plafond et peinture", 1360100], ["Carrelage", 1424900]];
+  const LOTS = [["Fondation", 2385500], ["Élévation RDC", 1757700], ["Dalle", 3389900], ["Élévation étage", 2008800], ["Charpente et toiture", 3013200], ["Crépissage et antivols", 3682800], ["Portes et fenêtres", 2762100], ["Plomberie et électricité", 2301800], ["Plafond et peinture", 3222500], ["Carrelage", 3375700]];
   const PLAN = `<svg viewBox="0 0 360 300" style="width:360px;height:300px;font-family:Jakarta">
     <g fill="none" stroke="#14302F" stroke-width="5">
       <rect x="20" y="20" width="320" height="230"/>
@@ -121,16 +121,16 @@
     </g>
     <g fill="#E7C36C" fill-opacity=".25"><rect x="22" y="112" width="196" height="136"/></g>
     <g font-size="13" font-weight="800" fill="#14302F" text-anchor="middle">
-      <text x="80" y="60">Ch. principale</text><text x="80" y="78" font-weight="600">13 m²</text>
-      <text x="170" y="60">SdB</text><text x="170" y="78" font-weight="600">4 m²</text>
-      <text x="225" y="60">SdB</text><text x="225" y="78" font-weight="600">4 m²</text>
-      <text x="295" y="60">Chambre 2</text><text x="295" y="78" font-weight="600">12 m²</text>
-      <text x="120" y="176">Séjour – salle à manger</text><text x="120" y="194" font-weight="600">31 m²</text>
-      <text x="280" y="140">Chambre 3</text><text x="280" y="158" font-weight="600">12 m²</text>
+      <text x="80" y="60">Chambre</text><text x="80" y="78" font-weight="600">9 m²</text>
+      <text x="170" y="60">SdB</text><text x="170" y="78" font-weight="600">3 m²</text>
+      <text x="225" y="60">Mag.</text><text x="225" y="78" font-weight="600">3 m²</text>
+      <text x="295" y="60">Salle à manger</text><text x="295" y="78" font-weight="600">11 m²</text>
+      <text x="120" y="176">Séjour</text><text x="120" y="194" font-weight="600">21 m²</text>
+      <text x="280" y="140">Couloir</text><text x="280" y="158" font-weight="600">5 m²</text>
       <text x="280" y="212">Cuisine</text><text x="280" y="230" font-weight="600">11 m²</text>
     </g>
     <g stroke="#C75B3A" stroke-width="2" fill="#C75B3A" font-size="12" font-weight="700" text-anchor="middle">
-      <path d="M20 272h320M20 266v12M340 266v12"/><text x="180" y="292" stroke="none">surface habitable 92 m²</text>
+      <path d="M20 272h320M20 266v12M340 266v12"/><text x="180" y="292" stroke="none">rez-de-chaussée · total 155 m²</text>
     </g></svg>`;
   scene("s04-etape-1", `
     <div class="phone" id="ph" style="left:56px;top:212px">
@@ -143,28 +143,28 @@
           <div id="tap" class="abs" style="left:63px;top:140px;width:80px;height:80px;border-radius:50%;background:rgba(231,195,108,.55);border:4px solid #E7C36C;opacity:0"></div>
         </div>
         <div class="scr" id="scr-fiche">
-          <img src="${IMG}digital/house-model-01.webp" style="width:100%;height:300px;object-fit:cover;display:block">
+          <img src="${IMG}digital/house-model-03.webp" style="width:100%;height:300px;object-fit:cover;display:block">
           <div style="padding:20px">
-            <div style="font-size:30px;font-weight:800">Villa V3-001</div>
-            <div style="margin:12px 0 10px"><span class="chip">3 chambres</span><span class="chip">2 SdB</span><span class="chip">92 m²</span><span class="chip">Plain-pied</span></div>
+            <div style="font-size:30px;font-weight:800">Duplex D4-040</div>
+            <div style="margin:12px 0 10px"><span class="chip">4 chambres</span><span class="chip">3 SdB</span><span class="chip">155 m²</span><span class="chip">R+1</span></div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
               <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:20% 50%">
               <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:80% 50%">
               <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:50% 90%">
             </div>
-            <div style="margin-top:18px;padding:16px;border-radius:14px;background:#0F5B59;color:#fff;font-weight:700;font-size:16px">Budget de construction estimé<div style="font-size:26px;font-weight:800;color:#E7C36C">10,6 – 13 M FCFA</div></div>
+            <div style="margin-top:18px;padding:16px;border-radius:14px;background:#0F5B59;color:#fff;font-weight:700;font-size:16px">Budget de construction estimé<div style="font-size:26px;font-weight:800;color:#E7C36C">25,1 – 30,7 M FCFA</div></div>
           </div>
         </div>
         <div class="scr" id="scr-plan">
-          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Plan coté · V3-001</b></div>
+          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Plan coté · D4-040</b></div>
           <div style="padding:30px 18px 0">${PLAN}</div>
           <div style="padding:10px 22px;font-size:15px;font-weight:600;color:#5d6b6a">Surface de chaque pièce, dimensions, terrasses.</div>
         </div>
         <div class="scr" id="scr-devis">
-          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Devis estimatif · V3-001</b></div>
+          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Devis estimatif · D4-040</b></div>
           <div style="padding:10px 22px">
             ${LOTS.map((l) => `<div class="lot"><span>${l[0]}</span><b>${fmt(l[1])}</b></div>`).join("")}
-            <div class="lot" style="border:0;font-size:19px;color:#0F5B59"><b>Total estimé</b><b>11 776 000 FCFA</b></div>
+            <div class="lot" style="border:0;font-size:19px;color:#0F5B59"><b>Total estimé</b><b>27 900 000 FCFA</b></div>
           </div>
         </div>
       </div>
@@ -181,11 +181,11 @@
     </div>
     <div class="abs" id="s4-ex" style="left:530px;top:270px;width:500px">
       <div class="kick">Exemple</div>
-      <div class="h2" style="font-size:64px;margin:6px 0 20px">Villa V3-001</div>
-      <div class="h3" id="ex-a" style="font-size:40px">3 chambres · 92 m²</div>
+      <div class="h2" style="font-size:64px;margin:6px 0 20px">Duplex D4-040</div>
+      <div class="h3" id="ex-a" style="font-size:40px">4 chambres · 155 m²</div>
       <div id="ex-b" style="margin-top:46px">
         <div style="font-size:28px;font-weight:700;opacity:.85">Budget de construction</div>
-        <div class="gold" style="font-size:74px;font-weight:800;letter-spacing:-.02em;line-height:1.1"><span id="cnt-a">10,6</span> – <span id="cnt-b">13</span> M</div>
+        <div class="gold" style="font-size:74px;font-weight:800;letter-spacing:-.02em;line-height:1.1"><span id="cnt-a">25,1</span> – <span id="cnt-b">30,7</span> M</div>
         <div style="font-size:34px;font-weight:800">FCFA</div>
       </div>
       <div id="ex-c" class="h3" style="margin-top:46px;font-size:40px;font-weight:800">Vous comparez <span class="gold">avant</span> de dépenser.</div>
@@ -249,7 +249,7 @@
         <rect x="170" y="270" width="80" height="70" fill="#3E5C6A"/><rect x="550" y="270" width="80" height="70" fill="#3E5C6A"/><rect x="365" y="280" width="70" height="120" fill="#7A4E2D"/></g>
       <path id="hr" d="M70 230 L400 70 L730 230 Z" fill="#6B4F3A"/>
     </svg>
-    <div class="vframe" id="render" style="left:90px;top:400px;width:900px;height:520px"><img src="${IMG}digital/house-model-01.webp" style="width:100%;height:100%;object-fit:cover"></div>
+    <div class="vframe" id="render" style="left:90px;top:400px;width:900px;height:520px"><img src="${IMG}digital/house-model-03.webp" style="width:100%;height:100%;object-fit:cover"></div>
     <div class="abs c" id="s7-tag" style="top:950px"><span class="tag" style="background:rgba(4,30,29,.7);border:3px solid var(--gold);font-size:34px">Plans + devis en main</span></div>
   `);
 
@@ -412,7 +412,7 @@
     },
     "s04-etape-1"(lt, sc) {
       const id = sc.id;
-      const ex = at(id, "Exemple"), ch = at(id, "trois chambres"), en = at(id, "entre"), cmp = at(id, "Vous comparez");
+      const ex = at(id, "Exemple"), ch = at(id, "quatre chambres"), en = at(id, "entre"), cmp = at(id, "Vous comparez");
       const ph = eo(prog(lt, 0, 0.6));
       tf($("#ph"), { o: ph, x: (1 - ph) * -80 });
       // Écrans du téléphone
@@ -421,7 +421,7 @@
         const o = Math.min(prog(lt, a, 0.35), 1 - prog(lt, b, 0.35));
         tf($(sel), { o, x: (1 - prog(lt, a, 0.35)) * 60 });
       }
-      // La grille défile puis revient en haut pour toucher la fiche V3-001.
+      // La grille défile puis revient en haut pour toucher la fiche D4-040.
       $("#grid-in").style.transform = `translateY(${-260 * Math.sin(Math.PI * prog(lt, 0.4, ex - 0.9))}px)`;
       const tapA = ex - 0.1;
       $("#tap").style.opacity = prog(lt, tapA, 0.15) * (1 - prog(lt, tapA + 0.4, 0.2));
@@ -438,8 +438,8 @@
       tf($("#s4-ex"), { o: inn, y: (1 - inn) * 40 });
       rise($("#ex-a"), lt, ch); rise($("#ex-b"), lt, en);
       const c = eo(prog(lt, en + 0.1, 1.3));
-      $("#cnt-a").textContent = (10.6 * c).toFixed(1).replace(".", ",");
-      $("#cnt-b").textContent = Math.round(13 * c);
+      $("#cnt-a").textContent = (25.1 * c).toFixed(1).replace(".", ",");
+      $("#cnt-b").textContent = (30.7 * c).toFixed(1).replace(".", ",");
       rise($("#ex-c"), lt, cmp);
     },
     "s05-precision"(lt, sc) {

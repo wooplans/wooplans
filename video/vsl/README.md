@@ -37,6 +37,7 @@ Sans `out/voice.wav`, `assemble.mjs main` produit l'animatique muette. Avec la v
 
 ## Éléments provisoires à remplacer
 
-- **Téléphone du plan 4** (« maquette provisoire ») : à remplacer par l'enregistrement d'écran réel de l'espace Premium (grille → fiche V3-001 → rendus → plan coté → devis), incrusté dans le cadre du téléphone. Les chiffres affichés (pièces, devis par poste, total 11 776 000 FCFA, budget 10,6–13 M) sont ceux de la vraie fiche V3-001 ; les images sont des rendus génériques du dépôt et le plan coté est un schéma.
-- **Plan 7** : rendu générique `house-model-01.webp`, à remplacer par un rendu de V3-001.
+- **Téléphone du plan 4** (« maquette provisoire ») : à remplacer par l'enregistrement d'écran réel de l'espace Premium (grille → fiche D4-040 → rendus → plan coté → devis), incrusté dans le cadre du téléphone. Les chiffres affichés (pièces, devis par poste, total 27 900 000 FCFA, budget 25,1–30,7 M) sont ceux de la vraie fiche D4-040 ; les images sont des rendus génériques du dépôt et le plan coté est un schéma.
+- **Plan 7** : rendu générique `house-model-01.webp`, à remplacer par un rendu de D4-040.
 - **Plan 8** (« emplacement provisoire ») : extraits réels de Francis (00:11–00:15) et Renaud (00:43–00:49), à incruster dans les cadres.
+- **Témoignages** : l'extrait de Francis est disponible (vidéo 360 × 640). Le fichier `renaud.mp4` servi par le site ne contient que du son (aucune piste vidéo) : il faut la vidéo d'origine.

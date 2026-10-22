@@ -33,9 +33,9 @@
       ["Étape un : le Catalogue Premium."],
       ["Plus de 60 villas et duplex,", "Plus de soixante villas et duplex,"],
       ["avec rendus 3D, plans cotés, surfaces / et devis poste par poste."],
-      ["Exemple : la villa V3-001,", "Exemple : la villa V3 zéro zéro un,"],
-      ["trois chambres, 92 m²,", "trois chambres, quatre-vingt-douze mètres carrés,"],
-      ["entre 10,6 et 13 millions de FCFA.", "entre dix virgule six et treize millions de francs CFA."],
+      ["Exemple : le duplex D4-040,", "Exemple : le duplex D4 zéro quarante,"],
+      ["quatre chambres, 155 m²,", "quatre chambres, cent cinquante-cinq mètres carrés,"],
+      ["entre 25,1 et 30,7 millions de FCFA.", "entre vingt-cinq virgule un et trente virgule sept millions de francs CFA."],
       ["Vous comparez en famille, / avant de dépenser un franc."],
     ] },
     { id: "s05-precision", lead: 0.2, tail: 0.5, subs: [

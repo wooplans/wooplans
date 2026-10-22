@@ -14,7 +14,7 @@ import { here, loadTimeline } from "./lib.mjs";
 
 const KEY = process.env.GRADIUM_API_KEY;
 const VOICE = process.env.GRADIUM_VOICE_ID || "TsRKBRWZGYldAeEI";
-const URL = process.env.GRADIUM_URL || "https://eu.api.gradium.ai/api/post/speech/tts";
+const URL = process.env.GRADIUM_URL || "https://api.gradium.ai/api/post/speech/tts";
 if (!KEY) {
   console.error("GRADIUM_API_KEY manquant (à ajouter dans les secrets de l'environnement).");
   process.exit(1);
