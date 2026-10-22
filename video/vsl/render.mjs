@@ -30,8 +30,9 @@ function frames(src, dir, args) {
   fs.mkdirSync(dir, { recursive: true });
   execFileSync("ffmpeg", ["-v", "error", "-y", ...args.pre, "-i", src, "-vf", args.vf, "-q:v", "3", path.join(dir, "f%04d.jpg")]);
 }
-frames(path.join(here, "out", "ecran", "ecran-b.mp4"), path.join(here, "out", "ecran", "frames"),
-  { pre: [], vf: "fps=30,crop=288:614:0:24,scale=398:849:flags=lanczos,unsharp=5:5:0.6" });
+// Barres d'état et de navigation Android retirées, mise à la taille de l'écran du cadre.
+frames(path.join(here, "out", "ecran", "ecran.mp4"), path.join(here, "out", "ecran", "frames"),
+  { pre: [], vf: "fps=30,crop=iw:ih*2182/2400:0:ih*88/2400,scale=415:838:flags=lanczos" });
 frames(path.join(here, "out", "temoignages", "francis.mp4"), path.join(here, "out", "temoignages", "francis"),
   { pre: ["-ss", "10.4", "-t", "5.0"], vf: "fps=30,scale=580:-2:flags=lanczos,crop=580:860:0:40" });
 

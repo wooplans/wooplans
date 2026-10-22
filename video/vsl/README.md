@@ -37,7 +37,7 @@ Sans `out/voice.wav`, `assemble.mjs main` produit l'animatique muette. Avec la v
 
 ## Médias réels (non versionnés, dans `out/`)
 
-- `out/ecran/ecran-b.mp4` : enregistrement d'écran de l'espace Premium (fiche Duplex D4-040), monté dans le téléphone du plan 4 et calé sur la voix (`cuts` dans `src/scenes.js`). Il affiche le prénom du compte : à garder hors du dépôt.
+- `out/ecran/ecran.mp4` : enregistrement (1080 × 2400) d'écran de l'espace Premium (fiche Duplex D4-040), monté dans le téléphone du plan 4 et calé sur la voix (`cuts` dans `src/scenes.js`). Il affiche le prénom du compte : à garder hors du dépôt.
 - `out/temoignages/francis.mp4` et `renaud.mp4` (téléchargés depuis `/videos/testimonials/`) : Francis 10,4–15,4 s (vidéo), Renaud 42,3–46,7 s (audio seul, carte animée). Repères trouvés par transcription.
 - `assets/d4-040-cover.webp` : rendu 3D de D4-040 (plan 7).
 

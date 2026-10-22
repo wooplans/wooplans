@@ -16,12 +16,13 @@ if (what === "main") {
   const voice = fs.existsSync(out("voice.wav")) ? out("voice.wav") : null;
   const music = fs.existsSync(path.join(here, "audio", "music.mp3")) ? path.join(here, "audio", "music.mp3") : null;
   const dst = out(voice ? "vsl-catalogue-premium.mp4" : "vsl-catalogue-premium-animatique.mp4");
+  const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", out("main-silent.mp4")]).toString());
   const inputs = ["-i", out("main-silent.mp4")];
   let filter = null, maps = ["-map", "0:v"];
   if (voice && music) {
     inputs.push("-i", voice, "-stream_loop", "-1", "-i", music);
     // Musique discrète, abaissée sous la voix (sidechain), fondu de fin.
-    filter = "[2:a]volume=0.22[m];[m][1:a]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[md];[1:a][md]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5[a]";
+    filter = `[2:a]volume=0.2,afade=t=in:d=1,afade=t=out:st=${(dur - 3).toFixed(2)}:d=3[m];[1:a]asplit=2[v1][v2];[m][v1]sidechaincompress=threshold=0.03:ratio=6:attack=20:release=400[md];[v2][md]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5[a]`;
     maps.push("-map", "[a]");
   } else if (voice) {
     inputs.push("-i", voice);
@@ -30,7 +31,6 @@ if (what === "main") {
   }
   // Deux passes, débit calculé pour tenir dans TARGET_MB (6 Mo par défaut, visiteurs
   // sur données mobiles) : (poids × 8 / durée) − audio, avec 4 % de marge.
-  const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", out("main-silent.mp4")]).toString());
   const kbps = Math.floor((Number(process.env.TARGET_MB || 6) * 8e3 * 0.96) / dur - (voice ? 96 : 0));
   const v = ["-c:v", "libx264", "-preset", "veryslow", "-tune", "animation", "-profile:v", "high", "-pix_fmt", "yuv420p",
     "-b:v", `${kbps}k`, "-maxrate", `${Math.round(kbps * 1.8)}k`, "-bufsize", `${kbps * 3}k`, "-g", "120"];
