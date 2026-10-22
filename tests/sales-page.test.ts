@@ -70,3 +70,18 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   assert.match(b, /data-locale="fr"/);
   assert.match(b, /widget_ready/);
 });
+
+test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
+  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8").replace(/&nbsp;/g, " ");
+  const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
+  const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
+  assert.equal(prices.length, 2);
+  const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
+  for (const price of prices) {
+    assert.match(b, new RegExp(fcfa(price)));
+    assert.match(b, new RegExp(fcfa(price - 39000)));
+  }
+  assert.match(b, /id="parcours"/);
+  assert.match(b, /Peut-on construire avec les plans du catalogue/);
+  assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
+});
