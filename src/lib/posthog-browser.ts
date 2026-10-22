@@ -36,6 +36,17 @@ export function phCapture(event: string, properties: Record<string, unknown> = {
   else if (pending.length < 50) pending.push([event, properties]);
 }
 
+/**
+ * Propriétés de la page courante, enregistrées sur chaque événement (clics, clics de rage, sorties).
+ * Elles remplacent à chaque page celles que la page de vente statique a mémorisées (page_type=page_vente),
+ * sinon tous les événements du site resteraient attribués à la page de vente.
+ */
+let pageProperties: Record<string, unknown> = {};
+export function phRegisterPage(properties: Record<string, unknown>) {
+  pageProperties = properties;
+  window.posthog?.register(properties);
+}
+
 export function loadPostHog(opts: { key: string; host: string; distinctId: string | null; superProperties: Record<string, unknown> }) {
   if (window.posthog) return window.posthog;
   const stub = [] as unknown as PostHogStub;
@@ -64,7 +75,7 @@ export function loadPostHog(opts: { key: string; host: string; distinctId: strin
     },
   ]);
   window.posthog = stub as unknown as PostHog;
-  window.posthog.register(opts.superProperties);
+  window.posthog.register({ ...opts.superProperties, ...pageProperties });
   for (const [event, properties] of pending.splice(0)) window.posthog.capture(event, properties);
 
   const script = document.createElement("script");

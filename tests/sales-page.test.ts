@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { budgetLabel, chooseVariant, galleryHtml, previewHtml } from "../src/lib/sales-page.ts";
+import { budgetLabel, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
 
 test("variante : part 0 → A pour tous, sans cookie", () => {
   assert.deepEqual(chooseVariant({ query: null, cookie: undefined, share: 0, random: 0 }), { variant: "a", remember: false });
@@ -65,8 +65,38 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
   assert.match(b, /data-wp-preview/);
-  assert.match(b, /Fiche PDF/);
+  assert.match(b, /Fiches PDF de chaque modèle en téléchargement/);
   assert.doesNotMatch(b, /50\+|Télécharger le Catalogue|b-cdn\.net/);
   assert.match(b, /data-locale="fr"/);
   assert.match(b, /widget_ready/);
+});
+
+test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
+  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8").replace(/&nbsp;/g, " ");
+  const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
+  const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
+  assert.equal(prices.length, 2);
+  const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
+  for (const price of prices) {
+    assert.match(b, new RegExp(fcfa(price)));
+    assert.match(b, new RegExp(fcfa(price - 39000)));
+  }
+  assert.match(b, /id="parcours"/);
+  assert.match(b, /Peut-on construire avec les plans du catalogue/);
+  assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
+  assert.doesNotMatch(b, /data-countdown|du jour/);
+  assert.match(b, /id="contenu-plans"/);
+  assert.equal(b.match(/data-wp-threshold/g)?.length, 4);
+});
+
+test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {
+  assert.deepEqual(priceStep(63), { reached: false, leftLabel: "37 modèles", percent: 63 });
+  assert.deepEqual(priceStep(99), { reached: false, leftLabel: "1 modèle", percent: 99 });
+  assert.deepEqual(priceStep(100), { reached: true, leftLabel: "0 modèle", percent: 100 });
+  assert.equal(priceStep(130).percent, 100);
+});
+
+test("prix par modèle : arrondi à la dizaine", () => {
+  assert.equal(perModelLabel(63), "environ 620");
+  assert.equal(perModelLabel(100), "environ 390");
 });

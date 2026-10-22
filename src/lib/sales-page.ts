@@ -108,3 +108,21 @@ export function previewHtml(p: PreviewPlan | null) {
     lots ? `<h4>Devis détaillé par poste <span class="lock">montants après achat</span></h4><ul class="lots">${lots}<li class="total"><span>Total estimatif</span><i></i></li></ul>` : ""
   }${p.roomsCount ? `<h4>${p.roomsCount} pièces avec leur surface <span class="lock">après achat</span></h4>` : ""}<h4>Fiche PDF</h4><div class="pdfline"><span class="doc"></span><span><b>Fiche-WOOPLANS-${escapeHtml(p.name.split(" ").pop() ?? "")}.pdf</b><br>Rendus, plan coté, devis : à imprimer ou à montrer à votre maçon.</span></div></div></div></article>`;
 }
+
+/** Le prix du catalogue passe de 39 000 à 60 000 FCFA quand le catalogue atteint ce nombre de modèles publiés. */
+export const PRICE_STEP_AT = 100;
+
+/** Progression vers le palier de prix : modèles restants (libellé accordé) et part atteinte, en %. */
+export function priceStep(count: number, at = PRICE_STEP_AT) {
+  const left = Math.max(0, at - count);
+  return {
+    reached: left === 0,
+    leftLabel: `${left} modèle${left > 1 ? "s" : ""}`,
+    percent: Math.min(100, Math.max(0, Math.round((count / at) * 100))),
+  };
+}
+
+/** Prix du catalogue ramené à un modèle, arrondi à la dizaine : « environ 620 ». */
+export function perModelLabel(count: number, price = 39000) {
+  return `environ ${Math.round(price / count / 10) * 10}`;
+}

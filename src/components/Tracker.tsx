@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { FUNNEL_EVENTS, isPrivatePath, pageType, planSlugFromPath } from "@/lib/behavior";
-import { phCapture } from "@/lib/posthog-browser";
+import { phCapture, phRegisterPage } from "@/lib/posthog-browser";
 
 /** Adresse de la page sans fragment (#) : le lien de connexion y transporte le code d'accès. */
 const pageUrl = () => window.location.origin + window.location.pathname + window.location.search;
@@ -54,7 +54,11 @@ export function Tracker() {
     const type = pathname === "/catalogue-premium" ? "sales_page_view" : planSlug ? "plan_view" : "page_view";
     if (firstView.current) trackAndIdentify({ type, planSlug });
     else track({ type, planSlug });
-    if (!isPrivatePath(pathname)) phCapture("$pageview", { page_type: pageType(pathname), plan: planSlug ?? null });
+    if (!isPrivatePath(pathname)) {
+      const page = { page_type: pageType(pathname), plan: planSlug ?? null };
+      phRegisterPage(page);
+      phCapture("$pageview", page);
+    }
     // La première vue est envoyée par le script du Pixel lui-même.
     if (!firstView.current) window.fbq?.("track", "PageView");
     firstView.current = false;

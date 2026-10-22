@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
-import { VARIANT_COOKIE, chooseVariant, galleryHtml, previewHtml, type GalleryPlan } from "@/lib/sales-page";
+import { VARIANT_COOKIE, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep, type GalleryPlan } from "@/lib/sales-page";
 
 const GALLERY_SIZE = 8;
 const DATA_TTL_MS = 5 * 60_000;
@@ -80,7 +80,15 @@ export async function GET(request: Request) {
   } else {
     rewriter
       .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
-      .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) });
+      .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) })
+      .on("[data-wp-per-model]", { element: (el) => void el.setInnerContent(perModelLabel(data.count)) });
+    // Palier de prix (100 modèles) : modèles restants et jauge ; mentions retirées une fois le palier atteint.
+    const step = priceStep(data.count);
+    if (step.reached) rewriter.on("[data-wp-threshold]", { element: (el) => void el.remove() });
+    else
+      rewriter
+        .on("[data-wp-left]", { element: (el) => void el.setInnerContent(step.leftLabel) })
+        .on("[data-wp-progress]", { element: (el) => void el.setAttribute("style", `width:${step.percent}%`) });
   }
   return rewriter.transform(new Response(asset.body, { status: 200, headers }));
 }
