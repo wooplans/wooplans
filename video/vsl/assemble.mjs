@@ -28,8 +28,13 @@ if (what === "main") {
     filter = "[1:a]loudnorm=I=-16:TP=-1.5[a]";
     maps.push("-map", "[a]");
   }
-  // Deux passes à débit moyen ≈ 1,2 Mb/s : poids prévisible pour les données mobiles.
-  const v = ["-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-pix_fmt", "yuv420p", "-b:v", "1150k", "-maxrate", "1800k", "-bufsize", "2400k", "-g", "60"];
+  // Deux passes, débit calculé pour tenir dans TARGET_MB (6 Mo par défaut, visiteurs
+  // sur données mobiles) : (poids × 8 / durée) − audio, avec 4 % de marge.
+  const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", out("main-silent.mp4")]).toString());
+  const kbps = Math.floor((Number(process.env.TARGET_MB || 6) * 8e3 * 0.96) / dur - (voice ? 96 : 0));
+  const v = ["-c:v", "libx264", "-preset", "veryslow", "-tune", "animation", "-profile:v", "high", "-pix_fmt", "yuv420p",
+    "-b:v", `${kbps}k`, "-maxrate", `${Math.round(kbps * 1.8)}k`, "-bufsize", `${kbps * 3}k`, "-g", "120"];
+  console.log(`Durée ${dur.toFixed(1)} s → vidéo ${kbps} kb/s`);
   ff([...inputs.slice(0, 2), ...v, "-pass", "1", "-an", "-f", "mp4", "/dev/null"]);
   ff([...inputs, ...(filter ? ["-filter_complex", filter] : []), ...maps, ...v, "-pass", "2",
     ...(voice ? ["-c:a", "aac", "-b:a", "96k", "-ar", "44100", "-shortest"] : ["-an"]), "-movflags", "+faststart", dst]);
