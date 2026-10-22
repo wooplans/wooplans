@@ -174,6 +174,16 @@ section{padding:56px 0}
 .value .tot{background:var(--bg);font-weight:800}
 .value .tot span:last-child s{color:var(--gray)}
 .value .you{background:var(--teal);color:#fff;font-weight:800;font-size:16px;border:0}
+.value-h{padding:14px 16px 4px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gray)}
+.vs{margin:0;padding:14px 16px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.vs p{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--gray)}
+.vs i{display:block;height:14px;border-radius:99px;background:#C9D1D8;min-width:8px}
+.vs b{font-variant-numeric:tabular-nums;color:var(--gray);text-decoration:line-through}
+.vs .me{color:var(--teal)}
+.vs .me i{background:var(--orange)}
+.vs .me b{color:var(--teal);text-decoration:none;font-size:15px}
+.value-f{padding:12px 16px 14px;font-size:14px;color:#46525E;background:#fff}
+.value-f b{color:var(--teal)}
 
 /* Offre */
 .offer{background:linear-gradient(180deg,var(--teal) 0%,var(--teal-dk) 100%);color:#fff}
@@ -404,12 +414,18 @@ footer a{color:rgba(255,255,255,.7)}
       <li>Vous voulez discuter avec votre entrepreneur chiffres en main, sans vous faire arnaquer.</li>
     </ul>
     <div class="value">
+      <p class="value-h">Ce que contient le catalogue, à sa vraie valeur</p>
       <div><span>Sélection de <span data-wp-count>nos</span> plans</span><span>250 000 FCFA</span></div>
       <div><span>Rendus 3D et présentation</span><span>100 000 FCFA</span></div>
       <div><span>Plans cotés et dimensions</span><span>75 000 FCFA</span></div>
       <div><span>Devis estimatifs par poste</span><span>75 000 FCFA</span></div>
       <div class="tot"><span>Valeur totale</span><span><s>500 000 FCFA</s></span></div>
+      <figure class="vs" aria-label="Valeur 500 000 FCFA, votre prix 39 000 FCFA">
+        <p><span>Valeur</span><i style="width:100%"></i><b>500 000</b></p>
+        <p class="me"><span>Vous</span><i style="width:7.8%"></i><b>39 000</b></p>
+      </figure>
       <div class="you"><span>Votre prix aujourd'hui</span><span>39 000 FCFA</span></div>
+      <p class="value-f">Soit <b><span data-wp-per-model>moins de 650</span> FCFA par modèle</b>, devis compris. Et si vous commandez vos plans complets, le catalogue vous revient à 0&nbsp;FCFA.</p>
     </div>
   </div>
 </section>
@@ -446,7 +462,7 @@ footer a{color:rgba(255,255,255,.7)}
     <h2>Vos questions</h2>
     <div class="faq">
       <details><summary>Comment vais-je recevoir le catalogue ?</summary><p>Immédiatement après le paiement : votre code d'accès personnel s'affiche à l'écran et vous est envoyé par e-mail. Avec votre e-mail et ce code, vous ouvrez votre espace Premium sur téléphone ou ordinateur, à vie.</p></details>
-      <details><summary>Puis-je télécharger les plans ?</summary><p>Oui. Chaque modèle se télécharge en fiche PDF : rendus 3D, plans cotés, pièces et surfaces, devis par poste. La fiche est marquée à votre nom, pour comparer et choisir en famille. Pour construire, vous commanderez ensuite les plans complets de votre maison (voir la question suivante).</p></details>
+      <details><summary>Puis-je télécharger les plans ?</summary><p>Oui. Chaque modèle se télécharge en fiche PDF : rendus 3D, plans cotés, pièces et surfaces, devis par poste. Elle vous sert à comparer et choisir en famille. Pour construire, vous commanderez ensuite les plans complets de votre maison (voir la question suivante).</p></details>
       <details id="construire"><summary>Peut-on construire avec les plans du catalogue ?</summary><p>Les plans du catalogue servent à choisir votre modèle et à connaître son budget : nous ne recommandons pas de construire avec. Nous vous recommandons de commander les plans complets : nos architectes modifient le modèle selon vos besoins et l'adaptent à votre terrain. Ils ont un prix fixe : 149&nbsp;000&nbsp;FCFA pour une villa, 249&nbsp;000&nbsp;FCFA pour un duplex, et les 39&nbsp;000&nbsp;FCFA du catalogue sont déduits : vous payez 110&nbsp;000&nbsp;FCFA ou 210&nbsp;000&nbsp;FCFA. Le catalogue vous revient donc à 0&nbsp;FCFA. <a href="#parcours">Voir le parcours en 3 étapes</a></p></details>
       <details id="contenu-plans"><summary>Que contiennent les plans complets ?</summary><p>10 plans, livrés pour une villa comme pour un duplex :</p><ol>
         <li><b>Plans de fondation</b> : principe d'implantation des fondations</li>

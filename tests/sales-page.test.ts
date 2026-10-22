@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { budgetLabel, chooseVariant, galleryHtml, previewHtml, priceStep } from "../src/lib/sales-page.ts";
+import { budgetLabel, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
 
 test("variante : part 0 → A pour tous, sans cookie", () => {
   assert.deepEqual(chooseVariant({ query: null, cookie: undefined, share: 0, random: 0 }), { variant: "a", remember: false });
@@ -94,4 +94,9 @@ test("palier de prix : modèles restants accordés, jauge bornée, palier attein
   assert.deepEqual(priceStep(99), { reached: false, leftLabel: "1 modèle", percent: 99 });
   assert.deepEqual(priceStep(100), { reached: true, leftLabel: "0 modèle", percent: 100 });
   assert.equal(priceStep(130).percent, 100);
+});
+
+test("prix par modèle : arrondi à la dizaine", () => {
+  assert.equal(perModelLabel(63), "environ 620");
+  assert.equal(perModelLabel(100), "environ 390");
 });

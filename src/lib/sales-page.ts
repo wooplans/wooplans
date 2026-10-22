@@ -121,3 +121,8 @@ export function priceStep(count: number, at = PRICE_STEP_AT) {
     percent: Math.min(100, Math.max(0, Math.round((count / at) * 100))),
   };
 }
+
+/** Prix du catalogue ramené à un modèle, arrondi à la dizaine : « environ 620 ». */
+export function perModelLabel(count: number, price = 39000) {
+  return `environ ${Math.round(price / count / 10) * 10}`;
+}
