@@ -1,0 +1,13 @@
+{
+  "name": "wooplans-vsl",
+  "private": true,
+  "type": "module",
+  "description": "VSL du Catalogue Premium en motion design : scènes HTML rendues image par image, assemblées avec ffmpeg.",
+  "scripts": {
+    "render": "node render.mjs",
+    "subs": "node export-subs.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}
