@@ -2,7 +2,7 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 const config = [
-  { ignores: [".next/**", ".open-next/**", ".wrangler/**", "node_modules/**", "worker.ts", "cloudflare-env.d.ts", "next-env.d.ts", "public/**", "scripts/**"] },
+  { ignores: [".next/**", ".open-next/**", ".wrangler/**", "node_modules/**", "worker.ts", "cloudflare-env.d.ts", "next-env.d.ts", "public/**", "scripts/**", "video/**"] },
   ...nextVitals,
   ...nextTs,
   {

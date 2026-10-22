@@ -16,7 +16,7 @@
 <meta name="theme-color" content="#0F5B59">
 <link rel="icon" href="/favicon.png">
 <link rel="preconnect" href="https://js.chariowcdn.com" crossorigin>
-<link rel="preload" as="image" href="/assets/digital/hero-video-poster.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/digital/vsl-poster.webp" fetchpriority="high">
 <style>
 :root{--teal:#0F5B59;--teal-dk:#0A3F3E;--teal-xdk:#072E2D;--orange:#F08A2E;--orange-dk:#D4731A;--red:#C75B3A;--gold:#E7C36C;--dark:#1E2933;--gray:#6B7280;--line:#E5E9EE;--bg:#F5F7F9;--white:#fff;--r:16px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -47,7 +47,7 @@ section{padding:56px 0}
   .hero .wrap{flex:1;display:flex;flex-direction:column}
   .hero .grid{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;gap:6px}
   .hero .grid>div{display:contents}
-  .hero h1,.hero .sub,.vsl,.hero .price,.hero .pay,.hero .social{margin-top:0;margin-bottom:0}
+  .hero h1,.hero .sub,.vsl,.vsl-count,.hero .price,.hero .pay,.hero .social{margin-top:0;margin-bottom:0}
   .hero .cta{flex-shrink:0}
 }
 .hero .logo{height:30px;width:auto;margin:0 auto 22px}
@@ -57,9 +57,13 @@ section{padding:56px 0}
 .hero .sub{font-size:15px;line-height:1.45;color:rgba(255,255,255,.86);margin-bottom:clamp(10px,2svh,20px)}
 .rating{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:rgba(255,255,255,.85);margin-bottom:20px}
 .rating b{color:#fff}
-.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:clamp(10px,2svh,20px)}
-.vsl img,.vsl video{width:100%;height:100%;object-fit:cover}
-.vsl .play{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
+/* VSL 4:5 : hauteur limitée sur mobile pour garder le bouton d'achat visible sans défiler. */
+.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:4/5;width:min(100%,calc(44svh*.8),440px);margin-inline:auto;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:clamp(10px,2svh,20px);cursor:pointer}
+.vsl img,.vsl video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vsl.previewing .play{display:none}
+.vsl-count{font-size:12.5px;color:rgba(255,255,255,.85);text-align:center;margin:-4px 0 clamp(8px,1.6svh,14px)}
+.vsl-count b{color:var(--gold);font-variant-numeric:tabular-nums}
+.vsl .play{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
 .vsl .play i{width:66px;height:66px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(240,138,46,.5)}
 .vsl .play i::after{content:"";margin-left:5px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
 .price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:clamp(10px,1.8svh,16px);white-space:nowrap;line-height:1.1}
@@ -268,7 +272,7 @@ footer a{color:rgba(255,255,255,.7)}
   .trust.desk{display:flex!important}
   .hero h1{margin-bottom:14px}
   .hero .sub{font-size:16.5px;margin-bottom:16px}
-  .vsl{margin-bottom:22px}
+  .vsl{margin-bottom:22px;width:min(100%,calc(60vh*.8),440px)}
   .social{margin-top:18px;font-size:13.5px}
   .hero .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:44px;align-items:center;text-align:left}
   .hero .grid .rating,.hero .grid .pay,.hero .grid .trust,.hero .grid .social,.hero .grid .price{justify-content:flex-start}
@@ -396,10 +400,12 @@ footer a{color:rgba(255,255,255,.7)}
         <p class="sub"><b><span data-wp-count>Nos</span> plans</b> de villas et duplex avec rendus 3D, plans cotés et devis détaillés. Sur votre téléphone.</p>
       </div>
       <div>
-        <div class="vsl" id="vsl" onclick="playVsl()" role="button" aria-label="Regarder la vidéo de présentation">
-          <img src="/assets/digital/hero-video-poster.webp" alt="" width="640" height="360" fetchpriority="high">
+        <div class="vsl" id="vsl" onclick="playVsl()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playVsl()}" role="button" tabindex="0" aria-label="Regarder la vidéo de présentation avec le son">
+          <img src="/assets/digital/vsl-poster.webp" alt="" width="540" height="675" fetchpriority="high">
+          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu.mp4"></video>
           <div class="play"><i></i>Voir la présentation</div>
         </div>
+        <p class="vsl-count" data-wp-threshold><b><span data-wp-count>Plus de 60</span> modèles</b> · plus que <b data-wp-left>quelques modèles</b> avant le passage à 60&nbsp;000&nbsp;FCFA</p>
         <div class="price"><s>60 000 FCFA</s><span class="now">39 000<small>FCFA</small></span><span class="badge">–35 %</span></div>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
         <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
@@ -666,11 +672,22 @@ document.addEventListener('click',function(e){
   for(var j=0;j<vids.length;j++)io.observe(vids[j]);
 })();
 
-/* Vidéos : la lecture ne démarre qu'au clic */
+/* VSL : aperçu muet de 6 s en boucle (≈ 0,5 Mo, sauf économie de données ou animations réduites),
+   puis vidéo complète avec le son au toucher. Les autres vidéos ne démarrent qu'au clic. */
+(function(){
+  var box=document.getElementById('vsl'),v=box&&box.querySelector('video[data-preview]');
+  if(!v)return;
+  var c=navigator.connection;
+  if((c&&c.saveData)||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
+  v.addEventListener('playing',function(){box.classList.add('previewing');},{once:true});
+  v.src=v.getAttribute('data-preview');
+  v.play().catch(function(){});
+})();
 function playVsl(){
   var box=document.getElementById('vsl');
-  if(box.querySelector('video'))return;
-  box.innerHTML='<video src="/videos/vsl-cpbook-digital.mp4" poster="/assets/digital/hero-video-poster.webp" controls playsinline autoplay></video>';
+  if(box.querySelector('video[controls]'))return;
+  box.classList.remove('previewing');
+  box.innerHTML='<video src="/videos/vsl-catalogue-premium.mp4" poster="/assets/digital/vsl-poster.webp" controls playsinline autoplay></video>';
   wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
   trackVideo(box.querySelector('video'),'vsl');
 }
