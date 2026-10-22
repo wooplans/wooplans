@@ -226,9 +226,10 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   }
   if (visitor) {
     await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: intent?.ctaId ?? null });
-    // PostHog : seulement si la vente est reliée avec certitude à la visite, et hors Europe
-    // (le consentement n'est pas connu ici). Aucune donnée personnelle : identifiant anonyme du visiteur.
-    if (matched && !countryRequiresConsent(visitor.country)) {
+    // PostHog : hors Europe seulement (le consentement n'est pas connu ici). Aucune donnée personnelle :
+    // identifiant anonyme du visiteur. Les ventes du widget, rattachées au dernier clic « acheter »,
+    // sont envoyées avec match = probable pour que le tunnel PostHog aille jusqu'à l'achat.
+    if (!countryRequiresConsent(visitor.country)) {
       captureServerEvents([
         {
           event: FUNNEL_EVENTS.purchase,
@@ -239,6 +240,7 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
             cta_id: intent?.ctaId ?? null,
             variant: variantFromCta(intent?.ctaId),
             page_type: "page_vente",
+            match: matched ? "certain" : "probable",
             wp_source: visitor.source,
             wp_campaign: visitor.utmCampaign,
           },

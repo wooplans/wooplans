@@ -591,6 +591,20 @@ function playVsl(){
   if(box.querySelector('video'))return;
   box.innerHTML='<video src="/videos/vsl-cpbook-digital.mp4" poster="/assets/digital/hero-video-poster.webp" controls playsinline autoplay></video>';
   wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
+  trackVideo(box.querySelector('video'),'vsl');
+}
+/* Visionnage : attente avant la première image (vidéo lourde, réseau mobile), paliers 25/50/75/100 %,
+   erreurs, et départ de la page avant le démarrage. */
+function trackVideo(v,name){
+  var t0=Date.now(),started=false,sent={};
+  v.addEventListener('playing',function(){if(started)return;started=true;wpCapture('video_start',{video:name,wait_ms:Date.now()-t0});});
+  v.addEventListener('timeupdate',function(){
+    if(!v.duration)return;
+    var p=v.currentTime/v.duration*100;
+    [25,50,75,100].forEach(function(m){if(p>=m-1&&!sent[m]){sent[m]=1;wpCapture('video_progress',{video:name,percent:m});}});
+  });
+  v.addEventListener('error',function(){wpCapture('video_error',{video:name,wait_ms:Date.now()-t0});});
+  window.addEventListener('pagehide',function(){if(!started)wpCapture('video_start_abandoned',{video:name,wait_ms:Date.now()-t0});},{once:true});
 }
 function openVideo(name){
   var v=document.getElementById('modalVideo');
