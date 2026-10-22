@@ -81,3 +81,7 @@ La feuille de route qui s'allume (plan 3) puis le calcul 149 000 − 39 000 (pla
 ## Mesure après mise en ligne
 
 Événements en place : `video_play`, `video_start` (attente), `video_progress` (25/50/75/100 %), `video_start_abandoned`. Comparer sur 2 à 3 semaines : taux de lancement (11 % aujourd'hui), part qui atteint 75 %, taux de clic « Obtenir » après visionnage (46 % aujourd'hui), et nombre de questions WhatsApp « peut-on construire avec ? ».
+
+## Production (octobre 2026)
+
+Réalisée en motion design reproductible dans `video/vsl/` (voir son README) : texte resserré pour la durée, démonstration sur le Duplex D4-040 (enregistrement d'écran réel), voix Gradium, musique mixkit « Let's Play Africa », témoignages de Francis (vidéo) et de Renaud (audio seul). Durée finale 115 s, 5,9 Mo ; aperçu muet 0,45 Mo. Fichiers servis depuis le bucket R2 `cpbook-videos` : `vsl-catalogue-premium.mp4` et `vsl-catalogue-premium-apercu.mp4`.

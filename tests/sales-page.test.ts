@@ -86,7 +86,19 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
   assert.match(b, /id="contenu-plans"/);
-  assert.equal(b.match(/data-wp-threshold/g)?.length, 4);
+  assert.equal(b.match(/data-wp-threshold/g)?.length, 5);
+});
+
+test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
+  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
+  assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
+  assert.match(b, /data-preview="\/videos\/vsl-catalogue-premium-apercu\.mp4"/);
+  assert.match(b, /src="\/videos\/vsl-catalogue-premium\.mp4"/);
+  assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
+  assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
+  // La voix off renvoie au compteur « juste sous la vidéo ».
+  assert.match(b, /<\/div>\s*<p class="vsl-count" data-wp-threshold>.*data-wp-count.*data-wp-left/);
+  assert.match(b, /trackVideo\(box\.querySelector\('video'\),'vsl'\)/);
 });
 
 test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {
