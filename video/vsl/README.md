@@ -13,7 +13,8 @@ Tout est produit en code, de façon reproductible : chaque image est une fonctio
 | `render.mjs` | Rendu image par image (Playwright + Chromium préinstallé) vers `out/`. |
 | `assemble.mjs` | Voix + musique + compression aux poids visés, aperçu muet, poster. |
 | `export-subs.mjs` | Sous-titres `out/vsl.srt` et `out/vsl.vtt` (incrustés dans la vidéo ; fichiers fournis en plus). |
-| `timings/voice.json` | (après la voix) durée réelle de chaque bloc de sous-titre ; l'animation se recale automatiquement. |
+| `voice.mjs` | Voix off Gradium (voix `TsRKBRWZGYldAeEI`), un appel par bloc de sous-titre, assemblée dans `out/voice.wav`. Lit `GRADIUM_API_KEY`. |
+| `timings/voice.json` | (écrit par `voice.mjs`) durée réelle de chaque bloc ; l'animation et les sous-titres se recalent au rendu suivant. |
 | `fonts/` | Plus Jakarta Sans (licence OFL), sous-ensemble latin. |
 
 `out/` (rendus) et `node_modules/` ne sont pas versionnés.
@@ -28,6 +29,8 @@ node render.mjs --mode preview       # aperçu muet de 6 s
 node render.mjs --mode poster        # image d'aperçu
 node assemble.mjs main|preview|poster
 node export-subs.mjs
+GRADIUM_API_KEY=… node voice.mjs --sample   # accroche seule, pour valider la voix
+GRADIUM_API_KEY=… node voice.mjs            # voix complète, puis relancer render + assemble
 ```
 
 Sans `out/voice.wav`, `assemble.mjs main` produit l'animatique muette. Avec la voix (et `audio/music.mp3` si présent), il produit la version finale : H.264 deux passes ≈ 1,15 Mb/s + AAC 96 kb/s, `faststart`.
