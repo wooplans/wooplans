@@ -49,24 +49,18 @@ Sources : `src/lib/custom-plans.ts`, `src/lib/faq.ts`, CGV (« Les distributions
 | 3. Feuille de route | 13–20 s | « Avec WOOPLANS, le parcours est clair. Un : vous choisissez votre maison et son budget. Deux : vous obtenez vos plans complets. Trois : vous lancez votre chantier. » | Les 3 jalons s'allument l'un après l'autre : **Choisir → Plans complets → Construire**. La route reste en haut de l'écran jusqu'à la fin, l'étape en cours allumée. |
 | 4. Étape 1 | 20–38 s | « L'étape un, c'est le Catalogue Premium. Plus de 60 villas et duplex, avec leurs rendus 3D, leurs plans cotés, la surface de chaque pièce et un devis poste par poste. Par exemple, la villa V3-001 : trois chambres, 92 m², entre 10,6 et 13 millions de FCFA de construction. Vous comparez, vous décidez en famille, avant de dépenser un franc sur le chantier. » | Jalon 1 allumé. Téléphone avec enregistrement d'écran réel : grille des modèles → fiche V3-001 → rendus → plan coté → devis. Compteur qui monte jusqu'à « 10,6 – 13 M FCFA ». |
 | 5. La précision | 38–45 s | « Attention : le catalogue sert à choisir. Pour construire, il vous faut les plans complets de votre maison, adaptés à votre terrain. » | Écran partagé : **Catalogue = choisir** / **Plans complets = construire**. |
-| 6. Étape 2 | 45–60 s | « C'est l'étape deux. Plans cotés, façades et coupes, plan de masse sur votre terrain, plans de fondation. À prix fixe, connu d'avance : 149 000 FCFA pour une villa, 249 000 pour un duplex. Et les 39 000 FCFA du catalogue sont déduits. Le catalogue vous revient donc à zéro franc. » | Jalon 2 allumé. Les 4 livrables s'empilent. Calcul animé : **149 000 − 39 000 = 110 000 FCFA**, puis **249 000 − 39 000 = 210 000 FCFA**. Tampon « Prix fixe ». |
+| 6. Étape 2 | 45–60 s | « C'est l'étape deux : dix plans pour construire, fondation, distribution, quatre façades, deux coupes, toiture et fosse septique, modifiés selon vos besoins. À prix fixe, connu d'avance : 149 000 FCFA pour une villa, 249 000 pour un duplex. Et les 39 000 FCFA du catalogue sont déduits. Le catalogue vous revient donc à zéro franc. » | Jalon 2 allumé. Les 10 plans s'empilent comme une liasse. Calcul animé : **149 000 − 39 000 = 110 000 FCFA**, puis **249 000 − 39 000 = 210 000 FCFA**. Tampon « Prix fixe ». |
 | 7. Étape 3 | 60–66 s | « Étape trois : avec vos plans complets et votre devis en main, vous lancez votre chantier en sachant exactement où vous allez. » | Jalon 3 allumé. La maison V3-001 se construit en accéléré : fondation, murs, toit (rendus 3D). |
 | 8. Preuve | 66–76 s | Voix des clients | Extraits réels dans un cadre arrondi. Francis 00:11–00:15 : « J'ai été très satisfait par la qualité des devis et des plans. » Renaud 00:43–00:49 : « J'ai découvert ce site et je vous le recommande fortement. » |
 | 9. Offre et garantie | 76–84 s | « Aujourd'hui, commencez par l'étape un : 39 000 FCFA en un seul paiement, accès immédiat et à vie, nouveaux modèles inclus. Et satisfait ou remboursé pendant 7 jours. » | Carte d'offre : **39 000 FCFA** · Accès immédiat · À vie · Déduit de vos plans complets. Sceau **7 jours**. |
 | 10. Urgence | 84–88 s | Voir « Urgence » ci-dessous. | Texte de l'option retenue. |
 | 11. Appel à l'action | 88–94 s | « Touchez le bouton orange juste en dessous, payez avec Orange Money, MTN, Wave ou Moov, et choisissez votre maison dès aujourd'hui. » | Flèche orange animée vers le bas. Logos des 4 opérateurs. **Touchez « Obtenir le catalogue » ↓** |
 
-## Urgence (à choisir, elle doit être vraie)
+## Urgence : le palier de 100 modèles
 
-La vidéo est la même tous les jours : une date ou un compte à rebours dit à l'oral serait faux presque tous les jours.
+Règle décidée : **le prix passe à 60 000 FCFA quand le catalogue atteint 100 modèles.** La page affiche le nombre de modèles publiés et les modèles restants avant le palier (mis à jour automatiquement) ; la vidéo ne cite pas de chiffre du jour, pour rester vraie quand le catalogue grandit.
 
-| Option | Voix off | Condition |
-|---|---|---|
-| A. Coût de l'attente (toujours vraie) | « Chaque mois sans plan, ce sont des prix de matériaux qui montent et un projet qui recule. » | Aucune |
-| B. Hausse de prix liée au catalogue | « Le prix passera à 60 000 FCFA quand le catalogue atteindra [80] modèles. Ceux qui rejoignent maintenant gardent leur accès à vie. » | Vous vous engagez à appliquer la hausse au palier annoncé |
-| C. Prix de lancement daté | « Prix de lancement jusqu'au [date]. » | Vidéo refaite à chaque nouvelle période |
-
-Recommandation : **A + B**.
+Voix off (plan 10) : « Le catalogue passera à 60 000 FCFA quand il atteindra 100 modèles. Le compteur est juste sous la vidéo. Si vous rejoignez maintenant, votre accès reste à vie, nouveaux modèles compris. »
 
 ## Aperçu muet (6 s, en boucle avant le clic)
 
@@ -83,7 +77,6 @@ La feuille de route qui s'allume (plan 3) puis le calcul 149 000 − 39 000 (pla
 1. Enregistrement d'écran du téléphone dans l'espace Premium : grille des modèles, fiche V3-001 complète.
 2. Accès aux rendus 3D de V3-001 et aux témoignages (réseau de l'environnement : autoriser wooplans.com et wooplans.b-cdn.net), et l'accord de Francis et Renaud.
 3. Choix de la voix : votre voix enregistrée, ou une voix ElevenLabs choisie sur échantillons.
-4. Choix de l'urgence (A, B ou C) et, pour B, le palier de modèles.
 
 ## Mesure après mise en ligne
 
