@@ -54,8 +54,10 @@
       ["Étape trois : plans et devis en main,"],
       ["vous lancez votre chantier / en sachant où vous allez."],
     ] },
-    // Plan 8 : extraits réels des témoignages (durées des extraits vidéo).
-    { id: "s08-preuve", lead: 0, tail: 0, fixed: [4.4, 6.2], subs: [
+    // Plan 8 : extraits réels des témoignages (out/temoignages/), début et durée
+    // repérés par transcription. Renaud n'a enregistré que du son.
+    { id: "s08-preuve", lead: 0, tail: 0, fixed: [5.0, 4.4],
+      clips: [{ file: "francis.mp4", from: 10.4 }, { file: "renaud.mp4", from: 42.3 }], subs: [
       ["« J'ai été très satisfait par la qualité / des devis et des plans. »"],
       ["« J'ai découvert ce site / et je vous le recommande fortement. »"],
     ] },

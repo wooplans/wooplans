@@ -54,7 +54,13 @@ const parts = []; // [fichier ou null (silence), durée]
 for (const scene of api.SCENES) {
   const built = scenes.find((s) => s.id === scene.id);
   if (scene.fixed) {
-    parts.push([null, built.dur]);
+    // Extraits réels des témoignages, au même niveau sonore que la voix.
+    scene.clips.forEach((clip, i) => {
+      const f = path.join(tmp, `${scene.id}-${i}.wav`);
+      execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(clip.from), "-t", String(scene.fixed[i]), "-i", path.join(here, "out", "temoignages", clip.file),
+        "-af", `loudnorm=I=-18:TP=-2,afade=t=in:d=0.08,afade=t=out:st=${scene.fixed[i] - 0.15}:d=0.15`, "-ac", "1", "-ar", "44100", f]);
+      parts.push([f, scene.fixed[i]]);
+    });
     continue;
   }
   parts.push([null, scene.lead]);

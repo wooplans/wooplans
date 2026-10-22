@@ -6,7 +6,7 @@
 //   node render.mjs --stills 2,18,40     images clés (out/still-<t>.png)
 //   options : --fps 30, --from <s>, --to <s>, --out <fichier>
 import { chromium } from "playwright-core";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,18 @@ fs.mkdirSync(path.join(here, "out"), { recursive: true });
 
 const timingsFile = path.join(here, "timings", "voice.json");
 const timings = fs.existsSync(timingsFile) ? JSON.parse(fs.readFileSync(timingsFile, "utf8")) : null;
+
+// Images de l'enregistrement d'écran (plan 4) et de l'extrait de Francis (plan 8).
+function frames(src, dir, args) {
+  if (fs.existsSync(path.join(dir, "f0001.jpg"))) return;
+  if (!fs.existsSync(src)) throw new Error(`Fichier manquant : ${src}`);
+  fs.mkdirSync(dir, { recursive: true });
+  execFileSync("ffmpeg", ["-v", "error", "-y", ...args.pre, "-i", src, "-vf", args.vf, "-q:v", "3", path.join(dir, "f%04d.jpg")]);
+}
+frames(path.join(here, "out", "ecran", "ecran-b.mp4"), path.join(here, "out", "ecran", "frames"),
+  { pre: [], vf: "fps=30,crop=288:614:0:24,scale=398:849:flags=lanczos,unsharp=5:5:0.6" });
+frames(path.join(here, "out", "temoignages", "francis.mp4"), path.join(here, "out", "temoignages", "francis"),
+  { pre: ["-ss", "10.4", "-t", "5.0"], vf: "fps=30,scale=580:-2:flags=lanczos,crop=580:860:0:40" });
 
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",

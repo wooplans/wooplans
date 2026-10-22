@@ -35,9 +35,10 @@ GRADIUM_API_KEY=… node voice.mjs            # voix complète, puis relancer re
 
 Sans `out/voice.wav`, `assemble.mjs main` produit l'animatique muette. Avec la voix (et `audio/music.mp3` si présent), il produit la version finale : H.264 deux passes ≈ 1,15 Mb/s + AAC 96 kb/s, `faststart`.
 
-## Éléments provisoires à remplacer
+## Médias réels (non versionnés, dans `out/`)
 
-- **Téléphone du plan 4** (« maquette provisoire ») : à remplacer par l'enregistrement d'écran réel de l'espace Premium (grille → fiche D4-040 → rendus → plan coté → devis), incrusté dans le cadre du téléphone. Les chiffres affichés (pièces, devis par poste, total 27 900 000 FCFA, budget 25,1–30,7 M) sont ceux de la vraie fiche D4-040 ; les images sont des rendus génériques du dépôt et le plan coté est un schéma.
-- **Plan 7** : rendu générique `house-model-01.webp`, à remplacer par un rendu de D4-040.
-- **Plan 8** (« emplacement provisoire ») : extraits réels de Francis (00:11–00:15) et Renaud (00:43–00:49), à incruster dans les cadres.
-- **Témoignages** : l'extrait de Francis est disponible (vidéo 360 × 640). Le fichier `renaud.mp4` servi par le site ne contient que du son (aucune piste vidéo) : il faut la vidéo d'origine.
+- `out/ecran/ecran-b.mp4` : enregistrement d'écran de l'espace Premium (fiche Duplex D4-040), monté dans le téléphone du plan 4 et calé sur la voix (`cuts` dans `src/scenes.js`). Il affiche le prénom du compte : à garder hors du dépôt.
+- `out/temoignages/francis.mp4` et `renaud.mp4` (téléchargés depuis `/videos/testimonials/`) : Francis 10,4–15,4 s (vidéo), Renaud 42,3–46,7 s (audio seul, carte animée). Repères trouvés par transcription.
+- `assets/d4-040-cover.webp` : rendu 3D de D4-040 (plan 7).
+
+`render.mjs` extrait les images de ces vidéos au premier rendu.

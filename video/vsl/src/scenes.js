@@ -101,74 +101,12 @@
     <div class="abs c h1" id="rm-t" style="top:350px">Un parcours clair</div>
   `);
 
-  // 4. Étape 1 : téléphone + arguments
-  const MODELS = [
-    ["Duplex D4-040", "4 ch · 155 m²", "house-model-03-720.webp"],
-    ["Villa V3-001", "3 ch · 92 m²", "house-model-01-720.webp"],
-    ["Villa V4-005", "4 ch · 140 m²", "house-model-02.webp"],
-    ["Villa V3-018", "3 ch · 105 m²", "house-model-01-720.webp"],
-    ["Duplex D5-001", "5 ch · 210 m²", "house-model-03-720.webp"],
-    ["Villa V4-010", "4 ch · 128 m²", "house-model-02.webp"],
-    ["Villa V3-022", "3 ch · 98 m²", "house-model-01-720.webp"],
-    ["Duplex D4-009", "4 ch · 176 m²", "house-model-03-720.webp"],
-  ];
-  const LOTS = [["Fondation", 2385500], ["Élévation RDC", 1757700], ["Dalle", 3389900], ["Élévation étage", 2008800], ["Charpente et toiture", 3013200], ["Crépissage et antivols", 3682800], ["Portes et fenêtres", 2762100], ["Plomberie et électricité", 2301800], ["Plafond et peinture", 3222500], ["Carrelage", 3375700]];
-  const PLAN = `<svg viewBox="0 0 360 300" style="width:360px;height:300px;font-family:Jakarta">
-    <g fill="none" stroke="#14302F" stroke-width="5">
-      <rect x="20" y="20" width="320" height="230"/>
-      <path d="M20 110h120M140 20v90M200 20v90M200 110h140M250 20v90M140 110v20M20 160h0"/>
-      <path d="M220 110v140M220 180h120"/>
-    </g>
-    <g fill="#E7C36C" fill-opacity=".25"><rect x="22" y="112" width="196" height="136"/></g>
-    <g font-size="13" font-weight="800" fill="#14302F" text-anchor="middle">
-      <text x="80" y="60">Chambre</text><text x="80" y="78" font-weight="600">9 m²</text>
-      <text x="170" y="60">SdB</text><text x="170" y="78" font-weight="600">3 m²</text>
-      <text x="225" y="60">Mag.</text><text x="225" y="78" font-weight="600">3 m²</text>
-      <text x="295" y="60">Salle à manger</text><text x="295" y="78" font-weight="600">11 m²</text>
-      <text x="120" y="176">Séjour</text><text x="120" y="194" font-weight="600">21 m²</text>
-      <text x="280" y="140">Couloir</text><text x="280" y="158" font-weight="600">5 m²</text>
-      <text x="280" y="212">Cuisine</text><text x="280" y="230" font-weight="600">11 m²</text>
-    </g>
-    <g stroke="#C75B3A" stroke-width="2" fill="#C75B3A" font-size="12" font-weight="700" text-anchor="middle">
-      <path d="M20 272h320M20 266v12M340 266v12"/><text x="180" y="292" stroke="none">rez-de-chaussée · total 155 m²</text>
-    </g></svg>`;
+  // 4. Étape 1 : enregistrement d'écran réel de l'espace Premium (fiche D4-040)
+  // dans un cadre de téléphone. Images extraites par render.mjs dans out/ecran/frames.
+  const REC_FPS = 30;
   scene("s04-etape-1", `
     <div class="phone" id="ph" style="left:56px;top:212px">
-      <div class="screen">
-        <div class="scr" id="scr-grid">
-          <div class="appbar"><img src="${IMG}wooplans-logo-white.png"><b>PREMIUM</b></div>
-          <div id="grid-in" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            ${MODELS.map((m) => `<div class="card"><img src="${IMG}digital/${m[2]}"><div>${m[0]}<small>${m[1]}</small></div></div>`).join("")}
-          </div>
-          <div id="tap" class="abs" style="left:63px;top:140px;width:80px;height:80px;border-radius:50%;background:rgba(231,195,108,.55);border:4px solid #E7C36C;opacity:0"></div>
-        </div>
-        <div class="scr" id="scr-fiche">
-          <img src="${IMG}digital/house-model-03.webp" style="width:100%;height:300px;object-fit:cover;display:block">
-          <div style="padding:20px">
-            <div style="font-size:30px;font-weight:800">Duplex D4-040</div>
-            <div style="margin:12px 0 10px"><span class="chip">4 chambres</span><span class="chip">3 SdB</span><span class="chip">155 m²</span><span class="chip">R+1</span></div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
-              <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:20% 50%">
-              <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:80% 50%">
-              <img src="${IMG}digital/house-model-01-720.webp" style="width:100%;height:76px;object-fit:cover;border-radius:10px;object-position:50% 90%">
-            </div>
-            <div style="margin-top:18px;padding:16px;border-radius:14px;background:#0F5B59;color:#fff;font-weight:700;font-size:16px">Budget de construction estimé<div style="font-size:26px;font-weight:800;color:#E7C36C">25,1 – 30,7 M FCFA</div></div>
-          </div>
-        </div>
-        <div class="scr" id="scr-plan">
-          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Plan coté · D4-040</b></div>
-          <div style="padding:30px 18px 0">${PLAN}</div>
-          <div style="padding:10px 22px;font-size:15px;font-weight:600;color:#5d6b6a">Surface de chaque pièce, dimensions, terrasses.</div>
-        </div>
-        <div class="scr" id="scr-devis">
-          <div class="appbar" style="height:80px"><b style="margin-left:0;color:#fff;font-size:18px;letter-spacing:0">Devis estimatif · D4-040</b></div>
-          <div style="padding:10px 22px">
-            ${LOTS.map((l) => `<div class="lot"><span>${l[0]}</span><b>${fmt(l[1])}</b></div>`).join("")}
-            <div class="lot" style="border:0;font-size:19px;color:#0F5B59"><b>Total estimé</b><b>27 900 000 FCFA</b></div>
-          </div>
-        </div>
-      </div>
-      <div class="prov" style="left:110px;top:-22px">maquette provisoire</div>
+      <div class="screen"><img id="rec" style="width:100%;height:100%;object-fit:cover;object-position:50% 0;display:block"></div>
     </div>
     <div class="abs" id="s4-right" style="left:530px;top:250px;width:500px">
       <div class="kick" id="s4-k">Étape 1</div>
@@ -249,21 +187,25 @@
         <rect x="170" y="270" width="80" height="70" fill="#3E5C6A"/><rect x="550" y="270" width="80" height="70" fill="#3E5C6A"/><rect x="365" y="280" width="70" height="120" fill="#7A4E2D"/></g>
       <path id="hr" d="M70 230 L400 70 L730 230 Z" fill="#6B4F3A"/>
     </svg>
-    <div class="vframe" id="render" style="left:90px;top:400px;width:900px;height:520px"><img src="${IMG}digital/house-model-03.webp" style="width:100%;height:100%;object-fit:cover"></div>
+    <div class="vframe" id="render" style="left:90px;top:400px;width:900px;height:520px"><img src="../assets/d4-040-cover.webp" style="width:100%;height:100%;object-fit:cover"></div>
     <div class="abs c" id="s7-tag" style="top:950px"><span class="tag" style="background:rgba(4,30,29,.7);border:3px solid var(--gold);font-size:34px">Plans + devis en main</span></div>
   `);
 
-  // 8. Preuve : extraits vidéo réels (emplacements provisoires)
-  const TESTI = [["Francis", "00:11 – 00:15"], ["Renaud", "00:43 – 00:49"]];
-  scene("s08-preuve", TESTI.map((p, i) => `
-    <div class="vframe testi" id="v${i}" style="left:250px;top:200px;width:580px;height:860px">
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:linear-gradient(160deg,#164e4c,#0a1b1b)">
-        <svg viewBox="0 0 100 100" width="150" height="150"><circle cx="50" cy="36" r="20" fill="rgba(255,255,255,.35)"/><path d="M14 92c4-22 20-32 36-32s32 10 36 32z" fill="rgba(255,255,255,.35)"/></svg>
-        <div style="font-weight:700;font-size:28px;opacity:.8;text-align:center">Extrait vidéo<br>${p[1]}</div>
-      </div>
-      <div class="prov" style="left:20px;top:20px">emplacement provisoire</div>
-      <div style="position:absolute;left:0;right:0;bottom:0;padding:26px 30px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"><div style="font-weight:800;font-size:40px">${p[0]}</div><div style="font-weight:600;font-size:24px;color:var(--gold)">Client WOOPLANS</div></div>
-    </div>`).join(""));
+  // 8. Preuve : extrait vidéo réel de Francis, témoignage audio de Renaud
+  // (images de Francis extraites dans out/temoignages/francis par render.mjs).
+  const NAME = (n) => `<div style="position:absolute;left:0;right:0;bottom:0;padding:26px 30px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"><div style="font-weight:800;font-size:40px">${n}</div><div style="font-weight:600;font-size:24px;color:var(--gold)">Client WOOPLANS</div></div>`;
+  const BARS = Array.from({ length: 21 }, (_, i) => `<i style="display:inline-block;width:12px;margin:0 4px;border-radius:6px;background:var(--gold);height:20px;vertical-align:middle" data-i="${i}"></i>`).join("");
+  scene("s08-preuve", `
+    <div class="vframe testi" id="v0" style="left:250px;top:200px;width:580px;height:860px">
+      <img id="fr" style="width:100%;height:100%;object-fit:cover;display:block">${NAME("Francis")}
+    </div>
+    <div class="vframe testi" id="v1" style="left:250px;top:200px;width:580px;height:860px;background:linear-gradient(160deg,#164e4c,#0a1b1b)">
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;padding:0 40px 120px">
+        <div style="font-size:150px;line-height:.6;font-weight:800;color:var(--gold)">“</div>
+        <div id="bars" style="height:150px;display:flex;align-items:center">${BARS}</div>
+        <div style="font-weight:700;font-size:26px;opacity:.75;letter-spacing:.08em;text-transform:uppercase">Témoignage audio</div>
+      </div>${NAME("Renaud")}
+    </div>`);
 
   // 9. Offre et garantie
   scene("s09-offre", `
@@ -415,18 +357,16 @@
       const ex = at(id, "Exemple"), ch = at(id, "quatre chambres"), en = at(id, "entre"), cmp = at(id, "Vous comparez");
       const ph = eo(prog(lt, 0, 0.6));
       tf($("#ph"), { o: ph, x: (1 - ph) * -80 });
-      // Écrans du téléphone
-      const screens = [["#scr-grid", -1, ex + 0.5], ["#scr-fiche", ex + 0.5, ch + 0.4], ["#scr-plan", ch + 0.4, en], ["#scr-devis", en, 1e9]];
-      for (const [sel, a, b] of screens) {
-        const o = Math.min(prog(lt, a, 0.35), 1 - prog(lt, b, 0.35));
-        tf($(sel), { o, x: (1 - prog(lt, a, 0.35)) * 60 });
-      }
-      // La grille défile puis revient en haut pour toucher la fiche D4-040.
-      $("#grid-in").style.transform = `translateY(${-260 * Math.sin(Math.PI * prog(lt, 0.4, ex - 0.9))}px)`;
-      const tapA = ex - 0.1;
-      $("#tap").style.opacity = prog(lt, tapA, 0.15) * (1 - prog(lt, tapA + 0.4, 0.2));
-      $("#tap").style.transform = `scale(${0.6 + 0.6 * prog(lt, tapA, 0.4)})`;
-      $$(".lot", scenes[id]).forEach((el, i) => { el.style.opacity = prog(lt, en + 0.1 + i * 0.16, 0.25); });
+      // Montage de l'enregistrement (secondes de la vidéo source), calé sur la voix :
+      // grille → rendus → distributions cotées → pièces → devis → budget de la fiche.
+      const r = at(id, "rendus"), pc = at(id, "plans cotés"), su = at(id, "surfaces"), dv = at(id, "devis poste");
+      const cuts = [[0, r - 0.2, 2.0, 7.3], [r - 0.2, pc - 0.1, 14.0, 16.0], [pc - 0.1, su - 0.1, 18.6, 26.6],
+        [su - 0.1, dv - 0.1, 27.8, 30.2], [dv - 0.1, ex, 31.0, 34.3], [ex, 1e9, 15.4, 16.4, "play"]];
+      const seg = cuts.find((k) => lt < k[1]) || cuts[cuts.length - 1];
+      const src = seg[4] === "play" ? Math.min(seg[3], seg[2] + (lt - seg[0])) : lerp(seg[2], seg[3], cl((lt - seg[0]) / (seg[1] - seg[0])));
+      const n = String(Math.max(1, Math.round(src * REC_FPS) + 1)).padStart(4, "0");
+      const img = $("#rec"), url = `../out/ecran/frames/f${n}.jpg`;
+      if (img.getAttribute("src") !== url) { img.setAttribute("src", url); pending.push(img.decode().catch(() => {})); }
       // Colonne de droite
       rise($("#s4-k"), lt, 0.2); rise($("#s4-t"), lt, 0.3);
       rise($("#s4-n"), lt, at(id, "Plus de"));
@@ -492,6 +432,14 @@
       const a = eo(prog(lt, 0, 0.45)), b = eo(prog(lt, sw - 0.2, 0.45));
       tf($("#v0"), { o: a * (1 - b), s: lerp(0.94, 1, a), x: -200 * b });
       tf($("#v1"), { o: b, x: (1 - b) * 200 });
+      const n = String(Math.min(150, Math.max(1, Math.round(lt * 30) + 1))).padStart(4, "0");
+      const img = $("#fr"), url = `../out/temoignages/francis/f${n}.jpg`;
+      if (img.getAttribute("src") !== url) { img.setAttribute("src", url); pending.push(img.decode().catch(() => {})); }
+      // Barres animées pendant la voix de Renaud (pseudo-aléatoires, reproductibles).
+      $$("#bars i").forEach((el, i) => {
+        const v = Math.abs(Math.sin(lt * 9.1 + i * 1.7) * Math.cos(lt * 5.3 + i * 0.9));
+        el.style.height = 20 + 120 * v * Math.sin((Math.PI * (i + 1)) / 22) + "px";
+      });
     },
     "s09-offre"(lt, sc) {
       const id = sc.id;
@@ -527,6 +475,7 @@
 
   // --- Rendu d'une image ---------------------------------------------------
   const FADE = 0.3;
+  let pending = [];
   const subsEl = $("#subs span");
   function renderScenes(t, opts) {
     $("#grid").style.transform = `translate(${(t * 6) % 60}px,${(t * 4) % 60}px)`;
@@ -556,9 +505,13 @@
   window.VSL = {
     duration: DURATION,
     scenes: SC,
-    // Rectangles des cadres vidéo du plan 8 (pour incruster les vrais extraits).
-    testimonialSlots: SC.find((s) => s.id === "s08-preuve"),
+    // Renvoie une promesse résolue quand les images de l'enregistrement sont décodées.
     renderFrame(t, mode = "main") {
+      pending = [];
+      this.draw(t, mode);
+      return Promise.all(pending);
+    },
+    draw(t, mode) {
       if (mode === "main") {
         renderScenes(t, { subs: true });
         $("#banner").style.opacity = 0;
