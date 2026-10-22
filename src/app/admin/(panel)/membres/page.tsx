@@ -2,10 +2,13 @@ import { cookies } from "next/headers";
 import { countDistinct, desc, eq, gte, inArray, like, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import Link from "next/link";
-import { Badge, fmtDate, PageTitle, Table } from "@/components/admin/ui";
+import { Badge, fmtDate, fmtDateTime, PageTitle, Table } from "@/components/admin/ui";
+import { automatedEmailAllowance } from "@/lib/email-budget";
+import { getLegacyCodesSettings, legacyCodesQueue, legacyCodesSentToday } from "@/lib/legacy-codes";
+import { nextWindowStart, PROSPECT_MARGIN } from "@/lib/legacy-codes-schedule";
 import { codeStatusByMember, getDigestCampaign, getMemberDigestSettings } from "@/lib/member-mailing";
 import { whatsappUrl } from "@/lib/phone";
-import { addMember, importFromChariow, newCode, reactivate, revoke, saveDigest, sendLegacyCodes } from "./actions";
+import { addMember, importFromChariow, newCode, reactivate, revoke, saveDigest, saveLegacyCodes, sendLegacyCodes } from "./actions";
 
 const SOURCES: Record<string, string> = { chariow: "Chariow", legacy_import: "Import", manual: "Manuel" };
 
@@ -45,6 +48,9 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       .where(gte(schema.pdfDownloads.createdAt, new Date(Date.now() - 30 * 86_400_000)))
       .groupBy(schema.pdfDownloads.memberId),
   ]);
+  const legacy = await getLegacyCodesSettings();
+  const [legacyQueue, legacySentToday, allowance] = await Promise.all([legacyCodesQueue(legacy), legacyCodesSentToday(), automatedEmailAllowance()]);
+  const legacyDays = Math.ceil(legacyQueue.first.length / legacy.perDay);
   const pdfByMember = new Map(pdfCounts.map((r) => [r.memberId, r.n]));
   const stateOf = (id: string) => codes.get(id)?.state ?? "never";
   const counts = { envoye: 0, jamais: 0, echec: 0 };
@@ -166,6 +172,45 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           </tr>
         ))}
       </Table>
+
+      <section className="card mt-8 p-5">
+        <h2 className="font-semibold">Envoi automatique des codes aux anciens abonnés</h2>
+        <p className="mt-1 text-sm text-muted">
+          Chaque matin, dans la fenêtre choisie (heure de Douala), les codes partent par lots aux membres actifs qui ne se
+          sont jamais connectés : d&apos;abord ceux qui n&apos;ont jamais reçu de code, puis un rappel unique (nouveau code) à
+          ceux qui l&apos;ont reçu sans se connecter. Un membre sort de la file dès sa première connexion. Le lot respecte le
+          quota Resend (réserve pour les emails d&apos;achat, {PROSPECT_MARGIN} emails laissés aux relances prospects) ; les actualités
+          mensuelles attendent que tous les codes soient partis.
+        </p>
+        <p className="mt-2 text-sm">
+          En attente : <strong>{legacyQueue.first.length}</strong> premier(s) envoi(s)
+          {legacyQueue.first.length ? <> (≈ {legacyDays} jour(s))</> : null} · <strong>{legacyQueue.reminders.length}</strong> rappel(s) ·
+          envoyés aujourd&apos;hui : <strong>{legacySentToday}</strong>/{legacy.perDay} · quota automatique restant : {allowance}
+          {legacy.enabled ? <> · prochaine fenêtre : {fmtDateTime(nextWindowStart(legacy, new Date()))}</> : <> · <Badge tone="warn">en pause</Badge></>}
+        </p>
+        <form action={saveLegacyCodes} className="mt-4 flex flex-wrap items-end gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="enabled" defaultChecked={legacy.enabled} /> Envoi automatique actif
+          </label>
+          <label className="text-sm">
+            <span className="label">Heure (Douala)</span>
+            <input name="hour" type="number" min={0} max={23} defaultValue={legacy.hour} className="input w-24" />
+          </label>
+          <label className="text-sm">
+            <span className="label">Fenêtre (h)</span>
+            <input name="windowHours" type="number" min={1} max={12} defaultValue={legacy.windowHours} className="input w-24" />
+          </label>
+          <label className="text-sm">
+            <span className="label">Codes par jour</span>
+            <input name="perDay" type="number" min={1} max={100} defaultValue={legacy.perDay} className="input w-24" />
+          </label>
+          <label className="text-sm">
+            <span className="label">Rappel après (j, 0 = aucun)</span>
+            <input name="reminderAfterDays" type="number" min={0} max={60} defaultValue={legacy.reminderAfterDays} className="input w-24" />
+          </label>
+          <button className="btn-primary">Enregistrer</button>
+        </form>
+      </section>
 
       <section className="card mt-8 p-5">
         <h2 className="font-semibold">Actualités mensuelles aux membres</h2>

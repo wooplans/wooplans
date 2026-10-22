@@ -8,7 +8,7 @@ import { getSetting, setSetting } from "@/lib/settings";
 import { optedOutEmails, unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
 
 /** Emails qui transmettent un code d'accès : un envoi réussi = le membre a reçu son code. */
-export const ACCESS_TEMPLATES = ["access_code", "access_code_reset", "legacy_welcome"];
+export const ACCESS_TEMPLATES = ["access_code", "access_code_reset", "legacy_welcome", "legacy_reminder"];
 
 export type CodeStatus = { state: "sent" | "failed" | "never"; at: Date | null };
 
@@ -84,6 +84,11 @@ export async function runMemberDigest(now = new Date()) {
   result.campaign = campaign.month;
   result.plans = campaign.planIds.length;
   if (campaign.done) return result;
+
+  // Les codes des anciens abonnés passent avant : la campagne attend que leur file soit vide.
+  const { getLegacyCodesSettings, legacyCodesQueue } = await import("@/lib/legacy-codes");
+  const legacy = await getLegacyCodesSettings();
+  if (legacy.enabled && (await legacyCodesQueue(legacy, now)).first.length > 0) return result;
 
   const template = `member_digest:${campaign.month}`;
   const [members, codes, logs, plans] = await Promise.all([

@@ -80,8 +80,8 @@ export async function importFromChariow() {
 
 export async function sendLegacyCodes() {
   await requireAdmin();
-  const { sendLegacyWelcomeBatch } = await import("@/lib/chariow-import");
-  const result = await sendLegacyWelcomeBatch(25);
+  const { sendLegacyCodesNow } = await import("@/lib/legacy-codes");
+  const result = await sendLegacyCodesNow(25);
   const quota = result.quotaReached ? " Quota d'emails du jour atteint : reprenez demain." : "";
   (await cookies()).set("wp_notice", `Codes envoyés : ${result.sent}/${result.attempted}. Restant à envoyer : ${result.remaining} (les membres qui ont déjà reçu leur code ou se sont connectés sont exclus).${quota}`, {
     httpOnly: true,
@@ -99,6 +99,19 @@ export async function saveDigest(form: FormData) {
     enabled: form.get("enabled") === "on",
     dayOfMonth: Math.min(28, Math.max(1, Number(form.get("dayOfMonth") || 1))),
     perRun: Math.min(200, Math.max(1, Number(form.get("perRun") || 80))),
+  });
+  revalidatePath("/admin/membres");
+}
+
+export async function saveLegacyCodes(form: FormData) {
+  await requireAdmin();
+  const { saveLegacyCodesSettings } = await import("@/lib/legacy-codes");
+  await saveLegacyCodesSettings({
+    enabled: form.get("enabled") === "on",
+    hour: Number(form.get("hour")),
+    windowHours: Number(form.get("windowHours")),
+    perDay: Number(form.get("perDay")),
+    reminderAfterDays: Number(form.get("reminderAfterDays")),
   });
   revalidatePath("/admin/membres");
 }
