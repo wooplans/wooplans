@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { parseAttribution } from "@/lib/attribution";
+import { isInternalDevice } from "@/lib/behavior";
 import { randomId } from "@/lib/crypto";
 import { runInBackground } from "@/lib/env";
 import { VISITOR_COOKIE } from "@/lib/session";
@@ -41,15 +42,18 @@ export async function POST(request: NextRequest) {
     }
   })();
 
-  runInBackground(
-    (async () => {
-      await upsertVisitor(id, isNew ? parseAttribution(body.url!, body.referrer ?? null) : null, {
-        country: request.headers.get("cf-ipcountry"),
-        device: deviceFromUserAgent(request.headers.get("user-agent")),
-      });
-      await recordServerEvent({ visitorId: id, type: body.type!, path, ctaId: body.ctaId, planSlug: body.planSlug });
-    })(),
-  );
+  // Appareil interne (propriétaire) : l'identifiant est renvoyé, mais la visite n'est pas comptée.
+  if (!isInternalDevice(request.headers.get("cookie"))) {
+    runInBackground(
+      (async () => {
+        await upsertVisitor(id, isNew ? parseAttribution(body.url!, body.referrer ?? null) : null, {
+          country: request.headers.get("cf-ipcountry"),
+          device: deviceFromUserAgent(request.headers.get("user-agent")),
+        });
+        await recordServerEvent({ visitorId: id, type: body.type!, path, ctaId: body.ctaId, planSlug: body.planSlug });
+      })(),
+    );
+  }
 
   // L'identifiant (anonyme) est renvoyé au navigateur pour que PostHog utilise le même : les achats
   // enregistrés côté serveur (webhook Chariow) se rattachent ainsi à la visite.

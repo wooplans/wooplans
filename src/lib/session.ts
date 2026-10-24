@@ -1,4 +1,5 @@
 import { base64url, fromBase64url, hmacSha256B64, timingSafeEqual } from "@/lib/crypto";
+import { INTERNAL_DEVICE_DAYS } from "@/lib/behavior";
 import { requireSecret } from "@/lib/env";
 
 export const MEMBER_COOKIE = "wp_member";
@@ -8,7 +9,9 @@ export const INTENT_COOKIE = "wp_intent";
 
 export type MemberToken = { kind: "member"; sub: string; ver: number; exp: number };
 export type AdminToken = { kind: "admin"; sub: string; exp: number };
-type Token = MemberToken | AdminToken;
+/** Lien des réglages qui marque un appareil comme interne sans connexion admin (téléphone d'un collaborateur). */
+export type DeviceToken = { kind: "device"; sub: string; exp: number };
+type Token = MemberToken | AdminToken | DeviceToken;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -40,6 +43,14 @@ export const cookieOptions = (maxAgeSeconds: number) => ({
   sameSite: "lax" as const,
   path: "/",
   maxAge: maxAgeSeconds,
+});
+
+/** Cookie wp_internal : lisible par le navigateur (le script PostHog l'étiquette), il ne donne aucun droit. */
+export const internalCookieOptions = () => ({
+  secure: true,
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: INTERNAL_DEVICE_DAYS * 86400,
 });
 
 export const MEMBER_SESSION_DAYS = 180;

@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { verifyPassword } from "@/lib/crypto";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { ADMIN_COOKIE, ADMIN_SESSION_DAYS, cookieOptions, signToken } from "@/lib/session";
+import { INTERNAL_COOKIE } from "@/lib/behavior";
+import { ADMIN_COOKIE, ADMIN_SESSION_DAYS, cookieOptions, internalCookieOptions, signToken } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as { email?: string; password?: string };
@@ -18,5 +19,7 @@ export async function POST(request: NextRequest) {
   const token = await signToken({ kind: "admin", sub: admin.id, exp: Date.now() + ADMIN_SESSION_DAYS * 86400_000 });
   const response = NextResponse.json({ ok: true });
   response.cookies.set(ADMIN_COOKIE, token, { ...cookieOptions(ADMIN_SESSION_DAYS * 86400), sameSite: "strict" });
+  // L'appareil de l'administrateur ne compte plus dans les statistiques (un an, au-delà de la session).
+  response.cookies.set(INTERNAL_COOKIE, "1", internalCookieOptions());
   return response;
 }

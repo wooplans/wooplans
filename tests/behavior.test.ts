@@ -5,6 +5,7 @@ import {
   buildBatch,
   countryRequiresConsent,
   filterEvent,
+  isInternalDevice,
   isPrivatePath,
   measurementAllowed,
   pageType,
@@ -108,5 +109,22 @@ test("pages de vente générées : PostHog à la place de Clarity, paiement excl
     assert.ok(html.includes('id="chariow-widget" class="ph-no-capture"'), `${file} : widget de paiement`);
     assert.ok(html.includes("maskAllInputs:true"), `${file} : masquage des saisies`);
     assert.ok(html.includes("window.wpConsent"), `${file} : consentement`);
+  }
+});
+
+test("appareil interne : reconnu seulement avec wp_internal=1", () => {
+  assert.equal(isInternalDevice("wp_internal=1"), true);
+  assert.equal(isInternalDevice("wp_vid=abc; wp_internal=1; wp_consent=granted"), true);
+  assert.equal(isInternalDevice("wp_internal=10"), false);
+  assert.equal(isInternalDevice("xwp_internal=1"), false);
+  assert.equal(isInternalDevice("wp_internal=0"), false);
+  assert.equal(isInternalDevice(null), false);
+});
+
+test("pages de vente statiques : les événements d'un appareil interne sont étiquetés", () => {
+  for (const file of ["scripts/lp-measure.js", "public/lp/catalogue-premium.html", "public/lp/catalogue-premium-b.html"]) {
+    const source = readFileSync(file, "utf8");
+    assert.match(source, /wp_internal=1\(\?:;\|\$\)\/\.test\(document\.cookie\)\)ph\.register\(\{wp_internal:true\}\)/, file);
+    assert.match(source, /'register_once','unregister'/, file);
   }
 });

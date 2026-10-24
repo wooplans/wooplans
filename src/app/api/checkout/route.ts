@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getDb, schema } from "@/db";
+import { isInternalDevice } from "@/lib/behavior";
 import { createChariowCheckout } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
 import { siteUrl } from "@/lib/env";
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
   const intentId = randomId();
   const db = getDb();
   await db.insert(schema.checkoutIntents).values({ id: intentId, visitorId, email, ctaId });
-  if (visitorId) {
+  if (visitorId && !isInternalDevice(request.headers.get("cookie"))) {
     await recordServerEvent({ visitorId, type: "checkout_start", path: "/catalogue-premium", ctaId }).catch(() => {});
   }
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
  */
 async function recordWidgetIntent(request: NextRequest, body: Body) {
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
-  if (!visitorId) return NextResponse.json({ ok: true });
+  if (!visitorId || isInternalDevice(request.headers.get("cookie"))) return NextResponse.json({ ok: true });
   if (!(await rateLimit(`intent:${clientIp(request.headers)}`, 30, 60 * 60 * 1000))) return NextResponse.json({ ok: true });
   const ctaId = (body.ctaId || "sales_page").slice(0, 80);
   await getDb().insert(schema.checkoutIntents).values({ id: randomId(), visitorId, ctaId });

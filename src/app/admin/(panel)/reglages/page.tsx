@@ -1,17 +1,29 @@
+import { cookies } from "next/headers";
 import { MediaField } from "@/components/admin/MediaField";
 import { PageTitle } from "@/components/admin/ui";
+import { requireAdmin } from "@/lib/auth";
+import { INTERNAL_COOKIE } from "@/lib/behavior";
 import { emailUsage, getEmailBudget } from "@/lib/email-budget";
+import { siteUrl } from "@/lib/env";
 import { STANDING_LABELS } from "@/lib/plan-pricing";
+import { signToken } from "@/lib/session";
 import { getCostSettings, getSetting } from "@/lib/settings";
 import { saveBudget, saveCatalogueFiles, saveCostSettings } from "./actions";
 
+const DEVICE_LINK_DAYS = 30;
+
 export default async function SettingsPage() {
-  const [cost, files, budget, usage] = await Promise.all([
+  const [cost, files, budget, usage, admin, jar] = await Promise.all([
     getCostSettings(),
     getSetting<{ key: string; label: string }[]>("catalogue_files", []),
     getEmailBudget(),
     emailUsage(),
+    requireAdmin(),
+    cookies(),
   ]);
+  const thisDeviceInternal = jar.get(INTERNAL_COOKIE)?.value === "1";
+  const deviceToken = await signToken({ kind: "device", sub: admin.id, exp: Date.now() + DEVICE_LINK_DAYS * 86400_000 });
+  const deviceLink = siteUrl(`/api/appareil-interne?cle=${encodeURIComponent(deviceToken)}`);
   return (
     <>
       <PageTitle title="Réglages" />
@@ -83,6 +95,21 @@ export default async function SettingsPage() {
             <MediaField name="files" label="Fichiers PDF" initial={files.map((f) => f.key)} visibility="private" folder="catalogue" />
             <button className="btn-primary">Enregistrer</button>
           </form>
+        </section>
+        <section className="card p-5">
+          <h2 className="font-semibold">Appareils exclus des statistiques</h2>
+          <p className="mt-1 text-sm text-muted">
+            Un appareil connecté à l&apos;admin n&apos;est plus compté pendant un an (tableau de bord et PostHog). Cet
+            appareil : <strong>{thisDeviceInternal ? "exclu" : "compté"}</strong>.
+          </p>
+          <p className="mt-3 text-sm">
+            Pour exclure un autre appareil sans connexion (téléphone d&apos;un collaborateur), ouvrez-y ce lien, valable{" "}
+            {DEVICE_LINK_DAYS} jours :
+          </p>
+          <input readOnly value={deviceLink} className="input mt-2 font-mono text-xs" />
+          <p className="mt-3 text-sm text-muted">
+            Pour qu&apos;un appareil compte de nouveau : <a href="/api/appareil-interne?retirer=1" className="underline">/api/appareil-interne?retirer=1</a>.
+          </p>
         </section>
       </div>
     </>

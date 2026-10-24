@@ -74,6 +74,18 @@ export function readConsent(cookieHeader: string | null | undefined): Consent | 
   return (value as Consent | undefined) ?? null;
 }
 
+/**
+ * Appareil interne (propriétaire, équipe) : marqué à la connexion admin ou par le lien des réglages.
+ * Ses visites ne sont pas comptées dans le suivi first-party ; dans PostHog, ses événements portent
+ * wp_internal=true et le filtre des comptes de test du projet les écarte. Lisible par le navigateur, sans secret.
+ */
+export const INTERNAL_COOKIE = "wp_internal";
+export const INTERNAL_DEVICE_DAYS = 365;
+
+export function isInternalDevice(cookieHeader: string | null | undefined) {
+  return new RegExp(`(?:^|;\\s*)${INTERNAL_COOKIE}=1(?:;|$)`).test(cookieHeader ?? "");
+}
+
 /** Mesure autorisée : jamais après un refus ; en Europe, seulement après un accord. */
 export function measurementAllowed(input: { requiresConsent: boolean; consent: Consent | null }) {
   if (input.consent === "denied") return false;

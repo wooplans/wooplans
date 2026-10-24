@@ -1,4 +1,4 @@
-import { filterEvent } from "@/lib/behavior";
+import { filterEvent, isInternalDevice } from "@/lib/behavior";
 
 type PostHogStub = unknown[] & {
   _i?: unknown[];
@@ -11,6 +11,7 @@ export type PostHog = {
   capture: (event: string, properties?: Record<string, unknown>) => void;
   register: (properties: Record<string, unknown>) => void;
   register_once: (properties: Record<string, unknown>) => void;
+  unregister: (property: string) => void;
   startSessionRecording: () => void;
   stopSessionRecording: () => void;
   opt_out_capturing: () => void;
@@ -22,7 +23,7 @@ declare global {
   }
 }
 
-const STUB_METHODS = ["capture", "register", "register_once", "startSessionRecording", "stopSessionRecording", "opt_out_capturing"];
+const STUB_METHODS = ["capture", "register", "register_once", "unregister", "startSessionRecording", "stopSessionRecording", "opt_out_capturing"];
 
 /**
  * Charge PostHog (script officiel array.js) : les appels faits avant le chargement sont mis en file
@@ -76,6 +77,10 @@ export function loadPostHog(opts: { key: string; host: string; distinctId: strin
   ]);
   window.posthog = stub as unknown as PostHog;
   window.posthog.register({ ...opts.superProperties, ...pageProperties });
+  // Appareil interne : étiqueté pour le filtre des comptes de test (retiré si l'appareil compte de nouveau,
+  // PostHog gardant les super-propriétés d'une visite à l'autre).
+  if (isInternalDevice(document.cookie)) window.posthog.register({ wp_internal: true });
+  else window.posthog.unregister("wp_internal");
   for (const [event, properties] of pending.splice(0)) window.posthog.capture(event, properties);
 
   const script = document.createElement("script");

@@ -44,7 +44,7 @@
   function loadPostHog(vid){
     if(!PH_KEY||window.posthog)return;
     var ph=[];ph._i=[];ph.__SV=1;ph.people=[];
-    ['capture','register','register_once','opt_out_capturing'].forEach(function(m){ph[m]=function(){ph.push([m].concat([].slice.call(arguments)));};});
+    ['capture','register','register_once','unregister','opt_out_capturing'].forEach(function(m){ph[m]=function(){ph.push([m].concat([].slice.call(arguments)));};});
     var cfg={api_host:PH_HOST,person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,autocapture:true,
       enable_heatmaps:true,capture_dead_clicks:true,disable_surveys:true,
       session_recording:{maskAllInputs:true,maskTextSelector:'[data-ph-mask]'},
@@ -53,6 +53,8 @@
     ph._i.push([PH_KEY,cfg]);
     window.posthog=ph;
     ph.register({page_type:'page_vente',variant:window.WP_VARIANT||'a'});
+    // Appareil interne (cookie wp_internal, connexion admin) : écarté par le filtre des comptes de test.
+    if(/(?:^|;\s*)wp_internal=1(?:;|$)/.test(document.cookie))ph.register({wp_internal:true});else ph.unregister('wp_internal');
     var p=new URLSearchParams(location.search);
     ph.register_once({wp_source:source(),wp_campaign:p.get('utm_campaign')});
     pending.splice(0).forEach(function(x){ph.capture(x[0],x[1]);});
