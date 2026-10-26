@@ -8,7 +8,7 @@ import { legacyRedirects } from "./src/lib/redirects";
  * (à propos, contact…) n'ont pas accès aux variables du Worker. Sans cela, elles partaient sans
  * Pixel ni PostHog et avec le numéro WhatsApp par défaut.
  */
-const PUBLIC_VARS = ["SITE_URL", "WHATSAPP_NUMBER", "CATALOGUE_PRICE_XAF", "FB_PIXEL_ID", "POSTHOG_KEY", "POSTHOG_HOST", "CHARIOW_STORE_DOMAIN", "CHARIOW_CATALOGUE_PRODUCT_ID"];
+const PUBLIC_VARS = ["SITE_URL", "WHATSAPP_NUMBER", "FB_PIXEL_ID", "POSTHOG_KEY", "POSTHOG_HOST", "CHARIOW_STORE_DOMAIN", "CHARIOW_CATALOGUE_PRODUCT_ID"];
 
 function wranglerVars() {
   const text = readFileSync(new URL("./wrangler.jsonc", import.meta.url), "utf8");

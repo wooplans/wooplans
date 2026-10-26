@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import catalogue from "../src/config/catalogue.json" with { type: "json" };
+
+const CATALOGUE_PRICE = catalogue.price;
 import { budgetLabel, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
 
 test("variante : part 0 → A pour tous, sans cookie", () => {
@@ -79,7 +82,7 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
   const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
   for (const price of prices) {
     assert.match(b, new RegExp(fcfa(price)));
-    assert.match(b, new RegExp(fcfa(price - 39000)));
+    assert.match(b, new RegExp(fcfa(price - CATALOGUE_PRICE)));
   }
   assert.match(b, /id="parcours"/);
   assert.match(b, /Peut-on construire avec les plans du catalogue/);
@@ -101,6 +104,16 @@ test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des v
   assert.match(b, /trackVideo\(box\.querySelector\('video'\),'vsl'\)/);
 });
 
+test("pages de vente : prix du catalogue repris de src/config/catalogue.json, sans repère restant", () => {
+  const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")}`;
+  for (const file of ["catalogue-premium.html", "catalogue-premium-b.html"]) {
+    const html = readFileSync(new URL(`../public/lp/${file}`, import.meta.url), "utf8").replace(/&nbsp;/g, " ");
+    assert.doesNotMatch(html, /\{\{[A-Z_]+\}\}/);
+    assert.match(html, new RegExp(`${fcfa(CATALOGUE_PRICE)}( |<)`));
+    assert.match(html, new RegExp(`value:${CATALOGUE_PRICE},`));
+  }
+});
+
 test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {
   assert.deepEqual(priceStep(63), { reached: false, leftLabel: "37 modèles", percent: 63 });
   assert.deepEqual(priceStep(99), { reached: false, leftLabel: "1 modèle", percent: 99 });
@@ -109,6 +122,7 @@ test("palier de prix : modèles restants accordés, jauge bornée, palier attein
 });
 
 test("prix par modèle : arrondi à la dizaine", () => {
-  assert.equal(perModelLabel(63), "environ 620");
-  assert.equal(perModelLabel(100), "environ 390");
+  assert.equal(perModelLabel(63, 39000), "environ 620");
+  assert.equal(perModelLabel(63, 29000), "environ 460");
+  assert.equal(perModelLabel(100, 39000), "environ 390");
 });

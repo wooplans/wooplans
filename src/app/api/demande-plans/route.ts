@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
-import { normalizeEmail } from "@/lib/members";
+import { memberCatalogueCredit, normalizeEmail } from "@/lib/members";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     channel: "site",
     stage: "demande",
     projectDetails: (body.details || "").trim().slice(0, 4000),
-    catalogueCredit: member ? Number(getEnv().CATALOGUE_PRICE_XAF || 39000) : 0,
+    catalogueCredit: member ? await memberCatalogueCredit(member.id) : 0,
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
     utmCampaign: visitor?.utmCampaign ?? null,
