@@ -1,8 +1,7 @@
-import { and, eq, inArray, max, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { normalizeAccessCode, randomAccessCode, randomId, sha256Hex } from "@/lib/crypto";
 import { requireSecret } from "@/lib/env";
-import { cataloguePrice } from "@/lib/site";
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -108,17 +107,4 @@ export async function verifyMemberCredentials(email: string, code: string) {
   if (!member || member.status !== "active") return null;
   const hash = await hashAccessCode(code);
   return hash === member.codeHash ? member : null;
-}
-
-/**
- * Montant du catalogue déduit des plans complets d'un membre : le prix actuel du catalogue,
- * ou ce qu'il a payé s'il l'a acheté plus cher (avant une baisse de prix).
- */
-export async function memberCatalogueCredit(memberId: string) {
-  const row = await getDb()
-    .select({ paid: max(schema.sales.amount) })
-    .from(schema.sales)
-    .where(and(eq(schema.sales.memberId, memberId), eq(schema.sales.status, "completed")))
-    .get();
-  return Math.max(cataloguePrice(), row?.paid ?? 0);
 }

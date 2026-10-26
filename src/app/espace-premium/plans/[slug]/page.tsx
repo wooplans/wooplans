@@ -7,7 +7,6 @@ import { FloorPlanViewer } from "@/components/premium/FloorPlanViewer";
 import { requireMember } from "@/lib/auth";
 import { CATEGORY_LABELS, formatFcfa, getPremiumPlan } from "@/lib/plans";
 import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
-import { memberCatalogueCredit } from "@/lib/members";
 import { getFavoriteIds, privateFileUrl } from "@/lib/premium";
 import { whatsappLink } from "@/lib/site";
 
@@ -15,7 +14,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
   const member = await requireMember();
   const plan = await getPremiumPlan((await params).slug);
   if (!plan) notFound();
-  const [favorites, credit] = await Promise.all([getFavoriteIds(member.id), memberCatalogueCredit(member.id)]);
+  const favorites = await getFavoriteIds(member.id);
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const lotsTotal = plan.estimateLots.reduce((sum, lot) => sum + lot.amount, 0);
   const estimate = plan.estimateTotal || lotsTotal || null;
@@ -154,7 +153,7 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
         <p className="mt-2 max-w-2xl text-white/75">
           Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets.{" "}
           {offer
-            ? <>Prix fixe {formatFcfa(offer.price)} : en tant que membre, vous payez seulement <strong className="text-white">{formatFcfa(memberBalance(offer, credit))}</strong>.</>
+            ? <>Prix fixe {formatFcfa(offer.price)} : en tant que membre, vous payez seulement <strong className="text-white">{formatFcfa(memberBalance(offer))}</strong>.</>
             : "En tant que membre, le prix du catalogue est déduit de la commande."}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
