@@ -120,6 +120,8 @@ function toBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
+const D1_MAX_PARAMS = 90;
+
 /** Fichiers Premium : distributions des modèles et catalogue PDF complet (réglages). */
 async function premiumFileIndex() {
   const db = getDb();
@@ -128,7 +130,10 @@ async function premiumFileIndex() {
     getSetting<CatalogueFile[]>("catalogue_files", []),
   ]);
   const keys = [...plans.flatMap((p) => p.floorPlans), ...catalogue.map((f) => f.key)].filter((k) => !/^https?:\/\//.test(k) && !k.startsWith("/"));
-  const entries = keys.length ? await db.query.media.findMany({ where: inArray(schema.media.key, keys) }) : [];
+  // D1 refuse plus de 100 paramètres par requête : recherche par lots.
+  const batches: string[][] = [];
+  for (let i = 0; i < keys.length; i += D1_MAX_PARAMS) batches.push(keys.slice(i, i + D1_MAX_PARAMS));
+  const entries = (await Promise.all(batches.map((batch) => db.query.media.findMany({ where: inArray(schema.media.key, batch) })))).flat();
   const byKey = new Map(entries.map((m) => [m.key, m]));
   const describe = (key: string) => {
     const m = byKey.get(key);
