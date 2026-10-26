@@ -6,5 +6,5 @@ export const TESTIMONIALS: Testimonial[] = [
   { id: "bassirou", name: "M. Mamadou Bassirou", location: "Sénégal", quote: "Très satisfait !", video: "/videos/testimonials/bassirou.mp4" },
   { id: "ibrahim", name: "M. Ibrahim Sako", location: "Mali", quote: "Je recommande à 100 %", video: "/videos/testimonials/ibrahim.mp4" },
   { id: "francis", name: "M. Francis Bilong", location: "Cameroun", quote: "Je recommande à 100 % !", video: "/videos/testimonials/francis.mp4" },
-  { id: "renaud", name: "M. Renaud Traoré", location: "Burkina Faso", quote: "Très satisfait du Catalogue Premium", video: "/videos/testimonials/renaud.mp4", poster: "/assets/digital/temoignage-renaud.webp" },
+  { id: "renaud", name: "M. Renaud Traoré", location: "Côte d'Ivoire", quote: "Très satisfait du Catalogue Premium", video: "/videos/testimonials/renaud.mp4", poster: "/assets/digital/temoignage-renaud.webp" },
 ];
