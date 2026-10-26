@@ -230,7 +230,8 @@ export function planStats(plans: SeoPlan[]): PlanStats {
 export type FaqEntry = { question: string; answer: string };
 
 /** Questions fréquentes d'une page thématique, chiffrées à partir des modèles du catalogue. */
-export function landingFaq(page: LandingPage, stats: PlanStats): FaqEntry[] {
+/** cataloguePrice : prix du Catalogue Premium en FCFA (cataloguePrice() de lib/site). */
+export function landingFaq(page: LandingPage, stats: PlanStats, cataloguePrice: number): FaqEntry[] {
   const faq: FaqEntry[] = [];
   if (stats.budget) {
     faq.push({
@@ -250,7 +251,7 @@ export function landingFaq(page: LandingPage, stats: PlanStats): FaqEntry[] {
     {
       question: "Les plans sont-ils gratuits ?",
       answer:
-        "Les rendus 3D, les surfaces et le budget indicatif de chaque modèle sont consultables gratuitement. Les distributions cotées (plan de chaque niveau avec les cotes) et les devis détaillés sont réunis dans le Catalogue Premium (39 000 FCFA, paiement unique, accès à vie).",
+        `Les rendus 3D, les surfaces et le budget indicatif de chaque modèle sont consultables gratuitement. Les distributions cotées (plan de chaque niveau avec les cotes) et les devis détaillés sont réunis dans le Catalogue Premium (${cataloguePrice.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA, paiement unique, accès à vie).`,
     },
     {
       question: "Peut-on adapter le plan à mon terrain ?",

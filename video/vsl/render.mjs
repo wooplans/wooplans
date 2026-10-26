@@ -10,6 +10,7 @@ import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PRICE } from "./lib.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => {
@@ -42,6 +43,7 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1350 }, deviceScaleFactor: 1 });
 page.on("pageerror", (e) => { console.error("Erreur dans la page :", e.message); process.exitCode = 1; });
+await page.addInitScript((price) => { window.VSL_PRICE = price; }, PRICE);
 if (timings) await page.addInitScript((t) => { window.VSL_TIMINGS = t; }, timings);
 await page.goto("file://" + path.join(here, "src", "index.html"));
 await page.evaluate(async () => {

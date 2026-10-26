@@ -1,4 +1,9 @@
 import type { FaqItem } from "@/components/Faq";
+import { formatFcfa } from "@/lib/plans";
+import { CUSTOM_PLAN_OFFERS, memberBalance } from "@/lib/custom-plans";
+import { cataloguePrice } from "@/lib/site";
+
+const [villa, duplex] = CUSTOM_PLAN_OFFERS;
 
 export const CATALOGUE_FAQ: FaqItem[] = [
   {
@@ -8,7 +13,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   },
   {
     question: "Combien coûte le catalogue et combien de temps y ai-je accès ?",
-    answer: "39 000 FCFA en paiement unique. L'accès est à vie, y compris aux nouveaux modèles ajoutés au catalogue.",
+    answer: `${formatFcfa(cataloguePrice())} en paiement unique. L'accès est à vie, y compris aux nouveaux modèles ajoutés au catalogue.`,
   },
   {
     question: "Comment est-ce que je reçois le catalogue après le paiement ?",
@@ -23,7 +28,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Le prix du catalogue est-il déduit si je commande des plans complets ?",
     answer:
-      "Oui. Les plans complets personnalisés ont un prix fixe : 149 000 FCFA pour une villa, 249 000 FCFA pour un duplex. Le prix du catalogue est déduit : vous payez seulement la différence, soit 110 000 FCFA pour une villa et 210 000 FCFA pour un duplex.",
+      `Oui. Les plans complets personnalisés ont un prix fixe : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. Le prix du catalogue est déduit : vous payez seulement la différence, soit ${formatFcfa(memberBalance(villa))} pour une villa et ${formatFcfa(memberBalance(duplex))} pour un duplex.`,
   },
   {
     question: "Les devis estimatifs sont-ils fiables ?",

@@ -84,4 +84,6 @@ La feuille de route qui s'allume (plan 3) puis le calcul 149 000 − 39 000 (pla
 
 ## Production (octobre 2026)
 
+> Mise à jour du 26 octobre 2026 : le catalogue passe à 29 000 FCFA (reste 120 000 / 220 000 FCFA). Le script ci-dessus garde les montants d'origine ; la vidéo publiée lit le prix dans `src/config/catalogue.json`.
+
 Réalisée en motion design reproductible dans `video/vsl/` (voir son README) : texte resserré pour la durée, démonstration sur le Duplex D4-040 (enregistrement d'écran réel), voix Gradium, musique mixkit « Let's Play Africa », témoignages de Francis (vidéo) et de Renaud (audio seul). Durée finale 115 s, 5,9 Mo ; aperçu muet 0,45 Mo. Fichiers servis depuis le bucket R2 `cpbook-videos` : `vsl-catalogue-premium.mp4` et `vsl-catalogue-premium-apercu.mp4`.

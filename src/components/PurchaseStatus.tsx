@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import catalogue from "@/config/catalogue.json";
 
 type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned"; email: string | null; code: string | null };
 
@@ -25,7 +26,7 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
-          window.fbq?.("track", "Purchase", { value: 39000, currency: "XAF", content_name: "Catalogue Premium Wooplans" });
+          window.fbq?.("track", "Purchase", { value: catalogue.price, currency: "XAF", content_name: "Catalogue Premium Wooplans" });
         }
         return;
       }

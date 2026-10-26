@@ -66,12 +66,16 @@ for (const scene of api.SCENES) {
   parts.push([null, scene.lead]);
   const subs = [];
   for (const [i, cue] of built.cues.entries()) {
-    const file = await tts(cue.spoken, path.join(tmp, `${scene.id}-${i}.raw.wav`));
+    // Un bloc déjà généré pour le même texte est réutilisé (pas de crédits Gradium consommés).
+    const base = path.join(tmp, `${scene.id}-${i}`);
+    const cached = fs.existsSync(`${base}.wav`) && fs.existsSync(`${base}.txt`) && fs.readFileSync(`${base}.txt`, "utf8") === cue.spoken;
+    const file = cached ? `${base}.wav` : await tts(cue.spoken, `${base}.raw.wav`);
+    if (!cached) fs.writeFileSync(`${base}.txt`, cue.spoken);
     const pause = PAUSE[cue.spoken.trim().slice(-1)] || 0.1;
     const d = duration(file);
     parts.push([file, d], [null, pause]);
     subs.push(Number((d + pause).toFixed(3)));
-    console.log(`${scene.id} #${i} ${d.toFixed(2)} s  ${cue.spoken}`);
+    console.log(`${scene.id} #${i} ${d.toFixed(2)} s ${cached ? "(réutilisé)" : "(généré)"}  ${cue.spoken}`);
   }
   parts.push([null, scene.tail]);
   timings[scene.id] = { subs };

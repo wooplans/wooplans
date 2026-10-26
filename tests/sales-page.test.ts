@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import catalogue from "../src/config/catalogue.json" with { type: "json" };
+
+const CATALOGUE_PRICE = catalogue.price;
 import { budgetLabel, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
 
 test("variante : part 0 → A pour tous, sans cookie", () => {
@@ -79,7 +82,7 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
   const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
   for (const price of prices) {
     assert.match(b, new RegExp(fcfa(price)));
-    assert.match(b, new RegExp(fcfa(price - 39000)));
+    assert.match(b, new RegExp(fcfa(price - CATALOGUE_PRICE)));
   }
   assert.match(b, /id="parcours"/);
   assert.match(b, /Peut-on construire avec les plans du catalogue/);
@@ -92,13 +95,24 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
 test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
   const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
-  assert.match(b, /data-preview="\/videos\/vsl-catalogue-premium-apercu\.mp4"/);
-  assert.match(b, /src="\/videos\/vsl-catalogue-premium\.mp4"/);
+  // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
+  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium\\.mp4\\?v=${CATALOGUE_PRICE}"`));
   assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
   assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
   // La voix off renvoie au compteur « juste sous la vidéo ».
   assert.match(b, /<\/div>\s*<p class="vsl-count" data-wp-threshold>.*data-wp-count.*data-wp-left/);
   assert.match(b, /trackVideo\(box\.querySelector\('video'\),'vsl'\)/);
+});
+
+test("pages de vente : prix du catalogue repris de src/config/catalogue.json, sans repère restant", () => {
+  const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")}`;
+  for (const file of ["catalogue-premium.html", "catalogue-premium-b.html"]) {
+    const html = readFileSync(new URL(`../public/lp/${file}`, import.meta.url), "utf8").replace(/&nbsp;/g, " ");
+    assert.doesNotMatch(html, /\{\{[A-Z_]+\}\}/);
+    assert.match(html, new RegExp(`${fcfa(CATALOGUE_PRICE)}( |<)`));
+    assert.match(html, new RegExp(`value:${CATALOGUE_PRICE},`));
+  }
 });
 
 test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {
@@ -109,6 +123,7 @@ test("palier de prix : modèles restants accordés, jauge bornée, palier attein
 });
 
 test("prix par modèle : arrondi à la dizaine", () => {
-  assert.equal(perModelLabel(63), "environ 620");
-  assert.equal(perModelLabel(100), "environ 390");
+  assert.equal(perModelLabel(63, 39000), "environ 620");
+  assert.equal(perModelLabel(63, 29000), "environ 460");
+  assert.equal(perModelLabel(100, 39000), "environ 390");
 });

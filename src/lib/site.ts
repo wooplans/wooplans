@@ -1,3 +1,5 @@
+import catalogue from "@/config/catalogue.json";
+
 export const SITE = {
   name: "WOOPLANS",
   tagline: "Plans de villas et duplex pour l'Afrique",
@@ -18,6 +20,10 @@ export function whatsappLink(message: string, number: string = process.env.WHATS
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
-export function cataloguePrice() {
-  return Number(process.env.CATALOGUE_PRICE_XAF || 39000);
+/**
+ * Prix du Catalogue Premium en FCFA. Source unique : src/config/catalogue.json, lue aussi par
+ * scripts/build-sales-page.py (pages de vente) et video/vsl (VSL). Le prix Chariow se change à part.
+ */
+export function cataloguePrice(): number {
+  return catalogue.price;
 }

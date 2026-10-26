@@ -9,6 +9,9 @@
   const byId = Object.fromEntries(SC.map((s) => [s.id, s]));
   const at = (id, phrase) => TL.at(byId[id], phrase);
   const IMG = "../../../public/assets/";
+  // Prix du catalogue (src/config/catalogue.json) et prix fixes des plans complets (src/lib/custom-plans.ts).
+  const PRICE = TL.PRICE, VILLA = 149000, DUPLEX = 249000, PRICE_AFTER_STEP = 60000;
+  const N = TL.digits;
 
   // --- Outils d'animation -------------------------------------------------
   const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -169,9 +172,9 @@
     <div class="calc" id="calc" style="top:250px">
       <div class="kick" style="color:var(--green)">Prix fixe, connu d'avance</div>
       <div style="height:26px"></div>
-      <div class="row"><div class="lbl">Villa</div><div class="eq"><span id="va">149 000</span> <span class="minus" id="vb">− 39 000</span> <span id="vc">= <b style="color:var(--green)">110 000</b></span></div></div>
-      <div class="row"><div class="lbl">Duplex</div><div class="eq"><span id="da">249 000</span> <span class="minus" id="db">− 39 000</span> <span id="dc">= <b style="color:var(--green)">210 000</b></span></div></div>
-      <div id="ded" style="font-size:30px;font-weight:700;color:#5d6b6a">FCFA · les 39 000 du catalogue sont déduits</div>
+      <div class="row"><div class="lbl">Villa</div><div class="eq"><span id="va">${N(VILLA)}</span> <span class="minus" id="vb">− ${N(PRICE)}</span> <span id="vc">= <b style="color:var(--green)">${N(VILLA - PRICE)}</b></span></div></div>
+      <div class="row"><div class="lbl">Duplex</div><div class="eq"><span id="da">${N(DUPLEX)}</span> <span class="minus" id="db">− ${N(PRICE)}</span> <span id="dc">= <b style="color:var(--green)">${N(DUPLEX - PRICE)}</b></span></div></div>
+      <div id="ded" style="font-size:30px;font-weight:700;color:#5d6b6a">FCFA · les ${N(PRICE)} du catalogue sont déduits</div>
       <div class="stamp" id="stamp" style="right:34px;top:26px">PRIX FIXE</div>
     </div>
     <div class="abs c" id="zero" style="top:900px"><span class="tag" style="background:var(--gold);color:var(--deep);font-size:44px;padding:18px 36px">Catalogue = 0 F</span></div>
@@ -211,7 +214,7 @@
   scene("s09-offre", `
     <div class="offer" id="offer" style="top:230px">
       <div class="kick" style="color:var(--green)">Catalogue Premium · étape 1</div>
-      <div style="font-size:120px;font-weight:800;letter-spacing:-.03em;line-height:1.05;color:var(--green);margin:14px 0 0">39 000 <span style="font-size:52px">FCFA</span></div>
+      <div style="font-size:120px;font-weight:800;letter-spacing:-.03em;line-height:1.05;color:var(--green);margin:14px 0 0">${N(PRICE)} <span style="font-size:52px">FCFA</span></div>
       <div style="font-size:30px;font-weight:700;color:#5d6b6a;margin-bottom:34px">Un seul paiement</div>
       <div class="feat" id="o1"><i></i>Accès immédiat</div>
       <div class="feat" id="o2"><i></i>À vie, nouveaux modèles inclus</div>
@@ -229,9 +232,9 @@
   scene("s10-urgence", `
     <div class="abs c" id="u-t" style="top:250px"><div class="kick">À 100 modèles</div><div class="h2" style="margin-top:8px">le prix change</div></div>
     <div class="abs" id="u-p" style="left:0;right:0;top:470px;display:flex;align-items:center;justify-content:center;gap:40px">
-      <div style="text-align:center"><div style="font-size:28px;font-weight:700;opacity:.8">Aujourd'hui</div><div style="font-size:84px;font-weight:800">39 000</div></div>
+      <div style="text-align:center"><div style="font-size:28px;font-weight:700;opacity:.8">Aujourd'hui</div><div style="font-size:84px;font-weight:800">${N(PRICE)}</div></div>
       <svg viewBox="0 0 100 60" width="120" height="72"><path d="M6 30h76M62 10l22 20-22 20" stroke="#E7C36C" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div style="text-align:center" id="u-60"><div style="font-size:28px;font-weight:700;opacity:.8">À 100 modèles</div><div style="font-size:84px;font-weight:800;color:#F09A7E">60 000</div></div>
+      <div style="text-align:center" id="u-60"><div style="font-size:28px;font-weight:700;opacity:.8">À 100 modèles</div><div style="font-size:84px;font-weight:800;color:#F09A7E">${N(PRICE_AFTER_STEP)}</div></div>
     </div>
     <div class="abs c" style="top:640px;font-size:34px;font-weight:700;opacity:.85" id="u-f">FCFA</div>
     <div class="abs c" id="u-c" style="top:780px"><span class="tag" style="background:rgba(4,30,29,.75);border:3px solid var(--gold);font-size:40px;padding:18px 34px">Compteur juste sous la vidéo</span>
@@ -391,7 +394,7 @@
     },
     "s06-etape-2"(lt, sc) {
       const id = sc.id;
-      const prix = at(id, "Prix fixe"), dup = at(id, "deux cent"), ded = at(id, "et les trente"), zero = at(id, "il vous revient");
+      const prix = at(id, "Prix fixe"), dup = at(id, "deux cent"), ded = at(id, "et les "), zero = at(id, "il vous revient");
       rise($("#s6-head"), lt, 0.05);
       const span = Math.max(1.5, at(id, "modifiés") - 0.4);
       $$(".sheet", scenes[id]).forEach((el, i) => {
@@ -520,7 +523,7 @@
         const s3 = byId["s03-feuille-de-route"], s6 = byId["s06-etape-2"];
         let mt;
         if (t < 3.2) mt = s3.start + lerp(at(s3.id, "Un :") - 0.4, at(s3.id, "Trois") + 0.6, t / 3.2);
-        else mt = s6.start + lerp(at(s6.id, "deux cent") - 0.5, at(s6.id, "et les trente") + 1.3, cl((t - 3.2) / 2.2));
+        else mt = s6.start + lerp(at(s6.id, "deux cent") - 0.5, at(s6.id, "et les ") + 1.3, cl((t - 3.2) / 2.2));
         renderScenes(mt, { subs: false });
         $("#banner").style.opacity = 1;
         // Fondu au noir vert aux extrémités pour une boucle douce.
