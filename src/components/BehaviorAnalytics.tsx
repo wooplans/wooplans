@@ -10,11 +10,13 @@ import { loadPostHog } from "@/lib/posthog-browser";
 
 const CONSENT_MAX_AGE = 60 * 60 * 24 * 395; // 13 mois
 
-function loadPixel(pixelId: string) {
-  if (window.fbq || !/^\d+$/.test(pixelId)) return;
+/** Un ou plusieurs identifiants séparés par des virgules : chaque événement fbq est envoyé à tous les pixels. */
+function loadPixel(pixelIds: string) {
+  const ids = pixelIds.split(",").map((id) => id.trim()).filter((id) => /^\d+$/.test(id));
+  if (window.fbq || ids.length === 0) return;
   // Code d'installation officiel du Pixel Meta.
   const script = document.createElement("script");
-  script.text = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');`;
+  script.text = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');${ids.map((id) => `fbq('init','${id}');`).join("")}fbq('track','PageView');`;
   document.head.appendChild(script);
 }
 

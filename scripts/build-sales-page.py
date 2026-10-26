@@ -162,7 +162,10 @@ ph_host = wrangler_var("POSTHOG_HOST") or "https://eu.i.posthog.com"
 if not re.fullmatch(r"(phc_[A-Za-z0-9]+)?", ph_key) or not re.fullmatch(r"https://[a-z0-9.-]+", ph_host):
     raise SystemExit("POSTHOG_KEY ou POSTHOG_HOST invalide dans wrangler.jsonc")
 measure = (ROOT / "scripts" / "lp-measure.js").read_text(encoding="utf-8")
-measure = measure.replace("__POSTHOG_KEY__", ph_key).replace("__POSTHOG_HOST__", ph_host)
+pixel_ids = wrangler_var("FB_PIXEL_ID").replace(" ", "")
+if not re.fullmatch(r"\d+(,\d+)*", pixel_ids):
+    raise SystemExit("FB_PIXEL_ID invalide dans wrangler.jsonc")
+measure = measure.replace("__POSTHOG_KEY__", ph_key).replace("__POSTHOG_HOST__", ph_host).replace("__FB_PIXEL_IDS__", pixel_ids)
 replace_between(
     "<!-- Tracking events are queued immediately",
     "</noscript>",

@@ -22,7 +22,8 @@
     // 0 = variante B visible seulement avec ?variante=b (aperçu).
     "SALES_PAGE_B_SHARE": "100",
     "WHATSAPP_NUMBER": "237694327885",
-    "FB_PIXEL_ID": "1025626273769966",
+    // Pixels Meta, séparés par des virgules : chaque événement est envoyé à tous.
+    "FB_PIXEL_ID": "1025626273769966,1127775973645411",
     // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
     "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",
     "POSTHOG_HOST": "https://eu.i.posthog.com",

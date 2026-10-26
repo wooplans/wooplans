@@ -14,7 +14,7 @@ interface __BaseEnv_CloudflareEnv {
 	CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS: "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx";
 	SALES_PAGE_B_SHARE: "0";
 	WHATSAPP_NUMBER: "237694327885";
-	FB_PIXEL_ID: "1025626273769966";
+	FB_PIXEL_ID: "1025626273769966,1127775973645411";
 	POSTHOG_KEY: "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68";
 	POSTHOG_HOST: "https://eu.i.posthog.com";
 	EMAIL_FROM: "WOOPLANS <info@wooplans.com>";
