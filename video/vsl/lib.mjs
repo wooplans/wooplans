@@ -6,8 +6,11 @@ import { fileURLToPath } from "node:url";
 
 export const here = path.dirname(fileURLToPath(import.meta.url));
 
+/** Prix du catalogue : src/config/catalogue.json (source unique du site, des pages de vente et de la VSL). */
+export const PRICE = JSON.parse(fs.readFileSync(path.join(here, "..", "..", "src", "config", "catalogue.json"), "utf8")).price;
+
 export function loadTimeline() {
-  const ctx = {};
+  const ctx = { VSL_PRICE: PRICE };
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(here, "src", "timeline.js"), "utf8"), ctx);
   const file = path.join(here, "timings", "voice.json");

@@ -9,7 +9,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
                               │  bouton unique « Obtenir le Catalogue Premium »
                               ▼
                      Page de vente /catalogue-premium
-                              │  formulaire → paiement Chariow (39 000 FCFA)
+                              │  formulaire → paiement Chariow (prix : src/config/catalogue.json)
                               ▼
         Notification Chariow signée ──▶ membre créé + code d'accès (écran /merci + email Resend)
                               │
@@ -112,6 +112,18 @@ Chaque push sur `master` ou `ccr-03cfaad2-40szss` lance `.github/workflows/deplo
 2. Compléter `src/lib/redirects.ts` avec toutes les URL du sitemap Framer qui changent.
 3. Workers → `wooplans-web` → Domaines : ajouter `www.wooplans.com` et `wooplans.com` (redirection vers www).
 4. Soumettre `https://www.wooplans.com/sitemap.xml` dans Google Search Console.
+
+## Changer le prix du Catalogue Premium
+
+Le prix est à **un seul endroit** : `src/config/catalogue.json` (`"price"`, en FCFA).
+
+1. Changer le prix du produit sur Chariow (`prd_41k85hc0`).
+2. Modifier `src/config/catalogue.json`, puis `python3 scripts/build-sales-page.py` : les pages de vente A et B sont régénérées avec le prix, le reste à payer des plans complets (149 000 / 249 000 FCFA moins le prix), la remise par rapport au prix de 60 000 FCFA et la valeur Pixel.
+3. Le reste du site (FAQ, CGV, fiches, espace Premium, crédit déduit des plans complets, Pixel Meta à l'achat, outils MCP) lit le même fichier.
+4. VSL : `cd video/vsl && node voice.mjs` (ne régénère avec Gradium que les phrases qui citent le prix), puis `node render.mjs`, `node render.mjs --mode preview`, `node assemble.mjs preview` et `node assemble.mjs main` ; déposer `out/vsl-catalogue-premium.mp4` et `out/vsl-catalogue-premium-apercu.mp4` dans le bucket R2 `cpbook-videos` (la page les appelle avec `?v=<prix>`, donc sans ancien cache).
+5. `npm test`, puis publier.
+
+Crédit des plans complets : un membre se voit déduire le prix actuel du catalogue, ou ce qu'il a payé s'il l'a acheté plus cher (`memberCatalogueCredit`, `src/lib/members.ts`).
 
 ## Page de vente : variantes et test A/B
 

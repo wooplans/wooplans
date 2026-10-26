@@ -11,6 +11,31 @@
 // de chaque bloc et remplace l'estimation (voir voice.mjs).
 
 (function (root) {
+  // Prix du catalogue : src/config/catalogue.json, injecté par render.mjs (navigateur) et lib.mjs (Node).
+  const PRICE = root.VSL_PRICE;
+  if (!Number.isInteger(PRICE)) throw new Error("VSL_PRICE manquant (prix du catalogue)");
+  const digits = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const UNITS = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize"];
+  const TENS = { 2: "vingt", 3: "trente", 4: "quarante", 5: "cinquante", 6: "soixante" };
+  // Nombre en toutes lettres pour la synthèse vocale (« vingt-neuf mille »), jusqu'à 999 999.
+  function words(n) {
+    if (n < 17) return UNITS[n];
+    if (n < 20) return "dix-" + UNITS[n - 10];
+    if (n < 100) {
+      const t = Math.floor(n / 10), u = n % 10;
+      if (t === 7 || t === 9) return (t === 7 ? "soixante" : "quatre-vingt") + (t === 7 && u === 1 ? "-et-" : "-") + words(10 + u);
+      if (t === 8) return u ? "quatre-vingt-" + words(u) : "quatre-vingts";
+      return TENS[t] + (u === 1 ? "-et-un" : u ? "-" + UNITS[u] : "");
+    }
+    if (n < 1000) {
+      const h = Math.floor(n / 100), r = n % 100;
+      return (h > 1 ? words(h) + " cent" + (r ? "" : "s") : "cent") + (r ? " " + words(r) : "");
+    }
+    const k = Math.floor(n / 1000), r = n % 1000;
+    return (k > 1 ? words(k).replace(/(cent|vingt)s$/, "$1") + " mille" : "mille") + (r ? " " + words(r) : "");
+  }
+  const PRICE_DIGITS = digits(PRICE), PRICE_WORDS = words(PRICE);
+
   const SCENES = [
     { id: "s01-accroche", lead: 0.3, tail: 0.3, subs: [
       ["Vous voulez construire / votre maison ?"],
@@ -47,7 +72,7 @@
       ["de la fondation à la fosse septique, / modifiés selon vos besoins."],
       ["Prix fixe : 149 000 FCFA la villa,", "Prix fixe : cent quarante-neuf mille francs CFA la villa,"],
       ["249 000 le duplex,", "deux cent quarante-neuf mille le duplex,"],
-      ["et les 39 000 du catalogue sont déduits :", "et les trente-neuf mille du catalogue sont déduits :"],
+      [`et les ${PRICE_DIGITS} du catalogue sont déduits :`, `et les ${PRICE_WORDS} du catalogue sont déduits :`],
       ["il vous revient à zéro franc."],
     ] },
     { id: "s07-etape-3", lead: 0.2, tail: 0.6, subs: [
@@ -63,7 +88,7 @@
     ] },
     { id: "s09-offre", lead: 0.2, tail: 0.4, subs: [
       ["Commencez par l'étape un :"],
-      ["39 000 FCFA, une seule fois, / accès immédiat et à vie.", "trente-neuf mille francs CFA, une seule fois, accès immédiat et à vie."],
+      [`${PRICE_DIGITS} FCFA, une seule fois, / accès immédiat et à vie.`, `${PRICE_WORDS} francs CFA, une seule fois, accès immédiat et à vie.`],
       ["Satisfait ou remboursé 7 jours.", "Satisfait ou remboursé sept jours."],
     ] },
     { id: "s10-urgence", lead: 0.2, tail: 0.3, subs: [
@@ -121,7 +146,7 @@
     throw new Error("Expression introuvable dans " + scene.id + " : " + phrase);
   }
 
-  const api = { SCENES, build, at, spoken, estimate };
+  const api = { SCENES, build, at, spoken, estimate, PRICE, digits, words };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.VSL_TIMELINE = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

@@ -95,8 +95,9 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
 test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
   const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
-  assert.match(b, /data-preview="\/videos\/vsl-catalogue-premium-apercu\.mp4"/);
-  assert.match(b, /src="\/videos\/vsl-catalogue-premium\.mp4"/);
+  // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
+  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium\\.mp4\\?v=${CATALOGUE_PRICE}"`));
   assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
   assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
   // La voix off renvoie au compteur « juste sous la vidéo ».

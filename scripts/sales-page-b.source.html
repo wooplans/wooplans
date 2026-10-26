@@ -309,7 +309,7 @@ footer a{color:rgba(255,255,255,.7)}
       <div>
         <div class="vsl" id="vsl" onclick="playVsl()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playVsl()}" role="button" tabindex="0" aria-label="Regarder la vidéo de présentation avec le son">
           <img src="/assets/digital/vsl-poster.webp" alt="" width="540" height="675" fetchpriority="high">
-          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu.mp4"></video>
+          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu.mp4?v={{PRIX_XAF}}"></video>
           <div class="play"><i></i>Voir la présentation</div>
         </div>
         <p class="vsl-count" data-wp-threshold><b><span data-wp-count>Plus de 60</span> modèles</b> · plus que <b data-wp-left>quelques modèles</b> avant le passage à 60&nbsp;000&nbsp;FCFA</p>
@@ -594,7 +594,7 @@ function playVsl(){
   var box=document.getElementById('vsl');
   if(box.querySelector('video[controls]'))return;
   box.classList.remove('previewing');
-  box.innerHTML='<video src="/videos/vsl-catalogue-premium.mp4" poster="/assets/digital/vsl-poster.webp" controls playsinline autoplay></video>';
+  box.innerHTML='<video src="/videos/vsl-catalogue-premium.mp4?v={{PRIX_XAF}}" poster="/assets/digital/vsl-poster.webp" controls playsinline autoplay></video>';
   wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
   trackVideo(box.querySelector('video'),'vsl');
 }
