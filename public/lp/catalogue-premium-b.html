@@ -264,6 +264,8 @@ footer a{color:rgba(255,255,255,.7)}
 #chariow-widget:empty::before{content:"Chargement du paiement sécurisé…";min-height:220px;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:13px}
 .sheet .wahelp{text-align:center;font-size:13.5px;color:var(--gray);margin-top:12px}
 .sheet .wahelp a{color:var(--teal);font-weight:800}
+.sheet .ckslow{text-align:center;font-size:13.5px;background:#FFF7EE;border-radius:10px;padding:10px 12px;margin-top:10px}
+.sheet .ckslow a{color:var(--teal);font-weight:800}
 .vbox{width:100%;max-width:420px;margin:auto;padding:16px;position:relative}
 .vbox video{width:100%;max-height:80vh;border-radius:14px;background:#000}
 .vbox .close{top:-6px;right:10px;background:#fff}
@@ -623,6 +625,7 @@ footer a{color:rgba(255,255,255,.7)}
       <li>Prévoyez <b>29 000 FCFA + frais</b> sur votre compte Mobile Money.</li>
     </ol></div>
     <div id="chariow-widget" class="ph-no-capture" data-product-id="prd_41k85hc0" data-store-domain="wooplans.mychariow.shop" data-style="frame" data-border-style="rounded" data-cta-width="xs" data-cta-animation="none" data-locale="fr" data-primary-color="#f08b2f" data-background-color="#FFFFFF"></div>
+    <p class="ckslow" id="ckSlow" hidden>Connexion lente : le formulaire arrive dans un instant. Il ne s'affiche toujours pas ? <a href="https://wooplans.mychariow.shop/prd_41k85hc0/checkout" onclick="wpCapture('checkout_fallback_click',{wait_ms:Date.now()-openedAt})">Ouvrir la page de paiement sécurisée</a></p>
     <p class="wahelp">Un souci pour payer ? <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="payment_help" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>
   </div>
 </div>
@@ -719,8 +722,13 @@ function closeVideo(){
   document.getElementById('videoModal').classList.remove('on');
 }
 
-/* Paiement Chariow (widget Snap), préchargé pendant les temps morts */
-var chariowPromise=null,widgetReported=false;
+/* Paiement Chariow (widget Snap). Le widget affiche le formulaire dans une iframe en
+   loading="lazy" (≈ 840 Ko) : tant que la fenêtre est masquée, rien ne se charge et l'acheteur
+   attendait 4 à 20 s après son clic. Dès que le visiteur s'intéresse à la page (défilement,
+   toucher, 15 s de lecture), on charge le script puis l'iframe en arrière-plan. */
+var CHECKOUT_URL='https://wooplans.mychariow.shop/prd_41k85hc0/checkout';
+var chariowPromise=null,widgetReported=false,checkoutWarm=false;
+var formShownAt=0,openedAt=0,formShownReported=false,slowTimer=null;
 function ensureChariowWidget(){
   if(chariowPromise)return chariowPromise;
   chariowPromise=new Promise(function(resolve,reject){
@@ -730,27 +738,56 @@ function ensureChariowWidget(){
   });
   return chariowPromise;
 }
+function checkoutIsOpen(){return document.getElementById('checkout').classList.contains('on');}
+function eagerFrame(){
+  var f=document.querySelector('#chariow-widget iframe');
+  if(f&&f.loading!=='eager'&&(checkoutWarm||checkoutIsOpen()))f.loading='eager';
+}
+function warmCheckout(){
+  if(checkoutWarm)return;checkoutWarm=true;
+  ensureChariowWidget().then(eagerFrame).catch(function(){chariowPromise=null;checkoutWarm=false});
+}
 window.addEventListener('load',function(){
   var go=function(){ensureChariowWidget().catch(function(){chariowPromise=null})};
   ('requestIdleCallback' in window)?requestIdleCallback(go,{timeout:6000}):setTimeout(go,4000);
+  setTimeout(warmCheckout,15000);
 },{once:true});
+window.addEventListener('scroll',function onScroll(){if(window.scrollY>400){window.removeEventListener('scroll',onScroll);warmCheckout();}},{passive:true});
+['touchstart','pointerdown'].forEach(function(t){document.addEventListener(t,warmCheckout,{once:true,passive:true});});
+/* Le formulaire Chariow annonce sa hauteur (postMessage) une fois affiché : c'est le vrai « prêt ». */
+window.addEventListener('message',function(e){
+  if(e.origin!=='https://wooplans.mychariow.shop'||!e.data||e.data.type!=='chariow-iframe-height'||!(e.data.height>0))return;
+  if(!formShownAt)formShownAt=Date.now();
+  reportFormShown();
+});
+function reportFormShown(){
+  if(formShownReported||!formShownAt||!checkoutIsOpen())return;
+  formShownReported=true;clearTimeout(slowTimer);document.getElementById('ckSlow').hidden=true;
+  wpCapture('checkout_form_shown',{wait_ms:Math.max(0,formShownAt-openedAt),preloaded:formShownAt<=openedAt});
+}
 function reportWidget(){
+  eagerFrame();
   var w=document.getElementById('chariow-widget');
-  if(!widgetReported&&w.children.length&&document.getElementById('checkout').classList.contains('on')){widgetReported=true;wpTrack('widget_ready','checkout@b');wpCapture('widget_ready',{});}
+  if(!widgetReported&&w.children.length&&checkoutIsOpen()){widgetReported=true;wpTrack('widget_ready','checkout@b');wpCapture('widget_ready',{});}
 }
 if('MutationObserver' in window)new MutationObserver(reportWidget).observe(document.getElementById('chariow-widget'),{childList:true,subtree:true});
 function buy(btn){
   var ctaId=(btn&&btn.getAttribute('data-cta')||'sales_page')+'@b';
-  wpTrack('cta_click',ctaId);wpCapture('cta_click',{cta_id:ctaId});wpCapture('checkout_open',{cta_id:ctaId,mode:'widget'});
+  wpTrack('cta_click',ctaId);wpCapture('cta_click',{cta_id:ctaId});wpCapture('checkout_open',{cta_id:ctaId,mode:'widget',preloaded:!!formShownAt});
   try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true})}catch(e){}
   fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:29000,currency:'XAF'});
   var ov=document.getElementById('checkout');ov.classList.add('on');ov.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
-  setTimeout(reportWidget,0);
-  ensureChariowWidget().catch(function(){location.href='https://wooplans.mychariow.shop/prd_41k85hc0/checkout'});
+  openedAt=Date.now();formShownReported=false;
+  setTimeout(reportWidget,0);reportFormShown();
+  if(!formShownReported){clearTimeout(slowTimer);slowTimer=setTimeout(function(){if(checkoutIsOpen()&&!formShownReported){document.getElementById('ckSlow').hidden=false;wpCapture('checkout_slow',{wait_ms:Date.now()-openedAt});}},8000);}
+  ensureChariowWidget().then(eagerFrame).catch(function(){location.href=CHECKOUT_URL});
 }
 function closeCheckout(){
+  if(checkoutIsOpen())wpCapture('checkout_close',{open_ms:Date.now()-openedAt,form_shown:formShownReported});
+  clearTimeout(slowTimer);document.getElementById('ckSlow').hidden=true;
   var ov=document.getElementById('checkout');ov.classList.remove('on');ov.setAttribute('aria-hidden','true');document.body.style.overflow='';
 }
+window.addEventListener('pagehide',function(){if(checkoutIsOpen()&&!formShownReported)wpCapture('checkout_close',{open_ms:Date.now()-openedAt,form_shown:false,page_left:true});});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeCheckout();closeVideo()}});
 </script>
 </body>
