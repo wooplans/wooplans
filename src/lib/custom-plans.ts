@@ -38,7 +38,7 @@ export function customPlanOffer(category: PlanCategory): CustomPlanOffer | undef
   return CUSTOM_PLAN_OFFERS.find((o) => o.category === category);
 }
 
-/** Ce qu'il reste à payer pour un membre Premium. */
-export function memberBalance(offer: CustomPlanOffer) {
-  return Math.max(0, offer.price - cataloguePrice());
+/** Ce qu'il reste à payer pour un membre Premium (credit : voir memberCatalogueCredit). */
+export function memberBalance(offer: CustomPlanOffer, credit = cataloguePrice()) {
+  return Math.max(0, offer.price - credit);
 }

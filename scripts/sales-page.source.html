@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>50+ Plans de Maisons avec leurs vrais devis | Wooplans</title>
-<meta name="description" content="Accédez à 50+ plans de maisons avec leurs vrais devis, rendus 3D et plans détaillés. Valeur réelle 500 000 FCFA, prix du jour 39 000 FCFA.">
+<meta name="description" content="Accédez à 50+ plans de maisons avec leurs vrais devis, rendus 3D et plans détaillés. Valeur réelle 500 000 FCFA, prix du jour {{PRIX}} FCFA.">
 <link rel="preload" as="image" href="/assets/digital/hero-video-poster.webp" fetchpriority="high">
 <style>
 :root {
@@ -624,7 +624,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
       <span class="price-old">500 000 FCFA</span>
       <span class="price-badge">–92%</span>
     </div>
-    <div class="price-new">39 000<span class="price-fcfa"> FCFA</span></div>
+    <div class="price-new">{{PRIX}}<span class="price-fcfa"> FCFA</span></div>
   </div>
 
   <button class="hero-cta" data-cta-id="hero_cta" onclick="redirectToCheckout(this.getAttribute('data-cta-id'))">
@@ -815,10 +815,10 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
       <tr><td>Plans détaillés et dimensions</td><td>75 000 FCFA</td></tr>
       <tr><td>Devis estimatifs pour comparer</td><td>75 000 FCFA</td></tr>
       <tr class="total"><td>Valeur totale de comparaison</td><td>500 000 FCFA</td></tr>
-      <tr class="price"><td>Prix du catalogue aujourd'hui</td><td>39 000 FCFA</td></tr>
+      <tr class="price"><td>Prix du catalogue aujourd'hui</td><td>{{PRIX}} FCFA</td></tr>
     </tbody>
   </table>
-  <p class="value-foot"><strong>Vous ne payez pas 500 000 FCFA, mais seulement 39 000 FCFA aujourd'hui.</strong></p>
+  <p class="value-foot"><strong>Vous ne payez pas 500 000 FCFA, mais seulement {{PRIX}} FCFA aujourd'hui.</strong></p>
 </div>
 
 <!-- POUR QUI -->
@@ -905,9 +905,9 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
   <div class="pricing-box r" style="margin-top:20px">
     <div class="pricing-top">
       <div class="lbl">Catalogue Premium Wooplans · Édition 2026</div>
-      <div class="p-main">39 000<span class="p-fcfa"> FCFA</span></div>
+      <div class="p-main">{{PRIX}}<span class="p-fcfa"> FCFA</span></div>
       <div class="p-was">valeur réelle 500 000 FCFA</div>
-      <div class="pricing-badge blink-offer">Économie : 461 000 FCFA</div>
+      <div class="pricing-badge blink-offer">Économie : {{ECONOMIE_VALEUR}} FCFA</div>
     </div>
       <div class="pricing-body">
       <div class="pricing-incs">
@@ -991,7 +991,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
     </div>
     <div class="faq-item r">
       <button class="faq-btn" onclick="toggleFaq(this)">Le prix va augmenter ?<span class="faq-chevron">▾</span></button>
-      <div class="faq-ans"><div class="faq-ans-inner">Oui. Le tarif spécial de 39 000 FCFA est valable jusqu'à la fin du compte à rebours du jour. Les campagnes promotionnelles peuvent être reconduites, mais le tarif et les conditions peuvent changer.</div></div>
+      <div class="faq-ans"><div class="faq-ans-inner">Oui. Le tarif spécial de {{PRIX}} FCFA est valable jusqu'à la fin du compte à rebours du jour. Les campagnes promotionnelles peuvent être reconduites, mais le tarif et les conditions peuvent changer.</div></div>
     </div>
     <div class="faq-item r">
       <button class="faq-btn" onclick="toggleFaq(this)">Et si je ne suis pas satisfait ?<span class="faq-chevron">▾</span></button>
@@ -1021,7 +1021,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
   <div style="max-width:400px;margin:0 auto">
     <div class="r" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px">
       <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;font-size:16px;color:rgba(255,255,255,0.4);text-decoration:line-through">500 000</span>
-      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:48px;color:var(--white);letter-spacing:-0.03em;line-height:1">39 000</span>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:48px;color:var(--white);letter-spacing:-0.03em;line-height:1">{{PRIX}}</span>
       <span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:16px;color:rgba(255,255,255,0.6)">FCFA</span>
     </div>
     <div class="countdown countdown-final" data-countdown style="margin-bottom:18px"><span>Tarif spécial du jour · encore</span> <strong>24H:00:00</strong></div>
@@ -1050,7 +1050,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
 <!-- STICKY BAR -->
 <div class="sticky-bar" id="stickyBar">
   <div class="sticky-price">
-    <div class="s-price">39 000 FCFA</div>
+    <div class="s-price">{{PRIX}} FCFA</div>
     <div class="s-was">valeur réelle 500 000 FCFA</div>
     <div class="sticky-countdown" data-countdown>Encore <strong>24H:00:00</strong></div>
   </div>
@@ -1099,7 +1099,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
   <div class="checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="checkoutHeading" onclick="event.stopPropagation()">
     <button class="checkout-close" type="button" onclick="closeChariowCheckout()" aria-label="Fermer le paiement">✕</button>
     <h3 class="checkout-heading" id="checkoutHeading">Finaliser ma commande</h3>
-    <p class="checkout-note">Paiement sécurisé · Catalogue Premium à 39 000 FCFA</p>
+    <p class="checkout-note">Paiement sécurisé · Catalogue Premium à {{PRIX}} FCFA</p>
     <div id="chariow-widget" data-product-id="prd_41k85hc0"
         data-store-domain="wooplans.mychariow.shop"
         data-style="frame"
@@ -1158,7 +1158,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
         <div class="os-lbl">
           <strong>Catalogue Premium (Téléchargement PDF)</strong>
         </div>
-        <div class="os-price">39 000 FCFA</div>
+        <div class="os-price">{{PRIX}} FCFA</div>
       </div>
       <button class="submit-btn" onclick="submitOrder()">
         <svg class="wa-svg" style="width:18px;height:18px;fill:white;flex-shrink:0" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
@@ -1245,7 +1245,7 @@ src="https://www.facebook.com/tr?id=1025626273769966&ev=PageView&noscript=1"/></
 
 /* ── FB PIXEL EVENTS ── */
 if(typeof fbq==='function'){
-  fbq('track','ViewContent',{content_name:'Catalogue Premium Wooplans',content_category:'Catalogue',value:39000,currency:'XAF'});
+  fbq('track','ViewContent',{content_name:'Catalogue Premium Wooplans',content_category:'Catalogue',value:{{PRIX_XAF}},currency:'XAF'});
 }
 
 /* ── TOPBAR & STICKY BAR ── */
@@ -1351,7 +1351,7 @@ function ensureChariowWidget(){
 }
 
 function redirectToCheckout(ctaId) {
-  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',cta_id:ctaId||'unknown'});
+  if(typeof fbq==='function') fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:{{PRIX_XAF}},currency:'XAF',cta_id:ctaId||'unknown'});
   var checkout=document.getElementById('chariowCheckout');
   checkout.classList.add('active');
   checkout.setAttribute('aria-hidden','false');
@@ -1446,7 +1446,7 @@ async function submitOrder(){
     });
     const data=await response.json().catch(()=>({}));
     if(!response.ok||!data.payment_url)throw new Error(data.error||'Paiement indisponible');
-    if(typeof fbq==='function')fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:39000,currency:'XAF',payment_method:'MoneyFusion'});
+    if(typeof fbq==='function')fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:{{PRIX_XAF}},currency:'XAF',payment_method:'MoneyFusion'});
     if(data.token)sessionStorage.setItem('cpbook_payment_token',data.token);
     window.location.href=data.payment_url;
   }catch(error){
@@ -1657,7 +1657,7 @@ document.addEventListener('click',function(e){var btn=e.target.closest('[data-ct
 
 var _rtc=window.redirectToCheckout;
 window.redirectToCheckout=function(ctaId){
-  fireEv('checkout_redirect',ctaId||'unknown',39000,'checkout',{button_id:ctaId||'unknown',destination:'chariow'});
+  fireEv('checkout_redirect',ctaId||'unknown',{{PRIX_XAF}},'checkout',{button_id:ctaId||'unknown',destination:'chariow'});
   setCT('checkout_started','yes');
   if(_rtc)_rtc.apply(this,arguments);
 };
@@ -1698,11 +1698,11 @@ window.cpbookTrackOrderLead=function(data,meta){
     lead_channel:meta&&meta.leadChannel?meta.leadChannel:'whatsapp',
     desktop_fallback:!!(meta&&meta.desktopFallback)
   };
-  fireEv('order_lead_captured',data.country||null,39000,'order_modal',props);
-  if(props.desktop_fallback)fireEv('desktop_lead_captured',data.country||null,39000,'order_modal',props);
+  fireEv('order_lead_captured',data.country||null,{{PRIX_XAF}},'order_modal',props);
+  if(props.desktop_fallback)fireEv('desktop_lead_captured',data.country||null,{{PRIX_XAF}},'order_modal',props);
 };
 window.cpbookTrackRedirect=function(data){
-  fireEv('whatsapp_redirect',data&&data.channel?data.channel:'whatsapp',39000,'order_modal',{
+  fireEv('whatsapp_redirect',data&&data.channel?data.channel:'whatsapp',{{PRIX_XAF}},'order_modal',{
     channel:data&&data.channel?data.channel:'whatsapp',
     city:data&&data.city?data.city:'',
     payment_method:data&&data.payment_method?data.payment_method:'',
@@ -1713,7 +1713,7 @@ window.cpbookTrackRedirect=function(data){
 document.querySelectorAll('#orderOv input, #orderOv select').forEach(function(field){field.addEventListener('focus',function(){if(this.dataset.analyticsStarted)return;this.dataset.analyticsStarted='1';fireEv('form_field_start',this.id,null,'order_modal',{field:this.id});});});
 
 var _oso=window.submitOrder;
-window.submitOrder=function(){var nm=document.getElementById('fName')&&document.getElementById('fName').value.trim(),ph=document.getElementById('fPhone')&&document.getElementById('fPhone').value.trim(),country=document.getElementById('fCountry')&&document.getElementById('fCountry').value;if(nm&&ph&&country){_sp.form_submitted=true;fireEv('order_form_submit',country,39000,'order_modal',{country:country,payment_method:'MoneyFusion'});setCT('form_submitted','yes');}if(_oso)_oso.apply(this,arguments);};
+window.submitOrder=function(){var nm=document.getElementById('fName')&&document.getElementById('fName').value.trim(),ph=document.getElementById('fPhone')&&document.getElementById('fPhone').value.trim(),country=document.getElementById('fCountry')&&document.getElementById('fCountry').value;if(nm&&ph&&country){_sp.form_submitted=true;fireEv('order_form_submit',country,{{PRIX_XAF}},'order_modal',{country:country,payment_method:'MoneyFusion'});setCT('form_submitted','yes');}if(_oso)_oso.apply(this,arguments);};
 
 function sessionEnd(){fetch(SB_URL+'/rest/v1/page_sessions?session_id=eq.'+SID,{method:'PATCH',headers:HDRS,body:JSON.stringify({time_on_page_s:Math.round((Date.now()-T0)/1000),max_scroll_pct:maxScroll,hero_read_s:_sp.hero_read_s,did_bounce:_sp.did_bounce&&(Date.now()-T0)<30000,vsl_played:_sp.vsl_played,order_opened:_sp.order_opened,form_submitted:_sp.form_submitted}),keepalive:true}).catch(function(){});}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')sessionEnd();});

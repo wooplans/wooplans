@@ -9,7 +9,7 @@ import { deleteMedia, planMediaFolder } from "@/lib/media-store";
 import { attachFileToPlan } from "@/lib/plan-media";
 import { derivedPlanFields, isStanding } from "@/lib/plan-pricing";
 import { getCostSettings, getSetting } from "@/lib/settings";
-import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
+import { grantAccess, memberCatalogueCredit, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
 import {
   PLAN_CATEGORIES,
   PLAN_IMAGE_MAX_BYTES,
@@ -419,7 +419,7 @@ export const TOOLS: McpTool[] = [
         channel,
         projectDetails: asString(args.details) ?? "",
         memberId: member?.id ?? null,
-        catalogueCredit: member ? 39000 : 0,
+        catalogueCredit: member ? await memberCatalogueCredit(member.id) : 0,
         nextFollowUpAt: asDate(args.next_follow_up) ?? null,
       });
       await logLead(id, "note", `Demande créée par l'agent (canal : ${channel}).`);

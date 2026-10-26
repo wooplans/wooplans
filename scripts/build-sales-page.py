@@ -190,6 +190,42 @@ replace_once("<td>Sélection de 50+ plans</td>", "<td>Sélection de <span data-w
 replace_once('<div class="pinc">50+ plans', '<div class="pinc"><span data-wp-count>50+</span> plans')
 replace_once("Catalogue Premium Wooplans — 50 Plans de Maison", "Catalogue Premium Wooplans — Plans de Maison")
 
+# Prix du catalogue et montants qui en découlent. Source unique : src/config/catalogue.json
+# (lue aussi par le site et la VSL) ; prix des plans complets : src/lib/custom-plans.ts.
+import json
+PRICE = int(json.loads((ROOT / "src" / "config" / "catalogue.json").read_text(encoding="utf-8"))["price"])
+PRICE_AFTER_STEP = 60000  # prix au palier de 100 modèles (src/lib/sales-page.ts)
+VALUE = 500000  # valeur affichée du catalogue (tableau de valeur)
+plan_prices = [int(x) for x in re.findall(r"price: (\d+)", (ROOT / "src" / "lib" / "custom-plans.ts").read_text(encoding="utf-8"))]
+if len(plan_prices) != 2 or not 0 < PRICE < PRICE_AFTER_STEP:
+    raise SystemExit("prix du catalogue ou des plans complets introuvable ou incohérent")
+villa, duplex = plan_prices
+
+def fcfa(n: int, sep: str = " ") -> str:
+    return f"{n:,}".replace(",", sep)
+
+PRICE_TOKENS = {
+    "{{PRIX}}": fcfa(PRICE),
+    "{{PRIX_NBSP}}": fcfa(PRICE, "&nbsp;"),
+    "{{PRIX_XAF}}": str(PRICE),
+    "{{RESTE_VILLA_NBSP}}": fcfa(villa - PRICE, "&nbsp;"),
+    "{{RESTE_DUPLEX_NBSP}}": fcfa(duplex - PRICE, "&nbsp;"),
+    "{{REMISE}}": str(round((PRICE_AFTER_STEP - PRICE) / PRICE_AFTER_STEP * 100)),
+    "{{PART_VALEUR}}": f"{PRICE / VALUE * 100:.1f}",
+    "{{ECONOMIE}}": fcfa(PRICE_AFTER_STEP - PRICE),
+    "{{ECONOMIE_VALEUR}}": fcfa(VALUE - PRICE),
+    # Repli si la base est indisponible (sinon la route calcule le prix réel par modèle) : 60 modèles et plus.
+    "{{PAR_MODELE_MAX}}": str(-(-PRICE // 60 // 50) * 50),
+}
+
+def apply_prices(html: str, page: str) -> str:
+    for token, value in PRICE_TOKENS.items():
+        html = html.replace(token, value)
+    if "{{" in html:
+        raise SystemExit(f"[{page}] repère de prix non remplacé : " + html[html.index("{{"):][:40])
+    return html
+
+s = apply_prices(s, "page A")
 out = ROOT / "public" / "lp" / "catalogue-premium.html"
 out.write_text(s, encoding="utf-8")
 print(f"OK → {out.relative_to(ROOT)} ({len(s)} octets)")
@@ -199,7 +235,7 @@ import importlib.util
 spec = importlib.util.spec_from_file_location("sales_page_b", ROOT / "scripts" / "sales-page-b.py")
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
-b = module.build(s, measure)
+b = apply_prices(module.build(s, measure), "variante B")
 out_b = ROOT / "public" / "lp" / "catalogue-premium-b.html"
 out_b.write_text(b, encoding="utf-8")
 print(f"OK → {out_b.relative_to(ROOT)} ({len(b)} octets)")

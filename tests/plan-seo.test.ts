@@ -65,9 +65,10 @@ test("liens thématiques depuis une fiche", () => {
 test("FAQ chiffrée à partir des modèles", () => {
   const stats = planStats([d4040, d5001]);
   assert.deepEqual(stats, { count: 2, surface: [155, 325], land: [400, 400], budget: [25_100_000, 64_400_000] });
-  const faq = landingFaq(landingPage("/plan-duplex-4-chambres"), stats);
+  const faq = landingFaq(landingPage("/plan-duplex-4-chambres"), stats, 29000);
   assert.match(faq[0].answer, /de 25 à 64 millions FCFA, hors terrain/);
-  assert.equal(landingFaq(landingPage("/petit-duplex"), planStats([])).length, 2);
+  assert.ok(faq.some((f) => f.answer.includes("(29 000 FCFA, paiement unique")));
+  assert.equal(landingFaq(landingPage("/petit-duplex"), planStats([]), 29000).length, 2);
 });
 
 test("toutes les pages thématiques sont mises en cache", () => {
