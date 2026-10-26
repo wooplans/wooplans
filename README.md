@@ -123,7 +123,7 @@ Le prix est à **un seul endroit** : `src/config/catalogue.json` (`"price"`, en 
 4. VSL : `cd video/vsl && node voice.mjs` (ne régénère avec Gradium que les phrases qui citent le prix), puis `node render.mjs`, `node render.mjs --mode preview`, `node assemble.mjs preview` et `node assemble.mjs main` ; déposer `out/vsl-catalogue-premium.mp4` et `out/vsl-catalogue-premium-apercu.mp4` dans le bucket R2 `cpbook-videos` (la page les appelle avec `?v=<prix>`, donc sans ancien cache).
 5. `npm test`, puis publier.
 
-Crédit des plans complets : un membre se voit déduire le prix actuel du catalogue, ou ce qu'il a payé s'il l'a acheté plus cher (`memberCatalogueCredit`, `src/lib/members.ts`).
+Crédit des plans complets : tout membre se voit déduire le prix actuel du catalogue (`cataloguePrice()`), quel que soit le prix auquel il l'a acheté.
 
 ## Page de vente : variantes et test A/B
 

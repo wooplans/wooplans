@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { memberCatalogueCredit } from "@/lib/members";
+import { cataloguePrice } from "@/lib/site";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { randomId } from "@/lib/crypto";
@@ -63,7 +63,7 @@ export async function createLead(form: FormData) {
     stage: "demande",
     projectDetails: str(form, "projectDetails") ?? "",
     memberId: member?.id ?? null,
-    catalogueCredit: member ? await memberCatalogueCredit(member.id) : 0,
+    catalogueCredit: member ? cataloguePrice() : 0,
     nextFollowUpAt: date(form, "nextFollowUpAt"),
   });
   await log(id, "note", `Demande ajoutée manuellement (canal : ${channel}).`, admin.email);
