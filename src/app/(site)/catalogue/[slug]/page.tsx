@@ -5,7 +5,8 @@ import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
-import { ProjectOffer, projectStartLink } from "@/components/ProjectOffer";
+import { Faq, FaqJsonLd } from "@/components/Faq";
+import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { customPlanOffer, memberBalance, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
@@ -53,6 +54,7 @@ export default async function PlanPage({ params }: Props) {
   const offer = customPlanOffer(plan.category);
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
   const project = getEnv().OFFRE_PROJET === "1" && offer ? offer : null;
+  const faq = project ? projectFaq({ plan, offer: project, planCount }) : null;
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const categoryPath = cataloguePath(plan.category);
   const categoryLabel = plan.category === "villa" ? "Villas" : plan.category === "duplex" ? "Duplex" : "Modèles";
@@ -147,16 +149,21 @@ export default async function PlanPage({ params }: Props) {
           ) : null}
         </section>
 
+        {faq ? (
+          <section className="mt-12 max-w-3xl">
+            <h2 className="mb-4 text-xl font-semibold">Questions fréquentes</h2>
+            <Faq items={faq} />
+            <FaqJsonLd items={faq} />
+          </section>
+        ) : (
         <section className="mt-12 grid gap-6 md:grid-cols-2">
           <div className="card relative overflow-hidden p-6">
             <h2 className="text-lg font-semibold">Distribution cotée</h2>
             <p className="mt-2 text-sm text-foreground/70">
-              {project
-                ? "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est dans le plan et devis du modèle, à télécharger."
-                : "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium."}
+              Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium.
             </p>
             <div className="mt-5 grid h-40 place-items-center rounded-xl bg-[repeating-linear-gradient(45deg,#eef2f4,#eef2f4_10px,#e3e9ed_10px,#e3e9ed_20px)] text-sm font-medium text-muted">
-              {project ? "🔒 Inclus dans le plan et devis à télécharger" : "🔒 Réservé au Catalogue Premium"}
+              🔒 Réservé au Catalogue Premium
             </div>
           </div>
           <div className="card p-6">
@@ -164,12 +171,7 @@ export default async function PlanPage({ params }: Props) {
             <p className="mt-2 text-sm text-foreground/70">
               Ce modèle vous plaît ? Nos architectes l&apos;adaptent à votre terrain et réalisent le dossier complet.
             </p>
-            {project ? (
-              <p className="mt-3 text-sm">
-                Prix fixe : <strong>{formatFcfa(project.price)}</strong>. Commencez par télécharger le plan et devis du modèle ({formatFcfa(projectStartPrice())}) :
-                ce montant est déduit de vos plans complets.
-              </p>
-            ) : offer ? (
+            {offer ? (
               <p className="mt-3 text-sm">
                 Prix fixe : <strong>{formatFcfa(offer.price)}</strong>. Avec le Catalogue Premium, vous payez seulement{" "}
                 <strong className="text-primary">{formatFcfa(memberBalance(offer))}</strong>.
@@ -191,6 +193,7 @@ export default async function PlanPage({ params }: Props) {
             </div>
           </div>
         </section>
+        )}
 
         {similar.length > 0 ? (
           <section className="mt-16">
