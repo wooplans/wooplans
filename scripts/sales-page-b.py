@@ -4,7 +4,7 @@ Variante B de la page de vente : page entièrement repensée pour l'acheteur mob
 
 Structure : promesse et prix → aperçu réel d'un modèle (ce que l'on débloque) → modèles
 avec leur budget → témoignages → étapes → pour qui / valeur → offre → FAQ → appel final,
-avec barre collante, WhatsApp et paiement Chariow Snap guidé (aide Mobile Money).
+avec barre collante, WhatsApp et paiement en formulaire court (nom, email, numéro) puis page Chariow.
 Urgence, avis et prix barré conservés (décision du propriétaire).
 
 Zones dynamiques remplies par src/app/catalogue-premium/route.ts (HTMLRewriter, données D1) :
@@ -17,13 +17,13 @@ from pathlib import Path
 SOURCE = Path(__file__).resolve().parent / "sales-page-b.source.html"
 REQUIRED = [
     "var WP_VARIANT='b'",
-    'data-product-id="prd_41k85hc0"',
     "data-wp-count",
     "data-wp-gallery",
     "data-wp-preview",
-    "widget_ready",
+    'id="ckForm"',
+    "/api/checkout",
     "237694327885",
-    'id="chariow-widget" class="ph-no-capture"',
+    'class="ckform ph-no-capture"',
     "wpCapture",
 ]
 

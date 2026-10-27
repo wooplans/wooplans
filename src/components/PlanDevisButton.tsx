@@ -34,6 +34,7 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
   const [country, setCountry] = useState<CountryCode>("CM");
   const countryChosen = useRef(false);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
+  const [promoOpen, setPromoOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -178,6 +179,16 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
               />
             </div>
           </div>
+          {promoOpen ? (
+            <div>
+              <label className="label" htmlFor={`pd-promo-${plan.slug}`}>Code promo</label>
+              <input id={`pd-promo-${plan.slug}`} name="discountCode" autoFocus autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
+            </div>
+          ) : (
+            <button type="button" onClick={() => setPromoOpen(true)} className="-mt-2 justify-self-start text-sm font-semibold text-primary underline">
+              Code promo
+            </button>
+          )}
           {error ? <p className="rounded-xl bg-secondary/10 px-4 py-3 text-sm text-secondary">{error}</p> : null}
           <button type="submit" disabled={sending} className="btn-cta mt-1 w-full py-3.5 text-base">
             {sending ? "Ouverture du paiement…" : `Payer ${price}`}
