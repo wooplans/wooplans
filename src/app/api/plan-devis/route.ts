@@ -11,7 +11,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
 
-type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string };
+type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
   const email = normalizeEmail(body.email || "");
   const phone = (body.phone || "").replace(/\D/g, "");
   const countryCode = (body.countryCode || "CM").toUpperCase().slice(0, 2);
+  const discountCode = (body.discountCode || "").trim().slice(0, 100) || undefined;
   if (name.length < 2 || !EMAIL_RE.test(email) || phone.length < 6) {
     return NextResponse.json({ error: "Merci de renseigner votre nom, un email valide et votre numéro." }, { status: 400 });
   }
@@ -63,7 +64,9 @@ export async function POST(request: NextRequest) {
     redirectUrl: `${request.nextUrl.origin}/merci?i=${intentId}`,
     metadata,
     customerIp: clientIp(request.headers),
+    discountCode,
   });
+  if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
 
   const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId });
   response.cookies.set(INTENT_COOKIE, intentId, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 48 });

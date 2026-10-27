@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, like, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, like, lte, ne, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { cataloguePrice } from "@/lib/site";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
@@ -204,7 +204,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "get_business_summary",
     description:
-      "Résumé du tunnel de vente sur une période : visiteurs, visiteurs de la page de vente, paiements démarrés, achats, revenu du catalogue, encaissements des plans complets, membres, demandes, et performance par source/campagne UTM.",
+      "Résumé du tunnel de vente sur une période : visiteurs, visiteurs de la page de vente, paiements démarrés, achats et revenu du Catalogue Premium, achats et revenu du plan et devis d'un modèle (planDevis*, comptés à part), encaissements des plans complets, membres, demandes, et performance par source/campagne UTM (tous produits).",
     inputSchema: obj({ days: { type: "number", enum: [7, 30, 90, 365], description: "Période en jours (défaut 30)" } }),
     annotations: { readOnlyHint: true },
     handler: async (args) => {
@@ -215,8 +215,10 @@ export const TOOLS: McpTool[] = [
   },
   {
     name: "list_sales",
-    description: "Liste les ventes du Catalogue Premium (Chariow), les plus récentes d'abord. Filtre possible par statut et date.",
+    description:
+      "Liste les ventes Chariow (Catalogue Premium et plan et devis d'un modèle), les plus récentes d'abord. Filtre possible par produit, statut et date.",
     inputSchema: obj({
+      product: str("catalogue | plan_devis (défaut : tous)", { enum: ["catalogue", "plan_devis"] }),
       status: str("completed | abandoned | failed", { enum: ["completed", "abandoned", "failed"] }),
       since: str("Date ISO (AAAA-MM-JJ) de début"),
       limit: num("Nombre maximum (défaut 25, max 100)"),
@@ -228,6 +230,10 @@ export const TOOLS: McpTool[] = [
       if (status === "completed" || status === "abandoned" || status === "failed") conditions.push(eq(schema.sales.status, status));
       const since = asDate(args.since);
       if (since) conditions.push(gte(schema.sales.occurredAt, since));
+      const planId = getEnv().CHARIOW_PLAN_PRODUCT_ID || "__aucun__";
+      const product = asString(args.product);
+      if (product === "catalogue") conditions.push(ne(schema.sales.productId, planId));
+      if (product === "plan_devis") conditions.push(eq(schema.sales.productId, planId));
       const rows = await getDb().query.sales.findMany({
         where: conditions.length ? and(...conditions) : undefined,
         orderBy: desc(schema.sales.occurredAt),
@@ -235,6 +241,7 @@ export const TOOLS: McpTool[] = [
       });
       return rows.map((s) => ({
         sale_id: s.chariowSaleId,
+        product: s.productName,
         date: iso(s.occurredAt),
         status: s.status,
         amount: s.amount,

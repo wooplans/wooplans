@@ -25,9 +25,9 @@
     // 0 = variante B visible seulement avec ?variante=b (aperçu).
     "SALES_PAGE_B_SHARE": "100",
     "WHATSAPP_NUMBER": "237694327885",
-    // Offre « Démarrer mon projet » sur les fiches modèles : "1" = visible. Reste à "0" en production
-    // tant qu'elle n'est pas validée ; l'aperçu (workflow apercu.yml) la force à "1".
-    "OFFRE_PROJET": "0",
+    // Offre « plan et devis » (10 000 FCFA, puis plans complets) sur les fiches villas et duplex :
+    // "1" = visible, "0" = ancien encart « Inclus dans le Catalogue Premium ».
+    "OFFRE_PROJET": "1",
     "FB_PIXEL_ID": "1025626273769966",
     // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
     "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",

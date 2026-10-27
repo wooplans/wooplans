@@ -474,7 +474,9 @@ export async function createChariowCheckout(params: {
   customerIp?: string;
   /** Produit à payer (par défaut le Catalogue Premium). */
   productId?: string;
-}): Promise<{ url: string; mode: "api" | "storefront" }> {
+  /** Code promo Chariow : en cas de refus, aucun repli vers la boutique (le client paierait plein tarif). */
+  discountCode?: string;
+}): Promise<{ url: string; mode: "api" | "storefront" } | { error: string }> {
   const env = getEnv();
   const productId = params.productId || env.CHARIOW_CATALOGUE_PRODUCT_ID;
   if (!env.CHARIOW_API_KEY) return { url: storefrontCheckoutUrl(productId), mode: "storefront" };
@@ -492,14 +494,22 @@ export async function createChariowCheckout(params: {
         redirect_url: params.redirectUrl,
         customer_ip: params.customerIp,
         custom_metadata: { intent_id: params.intentId, ...params.metadata },
+        ...(params.discountCode ? { discount_code: params.discountCode } : {}),
       }),
     });
     const data = (await response.json().catch(() => null)) as {
       data?: { step?: string; payment?: { checkout_url?: string | null } };
       message?: string;
+      errors?: Record<string, string[]>;
     } | null;
     const url = data?.data?.payment?.checkout_url;
     if (response.ok && data?.data?.step === "payment" && url) return { url, mode: "api" };
+    // Code promo à 100 % : la vente est conclue sans paiement, la notification Chariow suit.
+    if (response.ok && data?.data?.step === "completed") return { url: params.redirectUrl, mode: "api" };
+    if (params.discountCode && !response.ok) {
+      const discountError = data?.errors?.discount_code?.[0] || (/discount|code/i.test(data?.message || "") ? data?.message : null);
+      return { error: discountError ? "Ce code promo n'est pas valable pour cet achat." : "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp." };
+    }
     console.warn("Chariow checkout API indisponible, repli boutique :", response.status, data?.message);
   } catch (error) {
     console.warn("Chariow checkout API erreur, repli boutique :", error);

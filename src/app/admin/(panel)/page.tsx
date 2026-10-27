@@ -28,8 +28,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <>
       <PageTitle title="Tableau de bord" subtitle="Le tunnel de vente, de la visite à l'achat." actions={<PeriodTabs current={days} base="/admin" />} />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <Stat label="Revenu catalogue" value={formatFcfa(k.catalogueRevenue)} hint={`${n(k.purchases)} achats`} />
+        <Stat
+          label="Revenu plan et devis"
+          value={formatFcfa(k.planDevisRevenue)}
+          hint={`${n(k.planDevisPurchases)} achats · ${n(k.planDevisCheckouts)} paiements démarrés`}
+        />
         <Stat label="Encaissements plans complets" value={formatFcfa(k.customPlanRevenue)} hint="saisis dans le CRM" />
         <Stat label="Conversion page de vente" value={pct(k.salesPageConversion)} hint="achats / visiteurs de la page" />
         <Stat label="Membres actifs" value={n(k.activeMembers)} hint={`+${n(k.newMembers)} sur la période`} />
