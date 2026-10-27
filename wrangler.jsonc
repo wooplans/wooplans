@@ -26,7 +26,7 @@
     "SALES_PAGE_B_SHARE": "100",
     // Prestataire de paiement : "chariow" ou "wajub" (Wajub seulement si WAJUB_SECRET_KEY est défini).
     // En essai, ?paiement=wajub sur /catalogue-premium ou une fiche modèle active Wajub pour ce navigateur.
-    "PAYMENT_PROVIDER": "chariow",
+    "PAYMENT_PROVIDER": "wajub",
     "WHATSAPP_NUMBER": "237694327885",
     // Offre « plan et devis » (10 000 FCFA, puis plans complets) sur les fiches villas et duplex :
     // "1" = visible, "0" = ancien encart « Inclus dans le Catalogue Premium ».
