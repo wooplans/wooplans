@@ -106,8 +106,8 @@ Dans Chariow → Automatisations → Pulses : créer un Pulse vers `https://www.
 
 Wajub (checkout hébergé Mobile Money et carte, `src/lib/wajub.ts`) est branché sur les deux achats : Catalogue Premium (page de vente B, formulaire court puis page Wajub) et plan et devis (fiches modèles). Une vente Wajub passe par le même traitement qu'une vente Chariow : code d'accès, plan et devis, CRM, relances, statistiques (identifiant de vente `trx_…`, membre de source « Wajub »).
 
-1. Dashboard Wajub → Développeurs : créer une clé secrète (`sk_test.…` pour l'essai en sandbox, `sk.…` en production) puis `npx wrangler secret put WAJUB_SECRET_KEY`.
-2. Webhooks : endpoint `https://www.wooplans.com/api/webhooks/wajub`, événements `payment.succeeded`, `payment.failed`, `payment.expired`, `payment.cancelled` ; copier son secret (`whsec_…`) dans `npx wrangler secret put WAJUB_WEBHOOK_SECRET`.
+1. Dashboard Wajub → Développeurs : créer une clé secrète (`sk_test.…` pour l'essai en sandbox, `sk.…` en production) puis l'ajouter aux secrets GitHub sous le nom `WAJUB_SECRET_KEY` (copié dans le Worker à chaque déploiement, comme les autres secrets ; ou directement `npx wrangler secret put WAJUB_SECRET_KEY`).
+2. Webhooks : endpoint `https://www.wooplans.com/api/webhooks/wajub`, événements `payment.succeeded`, `payment.failed`, `payment.expired`, `payment.cancelled` ; copier son secret (`whsec_…`) dans le secret GitHub `WAJUB_WEBHOOK_SECRET`.
 3. Essai sans rien changer pour les visiteurs : ouvrir `https://www.wooplans.com/catalogue-premium?paiement=wajub` (le choix est gardé 7 jours dans ce navigateur, y compris sur les fiches modèles ; `?paiement=chariow` pour revenir). En sandbox, le numéro `+237670000000` réussit et `+237670000002` est refusé.
 4. Bascule de tout le trafic : `"PAYMENT_PROVIDER": "wajub"` dans `wrangler.jsonc`. Retour arrière : `"chariow"`.
 

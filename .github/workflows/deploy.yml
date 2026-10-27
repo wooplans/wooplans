@@ -51,7 +51,7 @@ jobs:
       - name: Secrets du Worker (depuis les secrets GitHub)
         run: |
           node -e '
-            const names = ["AUTH_SECRET","CHARIOW_PULSE_SECRET","CHARIOW_API_KEY","RESEND_API_KEY","MCP_TOKEN","CRON_SECRET"];
+            const names = ["AUTH_SECRET","CHARIOW_PULSE_SECRET","CHARIOW_API_KEY","RESEND_API_KEY","MCP_TOKEN","CRON_SECRET","WAJUB_SECRET_KEY","WAJUB_WEBHOOK_SECRET"];
             const out = Object.fromEntries(names.filter((n) => process.env[n]).map((n) => [n, process.env[n]]));
             require("fs").writeFileSync("/tmp/worker-secrets.json", JSON.stringify(out));
             console.log("Secrets transmis :", Object.keys(out).join(", ") || "aucun");
@@ -67,6 +67,8 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          WAJUB_SECRET_KEY: ${{ secrets.WAJUB_SECRET_KEY }}
+          WAJUB_WEBHOOK_SECRET: ${{ secrets.WAJUB_WEBHOOK_SECRET }}
 
   smoke:
     needs: deploy
