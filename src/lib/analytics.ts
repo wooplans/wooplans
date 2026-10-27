@@ -1,5 +1,11 @@
-import { and, count, countDistinct, desc, eq, gte, sql, sum } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, ne, sql, sum } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { getEnv } from "@/lib/env";
+
+/** Produit Chariow « Plan et devis » : ses ventes sont comptées à part du Catalogue Premium. */
+function planDevisProductId() {
+  return getEnv().CHARIOW_PLAN_PRODUCT_ID || "__aucun__";
+}
 
 export type Period = 7 | 30 | 90 | 365;
 
@@ -24,15 +30,27 @@ export async function getFunnelKpis(days: Period) {
     .groupBy(ev.type);
   const byType = Object.fromEntries(eventCounts.map((e) => [e.type, e]));
 
+  const planId = planDevisProductId();
   const [catalogue] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, since)));
-  const [checkouts] = await db.select({ n: count() }).from(schema.checkoutIntents).where(gte(schema.checkoutIntents.createdAt, since));
+    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
+  const [planDevis] = await db
+    .select({ n: count(), revenue: sum(schema.sales.amount) })
+    .from(schema.sales)
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
+  const [checkouts] = await db
+    .select({ n: count() })
+    .from(schema.checkoutIntents)
+    .where(and(isNull(schema.checkoutIntents.planSlug), gte(schema.checkoutIntents.createdAt, since)));
+  const [planDevisCheckouts] = await db
+    .select({ n: count() })
+    .from(schema.checkoutIntents)
+    .where(and(isNotNull(schema.checkoutIntents.planSlug), gte(schema.checkoutIntents.createdAt, since)));
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "abandoned"), gte(schema.sales.occurredAt, since)));
+    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
   const [customPlans] = await db
     .select({ revenue: sum(schema.leadPayments.amount) })
     .from(schema.leadPayments)
@@ -53,6 +71,9 @@ export async function getFunnelKpis(days: Period) {
     abandonedCheckouts: abandoned?.n ?? 0,
     purchases,
     catalogueRevenue: Number(catalogue?.revenue ?? 0),
+    planDevisCheckouts: planDevisCheckouts?.n ?? 0,
+    planDevisPurchases: planDevis?.n ?? 0,
+    planDevisRevenue: Number(planDevis?.revenue ?? 0),
     customPlanRevenue: Number(customPlans?.revenue ?? 0),
     whatsappClicks: byType.whatsapp_click?.n ?? 0,
     newLeads: newLeads?.n ?? 0,

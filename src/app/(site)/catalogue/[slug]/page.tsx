@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
@@ -59,7 +58,6 @@ export default async function PlanPage({ params }: Props) {
   const project = getEnv().OFFRE_PROJET === "1" && offer ? offer : null;
   const faq = project ? projectFaq({ plan, offer: project, planCount }) : null;
   const online = Boolean(project && planProductId());
-  const country = project ? (await headers()).get("cf-ipcountry") : null;
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const categoryPath = cataloguePath(plan.category);
   const categoryLabel = plan.category === "villa" ? "Villas" : plan.category === "duplex" ? "Duplex" : "Modèles";
@@ -111,7 +109,7 @@ export default async function PlanPage({ params }: Props) {
             </div>
 
             {project ? (
-              <ProjectOffer plan={plan} offer={project} planCount={planCount} online={online} country={country} />
+              <ProjectOffer plan={plan} offer={project} planCount={planCount} online={online} />
             ) : (
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
@@ -216,7 +214,6 @@ export default async function PlanPage({ params }: Props) {
             ctaId="plan_projet_sticky"
             className="btn-cta w-full py-3.5"
             fallbackHref={online ? undefined : projectStartLink(plan)}
-            defaultCountry={country}
           />
         ) : (
           <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">

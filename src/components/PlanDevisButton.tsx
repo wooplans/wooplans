@@ -60,17 +60,16 @@ type Props = {
   className: string;
   /** Paiement en ligne indisponible (produit Chariow non configuré) : le bouton ouvre WhatsApp. */
   fallbackHref?: string;
-  /** Pays du visiteur (en-tête Cloudflare), présélectionné pour le numéro. */
-  defaultCountry?: string | null;
 };
 
 /**
  * Achat du plan et devis d'un modèle : formulaire court (nom, email, numéro) puis paiement Chariow.
  * Le modèle est enregistré avec l'achat, ce qui permet de livrer le bon document.
  */
-export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref, defaultCountry }: Props) {
+export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }: Props) {
   const [open, setOpen] = useState(false);
-  const [country, setCountry] = useState<CountryCode>(() => phoneCountryOrDefault(defaultCountry));
+  const [country, setCountry] = useState<CountryCode>("CM");
+  const countryChosen = useRef(false);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +79,22 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref, d
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
+
+  // Pays du visiteur, lu à l'ouverture (la page est en cache, partagée entre pays) : présélectionné
+  // tant que le visiteur n'a pas choisi lui-même.
+  useEffect(() => {
+    if (!open || fallbackHref) return;
+    let cancelled = false;
+    fetch("/api/pays", { cache: "no-store" })
+      .then((r) => r.json() as Promise<{ country?: string | null }>)
+      .then((d) => {
+        if (!cancelled && !countryChosen.current) setCountry(phoneCountryOrDefault(d.country));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, fallbackHref]);
 
   if (fallbackHref) {
     return (
@@ -145,7 +160,10 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref, d
               <select
                 name="countryCode"
                 value={country}
-                onChange={(e) => setCountry(e.target.value as CountryCode)}
+                onChange={(e) => {
+                  countryChosen.current = true;
+                  setCountry(e.target.value as CountryCode);
+                }}
                 className="input"
                 aria-label="Pays"
               >
