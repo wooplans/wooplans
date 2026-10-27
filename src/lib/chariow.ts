@@ -74,7 +74,6 @@ export type PulseOutcome =
  * - une même vente ne crée l'accès qu'une seule fois, même reçue par plusieurs Pulses.
  */
 export async function handleChariowPulse(payload: ChariowSalePayload, deliveryId: string | null): Promise<PulseOutcome> {
-  const db = getDb();
   const event = payload.event || "";
 
   if (!deliveryId) {
@@ -82,15 +81,28 @@ export async function handleChariowPulse(payload: ChariowSalePayload, deliveryId
     return "test_event";
   }
 
+  return processDeliveryOnce(deliveryId, event, payload.sale?.id ?? null, () => processSaleEvent(payload));
+}
+
+/**
+ * Journalise une notification (Chariow ou Wajub) puis la traite une seule fois : une notification
+ * déjà reçue renvoie « duplicate ». En cas d'erreur, la clé est libérée pour que la nouvelle tentative soit retraitée.
+ */
+export async function processDeliveryOnce(
+  deliveryId: string,
+  event: string,
+  saleId: string | null,
+  run: () => Promise<PulseOutcome>,
+): Promise<PulseOutcome> {
+  const db = getDb();
   const inserted = await db
     .insert(schema.webhookDeliveries)
-    .values({ deliveryId, event, saleId: payload.sale?.id ?? null, outcome: "processing" })
+    .values({ deliveryId, event, saleId, outcome: "processing" })
     .onConflictDoNothing()
     .returning({ id: schema.webhookDeliveries.deliveryId });
   if (inserted.length === 0) return "duplicate";
 
-  const outcome = await processSaleEvent(payload).catch(async (error) => {
-    // Libère la clé pour que la nouvelle tentative de Chariow soit retraitée.
+  const outcome = await run().catch(async (error) => {
     await db.delete(schema.webhookDeliveries).where(eq(schema.webhookDeliveries.deliveryId, deliveryId));
     throw error;
   });
@@ -102,7 +114,15 @@ export async function handleChariowPulse(payload: ChariowSalePayload, deliveryId
   return outcome;
 }
 
-async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutcome> {
+/** Prestataire qui a encaissé la vente (les ventes Wajub passent par le même traitement que Chariow). */
+export type SaleProvider = "chariow" | "wajub";
+const PROVIDER_LABEL: Record<SaleProvider, string> = { chariow: "Chariow", wajub: "Wajub" };
+
+/**
+ * Enregistre une vente (catalogue ou plan et devis) et, sur paiement confirmé, ouvre l'accès ou livre le plan.
+ * Appelé avec une notification Chariow, ou une notification Wajub mise au même format (src/lib/wajub.ts).
+ */
+export async function processSaleEvent(payload: ChariowSalePayload, provider: SaleProvider = "chariow"): Promise<PulseOutcome> {
   const db = getDb();
   const status = SALE_EVENTS[payload.event || ""];
   if (!status) return "ignored_event";
@@ -110,7 +130,7 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   const sale = payload.sale;
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
-  if (planProductId() && productId === planProductId()) return processPlanSale(payload, status);
+  if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
   if (!catalogueProductIds().has(productId)) return "ignored_product";
 
   const customer = payload.customer ?? {};
@@ -203,8 +223,8 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
       name,
       phone: normalizePhone(customer.phone),
       country: customerCountry(customer),
-      source: "chariow",
-      chariowCustomerId: customer.id,
+      source: provider,
+      chariowCustomerId: provider === "chariow" ? customer.id : null,
     });
   } catch (error) {
     await db.update(schema.sales).set({ memberId: null }).where(eq(schema.sales.id, saleRow.id));
@@ -278,8 +298,13 @@ const PLAN_CREDIT_NOTE = "Plan et devis payé : son prix est déduit des plans c
  * avant le paiement (métadonnée intent_id, ou à défaut le même email dans les 48 h).
  * Sur paiement confirmé : lien de téléchargement par email, fiche dans le CRM, alerte au propriétaire.
  */
-async function processPlanSale(payload: ChariowSalePayload, status: "completed" | "abandoned" | "failed"): Promise<PulseOutcome> {
+async function processPlanSale(
+  payload: ChariowSalePayload,
+  status: "completed" | "abandoned" | "failed",
+  provider: SaleProvider,
+): Promise<PulseOutcome> {
   const db = getDb();
+  const saleLabel = `Vente ${PROVIDER_LABEL[provider]}`;
   const sale = payload.sale!;
   const customer = payload.customer ?? {};
   const email = customer.email ? normalizeEmail(customer.email) : null;
@@ -337,9 +362,9 @@ async function processPlanSale(payload: ChariowSalePayload, status: "completed" 
         text: `${subject}
 Email : ${email || "—"}
 Téléphone : ${phone || "—"}
-Vente Chariow : ${sale.id}
+${saleLabel} : ${sale.id}
 Contactez le client pour savoir quel modèle lui envoyer.`,
-        html: `<p><strong>${subject}</strong></p><p>Email : ${email || "—"}<br>Téléphone : ${phone || "—"}<br>Vente Chariow : ${sale.id}</p><p>Contactez le client pour savoir quel modèle lui envoyer.</p>`,
+        html: `<p><strong>${subject}</strong></p><p>Email : ${email || "—"}<br>Téléphone : ${phone || "—"}<br>${saleLabel} : ${sale.id}</p><p>Contactez le client pour savoir quel modèle lui envoyer.</p>`,
       });
     }
     return "plan_unmatched";
@@ -381,7 +406,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     id: randomId(),
     leadId,
     kind: "payment",
-    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA, vente Chariow ${sale.id}). Lien de téléchargement envoyé par email.`,
+    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
     author: "site",
   });
 

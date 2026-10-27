@@ -16,7 +16,7 @@ type GrantInput = {
   name?: string | null;
   phone?: string | null;
   country?: string | null;
-  source: "chariow" | "legacy_import" | "manual";
+  source: "chariow" | "wajub" | "legacy_import" | "manual";
   chariowCustomerId?: string | null;
 };
 

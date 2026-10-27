@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
 import { cataloguePrice } from "@/lib/site";
+import { PAY_COOKIE, paymentProvider } from "@/lib/wajub";
 import { VARIANT_COOKIE, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep, type GalleryPlan } from "@/lib/sales-page";
 
 const GALLERY_SIZE = 8;
@@ -64,11 +65,21 @@ export async function GET(request: Request) {
   });
   if (remember) headers.append("Set-Cookie", `${VARIANT_COOKIE}=${variant}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`);
 
+  // Prestataire de paiement (variante B) : PAYMENT_PROVIDER, ou l'aperçu ?paiement=wajub|chariow gardé 7 jours.
+  const payQuery = url.searchParams.get("paiement");
+  const payCookie = request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${PAY_COOKIE}=(wajub|chariow)`))?.[1];
+  if (payQuery === "wajub" || payQuery === "chariow") {
+    headers.append("Set-Cookie", `${PAY_COOKIE}=${payQuery}; Path=/; Max-Age=604800; SameSite=Lax; Secure`);
+  }
+  const wajub = variant === "b" && paymentProvider(payQuery || payCookie) === "wajub";
+  if (wajub || payQuery || payCookie) headers.set("Cache-Control", "private, no-store");
+  const payRewriter = new HTMLRewriter().on("html", { element: (el) => void (wajub && el.setAttribute("data-pay", "wajub")) });
+
   const data = await salesPageData().catch((error) => {
     console.error(`Page de vente ${variant.toUpperCase()} : données indisponibles`, error);
     return null;
   });
-  if (!data || data.count === 0) return new Response(asset.body, { status: 200, headers });
+  if (!data || data.count === 0) return payRewriter.transform(new Response(asset.body, { status: 200, headers }));
   const count = String(data.count);
   const rewriter = new HTMLRewriter().on("[data-wp-count]", { element: (el) => void el.setInnerContent(count) });
   if (variant === "a") {
@@ -91,5 +102,5 @@ export async function GET(request: Request) {
         .on("[data-wp-left]", { element: (el) => void el.setInnerContent(step.leftLabel) })
         .on("[data-wp-progress]", { element: (el) => void el.setAttribute("style", `width:${step.percent}%`) });
   }
-  return rewriter.transform(new Response(asset.body, { status: 200, headers }));
+  return payRewriter.transform(rewriter.transform(new Response(asset.body, { status: 200, headers })));
 }

@@ -6,18 +6,20 @@ import { randomId } from "@/lib/crypto";
 import { customPlanOffer } from "@/lib/custom-plans";
 import { getEnv } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { internationalPhone } from "@/lib/phone";
 import { getPublicPlan } from "@/lib/plans";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
+import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
-type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string };
+type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string; provider?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Achat du plan et devis d'un modèle : enregistre l'intention (modèle choisi, visiteur, email)
- * puis renvoie l'URL de paiement Chariow. Le modèle est relu à la confirmation du paiement.
+ * puis renvoie l'URL de paiement (Chariow ou Wajub). Le modèle est relu à la confirmation du paiement.
  */
 export async function POST(request: NextRequest) {
   const env = getEnv();
@@ -57,15 +59,27 @@ export async function POST(request: NextRequest) {
 
   const [firstName, ...rest] = name.split(" ");
   // Retour sur le site d'où vient l'acheteur (le site public, ou l'aperçu pendant les essais).
-  const checkout = await createChariowCheckout({
-    productId,
-    customer: { email, firstName, lastName: rest.join(" "), phoneNumber: phone, countryCode },
-    intentId,
-    redirectUrl: `${request.nextUrl.origin}/merci?i=${intentId}`,
-    metadata,
-    customerIp: clientIp(request.headers),
-    discountCode,
-  });
+  // Les codes promo sont ceux de Chariow : un achat avec code passe toujours par Chariow.
+  const provider = discountCode ? "chariow" : paymentProvider(body.provider || request.cookies.get(PAY_COOKIE)?.value);
+  const checkout =
+    provider === "wajub"
+      ? await createWajubCheckout({
+          offer: "plan_devis",
+          intentId,
+          description: `Plan et devis du modèle ${plan.code}`,
+          customer: { name, email, phone: internationalPhone(phone, countryCode) },
+          callbackUrl: `${request.nextUrl.origin}/merci?i=${intentId}`,
+          metadata: { ...metadata, country: countryCode },
+        }).then((r) => ("error" in r ? r : { url: r.url, mode: "wajub" as const }))
+      : await createChariowCheckout({
+          productId,
+          customer: { email, firstName, lastName: rest.join(" "), phoneNumber: phone, countryCode },
+          intentId,
+          redirectUrl: `${request.nextUrl.origin}/merci?i=${intentId}`,
+          metadata,
+          customerIp: clientIp(request.headers),
+          discountCode,
+        });
   if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
 
   const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId });
