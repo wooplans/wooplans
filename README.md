@@ -128,7 +128,7 @@ Chaque push sur `master` ou `ccr-03cfaad2-40szss` lance `.github/workflows/deplo
 
 Le prix est à **un seul endroit** : `src/config/catalogue.json` (`"price"`, en FCFA).
 
-1. Changer le prix du produit sur Chariow (`prd_41k85hc0`).
+1. Changer le prix du produit sur Chariow (`prd_9cbatg`, type Licence : seul ce type accepte le paiement direct par l’API).
 2. Modifier `src/config/catalogue.json`, puis `python3 scripts/build-sales-page.py` : les pages de vente A et B sont régénérées avec le prix, le reste à payer des plans complets (149 000 / 249 000 FCFA moins le prix), la remise par rapport au prix de 60 000 FCFA et la valeur Pixel.
 3. Le reste du site (FAQ, CGV, fiches, espace Premium, crédit déduit des plans complets, Pixel Meta à l'achat, outils MCP) lit le même fichier.
 4. VSL : `cd video/vsl && node voice.mjs` (ne régénère avec Gradium que les phrases qui citent le prix), puis `node render.mjs`, `node render.mjs --mode preview`, `node assemble.mjs preview` et `node assemble.mjs main` ; déposer `out/vsl-catalogue-premium.mp4` et `out/vsl-catalogue-premium-apercu.mp4` dans le bucket R2 `cpbook-videos` (la page les appelle avec `?v=<prix>`, donc sans ancien cache).

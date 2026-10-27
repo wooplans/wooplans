@@ -1177,7 +1177,7 @@ h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:clamp(24
     <button class="checkout-close" type="button" onclick="closeChariowCheckout()" aria-label="Fermer le paiement">✕</button>
     <h3 class="checkout-heading" id="checkoutHeading">Finaliser ma commande</h3>
     <p class="checkout-note">Paiement sécurisé · Catalogue Premium à 29 000 FCFA</p>
-    <div id="chariow-widget" class="ph-no-capture" data-product-id="prd_41k85hc0"
+    <div id="chariow-widget" class="ph-no-capture" data-product-id="prd_9cbatg"
         data-store-domain="wooplans.mychariow.shop"
         data-style="frame"
         data-border-style="rounded"
@@ -1441,7 +1441,7 @@ function redirectToCheckout(ctaId) {
   var closeButton=checkout.querySelector('.checkout-close');
   if(closeButton)window.setTimeout(function(){closeButton.focus();},50);
   ensureChariowWidget().catch(function(){
-    window.location.href='https://wooplans.mychariow.shop/prd_41k85hc0/checkout';
+    window.location.href='https://wooplans.mychariow.shop/prd_9cbatg/checkout';
   });
 }
 
@@ -1612,7 +1612,7 @@ window.addEventListener('DOMContentLoaded',checkReturnedPayment);
 (function(){
   var popup=document.getElementById('promoPopup');
   var promoEnabled=false; // Offre temporairement désactivée.
-  var promoUrl='https://wooplans.mychariow.shop/prd_41k85hc0?chw_pvar=8D0NXW';
+  var promoUrl='https://wooplans.mychariow.shop/prd_9cbatg';
   var shown=false;
   function sessionHasSeenPromo(){try{return sessionStorage.getItem('cpbook_promo_29000_seen')==='1';}catch(error){return false;}}
   function rememberPromo(){try{sessionStorage.setItem('cpbook_promo_29000_seen','1');}catch(error){}}

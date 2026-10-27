@@ -16,8 +16,8 @@
   "vars": {
     "SITE_URL": "https://www.wooplans.com",
     "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",
-    "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_41k85hc0",
-    "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx",
+    "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_9cbatg",
+    "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_41k85hc0,prd_kufwer,prd_icqox6,prd_dt190e,prd_27sozapx",
     // Produit Chariow « Plan et devis » (type Licence : achats répétés possibles et paiement par l'API,
     // qui transmet le modèle choisi). Vide = achat en ligne indisponible, le bouton ouvre WhatsApp.
     "CHARIOW_PLAN_PRODUCT_ID": "prd_fzuj8cse",
