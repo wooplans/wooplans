@@ -11,6 +11,8 @@ type Props = {
   planCount: number | null;
   /** Paiement en ligne disponible (produit Chariow configuré) ; sinon le bouton ouvre WhatsApp. */
   online: boolean;
+  /** Pays du visiteur, présélectionné dans le formulaire d'achat. */
+  country?: string | null;
 };
 
 /** Message WhatsApp de l'étape 1 quand le paiement en ligne du plan et devis n'est pas disponible. */
@@ -45,7 +47,7 @@ function Checklist({ items }: { items: string[] }) {
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
  * Les détails (contenu, déduction, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
-export function ProjectOffer({ plan, offer, planCount, online }: Props) {
+export function ProjectOffer({ plan, offer, planCount, online, country }: Props) {
   const start = formatFcfa(projectStartPrice());
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
@@ -78,6 +80,7 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
         ctaId="plan_projet"
         className="btn-cta mt-5 w-full py-4 text-base"
         fallbackHref={online ? undefined : projectStartLink(plan)}
+        defaultCountry={country}
       />
 
       <p className="mt-4 text-center text-sm text-foreground/75">
@@ -92,7 +95,7 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
 }
 
 /** FAQ du modèle : remplace les blocs « Distribution cotée » et « Plans complets personnalisés ». */
-export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): FaqItem[] {
+export function projectFaq({ plan, offer, planCount }: Omit<Props, "online" | "country">): FaqItem[] {
   const start = formatFcfa(projectStartPrice());
   return [
     {

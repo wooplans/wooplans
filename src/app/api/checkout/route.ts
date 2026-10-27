@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     customerIp: clientIp(request.headers),
   });
 
+  if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
   const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId });
   response.cookies.set(INTENT_COOKIE, intentId, {
     httpOnly: true,
