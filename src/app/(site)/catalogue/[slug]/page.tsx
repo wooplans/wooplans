@@ -51,7 +51,7 @@ export default async function PlanPage({ params }: Props) {
   const [similar, planCount] = await Promise.all([getSimilarPublicPlans(plan), countPublishedPlans()]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
-  // Offre « Démarrer mon projet » : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
+  // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
   const project = getEnv().OFFRE_PROJET === "1" && offer ? offer : null;
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const categoryPath = cataloguePath(plan.category);
@@ -95,7 +95,7 @@ export default async function PlanPage({ params }: Props) {
               <div className="mt-6 rounded-2xl bg-primary/5 p-5">
                 <p className="text-sm text-muted">Budget de construction indicatif</p>
                 <p className="mt-1 text-2xl font-bold text-primary">{budget}</p>
-                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans {project ? "la fiche du modèle" : "le Catalogue Premium"}.</p>
+                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans {project ? "le plan et devis du modèle" : "le Catalogue Premium"}.</p>
               </div>
             ) : null}
 
@@ -152,11 +152,11 @@ export default async function PlanPage({ params }: Props) {
             <h2 className="text-lg font-semibold">Distribution cotée</h2>
             <p className="mt-2 text-sm text-foreground/70">
               {project
-                ? "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est dans la fiche du modèle, avec le devis détaillé."
+                ? "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est dans le plan et devis du modèle, à télécharger."
                 : "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium."}
             </p>
             <div className="mt-5 grid h-40 place-items-center rounded-xl bg-[repeating-linear-gradient(45deg,#eef2f4,#eef2f4_10px,#e3e9ed_10px,#e3e9ed_20px)] text-sm font-medium text-muted">
-              {project ? "🔒 Inclus dans « Démarrer mon projet »" : "🔒 Réservé au Catalogue Premium"}
+              {project ? "🔒 Inclus dans le plan et devis à télécharger" : "🔒 Réservé au Catalogue Premium"}
             </div>
           </div>
           <div className="card p-6">
@@ -166,8 +166,8 @@ export default async function PlanPage({ params }: Props) {
             </p>
             {project ? (
               <p className="mt-3 text-sm">
-                Prix fixe : <strong>{formatFcfa(project.price)}</strong>. Commencez par « Démarrer mon projet » ({formatFcfa(projectStartPrice())}) :
-                ce montant est déduit de vos plans.
+                Prix fixe : <strong>{formatFcfa(project.price)}</strong>. Commencez par télécharger le plan et devis du modèle ({formatFcfa(projectStartPrice())}) :
+                ce montant est déduit de vos plans complets.
               </p>
             ) : offer ? (
               <p className="mt-3 text-sm">
@@ -203,7 +203,7 @@ export default async function PlanPage({ params }: Props) {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 p-3 backdrop-blur sm:hidden">
         {project ? (
           <a href={projectStartLink(plan)} target="_blank" rel="noopener noreferrer" data-cta="plan_projet_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
-            Démarrer mon projet · {formatFcfa(projectStartPrice())}
+            Télécharger plan et devis · {formatFcfa(projectStartPrice())}
           </a>
         ) : (
           <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">

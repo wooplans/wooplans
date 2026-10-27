@@ -9,15 +9,41 @@ type Props = {
   planCount: number | null;
 };
 
-/** Message WhatsApp de l'étape 1, en attendant le paiement en ligne de « Démarrer mon projet ». */
+/** Message WhatsApp de l'étape 1, en attendant le paiement en ligne du plan et de son devis. */
 export function projectStartLink(plan: Props["plan"]) {
-  return whatsappLink(`Bonjour WOOPLANS, je veux démarrer mon projet sur le modèle ${plan.code} (${plan.name}).`);
+  return whatsappLink(`Bonjour WOOPLANS, je veux télécharger le plan et le devis du modèle ${plan.code} (${plan.name}).`);
+}
+
+const STEP_ONE = [
+  "Plan de distribution avec les dimensions et la surface de chaque pièce",
+  "Devis poste par poste : fondation, élévation, toiture, finitions…",
+  "Discussion avec nos architectes sur WhatsApp",
+  "Idéal pour démarrer votre projet et préparer les modifications que vous souhaitez",
+];
+
+const STEP_TWO = [
+  "Plans personnalisés selon vos besoins, après discussion avec nos architectes",
+  "Dossier prêt à remettre à votre technicien pour la construction",
+];
+
+function Checklist({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-1.5 space-y-1 text-sm text-foreground/80">
+      {items.map((item) => (
+        <li key={item} className="flex gap-2">
+          <span className="text-primary" aria-hidden>✓</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /**
- * Offre d'une fiche modèle, présentée comme un parcours en 2 étapes vers les plans complets
- * personnalisés : tout ce qui est payé en chemin est déduit. Le catalogue reste l'alternative
- * pour qui hésite entre plusieurs modèles.
+ * Offre d'une fiche modèle, en 2 étapes : télécharger le plan de distribution et le devis du
+ * modèle (on peut en télécharger plusieurs avant de se décider), puis obtenir les plans complets
+ * personnalisés, le prix du plan et devis du modèle choisi étant déduit. Le catalogue reste
+ * l'alternative pour qui s'intéresse à plusieurs modèles.
  */
 export function ProjectOffer({ plan, offer, planCount }: Props) {
   const start = formatFcfa(projectStartPrice());
@@ -31,30 +57,18 @@ export function ProjectOffer({ plan, offer, planCount }: Props) {
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">1</span>
           <div>
             <p className="font-semibold">
-              Démarrez votre projet <span className="whitespace-nowrap text-primary">· {start}</span>
+              Téléchargez ce plan et son devis <span className="whitespace-nowrap text-primary">· {start}</span>
             </p>
-            <ul className="mt-1.5 space-y-1 text-sm text-foreground/80">
-              <li className="flex gap-2">
-                <span className="text-primary" aria-hidden>✓</span>
-                La fiche complète de ce modèle : distribution cotée, surface de chaque pièce, devis détaillé
-              </li>
-              <li className="flex gap-2">
-                <span className="text-primary" aria-hidden>✓</span>
-                Notre WhatsApp pour parler de vos modifications avec l&apos;architecte
-              </li>
-            </ul>
+            <Checklist items={STEP_ONE} />
           </div>
         </li>
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-primary text-sm font-bold text-primary">2</span>
           <div>
             <p className="font-semibold">
-              Recevez vos plans complets personnalisés <span className="whitespace-nowrap text-primary">· {formatFcfa(offer.price)}</span>
+              Obtenez les plans complets <span className="whitespace-nowrap text-primary">· {formatFcfa(offer.price)}</span>
             </p>
-            <p className="mt-1.5 text-sm text-foreground/80">
-              Adaptés à votre terrain et à votre famille (une chambre en plus, un garage…) : fondation, distribution, façades,
-              coupes, toiture et fosse septique.
-            </p>
+            <Checklist items={STEP_TWO} />
           </div>
         </li>
       </ol>
@@ -67,18 +81,19 @@ export function ProjectOffer({ plan, offer, planCount }: Props) {
         data-plan={plan.slug}
         className="btn-cta mt-5 w-full py-4 text-base"
       >
-        Démarrer mon projet · {start}
+        Télécharger ce plan et son devis · {start}
       </a>
       <p className="mt-2 text-center text-xs text-muted">
-        Les {start} sont déduits de vos plans complets : il reste {formatFcfa(projectBalance(offer))} à payer.
+        Plusieurs modèles vous intéressent ? Téléchargez-en plusieurs avant de vous décider. Les {start} du modèle choisi
+        sont déduits de ses plans complets : il reste {formatFcfa(projectBalance(offer))} à payer.
       </p>
 
       <p className="mt-5 border-t border-highlight/50 pt-4 text-sm text-foreground/75">
-        Vous hésitez entre plusieurs modèles ?{" "}
+        Plus de 3 modèles vous intéressent ?{" "}
         <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
           Le Catalogue Premium
         </Link>{" "}
-        réunit les fiches de {withPlanCount(planCount, "modèles", "tous les")} : {formatFcfa(cataloguePrice())}, déduits eux aussi de vos plans.
+        réunit les plans et devis de {withPlanCount(planCount, "modèles", "tous les")} : {formatFcfa(cataloguePrice())}, déduits eux aussi de vos plans complets.
       </p>
     </div>
   );
