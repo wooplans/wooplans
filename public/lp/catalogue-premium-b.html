@@ -271,6 +271,7 @@ footer a{color:rgba(255,255,255,.7)}
 .ckform .dial{position:relative;flex-shrink:0;display:flex;align-items:center;gap:4px;min-height:50px;padding:0 12px 0 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;font-weight:600}
 .ckform .dial small{font-size:11px;color:var(--gray)}
 .ckform .dial select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;font-size:16px}
+.ckform .promo-link{justify-self:start;margin-top:-6px;font-size:13.5px;font-weight:600;color:var(--teal);text-decoration:underline;background:none;padding:0}
 .ckform .err{background:rgba(199,91,58,.1);color:var(--red);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600}
 .ckform .cta{min-height:54px;font-size:16.5px;margin-top:2px}
 .ckform .secure{text-align:center;font-size:12.5px;color:var(--gray);margin-top:-4px}
@@ -640,6 +641,8 @@ footer a{color:rgba(255,255,255,.7)}
           <input id="ckPhone" name="phone" type="tel" required inputmode="tel" autocomplete="tel-national" placeholder="6 71 23 45 67">
         </div>
       </div>
+      <button type="button" class="promo-link" id="ckPromoLink" onclick="showPromo()">Code promo</button>
+      <div id="ckPromo" hidden><label for="ckCode">Code promo</label><input id="ckCode" name="discountCode" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
       <p class="err" id="ckErr" hidden></p>
       <button class="cta" type="submit" id="ckBtn">Payer 29&nbsp;000&nbsp;FCFA</button>
       <p class="secure">🔒 Paiement sécurisé par Mobile Money ou carte bancaire</p>
@@ -761,12 +764,16 @@ function guessCountry(){
     for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===d.country){sel.selectedIndex=i;setCountry(sel,true);return;}
   }).catch(function(){});
 }
+function showPromo(){
+  document.getElementById('ckPromoLink').hidden=true;document.getElementById('ckPromo').hidden=false;document.getElementById('ckCode').focus();
+}
 function pay(e){
   e.preventDefault();
   var f=document.getElementById('ckForm'),err=document.getElementById('ckErr'),btn=document.getElementById('ckBtn');
   var el=function(n){return f.elements.namedItem(n)},cc=el('countryCode'),raw=el('phone').value;
   var d={ctaId:ckCta,name:el('name').value.trim(),email:el('email').value.trim(),countryCode:cc.value,phone:raw.replace(/\D/g,'')};
-  if(WAJUB)d.provider='wajub';
+  var code=el('discountCode').value.trim();
+  if(code)d.discountCode=code;else if(WAJUB)d.provider='wajub';
   var dial=cc.options[cc.selectedIndex].getAttribute('data-dial');
   if(dial&&d.phone.indexOf(dial)===0&&/^\s*\+/.test(raw))d.phone=d.phone.slice(dial.length);
   else if(dial&&d.phone.indexOf('00'+dial)===0)d.phone=d.phone.slice(dial.length+2);
@@ -776,7 +783,7 @@ function pay(e){
     .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})
     .then(function(r){
       if(!r.ok||!r.j.url)throw new Error(r.j&&r.j.error||'');
-      wpCapture('checkout_redirect',{cta_id:ckCta,provider:r.j.mode==='wajub'?'wajub':'chariow'});location.href=r.j.url;
+      wpCapture('checkout_redirect',{cta_id:ckCta,provider:r.j.mode==='wajub'?'wajub':'chariow',promo:!!code});location.href=r.j.url;
     })
     .catch(function(x){err.textContent=x.message||"Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.";err.hidden=false;btn.disabled=false;btn.innerHTML=label});
   return false;

@@ -17,6 +17,8 @@ type Body = {
   phone?: string;
   countryCode?: string;
   ctaId?: string;
+  /** Code promo Chariow (lien « Code promo » du formulaire) : l'achat passe alors toujours par Chariow. */
+  discountCode?: string;
   /** « wajub » : formulaire Wajub de la page de vente (sinon PAYMENT_PROVIDER ou l'aperçu ?paiement=). */
   provider?: string;
 };
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest) {
   const email = normalizeEmail(body.email || "");
   const phone = (body.phone || "").replace(/\D/g, "");
   const countryCode = (body.countryCode || "CM").toUpperCase().slice(0, 2);
+  const discountCode = (body.discountCode || "").trim().slice(0, 100) || undefined;
 
   if (name.length < 2 || !EMAIL_RE.test(email) || phone.length < 6) {
     return NextResponse.json({ error: "Merci de renseigner votre nom, un email valide et votre numéro." }, { status: 400 });
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
   if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
   if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
 
-  const provider = paymentProvider(body.provider || request.cookies.get(PAY_COOKIE)?.value);
+  const provider = discountCode ? "chariow" : paymentProvider(body.provider || request.cookies.get(PAY_COOKIE)?.value);
   const checkout =
     provider === "wajub"
       ? await createWajubCheckout({
@@ -71,6 +74,7 @@ export async function POST(request: NextRequest) {
           redirectUrl: siteUrl(`/merci?i=${intentId}`),
           metadata,
           customerIp: clientIp(request.headers),
+          discountCode,
         });
 
   if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });

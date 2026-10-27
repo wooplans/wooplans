@@ -71,7 +71,8 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   // Paiement B : formulaire court sur la page puis page de paiement (/api/checkout), sans widget Chariow.
   assert.match(b, /id="ckForm"/);
   assert.match(b, /fetch\('\/api\/checkout'/);
-  assert.doesNotMatch(b, /chariow-widget|widget\.min\.js|[Cc]ode promo/);
+  assert.doesNotMatch(b, /chariow-widget|widget\.min\.js/);
+  assert.match(b, /name="discountCode"/);
 });
 
 test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
