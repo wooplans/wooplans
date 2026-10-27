@@ -10,8 +10,8 @@ interface __BaseEnv_CloudflareEnv {
 	ASSETS: Fetcher;
 	SITE_URL: "https://www.wooplans.com";
 	CHARIOW_STORE_DOMAIN: "wooplans.mychariow.shop";
-	CHARIOW_CATALOGUE_PRODUCT_ID: "prd_41k85hc0";
-	CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS: "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx";
+	CHARIOW_CATALOGUE_PRODUCT_ID: "prd_9cbatg";
+	CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS: "prd_41k85hc0,prd_kufwer,prd_icqox6,prd_dt190e,prd_27sozapx";
 	CHARIOW_PLAN_PRODUCT_ID: string;
 	SALES_PAGE_B_SHARE: "0";
 	PAYMENT_PROVIDER: string;

@@ -62,7 +62,7 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   assert.match(a, /var WP_VARIANT='a'/);
   assert.match(b, /var WP_VARIANT='b'/);
   for (const page of [a, b]) assert.doesNotMatch(page, /237653769998/);
-  assert.match(a, /data-product-id="prd_41k85hc0"/);
+  assert.match(a, /data-product-id="prd_9cbatg"/);
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
   assert.match(b, /data-wp-preview/);

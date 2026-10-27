@@ -63,8 +63,13 @@ for (const [from, to] of Object.entries(redirects)) {
 const sales = await get("/catalogue-premium");
 const salesHtml = await sales.text();
 ok("GET /catalogue-premium", sales.status === 200, String(sales.status));
-ok("widget Chariow présent", salesHtml.includes("chariow-widget"));
-ok("produit Snap prd_41k85hc0 présent", salesHtml.includes("prd_41k85hc0"));
+// A : widget Snap Chariow ; B : formulaire court du site (paiement ouvert par /api/checkout).
+if (sales.headers.get("x-page-variant") === "a") {
+  ok("widget Chariow présent", salesHtml.includes("chariow-widget"));
+  ok("produit Snap prd_9cbatg présent", salesHtml.includes("prd_9cbatg"));
+} else {
+  ok("formulaire de paiement court présent", salesHtml.includes("/api/checkout"));
+}
 ok("Pixel Meta présent", salesHtml.includes("1025626273769966") || (await (await get("/")).text()).includes("1025626273769966"));
 const bShare = Number(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"SALES_PAGE_B_SHARE"\s*:\s*"(\d+)"/)?.[1] ?? 0);
 const expectedVariant = bShare >= 100 ? "b" : bShare <= 0 ? "a" : null;
@@ -79,7 +84,7 @@ ok("page de vente B : nombre de modèles lu en base", Number(countB) > 0, countB
 const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<p class="count-line"/)?.[1] || "").match(/<article/g)?.length ?? 0;
 ok("page de vente B : galerie des modèles en vedette", galleryB > 0, `${galleryB} cartes`);
 ok("page de vente B : aperçu d'un vrai modèle (sans montants)", /data-wp-preview><article class="preview"/.test(salesBHtml) && !/class="lots"[^]*?\d{3} \d{3} FCFA/.test(salesBHtml.split("data-wp-preview")[1]?.split("</article>")[0] || ""));
-ok("page de vente B : widget Chariow prd_41k85hc0", salesBHtml.includes('data-product-id="prd_41k85hc0"'));
+ok("page de vente B : formulaire de paiement court (/api/checkout)", salesBHtml.includes("/api/checkout"));
 
 // Mesure du comportement : PostHog sur le site public, jamais sur l'administration ; plus de Microsoft Clarity
 const posthogKey = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"POSTHOG_KEY"\s*:\s*"([^"]*)"/)?.[1] || "";
