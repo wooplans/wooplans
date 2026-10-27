@@ -1,0 +1,47 @@
+name: Aperçu (version de prévisualisation)
+
+# Publie une version du Worker SANS la mettre en production : le site wooplans.com ne change pas.
+# La version reçoit une adresse propre à la branche :
+#   https://<branche>-wooplans-web.<sous-domaine>.workers.dev
+# Elle partage la base D1, les fichiers R2 et les secrets de la production : aucune migration
+# n'est appliquée ici, et les fonctions encore en test y sont activées par --var (ex. OFFRE_PROJET).
+on:
+  push:
+    branches: ["claude/**", "apercu/**"]
+    paths-ignore: ["scripts/framer/**", "docs/**", "*.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: apercu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apercu:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx opennextjs-cloudflare build
+      - name: Nom de l'aperçu (tiré de la branche)
+        run: |
+          alias=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g' | cut -c1-40 | sed -E 's/-+$//')
+          echo "ALIAS=$alias" >> "$GITHUB_ENV"
+      - name: Envoi de la version (sans déploiement)
+        run: npx opennextjs-cloudflare upload -- --preview-alias "$ALIAS" --var OFFRE_PROJET:1 --message "Aperçu ${GITHUB_REF_NAME} ${GITHUB_SHA::7}"
+      - name: Adresse de l'aperçu
+        run: |
+          sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" | jq -r .result.subdomain)
+          url="https://$ALIAS-wooplans-web.$sub.workers.dev"
+          echo "Aperçu : $url"
+          echo "### Aperçu : $url" >> "$GITHUB_STEP_SUMMARY"

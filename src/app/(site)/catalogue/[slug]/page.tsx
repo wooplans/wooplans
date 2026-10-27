@@ -5,8 +5,9 @@ import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
-import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
-import { siteUrl } from "@/lib/env";
+import { ProjectOffer, projectStartLink } from "@/components/ProjectOffer";
+import { customPlanOffer, memberBalance, projectStartPrice } from "@/lib/custom-plans";
+import { getEnv, siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
   countPublishedPlans,
@@ -50,6 +51,8 @@ export default async function PlanPage({ params }: Props) {
   const [similar, planCount] = await Promise.all([getSimilarPublicPlans(plan), countPublishedPlans()]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
+  // Offre « Démarrer mon projet » : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
+  const project = getEnv().OFFRE_PROJET === "1" && offer ? offer : null;
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const categoryPath = cataloguePath(plan.category);
   const categoryLabel = plan.category === "villa" ? "Villas" : plan.category === "duplex" ? "Duplex" : "Modèles";
@@ -92,7 +95,7 @@ export default async function PlanPage({ params }: Props) {
               <div className="mt-6 rounded-2xl bg-primary/5 p-5">
                 <p className="text-sm text-muted">Budget de construction indicatif</p>
                 <p className="mt-1 text-2xl font-bold text-primary">{budget}</p>
-                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans le Catalogue Premium.</p>
+                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans {project ? "la fiche du modèle" : "le Catalogue Premium"}.</p>
               </div>
             ) : null}
 
@@ -100,6 +103,9 @@ export default async function PlanPage({ params }: Props) {
               <PlanSpecs plan={plan} />
             </div>
 
+            {project ? (
+              <ProjectOffer plan={plan} offer={project} planCount={planCount} />
+            ) : (
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
               <ul className="mt-3 space-y-1.5 text-sm text-foreground/80">
@@ -117,6 +123,7 @@ export default async function PlanPage({ params }: Props) {
                 {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · accès à vie
               </p>
             </div>
+            )}
           </div>
         </div>
 
@@ -144,10 +151,12 @@ export default async function PlanPage({ params }: Props) {
           <div className="card relative overflow-hidden p-6">
             <h2 className="text-lg font-semibold">Distribution cotée</h2>
             <p className="mt-2 text-sm text-foreground/70">
-              Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium.
+              {project
+                ? "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est dans la fiche du modèle, avec le devis détaillé."
+                : "Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium."}
             </p>
             <div className="mt-5 grid h-40 place-items-center rounded-xl bg-[repeating-linear-gradient(45deg,#eef2f4,#eef2f4_10px,#e3e9ed_10px,#e3e9ed_20px)] text-sm font-medium text-muted">
-              🔒 Réservé au Catalogue Premium
+              {project ? "🔒 Inclus dans « Démarrer mon projet »" : "🔒 Réservé au Catalogue Premium"}
             </div>
           </div>
           <div className="card p-6">
@@ -155,7 +164,12 @@ export default async function PlanPage({ params }: Props) {
             <p className="mt-2 text-sm text-foreground/70">
               Ce modèle vous plaît ? Nos architectes l&apos;adaptent à votre terrain et réalisent le dossier complet.
             </p>
-            {offer ? (
+            {project ? (
+              <p className="mt-3 text-sm">
+                Prix fixe : <strong>{formatFcfa(project.price)}</strong>. Commencez par « Démarrer mon projet » ({formatFcfa(projectStartPrice())}) :
+                ce montant est déduit de vos plans.
+              </p>
+            ) : offer ? (
               <p className="mt-3 text-sm">
                 Prix fixe : <strong>{formatFcfa(offer.price)}</strong>. Avec le Catalogue Premium, vous payez seulement{" "}
                 <strong className="text-primary">{formatFcfa(memberBalance(offer))}</strong>.
@@ -187,12 +201,18 @@ export default async function PlanPage({ params }: Props) {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 p-3 backdrop-blur sm:hidden">
-        <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
-          {SITE.catalogueCta}
-        </Link>
+        {project ? (
+          <a href={projectStartLink(plan)} target="_blank" rel="noopener noreferrer" data-cta="plan_projet_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
+            Démarrer mon projet · {formatFcfa(projectStartPrice())}
+          </a>
+        ) : (
+          <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
+            {SITE.catalogueCta}
+          </Link>
+        )}
       </div>
       <div className="mt-16">
-        <CtaCatalogue ctaId="plan_band" />
+        <CtaCatalogue ctaId="plan_band" title={project ? "Vous hésitez encore entre plusieurs modèles ?" : undefined} />
       </div>
     </>
   );
