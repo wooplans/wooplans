@@ -1,28 +1,10 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import catalogue from "../src/config/catalogue.json" with { type: "json" };
 
 const CATALOGUE_PRICE = catalogue.price;
-import { budgetLabel, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
-
-test("variante : part 0 → A pour tous, sans cookie", () => {
-  assert.deepEqual(chooseVariant({ query: null, cookie: undefined, share: 0, random: 0 }), { variant: "a", remember: false });
-  assert.deepEqual(chooseVariant({ query: null, cookie: "b", share: 0, random: 0 }), { variant: "a", remember: false });
-});
-
-test("variante : ?variante=b force l'aperçu et le mémorise", () => {
-  assert.deepEqual(chooseVariant({ query: "B", cookie: undefined, share: 0, random: 0.9 }), { variant: "b", remember: true });
-  assert.deepEqual(chooseVariant({ query: "a", cookie: "b", share: 50, random: 0 }), { variant: "a", remember: true });
-});
-
-test("variante : tirage selon la part, puis visiteur fidèle à sa variante", () => {
-  assert.equal(chooseVariant({ query: null, cookie: undefined, share: 50, random: 0.2 }).variant, "b");
-  assert.equal(chooseVariant({ query: null, cookie: undefined, share: 50, random: 0.7 }).variant, "a");
-  assert.deepEqual(chooseVariant({ query: null, cookie: "a", share: 50, random: 0 }), { variant: "a", remember: false });
-  assert.equal(chooseVariant({ query: null, cookie: "a", share: 100, random: 0.99 }).variant, "b");
-  assert.equal(chooseVariant({ query: "x", cookie: undefined, share: Number("abc"), random: 0 }).variant, "a");
-});
+import { budgetLabel, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
 
 test("galerie : cartes échappées avec budget, modèles sans rendu ignorés", () => {
   const html = galleryHtml([
@@ -56,13 +38,14 @@ test("aperçu : intitulés des postes visibles, jamais les montants", () => {
   assert.equal(previewHtml(null), "");
 });
 
-test("pages générées : A inchangée côté offre, B alignée sur le livrable", () => {
-  const a = readFileSync(new URL("../public/lp/catalogue-premium.html", import.meta.url), "utf8");
-  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
-  assert.match(a, /var WP_VARIANT='a'/);
+const PAGE = new URL("../public/lp/catalogue-premium.html", import.meta.url);
+
+test("page de vente générée : une seule page (ancienne B), alignée sur le livrable", () => {
+  const b = readFileSync(PAGE, "utf8");
+  // Marqueur « b » gardé pour la continuité des statistiques ; l'ancienne page A n'existe plus.
   assert.match(b, /var WP_VARIANT='b'/);
-  for (const page of [a, b]) assert.doesNotMatch(page, /237653769998/);
-  assert.match(a, /data-product-id="prd_9cbatg"/);
+  assert.equal(existsSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url)), false);
+  assert.doesNotMatch(b, /237653769998/);
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
   assert.match(b, /data-wp-preview/);
@@ -75,8 +58,8 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   assert.match(b, /name="discountCode"/);
 });
 
-test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
-  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8").replace(/&nbsp;/g, " ");
+test("page de vente : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
+  const b = readFileSync(PAGE, "utf8").replace(/&nbsp;/g, " ");
   const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
   const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
   assert.equal(prices.length, 2);
@@ -93,8 +76,8 @@ test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans
   assert.equal(b.match(/data-wp-threshold/g)?.length, 5);
 });
 
-test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
-  const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
+test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
+  const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
   // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
   assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu\\.mp4\\?v=${CATALOGUE_PRICE}"`));
@@ -108,12 +91,10 @@ test("page B : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des v
 
 test("pages de vente : prix du catalogue repris de src/config/catalogue.json, sans repère restant", () => {
   const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")}`;
-  for (const file of ["catalogue-premium.html", "catalogue-premium-b.html"]) {
-    const html = readFileSync(new URL(`../public/lp/${file}`, import.meta.url), "utf8").replace(/&nbsp;/g, " ");
-    assert.doesNotMatch(html, /\{\{[A-Z_]+\}\}/);
-    assert.match(html, new RegExp(`${fcfa(CATALOGUE_PRICE)}( |<)`));
-    assert.match(html, new RegExp(`value:${CATALOGUE_PRICE},`));
-  }
+  const html = readFileSync(PAGE, "utf8").replace(/&nbsp;/g, " ");
+  assert.doesNotMatch(html, /\{\{[A-Z_]+\}\}/);
+  assert.match(html, new RegExp(`${fcfa(CATALOGUE_PRICE)}( |<)`));
+  assert.match(html, new RegExp(`value:${CATALOGUE_PRICE},`));
 });
 
 test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {

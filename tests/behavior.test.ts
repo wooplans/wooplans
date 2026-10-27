@@ -101,7 +101,7 @@ test("événements serveur : sans profil de personne ni donnée personnelle", ()
 test("pages de vente générées : PostHog à la place de Clarity, paiement exclu, consentement", () => {
   const wrangler = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
   const key = wrangler.match(/"POSTHOG_KEY"\s*:\s*"([^"]*)"/)?.[1] ?? "";
-  for (const file of ["catalogue-premium.html", "catalogue-premium-b.html"]) {
+  for (const file of ["catalogue-premium.html"]) {
     const html = readFileSync(new URL(`../public/lp/${file}`, import.meta.url), "utf8");
     assert.ok(!/clarity/i.test(html), `${file} : Clarity`);
     assert.ok(html.includes(`var PH_KEY='${key}'`), `${file} : clé PostHog différente de wrangler.jsonc (relancer scripts/build-sales-page.py)`);

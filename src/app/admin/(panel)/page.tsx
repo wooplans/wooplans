@@ -1,20 +1,18 @@
 import { DailyBars } from "@/components/admin/DailyBars";
-import { PageTitle, PeriodTabs, pct, Stat, Table } from "@/components/admin/ui";
-import { getDailySeries, getFunnelKpis, getSalesPageVariants, getSourceBreakdown, getTopCtas, getTopPlans, type Period } from "@/lib/analytics";
+import { DayPicker, PageTitle, PeriodTabs, pct, Stat, Table } from "@/components/admin/ui";
+import { getChannelBreakdown, getDailySeries, getFunnelKpis, getSalesPageStats, getTopCtas, getTopPlans } from "@/lib/analytics";
+import { localDay, parseRange } from "@/lib/date-range";
 import { formatFcfa } from "@/lib/plans";
 
-const PERIODS = [7, 30, 90, 365] as const;
-
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ jours?: string }> }) {
-  const requested = Number((await searchParams).jours);
-  const days: Period = (PERIODS as readonly number[]).includes(requested) ? (requested as Period) : 30;
-  const [k, sources, ctas, plans, series, variants] = await Promise.all([
-    getFunnelKpis(days),
-    getSourceBreakdown(days),
-    getTopCtas(days),
-    getTopPlans(days),
-    getDailySeries(days),
-    getSalesPageVariants(days),
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ jours?: string; jour?: string }> }) {
+  const range = parseRange(await searchParams);
+  const [k, breakdown, ctas, plans, series, salesPage] = await Promise.all([
+    getFunnelKpis(range),
+    getChannelBreakdown(range),
+    getTopCtas(range),
+    getTopPlans(range),
+    getDailySeries(range),
+    getSalesPageStats(range),
   ]);
   const n = (v: number) => v.toLocaleString("fr-FR");
   const funnel = [
@@ -23,10 +21,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { label: "Paiements démarrés", value: k.checkoutStarts },
     { label: "Achats confirmés", value: k.purchases },
   ];
+  const periodLabel = range.day
+    ? new Date(range.day).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+    : range.days === 365
+      ? "Les 12 derniers mois"
+      : `Les ${range.days} derniers jours`;
+  const perLabel = range.day ? "par heure" : "par jour";
+  const channelName = (c: { channel: string; paid: boolean }) => (c.paid ? `${c.channel} · publicité` : c.channel);
+  const conversion = (r: { visitors: number; purchases: number }) => (r.visitors ? pct(r.purchases / r.visitors) : "—");
 
   return (
     <>
-      <PageTitle title="Tableau de bord" subtitle="Le tunnel de vente, de la visite à l'achat." actions={<PeriodTabs current={days} base="/admin" />} />
+      <PageTitle
+        title="Tableau de bord"
+        subtitle={`${periodLabel} · heure du Cameroun`}
+        actions={
+          <>
+            <PeriodTabs current={range.day ? null : range.days} base="/admin" />
+            <DayPicker day={range.day ?? null} today={localDay(new Date())} base="/admin" />
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <Stat label="Revenu catalogue" value={formatFcfa(k.catalogueRevenue)} hint={`${n(k.purchases)} achats`} />
@@ -63,45 +78,70 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <DailyBars title="Visiteurs par jour" data={series.map((s) => ({ day: s.day, value: s.visitors }))} format={n} />
-        <DailyBars title="Revenu catalogue par jour" data={series.map((s) => ({ day: s.day, value: s.revenue }))} format={formatFcfa} />
+        <DailyBars title={`Visiteurs ${perLabel}`} data={series.map((s) => ({ day: s.day, value: s.visitors }))} format={n} />
+        <DailyBars title={`Revenu catalogue ${perLabel}`} data={series.map((s) => ({ day: s.day, value: s.revenue }))} format={formatFcfa} />
       </div>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Sources et campagnes (UTM)</h2>
-        <Table head={["Source", "Campagne", "Visiteurs", "Paiements démarrés", "Achats", "Revenu", "Conversion"]} empty={sources.length === 0}>
-          {sources.map((s) => (
-            <tr key={`${s.source}-${s.campaign}`}>
-              <td className="px-4 py-2.5 font-medium">{s.source}</td>
-              <td className="px-4 py-2.5">{s.campaign}</td>
-              <td className="px-4 py-2.5">{n(s.visitors)}</td>
-              <td className="px-4 py-2.5">{n(s.checkouts)}</td>
-              <td className="px-4 py-2.5">{n(s.purchases)}</td>
-              <td className="px-4 py-2.5">{formatFcfa(s.revenue)}</td>
-              <td className="px-4 py-2.5">{s.visitors ? pct(s.purchases / s.visitors) : "—"}</td>
+        <h2 className="mb-1 text-lg font-semibold">D&apos;où viennent les visiteurs</h2>
+        <p className="mb-3 text-sm text-muted">
+          Un canal par ligne (Facebook, YouTube, Google…). « Direct » : lien ouvert sans aucune trace de provenance (WhatsApp, appli, favori,
+          adresse tapée). Pour qu&apos;un lien soit reconnu à coup sûr, ajoutez-lui <code>?utm_source=facebook</code>, <code>youtube</code>,{" "}
+          <code>tiktok</code> ou <code>whatsapp</code>.
+        </p>
+        <Table head={["Canal", "Visiteurs", "Paiements démarrés", "Achats", "Revenu", "Conversion"]} empty={breakdown.channels.length === 0}>
+          {breakdown.channels.map((c) => (
+            <tr key={`${c.channel}-${c.paid}`}>
+              <td className="px-4 py-2.5 font-medium">{channelName(c)}</td>
+              <td className="px-4 py-2.5">{n(c.visitors)}</td>
+              <td className="px-4 py-2.5">{n(c.checkouts)}</td>
+              <td className="px-4 py-2.5">{n(c.purchases)}</td>
+              <td className="px-4 py-2.5">{c.revenue ? formatFcfa(c.revenue) : "—"}</td>
+              <td className="px-4 py-2.5">{conversion(c)}</td>
             </tr>
           ))}
         </Table>
+        {breakdown.untracked.purchases ? (
+          <p className="mt-2 text-xs text-muted">
+            + {n(breakdown.untracked.purchases)} vente{breakdown.untracked.purchases > 1 ? "s" : ""} sans visite suivie ({formatFcfa(breakdown.untracked.revenue)}),
+            importée{breakdown.untracked.purchases > 1 ? "s" : ""} de l&apos;ancienne boutique Chariow.
+          </p>
+        ) : null}
+        {breakdown.campaigns.length ? (
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium text-primary">Détail par campagne UTM ({n(breakdown.campaigns.length)})</summary>
+            <div className="mt-3">
+              <Table head={["Canal", "Campagne", "Visiteurs", "Paiements démarrés", "Achats", "Revenu"]}>
+                {breakdown.campaigns.map((c) => (
+                  <tr key={`${c.channel}-${c.paid}-${c.campaign}`}>
+                    <td className="px-4 py-2.5">{channelName(c)}</td>
+                    <td className="px-4 py-2.5 font-medium">{c.campaign}</td>
+                    <td className="px-4 py-2.5">{n(c.visitors)}</td>
+                    <td className="px-4 py-2.5">{n(c.checkouts)}</td>
+                    <td className="px-4 py-2.5">{n(c.purchases)}</td>
+                    <td className="px-4 py-2.5">{c.revenue ? formatFcfa(c.revenue) : "—"}</td>
+                  </tr>
+                ))}
+              </Table>
+            </div>
+          </details>
+        ) : null}
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-1 text-lg font-semibold">Page de vente : variantes A / B</h2>
-        <p className="mb-3 text-sm text-muted">Part du trafic envoyée sur B : variable SALES_PAGE_B_SHARE. Aperçu de B : /catalogue-premium?variante=b. « Widget prêt » n&apos;est mesuré que sur B.</p>
-        <Table head={["Variante", "Visiteurs", "Ont cliqué", "Widget prêt", "Paiements démarrés", "Échoués", "Abandonnés", "Achats", "Conversion", "WhatsApp"]}>
-          {variants.map((v) => (
-            <tr key={v.variant}>
-              <td className="px-4 py-2.5 font-medium">{v.variant.toUpperCase()}</td>
-              <td className="px-4 py-2.5">{n(v.visitors)}</td>
-              <td className="px-4 py-2.5">{n(v.ctaVisitors)}{v.visitors ? ` (${pct(v.ctaVisitors / v.visitors)})` : ""}</td>
-              <td className="px-4 py-2.5">{v.variant === "b" ? n(v.widgetReady) : "—"}</td>
-              <td className="px-4 py-2.5">{n(v.checkouts)}</td>
-              <td className="px-4 py-2.5">{n(v.failed)}</td>
-              <td className="px-4 py-2.5">{n(v.abandoned)}</td>
-              <td className="px-4 py-2.5">{n(v.purchases)}</td>
-              <td className="px-4 py-2.5">{v.visitors ? pct(v.conversion) : "—"}</td>
-              <td className="px-4 py-2.5">{n(v.whatsapp)}</td>
-            </tr>
-          ))}
+        <h2 className="mb-1 text-lg font-semibold">Page de vente</h2>
+        <p className="mb-3 text-sm text-muted">Une seule page de vente (l&apos;ancienne variante A est retirée et exclue des chiffres).</p>
+        <Table head={["Visiteurs", "Ont cliqué", "Paiements démarrés", "Échoués", "Abandonnés", "Achats", "Conversion", "WhatsApp"]}>
+          <tr>
+            <td className="px-4 py-2.5 font-medium">{n(salesPage.visitors)}</td>
+            <td className="px-4 py-2.5">{n(salesPage.ctaVisitors)}{salesPage.visitors ? ` (${pct(salesPage.ctaVisitors / salesPage.visitors)})` : ""}</td>
+            <td className="px-4 py-2.5">{n(salesPage.checkouts)}</td>
+            <td className="px-4 py-2.5">{n(salesPage.failed)}</td>
+            <td className="px-4 py-2.5">{n(salesPage.abandoned)}</td>
+            <td className="px-4 py-2.5">{n(salesPage.purchases)}</td>
+            <td className="px-4 py-2.5">{salesPage.visitors ? pct(salesPage.conversion) : "—"}</td>
+            <td className="px-4 py-2.5">{n(salesPage.whatsapp)}</td>
+          </tr>
         </Table>
       </section>
 

@@ -21,9 +21,6 @@
     // Produit Chariow « Plan et devis » (type Licence : achats répétés possibles et paiement par l'API,
     // qui transmet le modèle choisi). Vide = achat en ligne indisponible, le bouton ouvre WhatsApp.
     "CHARIOW_PLAN_PRODUCT_ID": "prd_fzuj8cse",
-    // Part du trafic de /catalogue-premium envoyée sur la variante B (0 à 100).
-    // 0 = variante B visible seulement avec ?variante=b (aperçu).
-    "SALES_PAGE_B_SHARE": "100",
     // Prestataire de paiement : "chariow" ou "wajub" (Wajub seulement si WAJUB_SECRET_KEY est défini).
     // En essai, ?paiement=wajub sur /catalogue-premium ou une fiche modèle active Wajub pour ce navigateur.
     "PAYMENT_PROVIDER": "chariow",

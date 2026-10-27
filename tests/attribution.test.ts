@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { classifySource, parseAttribution } from "../src/lib/attribution.ts";
+import { channelOf, classifySource, parseAttribution } from "../src/lib/attribution.ts";
 
 test("UTM Facebook payante → social_ads", () => {
   const a = parseAttribution("https://www.wooplans.com/catalogue-premium?utm_source=facebook&utm_medium=paid&utm_campaign=cp-oct", null);
@@ -29,4 +29,26 @@ test("identifiants de clic des régies : ttclid → social_ads, gclid → search
     "social_ads",
   );
   assert.equal(parseAttribution("https://www.wooplans.com/?utm_source=youtube&utm_medium=social", null).source, "social");
+});
+
+test("canal lisible : Facebook, YouTube, Instagram, Email, Google, Direct", () => {
+  const c = (source: string, utmSource: string | null, fbclid: boolean, referrer: string | null) =>
+    channelOf({ source, utmSource, fbclid, referrer });
+  assert.deepEqual(c("social", "youtube", false, "https://www.wooplans.com/"), { channel: "YouTube", paid: false });
+  assert.deepEqual(c("social_ads", "facebook", true, null), { channel: "Facebook", paid: true });
+  assert.equal(c("social", null, true, "http://m.facebook.com/").channel, "Facebook");
+  assert.equal(c("social", null, false, "https://lm.facebook.com/").channel, "Facebook");
+  assert.equal(c("social", null, true, null).channel, "Facebook");
+  assert.equal(c("social", null, true, "https://l.instagram.com/").channel, "Instagram");
+  assert.equal(c("social", null, false, "android-app://com.google.android.youtube/").channel, "YouTube");
+  assert.equal(c("search", null, false, "android-app://com.google.android.gm/").channel, "Email");
+  assert.equal(c("search", null, false, "https://mail.google.com/").channel, "Email");
+  assert.equal(c("search", null, false, "android-app://com.google.android.googlequicksearchbox/").channel, "Google et moteurs");
+  assert.equal(c("search", null, false, "https://www.bing.com/").channel, "Google et moteurs");
+  assert.equal(c("chatgpt.com", "chatgpt.com", false, null).channel, "ChatGPT et IA");
+  assert.equal(c("referral", null, false, "https://l.wl.co/").channel, "WhatsApp");
+  assert.equal(c("referral", null, false, "https://teams.public.onecdn.static.microsoft/").channel, "Autres sites");
+  assert.equal(c("social_ads", null, false, null).channel, "TikTok");
+  assert.deepEqual(c("direct", null, false, "https://www.wooplans.com/catalogue"), { channel: "Direct", paid: false });
+  assert.deepEqual(c("direct", null, false, null), { channel: "Direct", paid: false });
 });

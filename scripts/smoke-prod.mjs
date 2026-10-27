@@ -63,28 +63,15 @@ for (const [from, to] of Object.entries(redirects)) {
 const sales = await get("/catalogue-premium");
 const salesHtml = await sales.text();
 ok("GET /catalogue-premium", sales.status === 200, String(sales.status));
-// A : widget Snap Chariow ; B : formulaire court du site (paiement ouvert par /api/checkout).
-if (sales.headers.get("x-page-variant") === "a") {
-  ok("widget Chariow présent", salesHtml.includes("chariow-widget"));
-  ok("produit Snap prd_9cbatg présent", salesHtml.includes("prd_9cbatg"));
-} else {
-  ok("formulaire de paiement court présent", salesHtml.includes("/api/checkout"));
-}
+ok("formulaire de paiement court (/api/checkout)", salesHtml.includes("/api/checkout"));
 ok("Pixel Meta présent", salesHtml.includes("1025626273769966") || (await (await get("/")).text()).includes("1025626273769966"));
-const bShare = Number(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"SALES_PAGE_B_SHARE"\s*:\s*"(\d+)"/)?.[1] ?? 0);
-const expectedVariant = bShare >= 100 ? "b" : bShare <= 0 ? "a" : null;
-ok(`page de vente : variante servie (part B ${bShare} %)`, expectedVariant ? sales.headers.get("x-page-variant") === expectedVariant : ["a", "b"].includes(sales.headers.get("x-page-variant") || ""), sales.headers.get("x-page-variant") || "absent");
 ok("page de vente : WhatsApp du support 237694327885", salesHtml.includes("237694327885") && !salesHtml.includes("237653769998"));
-const salesB = await get("/catalogue-premium?variante=b");
-const salesBHtml = await salesB.text();
-ok("page de vente B : aperçu ?variante=b", salesB.status === 200 && salesB.headers.get("x-page-variant") === "b", `${salesB.status} ${salesB.headers.get("x-page-variant")}`);
-ok("page de vente B : cookie d'aperçu posé", /wp_lp=b/.test(salesB.headers.get("set-cookie") || ""));
-const countB = salesBHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
-ok("page de vente B : nombre de modèles lu en base", Number(countB) > 0, countB || "absent");
-const galleryB = (salesBHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<p class="count-line"/)?.[1] || "").match(/<article/g)?.length ?? 0;
-ok("page de vente B : galerie des modèles en vedette", galleryB > 0, `${galleryB} cartes`);
-ok("page de vente B : aperçu d'un vrai modèle (sans montants)", /data-wp-preview><article class="preview"/.test(salesBHtml) && !/class="lots"[^]*?\d{3} \d{3} FCFA/.test(salesBHtml.split("data-wp-preview")[1]?.split("</article>")[0] || ""));
-ok("page de vente B : formulaire de paiement court (/api/checkout)", salesBHtml.includes("/api/checkout"));
+const count = salesHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
+ok("page de vente : nombre de modèles lu en base", Number(count) > 0, count || "absent");
+const gallery = (salesHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<p class="count-line"/)?.[1] || "").match(/<article/g)?.length ?? 0;
+ok("page de vente : galerie des modèles en vedette", gallery > 0, `${gallery} cartes`);
+ok("page de vente : aperçu d'un vrai modèle (sans montants)", /data-wp-preview><article class="preview"/.test(salesHtml) && !/class="lots"[^]*?\d{3} \d{3} FCFA/.test(salesHtml.split("data-wp-preview")[1]?.split("</article>")[0] || ""));
+ok("page de vente : plus de variante A (aucun widget Chariow)", !salesHtml.includes("chariow-widget"));
 
 // Mesure du comportement : PostHog sur le site public, jamais sur l'administration ; plus de Microsoft Clarity
 const posthogKey = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"POSTHOG_KEY"\s*:\s*"([^"]*)"/)?.[1] || "";

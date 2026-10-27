@@ -1,5 +1,8 @@
-import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, ne, sql, sum } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, lt, ne, sql, sum, type SQL } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { getDb, schema } from "@/db";
+import { channelOf, type Channel } from "@/lib/attribution";
+import { TZ_OFFSET_MS, localDay, type Range } from "@/lib/date-range";
 import { getEnv } from "@/lib/env";
 
 /** Produit Chariow « Plan et devis » : ses ventes sont comptées à part du Catalogue Premium. */
@@ -7,26 +10,24 @@ function planDevisProductId() {
   return getEnv().CHARIOW_PLAN_PRODUCT_ID || "__aucun__";
 }
 
-export type Period = 7 | 30 | 90 | 365;
+/** Vue de la page de vente actuelle (marqueur « b » gardé de l'ancien test A/B, pour la continuité des chiffres). */
+const SALES_PAGE_VIEW = "variant_b";
 
-export function periodStart(days: Period) {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - (days - 1));
-  return d;
+/** Colonne dans la période [since, until[. */
+function within(col: SQLiteColumn, range: Range): SQL {
+  return and(gte(col, range.since), lt(col, range.until))!;
 }
 
 /** Indicateurs du tunnel : visites → page de vente → paiement démarré → achat. */
-export async function getFunnelKpis(days: Period) {
+export async function getFunnelKpis(range: Range) {
   const db = getDb();
-  const since = periodStart(days);
   const ev = schema.events;
 
-  const [visitors] = await db.select({ n: count() }).from(schema.visitors).where(gte(schema.visitors.createdAt, since));
+  const [visitors] = await db.select({ n: count() }).from(schema.visitors).where(within(schema.visitors.createdAt, range));
   const eventCounts = await db
     .select({ type: ev.type, n: count(), visitors: countDistinct(ev.visitorId) })
     .from(ev)
-    .where(gte(ev.createdAt, since))
+    .where(within(ev.createdAt, range))
     .groupBy(ev.type);
   const byType = Object.fromEntries(eventCounts.map((e) => [e.type, e]));
 
@@ -34,32 +35,38 @@ export async function getFunnelKpis(days: Period) {
   const [catalogue] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
+    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
   const [planDevis] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
   const [checkouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(isNull(schema.checkoutIntents.planSlug), gte(schema.checkoutIntents.createdAt, since)));
+    .where(and(isNull(schema.checkoutIntents.planSlug), within(schema.checkoutIntents.createdAt, range)));
   const [planDevisCheckouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(isNotNull(schema.checkoutIntents.planSlug), gte(schema.checkoutIntents.createdAt, since)));
+    .where(and(isNotNull(schema.checkoutIntents.planSlug), within(schema.checkoutIntents.createdAt, range)));
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), gte(schema.sales.occurredAt, since)));
+    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
   const [customPlans] = await db
     .select({ revenue: sum(schema.leadPayments.amount) })
     .from(schema.leadPayments)
-    .where(gte(schema.leadPayments.paidAt, since));
-  const [newLeads] = await db.select({ n: count() }).from(schema.leads).where(gte(schema.leads.createdAt, since));
-  const [newMembers] = await db.select({ n: count() }).from(schema.members).where(gte(schema.members.createdAt, since));
+    .where(within(schema.leadPayments.paidAt, range));
+  const [newLeads] = await db.select({ n: count() }).from(schema.leads).where(within(schema.leads.createdAt, range));
+  const [newMembers] = await db.select({ n: count() }).from(schema.members).where(within(schema.members.createdAt, range));
   const [activeMembers] = await db.select({ n: count() }).from(schema.members).where(eq(schema.members.status, "active"));
 
-  const salesPageVisitors = byType.sales_page_view?.visitors ?? 0;
+  // Page de vente : seule la page actuelle (marqueur « variant_b ») compte ; l'ancienne page A est retirée.
+  const [salesPage] = await db
+    .select({ visitors: countDistinct(ev.visitorId) })
+    .from(ev)
+    .where(and(eq(ev.type, "sales_page_view"), eq(ev.ctaId, SALES_PAGE_VIEW), within(ev.createdAt, range)));
+
+  const salesPageVisitors = salesPage?.visitors ?? 0;
   const purchases = catalogue?.n ?? 0;
   return {
     visitors: visitors?.n ?? 0,
@@ -83,155 +90,166 @@ export async function getFunnelKpis(days: Period) {
   };
 }
 
-/** Performance par source et campagne UTM (visiteurs → achats → revenu). */
-export async function getSourceBreakdown(days: Period) {
+type ChannelRow = { channel: Channel; paid: boolean; visitors: number; checkouts: number; purchases: number; revenue: number };
+type CampaignRow = ChannelRow & { campaign: string };
+
+/**
+ * Performance par canal (Facebook, YouTube, Google…), visiteurs → paiements démarrés → achats → revenu,
+ * puis détail par campagne UTM. Achats et paiements sont rattachés au canal de la visite qui les a lancés ;
+ * les ventes sans visite suivie (import de l'ancienne boutique Chariow) sont comptées à part.
+ */
+export async function getChannelBreakdown(range: Range) {
   const db = getDb();
-  const since = periodStart(days);
   const v = schema.visitors;
-  const rows = await db
-    .select({
-      source: v.source,
-      campaign: sql<string>`coalesce(${v.utmCampaign}, '—')`,
-      visitors: count(v.id),
-    })
-    .from(v)
-    .where(gte(v.createdAt, since))
-    .groupBy(v.source, sql`coalesce(${v.utmCampaign}, '—')`)
-    .orderBy(desc(count(v.id)))
-    .limit(30);
+  // Hôte du référent (« https://m.facebook.com/x » → « m.facebook.com ») : regroupe les visites par site d'origine.
+  const rest = sql`substr(${v.referrer}, instr(${v.referrer}, '://') + 3)`;
+  const host = sql<string | null>`case when ${v.referrer} is null then null else substr(${rest}, 1, instr(${rest} || '/', '/') - 1) end`;
+  const campaign = sql<string>`coalesce(${v.utmCampaign}, '')`;
+  const dims = { source: v.source, utmSource: v.utmSource, fbclid: v.fbclid, host, campaign };
+  const groupBy = [v.source, v.utmSource, v.fbclid, host, campaign] as const;
 
-  const sales = await db
-    .select({
-      source: sql<string>`coalesce(${schema.sales.source}, 'inconnue')`,
-      campaign: sql<string>`coalesce(${schema.sales.utmCampaign}, '—')`,
-      purchases: count(),
-      revenue: sum(schema.sales.amount),
-    })
-    .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, since)))
-    .groupBy(sql`coalesce(${schema.sales.source}, 'inconnue')`, sql`coalesce(${schema.sales.utmCampaign}, '—')`);
+  const [visits, intents, sales] = await Promise.all([
+    db.select({ ...dims, n: count() }).from(v).where(within(v.createdAt, range)).groupBy(...groupBy),
+    db
+      .select({ ...dims, n: count() })
+      .from(schema.checkoutIntents)
+      .leftJoin(v, eq(v.id, schema.checkoutIntents.visitorId))
+      .where(within(schema.checkoutIntents.createdAt, range))
+      .groupBy(...groupBy),
+    db
+      .select({ ...dims, n: count(), revenue: sum(schema.sales.amount) })
+      .from(schema.sales)
+      .leftJoin(v, eq(v.id, schema.sales.visitorId))
+      .where(and(eq(schema.sales.status, "completed"), within(schema.sales.occurredAt, range)))
+      .groupBy(...groupBy),
+  ]);
 
-  const checkouts = await db
-    .select({
-      source: sql<string>`coalesce(${v.source}, 'inconnue')`,
-      campaign: sql<string>`coalesce(${v.utmCampaign}, '—')`,
-      n: count(),
-    })
-    .from(schema.checkoutIntents)
-    .leftJoin(v, eq(v.id, schema.checkoutIntents.visitorId))
-    .where(gte(schema.checkoutIntents.createdAt, since))
-    .groupBy(sql`coalesce(${v.source}, 'inconnue')`, sql`coalesce(${v.utmCampaign}, '—')`);
-
-  const key = (s: string, c: string) => `${s}|${c}`;
-  const map = new Map<string, { source: string; campaign: string; visitors: number; checkouts: number; purchases: number; revenue: number }>();
-  for (const r of rows) map.set(key(r.source, r.campaign), { ...r, checkouts: 0, purchases: 0, revenue: 0 });
-  for (const c of checkouts) {
-    const k = key(c.source, c.campaign);
-    const row = map.get(k) ?? { source: c.source, campaign: c.campaign, visitors: 0, checkouts: 0, purchases: 0, revenue: 0 };
-    row.checkouts = c.n;
-    map.set(k, row);
+  const channels = new Map<string, ChannelRow>();
+  const campaigns = new Map<string, CampaignRow>();
+  const untracked = { purchases: 0, revenue: 0 };
+  type Dims = { n: number; source: string | null; utmSource: string | null; fbclid: boolean | null; host: string | null; campaign: string };
+  const add = (r: Dims, field: "visitors" | "checkouts" | "purchases", revenue = 0) => {
+    const { channel, paid } = channelOf({
+      source: r.source ?? "direct",
+      utmSource: r.utmSource,
+      fbclid: Boolean(r.fbclid),
+      referrer: r.host ? `https://${r.host}/` : null,
+    });
+    const blank = { channel, paid, visitors: 0, checkouts: 0, purchases: 0, revenue: 0 };
+    const c = channels.get(`${channel}|${paid}`) ?? { ...blank };
+    c[field] += r.n;
+    c.revenue += revenue;
+    channels.set(`${channel}|${paid}`, c);
+    if (!r.campaign) return;
+    const k = `${channel}|${paid}|${r.campaign}`;
+    const row = campaigns.get(k) ?? { ...blank, campaign: r.campaign };
+    row[field] += r.n;
+    row.revenue += revenue;
+    campaigns.set(k, row);
+  };
+  for (const r of visits) add(r, "visitors");
+  for (const r of intents) if (r.source !== null) add(r, "checkouts");
+  for (const r of sales) {
+    if (r.source === null) {
+      untracked.purchases += r.n;
+      untracked.revenue += Number(r.revenue ?? 0);
+    } else add(r, "purchases", Number(r.revenue ?? 0));
   }
-  for (const s of sales) {
-    const k = key(s.source, s.campaign);
-    const row = map.get(k) ?? { source: s.source, campaign: s.campaign, visitors: 0, checkouts: 0, purchases: 0, revenue: 0 };
-    row.purchases = s.purchases;
-    row.revenue = Number(s.revenue ?? 0);
-    map.set(k, row);
-  }
-  return [...map.values()].sort((a, b) => b.revenue - a.revenue || b.visitors - a.visitors);
+  const order = (a: ChannelRow, b: ChannelRow) => b.revenue - a.revenue || b.purchases - a.purchases || b.visitors - a.visitors;
+  return {
+    channels: [...channels.values()].sort(order),
+    campaigns: [...campaigns.values()].sort(order),
+    untracked,
+  };
 }
 
-export async function getTopCtas(days: Period) {
+export async function getTopCtas(range: Range) {
   const ev = schema.events;
   return getDb()
     .select({ ctaId: ev.ctaId, n: count() })
     .from(ev)
-    .where(and(eq(ev.type, "cta_click"), gte(ev.createdAt, periodStart(days))))
+    .where(and(eq(ev.type, "cta_click"), within(ev.createdAt, range)))
     .groupBy(ev.ctaId)
     .orderBy(desc(count()))
     .limit(10);
 }
 
-export async function getTopPlans(days: Period) {
+export async function getTopPlans(range: Range) {
   const ev = schema.events;
   return getDb()
     .select({ slug: ev.planSlug, n: count() })
     .from(ev)
-    .where(and(eq(ev.type, "plan_view"), gte(ev.createdAt, periodStart(days))))
+    .where(and(eq(ev.type, "plan_view"), within(ev.createdAt, range)))
     .groupBy(ev.planSlug)
     .orderBy(desc(count()))
     .limit(10);
 }
 
-/** Série journalière : visiteurs et achats. */
-export async function getDailySeries(days: Period) {
+/**
+ * Série visiteurs / achats / revenu catalogue : par jour, ou par heure quand un seul jour est demandé
+ * (heure du Cameroun). `day` : AAAA-MM-JJ, ou « HH » pour une série horaire.
+ */
+export async function getDailySeries(range: Range) {
   const db = getDb();
-  const since = periodStart(days);
-  const day = (col: typeof schema.visitors.createdAt | typeof schema.sales.occurredAt) =>
-    sql<string>`strftime('%Y-%m-%d', ${col} / 1000, 'unixepoch')`;
+  const hourly = range.days === 1;
+  const offset = TZ_OFFSET_MS / 1000;
+  const bucket = (col: typeof schema.visitors.createdAt | typeof schema.sales.occurredAt) =>
+    sql<string>`strftime(${hourly ? "%H" : "%Y-%m-%d"}, ${col} / 1000 + ${offset}, 'unixepoch')`;
   const visitors = await db
-    .select({ day: day(schema.visitors.createdAt), n: count() })
+    .select({ day: bucket(schema.visitors.createdAt), n: count() })
     .from(schema.visitors)
-    .where(gte(schema.visitors.createdAt, since))
-    .groupBy(day(schema.visitors.createdAt));
+    .where(within(schema.visitors.createdAt, range))
+    .groupBy(bucket(schema.visitors.createdAt));
   const sales = await db
-    .select({ day: day(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
+    .select({ day: bucket(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, since)))
-    .groupBy(day(schema.sales.occurredAt));
+    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range)))
+    .groupBy(bucket(schema.sales.occurredAt));
 
-  const out: { day: string; visitors: number; purchases: number; revenue: number }[] = [];
-  for (let i = 0; i < days; i++) {
-    const d = new Date(since.getTime() + i * 86400_000).toISOString().slice(0, 10);
-    out.push({
-      day: d,
-      visitors: visitors.find((v) => v.day === d)?.n ?? 0,
-      purchases: sales.find((s) => s.day === d)?.n ?? 0,
-      revenue: Number(sales.find((s) => s.day === d)?.revenue ?? 0),
-    });
-  }
-  return out;
+  const keys = hourly
+    ? Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"))
+    : Array.from({ length: range.days }, (_, i) => localDay(new Date(range.since.getTime() + i * 86_400_000)));
+  return keys.map((day) => ({
+    day,
+    visitors: visitors.find((v) => v.day === day)?.n ?? 0,
+    purchases: sales.find((s) => s.day === day)?.n ?? 0,
+    revenue: Number(sales.find((s) => s.day === day)?.revenue ?? 0),
+  }));
 }
 
 /**
- * Test A/B de la page de vente : la variante est portée par cta_id
- * (« variant_a » pour la vue de page, suffixe « @a » / « @b » pour les clics, intentions et achats).
+ * Tunnel de la page de vente : vues, clics, paiements démarrés, échoués, abandonnés, achats, WhatsApp.
+ * Seuls les événements de la page actuelle (« variant_b », suffixe « @b ») sont comptés : ceux de l'ancienne
+ * page A, retirée, sont écartés pour des chiffres fiables.
  */
-export async function getSalesPageVariants(days: Period) {
+export async function getSalesPageStats(range: Range) {
   const db = getDb();
-  const since = periodStart(days);
   const ev = schema.events;
-  const variantOf = (col: typeof ev.ctaId | typeof schema.checkoutIntents.ctaId) =>
-    sql<string>`case when ${col} = 'variant_b' or ${col} like '%@b' then 'b' when ${col} = 'variant_a' or ${col} like '%@a' then 'a' end`;
+  const current = (col: typeof ev.ctaId | typeof schema.checkoutIntents.ctaId) => sql`(${col} = ${SALES_PAGE_VIEW} or ${col} like '%@b')`;
 
   const events = await db
-    .select({ variant: variantOf(ev.ctaId), type: ev.type, n: count(), visitors: countDistinct(ev.visitorId) })
+    .select({ type: ev.type, n: count(), visitors: countDistinct(ev.visitorId) })
     .from(ev)
-    .where(and(gte(ev.createdAt, since), sql`${ev.type} in ('sales_page_view','cta_click','widget_ready','whatsapp_click','purchase')`))
-    .groupBy(variantOf(ev.ctaId), ev.type);
+    .where(and(within(ev.createdAt, range), current(ev.ctaId), sql`${ev.type} in ('sales_page_view','cta_click','whatsapp_click','purchase')`))
+    .groupBy(ev.type);
   const intents = await db
-    .select({ variant: variantOf(schema.checkoutIntents.ctaId), status: schema.checkoutIntents.status, n: count() })
+    .select({ status: schema.checkoutIntents.status, n: count() })
     .from(schema.checkoutIntents)
-    .where(gte(schema.checkoutIntents.createdAt, since))
-    .groupBy(variantOf(schema.checkoutIntents.ctaId), schema.checkoutIntents.status);
+    .where(and(within(schema.checkoutIntents.createdAt, range), current(schema.checkoutIntents.ctaId)))
+    .groupBy(schema.checkoutIntents.status);
 
-  return (["a", "b"] as const).map((variant) => {
-    const e = (type: string) => events.find((r) => r.variant === variant && r.type === type);
-    const i = (status?: string) =>
-      intents.filter((r) => r.variant === variant && (!status || r.status === status)).reduce((sum, r) => sum + r.n, 0);
-    const visitors = e("sales_page_view")?.visitors ?? 0;
-    const purchases = e("purchase")?.n ?? 0;
-    return {
-      variant,
-      visitors,
-      ctaVisitors: e("cta_click")?.visitors ?? 0,
-      widgetReady: e("widget_ready")?.n ?? 0,
-      checkouts: i(),
-      failed: i("failed"),
-      abandoned: i("abandoned"),
-      purchases,
-      whatsapp: e("whatsapp_click")?.n ?? 0,
-      conversion: visitors ? purchases / visitors : 0,
-    };
-  });
+  const e = (type: string) => events.find((r) => r.type === type);
+  const i = (status?: string) => intents.filter((r) => !status || r.status === status).reduce((sum, r) => sum + r.n, 0);
+  const visitors = e("sales_page_view")?.visitors ?? 0;
+  const purchases = e("purchase")?.n ?? 0;
+  return {
+    visitors,
+    ctaVisitors: e("cta_click")?.visitors ?? 0,
+    checkouts: i(),
+    failed: i("failed"),
+    abandoned: i("abandoned"),
+    purchases,
+    whatsapp: e("whatsapp_click")?.n ?? 0,
+    conversion: visitors ? purchases / visitors : 0,
+  };
 }

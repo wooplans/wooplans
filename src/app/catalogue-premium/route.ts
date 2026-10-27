@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
 import { cataloguePrice } from "@/lib/site";
 import { PAY_COOKIE, paymentProvider } from "@/lib/wajub";
-import { VARIANT_COOKIE, chooseVariant, galleryHtml, perModelLabel, previewHtml, priceStep, type GalleryPlan } from "@/lib/sales-page";
+import { galleryHtml, perModelLabel, previewHtml, priceStep, type GalleryPlan } from "@/lib/sales-page";
 
 const GALLERY_SIZE = 8;
 const DATA_TTL_MS = 5 * 60_000;
@@ -42,65 +42,49 @@ async function salesPageData() {
 }
 
 /**
- * Page de vente : HTML statique optimisé (public/lp/), servi sous l'URL canonique /catalogue-premium.
- * Variante A : catalogue-premium.html. Variante B : catalogue-premium-b.html. Les deux sont complétées ici
- * par HTMLRewriter, en flux : nombre de modèles publiés (A et B), galerie et aperçu (B).
+ * Page de vente : HTML statique optimisé (public/lp/catalogue-premium.html), servi sous l'URL canonique
+ * /catalogue-premium et complété ici par HTMLRewriter, en flux : nombre de modèles publiés, galerie et aperçu.
  */
 export async function GET(request: Request) {
   const env = getEnv();
   const url = new URL(request.url);
-  const cookie = request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${VARIANT_COOKIE}=([ab])`))?.[1];
-  const share = Number(env.SALES_PAGE_B_SHARE ?? "0");
-  const { variant, remember } = chooseVariant({ query: url.searchParams.get("variante"), cookie, share, random: Math.random() });
 
-  const asset = await env.ASSETS!.fetch(new URL(variant === "b" ? "/lp/catalogue-premium-b" : "/lp/catalogue-premium", request.url));
+  const asset = await env.ASSETS!.fetch(new URL("/lp/catalogue-premium", request.url));
   if (!asset.ok) return new Response("Page indisponible", { status: 502 });
 
   const headers = new Headers({
     "Content-Type": "text/html; charset=utf-8",
-    // Réponse publique tant que tout le monde reçoit A ; privée dès qu'un tirage ou un aperçu intervient.
-    "Cache-Control": share === 0 && variant === "a" && !url.searchParams.has("variante") ? "public, max-age=300, s-maxage=300" : "private, max-age=300",
+    "Cache-Control": "public, max-age=300, s-maxage=300",
     "X-Content-Type-Options": "nosniff",
-    "X-Page-Variant": variant,
   });
-  if (remember) headers.append("Set-Cookie", `${VARIANT_COOKIE}=${variant}; Path=/; Max-Age=2592000; SameSite=Lax; Secure`);
 
-  // Prestataire de paiement (variante B) : PAYMENT_PROVIDER, ou l'aperçu ?paiement=wajub|chariow gardé 7 jours.
+  // Prestataire de paiement : PAYMENT_PROVIDER, ou l'aperçu ?paiement=wajub|chariow gardé 7 jours.
   const payQuery = url.searchParams.get("paiement");
   const payCookie = request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${PAY_COOKIE}=(wajub|chariow)`))?.[1];
   if (payQuery === "wajub" || payQuery === "chariow") {
     headers.append("Set-Cookie", `${PAY_COOKIE}=${payQuery}; Path=/; Max-Age=604800; SameSite=Lax; Secure`);
   }
-  const wajub = variant === "b" && paymentProvider(payQuery || payCookie) === "wajub";
+  const wajub = paymentProvider(payQuery || payCookie) === "wajub";
   if (wajub || payQuery || payCookie) headers.set("Cache-Control", "private, no-store");
   const payRewriter = new HTMLRewriter().on("html", { element: (el) => void (wajub && el.setAttribute("data-pay", "wajub")) });
 
   const data = await salesPageData().catch((error) => {
-    console.error(`Page de vente ${variant.toUpperCase()} : données indisponibles`, error);
+    console.error("Page de vente : données indisponibles", error);
     return null;
   });
   if (!data || data.count === 0) return payRewriter.transform(new Response(asset.body, { status: 200, headers }));
   const count = String(data.count);
-  const rewriter = new HTMLRewriter().on("[data-wp-count]", { element: (el) => void el.setInnerContent(count) });
-  if (variant === "a") {
-    // Titre et balises meta de la page A : « 50+ » remplacé par le nombre de modèles publiés.
+  const rewriter = new HTMLRewriter()
+    .on("[data-wp-count]", { element: (el) => void el.setInnerContent(count) })
+    .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
+    .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) })
+    .on("[data-wp-per-model]", { element: (el) => void el.setInnerContent(perModelLabel(data.count, cataloguePrice())) });
+  // Palier de prix (100 modèles) : modèles restants et jauge ; mentions retirées une fois le palier atteint.
+  const step = priceStep(data.count);
+  if (step.reached) rewriter.on("[data-wp-threshold]", { element: (el) => void el.remove() });
+  else
     rewriter
-      .on("title", { text: (t) => void (t.text.includes("50+") && t.replace(t.text.replaceAll("50+", count))) })
-      .on('meta[name="description"], meta[property="og:title"]', {
-        element: (el) => void el.setAttribute("content", (el.getAttribute("content") ?? "").replaceAll("50+", count)),
-      });
-  } else {
-    rewriter
-      .on("[data-wp-gallery]", { element: (el) => void el.setInnerContent(data.gallery, { html: true }) })
-      .on("[data-wp-preview]", { element: (el) => void el.setInnerContent(data.preview, { html: true }) })
-      .on("[data-wp-per-model]", { element: (el) => void el.setInnerContent(perModelLabel(data.count, cataloguePrice())) });
-    // Palier de prix (100 modèles) : modèles restants et jauge ; mentions retirées une fois le palier atteint.
-    const step = priceStep(data.count);
-    if (step.reached) rewriter.on("[data-wp-threshold]", { element: (el) => void el.remove() });
-    else
-      rewriter
-        .on("[data-wp-left]", { element: (el) => void el.setInnerContent(step.leftLabel) })
-        .on("[data-wp-progress]", { element: (el) => void el.setAttribute("style", `width:${step.percent}%`) });
-  }
+      .on("[data-wp-left]", { element: (el) => void el.setInnerContent(step.leftLabel) })
+      .on("[data-wp-progress]", { element: (el) => void el.setAttribute("style", `width:${step.percent}%`) });
   return payRewriter.transform(rewriter.transform(new Response(asset.body, { status: 200, headers })));
 }
