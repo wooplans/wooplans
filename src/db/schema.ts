@@ -109,7 +109,7 @@ export const members = sqliteTable(
     codeHash: text("code_hash").notNull(),
     /** Incrémenté à chaque révocation / nouveau code : invalide les sessions ouvertes. */
     sessionVersion: integer("session_version").notNull().default(1),
-    source: text("source", { enum: ["chariow", "legacy_import", "manual"] }).notNull(),
+    source: text("source", { enum: ["chariow", "wajub", "legacy_import", "manual"] }).notNull(),
     chariowCustomerId: text("chariow_customer_id"),
     revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
     revokedReason: text("revoked_reason"),

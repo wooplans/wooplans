@@ -14,6 +14,7 @@ interface __BaseEnv_CloudflareEnv {
 	CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS: "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx";
 	CHARIOW_PLAN_PRODUCT_ID: string;
 	SALES_PAGE_B_SHARE: "0";
+	PAYMENT_PROVIDER: string;
 	WHATSAPP_NUMBER: "237694327885";
 	OFFRE_PROJET: string;
 	FB_PIXEL_ID: "1025626273769966";
@@ -38,7 +39,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SITE_URL" | "CHARIOW_STORE_DOMAIN" | "CHARIOW_CATALOGUE_PRODUCT_ID" | "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS" | "CHARIOW_PLAN_PRODUCT_ID" | "SALES_PAGE_B_SHARE" | "WHATSAPP_NUMBER" | "OFFRE_PROJET" | "FB_PIXEL_ID" | "POSTHOG_KEY" | "POSTHOG_HOST" | "EMAIL_FROM" | "EMAIL_REPLY_TO" | "ADMIN_NOTIFY_EMAIL" | "PDF_QUOTA_DAY" | "PDF_QUOTA_MONTH" | "PDF_QUOTA_MAX_PER_DAY" | "PDF_QUOTA_LIFETIME">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SITE_URL" | "CHARIOW_STORE_DOMAIN" | "CHARIOW_CATALOGUE_PRODUCT_ID" | "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS" | "CHARIOW_PLAN_PRODUCT_ID" | "SALES_PAGE_B_SHARE" | "PAYMENT_PROVIDER" | "WHATSAPP_NUMBER" | "OFFRE_PROJET" | "FB_PIXEL_ID" | "POSTHOG_KEY" | "POSTHOG_HOST" | "EMAIL_FROM" | "EMAIL_REPLY_TO" | "ADMIN_NOTIFY_EMAIL" | "PDF_QUOTA_DAY" | "PDF_QUOTA_MONTH" | "PDF_QUOTA_MAX_PER_DAY" | "PDF_QUOTA_LIFETIME">> {}
 }
 declare module "*.txt" {
 	const value: string;

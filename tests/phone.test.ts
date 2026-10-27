@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { normalizePhone, phoneCountry, whatsappUrl } from "../src/lib/phone.ts";
+import { internationalPhone, normalizePhone, phoneCountry, whatsappUrl } from "../src/lib/phone.ts";
 
 test("numéro Chariow (objet avec indicatif déjà inclus)", () => {
   const phone = { number: 22676658258, country: { dial_code: "+226", code: "BF" } };
@@ -22,4 +22,11 @@ test("texte libre, préfixe 00 et numéros inexploitables", () => {
 test("lien WhatsApp", () => {
   assert.equal(whatsappUrl("+237 653 769 998", "Bonjour"), "https://wa.me/237653769998?text=Bonjour");
   assert.equal(whatsappUrl(""), null);
+});
+
+test("numéro national + pays → format international pour Wajub", () => {
+  assert.equal(internationalPhone("671234567", "CM"), "+237671234567");
+  assert.equal(internationalPhone("07 01 23 45 67", "ci"), "+2250701234567");
+  assert.equal(internationalPhone("671234567", "ZZ"), null);
+  assert.equal(internationalPhone("123", "CM"), null);
 });

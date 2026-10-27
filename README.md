@@ -30,7 +30,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 | Base de données | **Cloudflare D1** via Drizzle ORM (`src/db/schema.ts`, migrations dans `drizzle/`) |
 | Fichiers | **Cloudflare R2** : `MEDIA` (rendus publics, distributions privées), `VIDEOS` (vidéos de la page de vente) |
 | Fiches PDF | **pdf-lib** dans le Worker + binding **Cloudflare Images** (`IMAGES`, conversion WebP → JPEG hors CPU du Worker) |
-| Paiement | **Chariow** (notifications « Pulse » signées HMAC) |
+| Paiement | **Chariow** (notifications « Pulse » signées HMAC) ; **Wajub** en essai (webhooks signés HMAC, voir « 4 bis ») |
 | Emails | **Resend** (codes d'accès, relances CRM, récapitulatif quotidien) |
 | Mesure | Suivi first-party du tunnel (`/api/t`, UTM, fait foi pour les ventes), Pixel Meta, **PostHog** UE (comportement : enregistrements masqués, cartes de chaleur, tunnel) |
 | Pilotage par agent | Serveur **MCP** intégré (`/api/mcp`) |
@@ -101,6 +101,17 @@ npx wrangler d1 execute DB --remote --file /tmp/admin.sql
 ### 4. Chariow
 
 Dans Chariow → Automatisations → Pulses : créer un Pulse vers `https://www.wooplans.com/api/webhooks/chariow` avec les événements *Successful / Abandoned / Failed sale* sur le produit Catalogue Premium, puis copier son secret dans `CHARIOW_PULSE_SECRET`. Désactiver les anciens Pulses vers `woo-premium.pages.dev`.
+
+### 4 bis. Wajub (essai, à la place de Chariow)
+
+Wajub (checkout hébergé Mobile Money et carte, `src/lib/wajub.ts`) est branché sur les deux achats : Catalogue Premium (page de vente B, formulaire court puis page Wajub) et plan et devis (fiches modèles). Une vente Wajub passe par le même traitement qu'une vente Chariow : code d'accès, plan et devis, CRM, relances, statistiques (identifiant de vente `trx_…`, membre de source « Wajub »).
+
+1. Dashboard Wajub → Développeurs : créer une clé secrète (`sk_test.…` pour l'essai en sandbox, `sk.…` en production) puis `npx wrangler secret put WAJUB_SECRET_KEY`.
+2. Webhooks : endpoint `https://www.wooplans.com/api/webhooks/wajub`, événements `payment.succeeded`, `payment.failed`, `payment.expired`, `payment.cancelled` ; copier son secret (`whsec_…`) dans `npx wrangler secret put WAJUB_WEBHOOK_SECRET`.
+3. Essai sans rien changer pour les visiteurs : ouvrir `https://www.wooplans.com/catalogue-premium?paiement=wajub` (le choix est gardé 7 jours dans ce navigateur, y compris sur les fiches modèles ; `?paiement=chariow` pour revenir). En sandbox, le numéro `+237670000000` réussit et `+237670000002` est refusé.
+4. Bascule de tout le trafic : `"PAYMENT_PROVIDER": "wajub"` dans `wrangler.jsonc`. Retour arrière : `"chariow"`.
+
+Limites : les codes promo restent ceux de Chariow (un achat de plan et devis avec code passe par Chariow ; le formulaire Wajub de la page de vente n'a pas de champ code promo) ; la page de vente A garde le widget Chariow. Le montant encaissé est contrôlé (prix de `src/config/catalogue.json` ou `projet.json`) avant d'ouvrir l'accès, et un paiement sandbox n'ouvre jamais d'accès avec une clé live.
 
 ### 5. Déploiement automatique
 

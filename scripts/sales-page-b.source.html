@@ -262,6 +262,15 @@ footer a{color:rgba(255,255,255,.7)}
 .payhelp li{margin:2px 0}
 #chariow-widget{min-height:220px}
 #chariow-widget:empty::before{content:"Chargement du paiement sécurisé…";min-height:220px;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:13px}
+/* Paiement Wajub (essai) : formulaire court puis page de paiement Wajub. Affiché si <html data-pay="wajub">. */
+.wjform{display:none;gap:10px}
+html[data-pay="wajub"] .wjform{display:grid}
+html[data-pay="wajub"] #chariow-widget,html[data-pay="wajub"] #ckSlow{display:none!important}
+.wjform label{font-size:13px;font-weight:700;color:var(--teal)}
+.wjform input,.wjform select{width:100%;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:16px;background:#fff;margin-top:4px}
+.wjform .row{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:8px}
+.wjform .err{color:var(--red);font-size:13.5px;font-weight:700}
+.wjform .cta{min-height:54px;font-size:16.5px}
 .sheet .wahelp{text-align:center;font-size:13.5px;color:var(--gray);margin-top:12px}
 .sheet .wahelp a{color:var(--teal);font-weight:800}
 .sheet .ckslow{text-align:center;font-size:13.5px;background:#FFF7EE;border-radius:10px;padding:10px 12px;margin-top:10px}
@@ -529,6 +538,18 @@ footer a{color:rgba(255,255,255,.7)}
       <li>Prévoyez <b>{{PRIX}} FCFA + frais</b> sur votre compte Mobile Money.</li>
     </ol></div>
     <div id="chariow-widget" class="ph-no-capture" data-product-id="prd_41k85hc0" data-store-domain="wooplans.mychariow.shop" data-style="frame" data-border-style="rounded" data-cta-width="xs" data-cta-animation="none" data-locale="fr" data-primary-color="#f08b2f" data-background-color="#FFFFFF"></div>
+    <form class="wjform ph-no-capture" id="wjForm" onsubmit="return wajubPay(event)" novalidate>
+      <div><label for="wjName">Nom complet</label><input id="wjName" name="name" required minlength="2" autocomplete="name"></div>
+      <div><label for="wjEmail">Email (votre code d'accès y est envoyé)</label><input id="wjEmail" name="email" type="email" required autocomplete="email" inputmode="email"></div>
+      <div><label for="wjPhone">Numéro Mobile Money</label>
+        <div class="row">
+          <select name="countryCode" aria-label="Pays"><option value="CM" data-dial="237">+237 Cameroun</option><option value="CI" data-dial="225">+225 Côte d'Ivoire</option><option value="SN" data-dial="221">+221 Sénégal</option><option value="GA" data-dial="241">+241 Gabon</option><option value="CG" data-dial="242">+242 Congo</option><option value="CD" data-dial="243">+243 RD Congo</option><option value="BJ" data-dial="229">+229 Bénin</option><option value="TG" data-dial="228">+228 Togo</option><option value="BF" data-dial="226">+226 Burkina Faso</option><option value="ML" data-dial="223">+223 Mali</option><option value="GN" data-dial="224">+224 Guinée</option><option value="NE" data-dial="227">+227 Niger</option><option value="TD" data-dial="235">+235 Tchad</option><option value="CF" data-dial="236">+236 Centrafrique</option><option value="GQ" data-dial="240">+240 Guinée équatoriale</option><option value="FR" data-dial="33">+33 France</option><option value="BE" data-dial="32">+32 Belgique</option><option value="CA" data-dial="1">+1 Canada</option><option value="US" data-dial="1">+1 États-Unis</option></select>
+          <input id="wjPhone" name="phone" type="tel" required inputmode="tel" autocomplete="tel-national" placeholder="6 71 23 45 67">
+        </div>
+      </div>
+      <p class="err" id="wjErr" hidden></p>
+      <button class="cta" type="submit" id="wjBtn">Payer {{PRIX}} FCFA</button>
+    </form>
     <p class="ckslow" id="ckSlow" hidden>Connexion lente : le formulaire arrive dans un instant. Il ne s'affiche toujours pas ? <a href="https://wooplans.mychariow.shop/prd_41k85hc0/checkout" onclick="wpCapture('checkout_fallback_click',{wait_ms:Date.now()-openedAt})">Ouvrir la page de paiement sécurisée</a></p>
     <p class="wahelp">Un souci pour payer ? <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="payment_help" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>
   </div>
@@ -633,7 +654,11 @@ function closeVideo(){
 var CHECKOUT_URL='https://wooplans.mychariow.shop/prd_41k85hc0/checkout';
 var chariowPromise=null,widgetReported=false,checkoutWarm=false;
 var formShownAt=0,openedAt=0,formShownReported=false,slowTimer=null;
+/* Essai Wajub (<html data-pay="wajub">, posé par le serveur) : formulaire court puis page de paiement Wajub ;
+   le widget Chariow n'est alors jamais chargé. */
+var WAJUB=document.documentElement.getAttribute('data-pay')==='wajub';
 function ensureChariowWidget(){
+  if(WAJUB)return Promise.reject(new Error('wajub'));
   if(chariowPromise)return chariowPromise;
   chariowPromise=new Promise(function(resolve,reject){
     var l=document.createElement('link');l.rel='stylesheet';l.href='https://js.chariowcdn.com/v1/widget.min.css';document.head.appendChild(l);
@@ -675,8 +700,34 @@ function reportWidget(){
   if(!widgetReported&&w.children.length&&checkoutIsOpen()){widgetReported=true;wpTrack('widget_ready','checkout@b');wpCapture('widget_ready',{});}
 }
 if('MutationObserver' in window)new MutationObserver(reportWidget).observe(document.getElementById('chariow-widget'),{childList:true,subtree:true});
+var wjCta='sales_page@b';
+function wajubPay(e){
+  e.preventDefault();
+  var f=document.getElementById('wjForm'),err=document.getElementById('wjErr'),btn=document.getElementById('wjBtn');
+  var el=function(n){return f.elements.namedItem(n)},cc=el('countryCode'),raw=el('phone').value;
+  var d={provider:'wajub',ctaId:wjCta,name:el('name').value.trim(),email:el('email').value.trim(),countryCode:cc.value,phone:raw.replace(/\D/g,'')};
+  var dial=cc.options[cc.selectedIndex].getAttribute('data-dial');
+  if(dial&&d.phone.indexOf(dial)===0&&/^\s*\+/.test(raw))d.phone=d.phone.slice(dial.length);
+  else if(dial&&d.phone.indexOf('00'+dial)===0)d.phone=d.phone.slice(dial.length+2);
+  if(d.name.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)||d.phone.length<6){err.textContent='Merci de renseigner votre nom, un email valide et votre numéro.';err.hidden=false;return false}
+  err.hidden=true;btn.disabled=true;btn.textContent='Ouverture du paiement…';
+  fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})
+    .then(function(r){
+      if(!r.ok||!r.j.url)throw new Error(r.j&&r.j.error||'');
+      wpCapture('checkout_redirect',{cta_id:wjCta,provider:'wajub'});location.href=r.j.url;
+    })
+    .catch(function(x){err.textContent=x.message||"Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.";err.hidden=false;btn.disabled=false;btn.textContent='Payer {{PRIX}} FCFA'});
+  return false;
+}
 function buy(btn){
   var ctaId=(btn&&btn.getAttribute('data-cta')||'sales_page')+'@b';
+  if(WAJUB){
+    wjCta=ctaId;wpTrack('cta_click',ctaId);wpCapture('cta_click',{cta_id:ctaId});wpCapture('checkout_open',{cta_id:ctaId,mode:'wajub'});
+    fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:{{PRIX_XAF}},currency:'XAF'});
+    var o=document.getElementById('checkout');o.classList.add('on');o.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';openedAt=Date.now();
+    return;
+  }
   wpTrack('cta_click',ctaId);wpCapture('cta_click',{cta_id:ctaId});wpCapture('checkout_open',{cta_id:ctaId,mode:'widget',preloaded:!!formShownAt});
   try{fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'widget',ctaId:ctaId}),keepalive:true})}catch(e){}
   fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:{{PRIX_XAF}},currency:'XAF'});
@@ -687,7 +738,7 @@ function buy(btn){
   ensureChariowWidget().then(eagerFrame).catch(function(){location.href=CHECKOUT_URL});
 }
 function closeCheckout(){
-  if(checkoutIsOpen())wpCapture('checkout_close',{open_ms:Date.now()-openedAt,form_shown:formShownReported});
+  if(checkoutIsOpen())wpCapture('checkout_close',{open_ms:Date.now()-openedAt,form_shown:WAJUB||formShownReported});
   clearTimeout(slowTimer);document.getElementById('ckSlow').hidden=true;
   var ov=document.getElementById('checkout');ov.classList.remove('on');ov.setAttribute('aria-hidden','true');document.body.style.overflow='';
 }

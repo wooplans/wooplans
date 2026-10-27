@@ -2,6 +2,8 @@
 AUTH_SECRET="une-longue-chaine-aleatoire"
 CHARIOW_PULSE_SECRET="whsec_..."
 CHARIOW_API_KEY=""
+WAJUB_SECRET_KEY="sk_test...."
+WAJUB_WEBHOOK_SECRET="whsec_..."
 RESEND_API_KEY=""
 MCP_TOKEN="une-autre-longue-chaine-aleatoire"
 CRON_SECRET=""

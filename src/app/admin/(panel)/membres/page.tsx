@@ -10,7 +10,7 @@ import { codeStatusByMember, getDigestCampaign, getMemberDigestSettings } from "
 import { whatsappUrl } from "@/lib/phone";
 import { addMember, importFromChariow, newCode, reactivate, revoke, saveDigest, saveLegacyCodes, sendLegacyCodes } from "./actions";
 
-const SOURCES: Record<string, string> = { chariow: "Chariow", legacy_import: "Import", manual: "Manuel" };
+const SOURCES: Record<string, string> = { chariow: "Chariow", wajub: "Wajub", legacy_import: "Import", manual: "Manuel" };
 
 const CODE_VIEWS = [
   { id: "", label: "Tous" },
