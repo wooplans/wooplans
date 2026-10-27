@@ -84,6 +84,7 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
       <PlanDevisButton
         plan={plan}
         label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
+        price={start}
         ctaId="plan_projet"
         className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
         fallbackHref={online ? undefined : projectStartLink(plan)}

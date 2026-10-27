@@ -208,6 +208,7 @@ export default async function PlanPage({ params }: Props) {
           <PlanDevisButton
             plan={plan}
             label={`Télécharger plan et devis · ${formatFcfa(projectStartPrice())}`}
+            price={formatFcfa(projectStartPrice())}
             ctaId="plan_projet_sticky"
             className="btn-cta w-full py-3.5"
             fallbackHref={online ? undefined : projectStartLink(plan)}
