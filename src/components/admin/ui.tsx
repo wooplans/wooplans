@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { shiftDay } from "@/lib/date-range";
 
 export function PageTitle({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (
@@ -22,7 +23,7 @@ export function Stat({ label, value, hint }: { label: string; value: string; hin
   );
 }
 
-export function PeriodTabs({ current, base }: { current: number; base: string }) {
+export function PeriodTabs({ current, base }: { current: number | null; base: string }) {
   const periods = [7, 30, 90, 365];
   return (
     <div className="flex rounded-full border border-outline bg-surface p-1 text-sm">
@@ -35,6 +36,37 @@ export function PeriodTabs({ current, base }: { current: number; base: string })
           {p === 365 ? "1 an" : `${p} j`}
         </Link>
       ))}
+    </div>
+  );
+}
+
+/** Choix d'un jour précis (formulaire GET ?jour=AAAA-MM-JJ, sans JavaScript) : raccourcis, jour précédent / suivant. */
+export function DayPicker({ day, today, base }: { day: string | null; today: string; base: string }) {
+  const yesterday = shiftDay(today, -1);
+  const chip = (d: string, label: string) => (
+    <Link
+      href={`${base}?jour=${d}`}
+      className={`rounded-full px-3 py-1 ${d === day ? "bg-primary text-white" : "text-foreground/70 hover:text-primary"}`}
+    >
+      {label}
+    </Link>
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="flex rounded-full border border-outline bg-surface p-1">
+        {chip(today, "Aujourd'hui")}
+        {chip(yesterday, "Hier")}
+      </div>
+      <form action={base} method="get" className="flex items-center gap-1 rounded-full border border-outline bg-surface p-1 pl-3">
+        {day ? (
+          <Link href={`${base}?jour=${shiftDay(day, -1)}`} aria-label="Jour précédent" className="px-1 text-foreground/70 hover:text-primary">‹</Link>
+        ) : null}
+        <input type="date" name="jour" defaultValue={day ?? ""} max={today} required aria-label="Jour précis" className="bg-transparent text-sm outline-none" />
+        {day && day < today ? (
+          <Link href={`${base}?jour=${shiftDay(day, 1)}`} aria-label="Jour suivant" className="px-1 text-foreground/70 hover:text-primary">›</Link>
+        ) : null}
+        <button type="submit" className="rounded-full bg-primary px-3 py-1 text-white">Voir</button>
+      </form>
     </div>
   );
 }

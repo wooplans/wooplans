@@ -2,7 +2,8 @@ import { and, asc, desc, eq, gte, inArray, like, lte, ne, or, sql } from "drizzl
 import { getDb, schema } from "@/db";
 import { cataloguePrice } from "@/lib/site";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
-import { getFunnelKpis, getSourceBreakdown, type Period } from "@/lib/analytics";
+import { getChannelBreakdown, getFunnelKpis } from "@/lib/analytics";
+import { parseRange } from "@/lib/date-range";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
 import { getEnv, requireSecret, siteUrl } from "@/lib/env";
@@ -204,13 +205,23 @@ export const TOOLS: McpTool[] = [
   {
     name: "get_business_summary",
     description:
-      "Résumé du tunnel de vente sur une période : visiteurs, visiteurs de la page de vente, paiements démarrés, achats et revenu du Catalogue Premium, achats et revenu du plan et devis d'un modèle (planDevis*, comptés à part), encaissements des plans complets, membres, demandes, et performance par source/campagne UTM (tous produits).",
-    inputSchema: obj({ days: { type: "number", enum: [7, 30, 90, 365], description: "Période en jours (défaut 30)" } }),
+      "Résumé du tunnel de vente sur une période ou un jour précis (heure du Cameroun) : visiteurs, visiteurs de la page de vente, paiements démarrés, achats et revenu du Catalogue Premium, achats et revenu du plan et devis d'un modèle (planDevis*, comptés à part), encaissements des plans complets, membres, demandes, et performance par canal (Facebook, YouTube, Google, Direct…, paid = publicité) puis par campagne UTM (tous produits).",
+    inputSchema: obj({
+      days: { type: "number", enum: [7, 30, 90, 365], description: "Période en jours (défaut 30)" },
+      day: str("Jour précis AAAA-MM-JJ (prioritaire sur days)"),
+    }),
     annotations: { readOnlyHint: true },
     handler: async (args) => {
-      const days = ([7, 30, 90, 365].includes(asNumber(args.days) ?? 30) ? asNumber(args.days) ?? 30 : 30) as Period;
-      const [kpis, sources] = await Promise.all([getFunnelKpis(days), getSourceBreakdown(days)]);
-      return { period_days: days, currency: "XAF", ...kpis, sources: sources.slice(0, 15) };
+      const range = parseRange({ jour: asString(args.day), jours: asNumber(args.days) });
+      const [kpis, breakdown] = await Promise.all([getFunnelKpis(range), getChannelBreakdown(range)]);
+      return {
+        ...(range.day ? { day: range.day } : { period_days: range.days }),
+        currency: "XAF",
+        ...kpis,
+        channels: breakdown.channels,
+        campaigns: breakdown.campaigns.slice(0, 15),
+        untracked_sales: breakdown.untracked,
+      };
     },
   },
   {

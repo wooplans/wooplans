@@ -1,4 +1,7 @@
-/** Histogramme journalier mono-série (une seule échelle), avec info-bulle native par barre. */
+/**
+ * Histogramme mono-série (une seule échelle), avec info-bulle native par barre : par jour (`day` AAAA-MM-JJ)
+ * ou par heure (`day` « HH », série d'une seule journée).
+ */
 export function DailyBars({
   title,
   data,
@@ -8,6 +11,8 @@ export function DailyBars({
   data: { day: string; value: number }[];
   format?: (v: number) => string;
 }) {
+  const label = (day: string | undefined) =>
+    !day ? "" : /^\d{2}$/.test(day) ? `${Number(day)} h` : new Date(day).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
   const max = Math.max(1, ...data.map((d) => d.value));
   const total = data.reduce((s, d) => s + d.value, 0);
   const width = 600;
@@ -28,7 +33,7 @@ export function DailyBars({
           return (
             <g key={d.day}>
               <rect x={x} y={0} width={barW + gap} height={height} fill="transparent">
-                <title>{`${new Date(d.day).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} : ${format(d.value)}`}</title>
+                <title>{`${label(d.day)} : ${format(d.value)}`}</title>
               </rect>
               {h > 0 ? (
                 <path
@@ -41,10 +46,10 @@ export function DailyBars({
           );
         })}
         <text x={0} y={height + 14} fontSize={10} fill="#6B7280">
-          {new Date(data[0]?.day ?? Date.now()).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+          {label(data[0]?.day)}
         </text>
         <text x={width} y={height + 14} fontSize={10} fill="#6B7280" textAnchor="end">
-          {new Date(data.at(-1)?.day ?? Date.now()).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+          {label(data.at(-1)?.day)}
         </text>
       </svg>
     </figure>

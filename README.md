@@ -41,7 +41,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 |---|---|
 | `/` | Accueil, modèles mis en avant, étapes, témoignages, FAQ |
 | `/catalogue`, `/catalogue-villa`, `/catalogue-duplex`, `/catalogue/<slug>` | Catalogue public filtrable et fiches (rendus, chambres, niveaux, surfaces, dimensions, budget indicatif) |
-| `/catalogue-premium` | Page de vente, variantes A/B (HTML statique `public/lp/catalogue-premium.html` et `-b.html`, générés par `scripts/build-sales-page.py` et `scripts/sales-page-b.py`) |
+| `/catalogue-premium` | Page de vente (HTML statique `public/lp/catalogue-premium.html`, généré par `scripts/build-sales-page.py` depuis `scripts/sales-page.source.html`) |
 | `/merci` | Confirmation de paiement et affichage du code d'accès |
 | `/connexion` | Connexion membre (email + code), « code perdu » |
 | `/espace-premium/…` | Index et filtres, fiche complète, favoris, comparateur (3 modèles), fiches PDF |
@@ -136,14 +136,17 @@ Le prix est à **un seul endroit** : `src/config/catalogue.json` (`"price"`, en 
 
 Crédit des plans complets : tout membre se voit déduire le prix actuel du catalogue (`cataloguePrice()`), quel que soit le prix auquel il l'a acheté.
 
-## Page de vente : variantes et test A/B
+## Page de vente
 
-- **A** (`public/lp/catalogue-premium.html`) : la page historique.
-- **B** (`public/lp/catalogue-premium-b.html`, source `scripts/sales-page-b.source.html`) : page repensée pour l'acheteur mobile, 12 Ko compressée. Promesse « choisissez votre maison, connaissez son vrai coût », aperçu d'un vrai modèle (rendu, caractéristiques, intitulés des postes du devis — montants et plan coté masqués), modèles en vedette avec budget indicatif, témoignages (vidéos chargées au clic), étapes, offre, FAQ, barre collante et WhatsApp. Paiement : formulaire court sur la page (nom, email, numéro avec indicatif deviné d'après le pays du visiteur), prix sur le bouton, puis page de paiement Chariow (`/api/checkout`) ; plus de widget Chariow à précharger, la fenêtre s'ouvre instantanément. WhatsApp en cas de souci. Urgence, avis et prix barré conservés. Nombre de modèles, galerie et aperçu lus en base par `src/app/catalogue-premium/route.ts` (HTMLRewriter, cache mémoire de 5 min).
-- Les deux pages se régénèrent avec `python3 scripts/build-sales-page.py`.
-- **Répartition** : variable `SALES_PAGE_B_SHARE` de `wrangler.jsonc` (0 à 100, en %), **actuellement 100 : tout le monde voit B**. À 0, tout le monde voit A et B n'est visible qu'en aperçu avec `/catalogue-premium?variante=b` ; `?variante=a` affiche toujours A. Prix affiché sur B : 39 000 FCFA au lieu de 60 000 FCFA (prix normal après le compte à rebours), valeur du catalogue 500 000 FCFA. Le visiteur garde sa variante 30 jours (cookie `wp_lp`).
-- **Mesure** : la variante voyage dans `cta_id` (`variant_a`/`variant_b` pour la vue de page, suffixe `@a`/`@b` pour les clics, les intentions de paiement, les échecs/abandons et les achats). Tableau de bord → « Page de vente : variantes A / B » : visiteurs, clics, paiements démarrés, échoués, abandonnés, achats, conversion, clics WhatsApp.
-- Avec 1 à 2 ventes par jour, comparer d'abord le taux de clic et les paiements démarrés ; il faut plusieurs semaines pour conclure sur les achats.
+- Une seule page (`public/lp/catalogue-premium.html`, source `scripts/sales-page.source.html`) : page pensée pour l'acheteur mobile, 12 Ko compressée. Promesse « choisissez votre maison, connaissez son vrai coût », aperçu d'un vrai modèle (rendu, caractéristiques, intitulés des postes du devis — montants et plan coté masqués), modèles en vedette avec budget indicatif, témoignages (vidéos chargées au clic), étapes, offre, FAQ, barre collante et WhatsApp. Paiement : formulaire court sur la page (nom, email, numéro avec indicatif deviné d'après le pays du visiteur), prix sur le bouton, puis page de paiement Chariow (`/api/checkout`). Urgence, avis et prix barré conservés. Nombre de modèles, galerie et aperçu lus en base par `src/app/catalogue-premium/route.ts` (HTMLRewriter, cache mémoire de 5 min).
+- Régénération : `python3 scripts/build-sales-page.py`.
+- L'ancienne variante A (page historique avec widget Chariow) et le test A/B sont retirés. La page garde son marqueur « b » (`variant_b` pour la vue, suffixe `@b` pour les clics, intentions de paiement et achats) : le tableau de bord ne compte que ces événements, les chiffres de l'ancienne page A sont exclus.
+
+## Tableau de bord /admin
+
+- **Période** : 7 j, 30 j, 90 j, 1 an, ou **un jour précis** (`/admin?jour=AAAA-MM-JJ`, raccourcis « Aujourd'hui » / « Hier », jour précédent / suivant). Les jours sont comptés en heure du Cameroun (UTC+1). Sur un jour précis, les graphiques passent par heure.
+- **D'où viennent les visiteurs** : une ligne par canal (Facebook, Instagram, YouTube, TikTok, WhatsApp, Google et moteurs, Email, ChatGPT et IA, Autres sites, Direct), « · publicité » quand la visite vient d'une pub reconnue. Canal déduit de l'UTM, sinon du site ou de l'appli d'origine (`src/lib/attribution.ts`, `channelOf`). Détail par campagne UTM dépliable. « Direct » = aucune trace de provenance (lien ouvert depuis WhatsApp ou une appli, favori) : ajouter `?utm_source=…` aux liens partagés pour les reconnaître. Les ventes importées de l'ancienne boutique Chariow (sans visite suivie) sont indiquées à part.
+- Outil MCP `get_business_summary` : mêmes chiffres (`days` ou `day`).
 
 ## Analyse du comportement des visiteurs (PostHog)
 
@@ -153,7 +156,7 @@ Objectif : demander à l'agent Claude, à tout moment, où les visiteurs cliquen
 - **Jamais mesuré** : `/admin`, `/espace-premium`, `/connexion`, `/merci`, `/televersement` (non chargé, puis événements filtrés et enregistrement arrêté en navigation interne).
 - **Aucune donnée personnelle** : saisies masquées (`maskAllInputs`), widget Chariow exclu (`ph-no-capture`), texte marqué `data-ph-mask` masqué, paramètres d'URL retirés sauf UTM/filtres, pas de profil de personne. L'identifiant PostHog est l'identifiant anonyme first-party `wp_vid` (renvoyé par `/api/t`).
 - **Consentement** : visiteurs en Europe (fuseau horaire `Europe/…`) : bandeau, rien n'est chargé (PostHog, Pixel) avant « Accepter ». Ailleurs : mesure par défaut, refus possible sur `/confidentialite`. Cookie `wp_consent` (13 mois).
-- **Événements** : `$pageview` (`page_type`, `plan`), `cta_click` (`cta_id`, suffixe `@a`/`@b`), `checkout_open`, `purchase_success` (envoyé par le serveur depuis le webhook Chariow, vente reliée avec certitude à la visite, hors Europe), `plan_request_submit`, `whatsapp_click`, `promo_popup_*`, plus clics de rage, clics morts, défilement et sorties. Provenance : `wp_source` / `wp_campaign` (mêmes valeurs que `/admin`), `variant` sur la page de vente.
+- **Événements** : `$pageview` (`page_type`, `plan`), `cta_click` (`cta_id`, suffixe `@a`/`@b`), `checkout_open`, `purchase_success` (envoyé par le serveur depuis le webhook Chariow, vente reliée avec certitude à la visite, hors Europe), `plan_request_submit`, `whatsapp_click`, `promo_popup_*`, plus clics de rage, clics morts, défilement et sorties. Provenance : `wp_source` / `wp_campaign` (regroupées par canal dans `/admin`), `variant` (toujours `b`) sur la page de vente.
 - **Accès de l'agent** : serveur MCP officiel PostHog connecté à l'agent (requêtes, tunnels, cartes de chaleur, recherche et résumés d'enregistrements). Les instructions du serveur MCP WOOPLANS décrivent la méthode d'analyse (tunnel par segment, frictions, recommandations impact/effort, liens d'enregistrements). Les ventes font foi dans `get_business_summary` / `list_sales`.
 
 Mise en place (une fois) :

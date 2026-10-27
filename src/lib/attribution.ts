@@ -56,6 +56,59 @@ export function classifySource(input: {
   return "direct";
 }
 
+export const CHANNELS = [
+  "Facebook",
+  "Instagram",
+  "YouTube",
+  "TikTok",
+  "WhatsApp",
+  "Google et moteurs",
+  "Email",
+  "ChatGPT et IA",
+  "Autres sites",
+  "Direct",
+] as const;
+export type Channel = (typeof CHANNELS)[number];
+
+const CHANNEL_PATTERNS: [Channel, RegExp][] = [
+  ["Instagram", /instagram|^ig$/i],
+  ["Facebook", /facebook|^fb$|^meta$|com\.facebook/i],
+  ["YouTube", /youtube|youtu\.be|^yt$/i],
+  ["TikTok", /tiktok/i],
+  ["WhatsApp", /whatsapp|^wa$|^l\.wl\.co$/i],
+  ["Email", /mail|newsletter|resend|com\.google\.android\.gm$|outlook/i],
+  ["ChatGPT et IA", /chatgpt|openai|perplexity|gemini\.google|copilot|claude\.ai/i],
+  ["Google et moteurs", /google|bing|yahoo|duckduckgo|ecosia|qwant|yandex/i],
+];
+
+function hostOf(referrer: string) {
+  const m = referrer.match(/^[a-z-]+:\/\/([^/?#]+)/i);
+  return m ? m[1].toLowerCase() : "";
+}
+
+/**
+ * Canal lisible (Facebook, YouTube, Google…) d'une visite, pour le tableau de bord : UTM d'abord,
+ * puis référent (y compris les applis Android, « android-app://com.facebook.katana »), puis
+ * identifiants de clic. Une visite sans aucune trace (lien ouvert depuis WhatsApp, une appli, un favori)
+ * reste « Direct ». `paid` : publicité reconnue (UTM payants, ttclid, gclid).
+ */
+export function channelOf(input: {
+  source: string;
+  utmSource: string | null;
+  fbclid: boolean;
+  referrer: string | null;
+}): { channel: Channel; paid: boolean } {
+  const paid = input.source === "social_ads" || input.source === "search_ads";
+  const match = (value: string) => CHANNEL_PATTERNS.find(([, re]) => re.test(value))?.[0];
+  if (input.utmSource) return { channel: match(input.utmSource.trim()) ?? "Autres sites", paid };
+  const host = input.referrer ? hostOf(input.referrer) : "";
+  if (host && !/(^|\.)wooplans\.com$/.test(host)) return { channel: match(host) ?? "Autres sites", paid };
+  if (input.fbclid) return { channel: "Facebook", paid };
+  if (input.source === "social_ads") return { channel: "TikTok", paid };
+  if (input.source === "search_ads") return { channel: "Google et moteurs", paid };
+  return { channel: "Direct", paid: false };
+}
+
 export function parseAttribution(url: string, referrer: string | null): Attribution {
   const parsed = new URL(url, "https://www.wooplans.com");
   const p = parsed.searchParams;
