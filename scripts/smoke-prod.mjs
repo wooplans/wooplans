@@ -94,7 +94,10 @@ ok("Clarity absent (vitrine, page de vente)", !/clarity\.ms/.test(homeHtml) && !
 ok("PostHog configuré sur la vitrine", homeHtml.includes("eu.i.posthog.com") && (!posthogKey || homeHtml.includes(posthogKey)));
 ok("PostHog configuré sur la page de vente", salesHtml.includes("eu.i.posthog.com") && (!posthogKey || salesHtml.includes(posthogKey)));
 ok("PostHog absent de l'administration", !/posthog/i.test(adminLoginHtml) && (!posthogKey || !adminLoginHtml.includes(posthogKey)));
-ok("page de vente : widget de paiement exclu des enregistrements", salesHtml.includes('id="chariow-widget" class="ph-no-capture"'));
+ok(
+  "page de vente : formulaire de paiement exclu des enregistrements",
+  salesHtml.includes('id="chariow-widget" class="ph-no-capture"') || /<form class="[^"]*ph-no-capture[^"]*" id="ckForm"/.test(salesHtml),
+);
 ok("page de vente : bandeau de consentement (Europe)", salesHtml.includes("wpConsent"));
 if (!posthogKey) console.log("Note : POSTHOG_KEY vide dans wrangler.jsonc, PostHog n'est pas encore activé.");
 
