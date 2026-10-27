@@ -6,6 +6,7 @@ import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { Faq, FaqJsonLd } from "@/components/Faq";
+import { PlanDescription } from "@/components/PlanDescription";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
@@ -134,11 +135,7 @@ export default async function PlanPage({ params }: Props) {
 
         <section className="mt-12 max-w-3xl">
           <h2 className="text-xl font-semibold">À propos de ce modèle</h2>
-          <div className="prose-wp mt-3">
-            {description.split(/\n{2,}/).map((p) => (
-              <p key={p.slice(0, 40)}>{p}</p>
-            ))}
-          </div>
+          <PlanDescription description={description} />
           {themes.length > 0 ? (
             <p className="mt-4 text-sm text-foreground/75">
               Voir aussi :{" "}
