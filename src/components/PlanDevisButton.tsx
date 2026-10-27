@@ -111,15 +111,15 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           </div>
           <div>
             <label className="label" htmlFor={`pd-phone-${plan.slug}`}>Numéro Mobile Money / WhatsApp</label>
-            <div className="flex gap-2">
-              <select name="countryCode" defaultValue="CM" className="input w-auto" aria-label="Pays">
+            <div className="grid gap-2 sm:grid-cols-[auto_1fr]">
+              <select name="countryCode" defaultValue="CM" className="input" aria-label="Pays">
                 {COUNTRIES.map(([code, name, dial]) => (
                   <option key={code} value={code}>
                     {name} {dial}
                   </option>
                 ))}
               </select>
-              <input id={`pd-phone-${plan.slug}`} name="phone" required type="tel" inputMode="tel" autoComplete="tel-national" placeholder="6 xx xx xx xx" className="input min-w-0 flex-1" />
+              <input id={`pd-phone-${plan.slug}`} name="phone" required type="tel" inputMode="tel" autoComplete="tel-national" placeholder="6 xx xx xx xx" className="input" />
             </div>
           </div>
           {error ? <p className="text-sm text-secondary">{error}</p> : null}
