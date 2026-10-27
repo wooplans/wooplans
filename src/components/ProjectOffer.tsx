@@ -29,14 +29,23 @@ const STEP_TWO = ["Plans personnalisés selon vos besoins et votre terrain", "Do
 
 function Checklist({ items }: { items: string[] }) {
   return (
-    <ul className="mt-1.5 space-y-1 text-sm text-foreground/80">
+    <ul className="mt-2 space-y-1.5 text-sm leading-snug text-foreground/80">
       {items.map((item) => (
         <li key={item} className="flex gap-2">
-          <span className="text-primary" aria-hidden>✓</span>
-          {item}
+          <span className="w-4 shrink-0 font-bold text-primary" aria-hidden>✓</span>
+          <span>{item}</span>
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Prix d'une étape, sur sa propre ligne : évite un « · prix » orphelin quand le titre passe à la ligne. */
+function Price({ value }: { value: string }) {
+  return (
+    <span className="mt-1 inline-block whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-bold text-primary">
+      {value}
+    </span>
   );
 }
 
@@ -48,25 +57,25 @@ function Checklist({ items }: { items: string[] }) {
 export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   const start = formatFcfa(projectStartPrice());
   return (
-    <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
-      <h2 className="text-xl font-bold tracking-tight">Ce modèle {plan.code} vous intéresse ?</h2>
+    <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
+      <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
+        Ce modèle <span className="whitespace-nowrap">{plan.code}</span> vous intéresse ?
+      </h2>
 
-      <ol className="mt-4 space-y-4">
+      <ol className="mt-4 space-y-5">
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">1</span>
-          <div>
-            <p className="font-semibold">
-              Téléchargez son plan et devis <span className="whitespace-nowrap text-primary">· {start}</span>
-            </p>
+          <div className="min-w-0">
+            <p className="font-semibold leading-snug">Téléchargez son plan et devis</p>
+            <Price value={start} />
             <Checklist items={STEP_ONE} />
           </div>
         </li>
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-primary text-sm font-bold text-primary">2</span>
-          <div>
-            <p className="font-semibold">
-              Obtenez les plans complets <span className="whitespace-nowrap text-primary">· {formatFcfa(offer.price)}</span>
-            </p>
+          <div className="min-w-0">
+            <p className="font-semibold leading-snug">Obtenez les plans complets</p>
+            <Price value={formatFcfa(offer.price)} />
             <Checklist items={STEP_TWO} />
           </div>
         </li>
@@ -74,18 +83,19 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
 
       <PlanDevisButton
         plan={plan}
-        label={`Télécharger maintenant · ${start}`}
+        label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
         ctaId="plan_projet"
-        className="btn-cta mt-5 w-full py-4 text-base"
+        className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
         fallbackHref={online ? undefined : projectStartLink(plan)}
       />
 
-      <p className="mt-4 text-center text-sm text-foreground/75">
-        Vous hésitez encore entre plusieurs modèles ?{" "}
+      <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
+        Vous hésitez entre plusieurs modèles ?{" "}
         <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
           Le Catalogue Premium
         </Link>{" "}
-        réunit les plans et devis de {withPlanCount(planCount, "modèles", "tous les")} : {formatFcfa(cataloguePrice())}.
+        réunit les plans et devis de {withPlanCount(planCount, "modèles", "tous les")} :{" "}
+        <span className="whitespace-nowrap font-semibold">{formatFcfa(cataloguePrice())}</span>.
       </p>
     </div>
   );
