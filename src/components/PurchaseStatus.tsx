@@ -3,8 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
+import projet from "@/config/projet.json";
 
-type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned"; email: string | null; code: string | null };
+type Status = {
+  status: "unknown" | "started" | "paid" | "failed" | "abandoned";
+  email: string | null;
+  code: string | null;
+  /** Achat du plan et devis d'un seul modèle (sinon Catalogue Premium). */
+  plan?: { slug: string; code: string; name: string } | null;
+  download?: string | null;
+};
 
 /** Interroge le serveur jusqu'à la confirmation du paiement (notification Chariow). */
 export function PurchaseStatus({ intentId }: { intentId?: string }) {
@@ -22,6 +30,14 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
       if (cancelled) return;
       if (json) setData(json);
       setAttempts(n);
+      if (json?.status === "paid" && json.download) {
+        const key = `wp_purchase_${intentId ?? "x"}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          window.fbq?.("track", "Purchase", { value: projet.price, currency: "XAF", content_name: `Plan et devis ${json.plan?.code ?? ""}`.trim() });
+        }
+        return;
+      }
       if (json?.status === "paid" && json.code) {
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
@@ -38,6 +54,28 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
       clearTimeout(timer);
     };
   }, [intentId]);
+
+  if (data?.status === "paid" && data.plan && data.download) {
+    const whatsapp = `https://wa.me/${process.env.WHATSAPP_NUMBER || "237694327885"}?text=${encodeURIComponent(
+      `Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${data.plan.code} et je souhaite parler de mon projet.`,
+    )}`;
+    return (
+      <div className="card p-6 text-center md:p-10">
+        <p className="text-4xl" aria-hidden>🎉</p>
+        <h1 className="mt-3 text-2xl font-bold md:text-3xl">Paiement confirmé, votre plan et devis est prêt</h1>
+        <p className="mt-3 text-foreground/75">
+          {data.plan.name} (réf. {data.plan.code}) : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé. Le lien vous
+          est aussi envoyé par email.
+        </p>
+        <a href={data.download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger mon plan et devis</a>
+        <p className="mt-8 font-semibold">Des modifications à faire ?</p>
+        <p className="mt-1 text-sm text-foreground/75">Parlez-en à nos architectes : le prix de ce plan et devis est déduit de vos plans complets.</p>
+        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn mt-4 border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10">
+          Discuter sur WhatsApp
+        </a>
+      </div>
+    );
+  }
 
   if (data?.status === "paid") {
     return (
@@ -77,7 +115,7 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
       <div className="card p-8 text-center">
         <h1 className="text-2xl font-bold">Le paiement n&apos;a pas abouti</h1>
         <p className="mt-3 text-foreground/75">Aucun montant n&apos;a été débité. Vous pouvez réessayer quand vous voulez.</p>
-        <Link href="/catalogue-premium" className="btn-cta mt-6">Réessayer</Link>
+        <Link href={data.plan ? `/catalogue/${data.plan.slug}` : "/catalogue-premium"} className="btn-cta mt-6">Réessayer</Link>
       </div>
     );
   }
@@ -90,9 +128,11 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
       <p className="mt-3 text-foreground/75">
         {waiting
           ? "Cela prend généralement moins d'une minute. Ne fermez pas cette page."
-          : "La confirmation prend plus de temps que prévu. Dès qu'elle arrive, vous recevez votre catalogue et votre code d'accès par email."}
+          : data?.plan
+            ? "La confirmation prend plus de temps que prévu. Dès qu'elle arrive, vous recevez votre plan et devis par email."
+            : "La confirmation prend plus de temps que prévu. Dès qu'elle arrive, vous recevez votre catalogue et votre code d'accès par email."}
       </p>
-      {!waiting ? (
+      {!waiting && !data?.plan ? (
         <p className="mt-4 text-sm text-muted">
           Déjà reçu votre code ? <Link href="/connexion" className="font-semibold text-primary">Connectez-vous</Link>
         </p>

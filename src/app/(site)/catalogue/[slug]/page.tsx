@@ -6,7 +6,9 @@ import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { Faq, FaqJsonLd } from "@/components/Faq";
+import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
+import { planProductId } from "@/lib/chariow";
 import { customPlanOffer, memberBalance, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
@@ -55,6 +57,7 @@ export default async function PlanPage({ params }: Props) {
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
   const project = getEnv().OFFRE_PROJET === "1" && offer ? offer : null;
   const faq = project ? projectFaq({ plan, offer: project, planCount }) : null;
+  const online = Boolean(project && planProductId());
   const images = [plan.coverImage, ...plan.renders.filter((r) => r !== plan.coverImage)].filter(Boolean);
   const categoryPath = cataloguePath(plan.category);
   const categoryLabel = plan.category === "villa" ? "Villas" : plan.category === "duplex" ? "Duplex" : "Modèles";
@@ -106,7 +109,7 @@ export default async function PlanPage({ params }: Props) {
             </div>
 
             {project ? (
-              <ProjectOffer plan={plan} offer={project} planCount={planCount} />
+              <ProjectOffer plan={plan} offer={project} planCount={planCount} online={online} />
             ) : (
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
@@ -205,9 +208,13 @@ export default async function PlanPage({ params }: Props) {
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 p-3 backdrop-blur sm:hidden">
         {project ? (
-          <a href={projectStartLink(plan)} target="_blank" rel="noopener noreferrer" data-cta="plan_projet_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
-            Télécharger plan et devis · {formatFcfa(projectStartPrice())}
-          </a>
+          <PlanDevisButton
+            plan={plan}
+            label={`Télécharger plan et devis · ${formatFcfa(projectStartPrice())}`}
+            ctaId="plan_projet_sticky"
+            className="btn-cta w-full py-3.5"
+            fallbackHref={online ? undefined : projectStartLink(plan)}
+          />
         ) : (
           <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
             {SITE.catalogueCta}

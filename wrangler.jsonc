@@ -18,6 +18,9 @@
     "CHARIOW_STORE_DOMAIN": "wooplans.mychariow.shop",
     "CHARIOW_CATALOGUE_PRODUCT_ID": "prd_41k85hc0",
     "CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS": "prd_kufwer,prd_icqox6,prd_9cbatg,prd_dt190e,prd_27sozapx",
+    // Produit Chariow « Plan et devis » (type Licence : achats répétés possibles et paiement par l'API,
+    // qui transmet le modèle choisi). Vide = achat en ligne indisponible, le bouton ouvre WhatsApp.
+    "CHARIOW_PLAN_PRODUCT_ID": "",
     // Part du trafic de /catalogue-premium envoyée sur la variante B (0 à 100).
     // 0 = variante B visible seulement avec ?variante=b (aperçu).
     "SALES_PAGE_B_SHARE": "100",

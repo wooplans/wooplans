@@ -3,8 +3,9 @@ name: Aperçu (version de prévisualisation)
 # Publie une version du Worker SANS la mettre en production : le site wooplans.com ne change pas.
 # La version reçoit une adresse propre à la branche :
 #   https://<branche>-wooplans-web.<sous-domaine>.workers.dev
-# Elle partage la base D1, les fichiers R2 et les secrets de la production : aucune migration
-# n'est appliquée ici, et les fonctions encore en test y sont activées par --var (ex. OFFRE_PROJET).
+# Elle partage la base D1, les fichiers R2 et les secrets de la production. Les migrations de la
+# branche sont appliquées à la base : elles doivent se limiter à des AJOUTS (colonnes, tables), sans
+# effet sur le site en ligne. Les fonctions encore en test y sont activées par --var (ex. OFFRE_PROJET).
 # Attention : opennextjs-cloudflare transmet ces options sans guillemets, donc aucune valeur avec espace.
 on:
   push:
@@ -37,6 +38,8 @@ jobs:
         run: |
           alias=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g' | cut -c1-40 | sed -E 's/-+$//')
           echo "ALIAS=$alias" >> "$GITHUB_ENV"
+      - name: Migrations D1 (ajouts uniquement)
+        run: npx wrangler d1 migrations apply DB --remote
       - name: Envoi de la version (sans déploiement)
         run: npx opennextjs-cloudflare upload -- --preview-alias "$ALIAS" --var OFFRE_PROJET:1
       - name: Adresse de l'aperçu
