@@ -148,6 +148,28 @@ ${button(loginUrl, "Ouvrir mon espace Premium")}
   return { subject, html, text };
 }
 
+/** Livraison du plan et devis d'un modèle : lien de téléchargement personnel et WhatsApp des architectes. */
+export function planDevisEmail(params: { name?: string | null; planName: string; planCode: string; downloadUrl: string }) {
+  const subject = `Votre plan et devis du modèle ${params.planCode}`;
+  const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
+  const whatsapp = `https://wa.me/${getEnv().WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${params.planCode} et je souhaite parler de mon projet.`)}`;
+  const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Le plan et devis du modèle <strong>${escape(params.planName)}</strong> (réf. ${escape(params.planCode)}) est prêt : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé.</p>
+${button(params.downloadUrl, "Télécharger mon plan et devis")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
+<p style="margin-top:24px;font-weight:700">Des modifications à faire ?</p>
+<p>Écrivez à nos architectes sur WhatsApp : une chambre en plus, un garage, la taille de votre terrain… Ils vous accompagnent jusqu'aux plans complets personnalisés, dont le prix de ce plan et devis est déduit.</p>
+${button(whatsapp, "Discuter sur WhatsApp")}`);
+  const text = [
+    hello,
+    `Merci pour votre achat. Le plan et devis du modèle ${params.planName} (réf. ${params.planCode}) est prêt.`,
+    `Télécharger : ${params.downloadUrl}`,
+    "Ce lien est personnel. Le document est marqué à votre nom.",
+    `Des modifications à faire ? Écrivez à nos architectes sur WhatsApp : ${whatsapp}`,
+    "Le prix de ce plan et devis est déduit de vos plans complets personnalisés.",
+  ].join("\n\n");
+  return { subject, html, text };
+}
+
 export function adminSaleEmail(params: { email: string; name?: string | null; amount: number; product: string }) {
   const subject = `Nouvelle vente : ${params.product} (${params.amount.toLocaleString("fr-FR")} FCFA)`;
   const html = layout(subject, `<p>${escape(params.name || "Client")} — ${escape(params.email)}</p>${button(siteUrl("/admin/ventes"), "Voir les ventes")}`);

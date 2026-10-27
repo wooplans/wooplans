@@ -1,9 +1,9 @@
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
-import { and, desc, eq, gte, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, sendEmail } from "@/lib/email";
-import { getEnv } from "@/lib/env";
+import { accessCodeEmail, adminSaleEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
@@ -64,7 +64,9 @@ export type PulseOutcome =
   | "invalid_payload"
   | "recorded"
   | "access_granted"
-  | "already_granted";
+  | "already_granted"
+  | "plan_delivered"
+  | "plan_unmatched";
 
 /**
  * Traite une notification déjà authentifiée. Idempotent :
@@ -108,6 +110,7 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   const sale = payload.sale;
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
+  if (planProductId() && productId === planProductId()) return processPlanSale(payload, status);
   if (!catalogueProductIds().has(productId)) return "ignored_product";
 
   const customer = payload.customer ?? {};
@@ -261,6 +264,155 @@ async function processSaleEvent(payload: ChariowSalePayload): Promise<PulseOutco
   return "access_granted";
 }
 
+/* ─────────────── Plan et devis d'un modèle ─────────────── */
+
+export function planProductId() {
+  return getEnv().CHARIOW_PLAN_PRODUCT_ID || "";
+}
+
+/** Prix déduit des plans complets, inscrit dans le CRM avec l'achat. */
+const PLAN_CREDIT_NOTE = "Plan et devis payé : son prix est déduit des plans complets de ce modèle.";
+
+/**
+ * Vente du produit « Plan et devis » (un seul modèle). Le modèle vient de l'intention créée
+ * avant le paiement (métadonnée intent_id, ou à défaut le même email dans les 48 h).
+ * Sur paiement confirmé : lien de téléchargement par email, fiche dans le CRM, alerte au propriétaire.
+ */
+async function processPlanSale(payload: ChariowSalePayload, status: "completed" | "abandoned" | "failed"): Promise<PulseOutcome> {
+  const db = getDb();
+  const sale = payload.sale!;
+  const customer = payload.customer ?? {};
+  const email = customer.email ? normalizeEmail(customer.email) : null;
+  const name = customer.name || [customer.first_name, customer.last_name].filter(Boolean).join(" ") || null;
+  const phone = normalizePhone(customer.phone);
+  const country = customerCountry(customer);
+  const amount = Math.round(Number(sale.amount?.value ?? sale.original_amount?.value ?? 0)) || 0;
+  const metadata = sale.custom_metadata ?? {};
+
+  const intent = await findPlanIntent(metadata.intent_id, email);
+  const visitor = intent?.visitorId ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) }) : null;
+  const existing = await db.query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, sale.id!) });
+  const nextStatus = existing?.status === "completed" ? "completed" : status;
+  const values = {
+    productId: payload.product!.id!,
+    productName: `Plan et devis${intent?.planSlug ? ` · ${intent.planSlug}` : ""}`,
+    status: nextStatus,
+    amount,
+    currency: sale.amount?.currency || sale.original_amount?.currency || "XAF",
+    email,
+    name,
+    phone,
+    country,
+    intentId: intent?.id ?? existing?.intentId ?? null,
+    visitorId: visitor?.id ?? existing?.visitorId ?? null,
+    utmSource: visitor?.utmSource ?? existing?.utmSource ?? null,
+    utmCampaign: visitor?.utmCampaign ?? existing?.utmCampaign ?? null,
+    source: visitor?.source ?? existing?.source ?? null,
+    occurredAt: new Date(sale.completed_at || sale.created_at || Date.now()),
+    updatedAt: new Date(),
+  } as const;
+  if (existing) await db.update(schema.sales).set(values).where(eq(schema.sales.id, existing.id));
+  else await db.insert(schema.sales).values({ id: randomId(), chariowSaleId: sale.id!, ...values });
+
+  if (status !== "completed" || (sale.status && sale.status !== "completed")) {
+    if (intent && intent.status === "started" && status !== "completed") {
+      await db
+        .update(schema.checkoutIntents)
+        .set({ status, saleId: sale.id, updatedAt: new Date() })
+        .where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    return "recorded";
+  }
+
+  const notify = getEnv().ADMIN_NOTIFY_EMAIL;
+  const plan = intent?.planSlug ? await db.query.plans.findFirst({ where: eq(schema.plans.slug, intent.planSlug) }) : null;
+  if (!intent || !plan) {
+    // Modèle inconnu (email différent de celui saisi sur le site) : livraison manuelle par le propriétaire.
+    if (notify) {
+      const subject = `Plan et devis payé, modèle à identifier : ${name || email || "client"}`;
+      await sendEmail({
+        to: notify,
+        subject,
+        template: "admin_sale",
+        text: `${subject}
+Email : ${email || "—"}
+Téléphone : ${phone || "—"}
+Vente Chariow : ${sale.id}
+Contactez le client pour savoir quel modèle lui envoyer.`,
+        html: `<p><strong>${subject}</strong></p><p>Email : ${email || "—"}<br>Téléphone : ${phone || "—"}<br>Vente Chariow : ${sale.id}</p><p>Contactez le client pour savoir quel modèle lui envoyer.</p>`,
+      });
+    }
+    return "plan_unmatched";
+  }
+
+  // Verrou : une seule notification livre ce plan (Pulses multiples ou rejouées).
+  const claimed = await db
+    .update(schema.checkoutIntents)
+    .set({ status: "paid", saleId: sale.id, email: email ?? intent.email, updatedAt: new Date() })
+    .where(and(eq(schema.checkoutIntents.id, intent.id), ne(schema.checkoutIntents.status, "paid")))
+    .returning({ id: schema.checkoutIntents.id });
+  if (claimed.length === 0) return "already_granted";
+
+  const to = email ?? intent.email;
+  const downloadUrl = siteUrl(`/api/plan-devis/${intent.id}`);
+  if (to) {
+    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl });
+    await sendEmail({ to, ...mail, template: "plan_devis" });
+  }
+
+  const leadId = randomId();
+  await db.insert(schema.leads).values({
+    id: leadId,
+    name: name || to || "Client",
+    phone,
+    email: to,
+    country,
+    planId: plan.id,
+    planLabel: plan.code,
+    channel: "site",
+    stage: "demande",
+    projectDetails: PLAN_CREDIT_NOTE,
+    catalogueCredit: amount,
+    nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    utmSource: visitor?.utmSource ?? null,
+    utmCampaign: visitor?.utmCampaign ?? null,
+  });
+  await db.insert(schema.leadActivities).values({
+    id: randomId(),
+    leadId,
+    kind: "payment",
+    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA, vente Chariow ${sale.id}). Lien de téléchargement envoyé par email.`,
+    author: "site",
+  });
+
+  if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: intent.ctaId ?? null });
+  if (notify) {
+    const adminMail = adminSaleEmail({ email: to || "—", name, amount, product: `Plan et devis ${plan.code}` });
+    await sendEmail({ to: notify, ...adminMail, template: "admin_sale", leadId });
+  }
+  return "plan_delivered";
+}
+
+async function findPlanIntent(intentId: string | undefined, email: string | null) {
+  const db = getDb();
+  if (intentId) {
+    const byId = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intentId) });
+    if (byId?.planSlug) return byId;
+  }
+  if (!email) return null;
+  return (
+    (await db.query.checkoutIntents.findFirst({
+      where: and(
+        eq(schema.checkoutIntents.email, email),
+        isNotNull(schema.checkoutIntents.planSlug),
+        ne(schema.checkoutIntents.status, "paid"),
+        gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
+      ),
+      orderBy: desc(schema.checkoutIntents.createdAt),
+    })) ?? null
+  );
+}
+
 async function findRecentAnonymousIntent() {
   return (
     (await getDb().query.checkoutIntents.findFirst({
@@ -286,6 +438,7 @@ async function findIntent(intentId: string | undefined, email: string | null) {
     (await db.query.checkoutIntents.findFirst({
       where: and(
         eq(schema.checkoutIntents.email, email),
+        isNull(schema.checkoutIntents.planSlug),
         gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
       ),
       orderBy: desc(schema.checkoutIntents.createdAt),
@@ -295,9 +448,9 @@ async function findIntent(intentId: string | undefined, email: string | null) {
 
 /* ─────────────── Paiement ─────────────── */
 
-export function storefrontCheckoutUrl() {
+export function storefrontCheckoutUrl(productId?: string) {
   const env = getEnv();
-  return `https://${env.CHARIOW_STORE_DOMAIN}/${env.CHARIOW_CATALOGUE_PRODUCT_ID}/checkout`;
+  return `https://${env.CHARIOW_STORE_DOMAIN}/${productId || env.CHARIOW_CATALOGUE_PRODUCT_ID}/checkout`;
 }
 
 type CheckoutCustomer = {
@@ -319,16 +472,19 @@ export async function createChariowCheckout(params: {
   redirectUrl: string;
   metadata: Record<string, string>;
   customerIp?: string;
+  /** Produit à payer (par défaut le Catalogue Premium). */
+  productId?: string;
 }): Promise<{ url: string; mode: "api" | "storefront" }> {
   const env = getEnv();
-  if (!env.CHARIOW_API_KEY) return { url: storefrontCheckoutUrl(), mode: "storefront" };
+  const productId = params.productId || env.CHARIOW_CATALOGUE_PRODUCT_ID;
+  if (!env.CHARIOW_API_KEY) return { url: storefrontCheckoutUrl(productId), mode: "storefront" };
 
   try {
     const response = await fetch("https://api.chariow.com/v1/checkout", {
       method: "POST",
       headers: { Authorization: `Bearer ${env.CHARIOW_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        product_id: env.CHARIOW_CATALOGUE_PRODUCT_ID,
+        product_id: productId,
         email: params.customer.email,
         first_name: params.customer.firstName.slice(0, 50),
         last_name: (params.customer.lastName || params.customer.firstName).slice(0, 50),
@@ -348,5 +504,5 @@ export async function createChariowCheckout(params: {
   } catch (error) {
     console.warn("Chariow checkout API erreur, repli boutique :", error);
   }
-  return { url: storefrontCheckoutUrl(), mode: "storefront" };
+  return { url: storefrontCheckoutUrl(productId), mode: "storefront" };
 }

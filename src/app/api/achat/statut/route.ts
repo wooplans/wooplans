@@ -18,11 +18,21 @@ export async function GET(request: NextRequest) {
   const revealable =
     intent.status === "paid" && sameBrowser && intent.revealCode && intent.revealUntil && intent.revealUntil > new Date();
 
+  // Plan et devis d'un modèle : l'identifiant de l'achat est lui-même le lien de téléchargement.
+  const plan = intent.planSlug
+    ? await getDb().query.plans.findFirst({
+        where: eq(schema.plans.slug, intent.planSlug),
+        columns: { slug: true, code: true, name: true },
+      })
+    : null;
+
   return NextResponse.json(
     {
       status: intent.status,
       email: sameBrowser ? intent.email : null,
       code: revealable ? intent.revealCode : null,
+      plan: plan ?? null,
+      download: plan && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
     },
     { headers: { "Cache-Control": "no-store" } },
   );

@@ -216,6 +216,10 @@ export const checkoutIntents = sqliteTable(
     visitorId: text("visitor_id"),
     email: text("email"),
     ctaId: text("cta_id"),
+    /** Achat du plan et devis d'un seul modèle (slug du modèle) ; null pour le Catalogue Premium. */
+    planSlug: text("plan_slug"),
+    /** Téléchargements du plan et devis (lien personnel = identifiant de l'intention), plafonnés. */
+    downloads: integer("downloads").notNull().default(0),
     status: text("status", { enum: ["started", "paid", "failed", "abandoned"] }).notNull().default("started"),
     saleId: text("sale_id"),
     /** Code en clair, conservé quelques heures pour l'affichage sur /merci puis effacé. */

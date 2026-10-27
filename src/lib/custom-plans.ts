@@ -1,4 +1,5 @@
 import type { PlanCategory } from "@/lib/plan-format";
+import projet from "@/config/projet.json";
 import { cataloguePrice } from "@/lib/site";
 
 /**
@@ -41,4 +42,17 @@ export function customPlanOffer(category: PlanCategory): CustomPlanOffer | undef
 /** Ce qu'il reste à payer pour un membre Premium : le prix actuel du catalogue est déduit. */
 export function memberBalance(offer: CustomPlanOffer) {
   return Math.max(0, offer.price - cataloguePrice());
+}
+
+/**
+ * Plan et devis d'un modèle à télécharger (1re étape) : distribution cotée, devis détaillé et échange
+ * avec nos architectes. Prix lu dans src/config/projet.json, déduit des plans complets du modèle choisi.
+ */
+export function projectStartPrice(): number {
+  return projet.price;
+}
+
+/** Ce qu'il reste à payer pour les plans complets après le plan et devis du modèle. */
+export function projectBalance(offer: CustomPlanOffer) {
+  return Math.max(0, offer.price - projectStartPrice());
 }
