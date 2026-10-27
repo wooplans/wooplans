@@ -105,7 +105,7 @@ test("pages de vente générées : PostHog à la place de Clarity, paiement excl
     const html = readFileSync(new URL(`../public/lp/${file}`, import.meta.url), "utf8");
     assert.ok(!/clarity/i.test(html), `${file} : Clarity`);
     assert.ok(html.includes(`var PH_KEY='${key}'`), `${file} : clé PostHog différente de wrangler.jsonc (relancer scripts/build-sales-page.py)`);
-    assert.ok(html.includes('id="chariow-widget" class="ph-no-capture"'), `${file} : widget de paiement`);
+    assert.ok(/id="chariow-widget" class="ph-no-capture"|class="ckform ph-no-capture"/.test(html), `${file} : paiement exclu des enregistrements`);
     assert.ok(html.includes("maskAllInputs:true"), `${file} : masquage des saisies`);
     assert.ok(html.includes("window.wpConsent"), `${file} : consentement`);
   }

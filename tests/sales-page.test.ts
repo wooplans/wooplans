@@ -61,17 +61,17 @@ test("pages générées : A inchangée côté offre, B alignée sur le livrable"
   const b = readFileSync(new URL("../public/lp/catalogue-premium-b.html", import.meta.url), "utf8");
   assert.match(a, /var WP_VARIANT='a'/);
   assert.match(b, /var WP_VARIANT='b'/);
-  for (const page of [a, b]) {
-    assert.match(page, /data-product-id="prd_41k85hc0"/);
-    assert.doesNotMatch(page, /237653769998/);
-  }
+  for (const page of [a, b]) assert.doesNotMatch(page, /237653769998/);
+  assert.match(a, /data-product-id="prd_41k85hc0"/);
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
   assert.match(b, /data-wp-preview/);
   assert.match(b, /Fiches PDF de chaque modèle en téléchargement/);
   assert.doesNotMatch(b, /50\+|Télécharger le Catalogue|b-cdn\.net/);
-  assert.match(b, /data-locale="fr"/);
-  assert.match(b, /widget_ready/);
+  // Paiement B : formulaire court sur la page puis page de paiement (/api/checkout), sans widget Chariow.
+  assert.match(b, /id="ckForm"/);
+  assert.match(b, /fetch\('\/api\/checkout'/);
+  assert.doesNotMatch(b, /chariow-widget|widget\.min\.js|[Cc]ode promo/);
 });
 
 test("page B : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
