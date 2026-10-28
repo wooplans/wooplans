@@ -72,6 +72,17 @@ export function cleanFilters(f: PlanFilters): PlanFilters {
   return out;
 }
 
+/** Filtres lus dans une adresse (?categorie=villa&chambres=4…), comme le serveur les reçoit. */
+export function filtersFromSearch(search: string): PlanFilters {
+  const params = new URLSearchParams(search);
+  const out: PlanFilters = {};
+  for (const key of FILTER_KEYS) {
+    const value = params.get(key);
+    if (value) out[key] = value;
+  }
+  return out;
+}
+
 export function catalogueHref(f: PlanFilters, basePath = "/catalogue") {
   const query = new URLSearchParams(cleanFilters(f) as Record<string, string>).toString();
   return query ? `${basePath}?${query}` : basePath;
@@ -94,4 +105,16 @@ export function activeFilterChips(f: PlanFilters) {
   if (f.niveaux) chips.push({ key: "niveaux", label: Number(f.niveaux) >= 2 ? "À étage" : "Plain-pied" });
   if (f.terrain) chips.push({ key: "terrain", label: `Terrain ≤ ${f.terrain} m²` });
   return chips;
+}
+
+/** Résumé court des filtres, sur une ligne (barre de rappel du catalogue) : « Duplex · ≤ 30 M · 4 ch. ». */
+export function filterSummary(f: PlanFilters) {
+  const parts: string[] = [];
+  if (f.q?.trim()) parts.push(`« ${f.q.trim()} »`);
+  if (f.categorie) parts.push(f.categorie === "villa" ? "Villas" : f.categorie === "duplex" ? "Duplex" : f.categorie);
+  if (f.budget) parts.push(`≤ ${f.budget} M`);
+  if (f.chambres) parts.push(Number(f.chambres) >= 5 ? "5 ch. +" : `${f.chambres} ch.`);
+  if (f.niveaux) parts.push(Number(f.niveaux) >= 2 ? "À étage" : "Plain-pied");
+  if (f.terrain) parts.push(`Terrain ≤ ${f.terrain} m²`);
+  return parts.length > 0 ? parts.join(" · ") : "Tous les plans";
 }

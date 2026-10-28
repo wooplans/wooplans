@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode, type RefObject } from "react";
 import {
   BUDGET_OPTIONS,
   TYPE_OPTIONS,
@@ -9,6 +9,8 @@ import {
   bedroomOptions,
   catalogueHref,
   cleanFilters,
+  filterSummary,
+  filtersFromSearch,
   type PlanFilterData,
   type PlanFilters,
 } from "@/lib/plan-filters";
@@ -35,10 +37,16 @@ export function CatalogueBrowser({
 }) {
   const plans = useMemo(() => items.map((item) => item.plan), [items]);
   const cards = useMemo(() => new Map(items.map((item) => [item.plan.id, item.card])), [items]);
-  const [filters, setFilters] = useState(() => cleanFilters(initialFilters));
-  const [bedroomsOpen, setBedroomsOpen] = useState(Boolean(initialFilters.chambres));
+  const [filters, setFilters] = useState(() =>
+    // Retour sur le catalogue après une fiche : Next réaffiche la page rendue au départ, avec ses filtres
+    // d'origine ; l'adresse (mise à jour à chaque filtre) fait foi, pour retrouver la même liste.
+    typeof window !== "undefined" && window.location.pathname === basePath ? filtersFromSearch(window.location.search) : cleanFilters(initialFilters),
+  );
+  const [bedroomsOpen, setBedroomsOpen] = useState(Boolean(filters.chambres));
   // Change à chaque tap, même sur l'option déjà active : relance l'animation des résultats (retour visible).
   const [tick, setTick] = useState(0);
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => applyPlanFilters(plans, filters), [plans, filters]);
   const bedrooms = useMemo(() => bedroomOptions(plans), [plans]);
@@ -70,119 +78,128 @@ export function CatalogueBrowser({
 
   return (
     <div>
-      {search ? (
-        <form action={basePath} onSubmit={(event) => event.preventDefault()} className="mb-3" role="search">
-          {Object.entries(filters).map(([key, value]) =>
-            key === "q" ? null : <input key={key} type="hidden" name={key} value={value} />,
-          )}
-          <input
-            type="search"
-            name="q"
-            value={filters.q ?? ""}
-            onChange={(event) => apply({ ...filters, q: event.target.value }, "recherche")}
-            placeholder="Rechercher (ex. V3-037)"
-            aria-label="Rechercher une référence ou un nom de modèle"
-            enterKeyHint="search"
-            className="input"
-          />
-        </form>
-      ) : null}
-      <div role="group" aria-label="Type de plan" className="grid grid-cols-3 gap-1 rounded-2xl bg-outline/60 p-1">
-        {TYPE_OPTIONS.map((o) => (
-          <FilterLink
-            key={o.label}
-            {...set("categorie", o.value, "type")}
-            active={filters.categorie === o.value}
-            className="flex min-h-12 flex-col items-center justify-center rounded-xl px-1 text-center leading-tight"
-            activeClassName="bg-surface text-primary shadow-sm"
-            idleClassName="text-foreground/80"
-          >
-            <span className="text-sm font-semibold">{o.label}</span>
-            <span className="text-[11px] text-muted">{o.hint}</span>
-          </FilterLink>
-        ))}
-      </div>
-
-      <div className="mt-3 flex items-center gap-2">
-        <span className="shrink-0 text-sm font-medium text-muted">Budget max</span>
-        <div
-          role="group"
-          aria-label="Budget maximum"
-          className="no-scrollbar -mr-4 flex min-w-0 gap-2 overflow-x-auto pr-4 sm:mr-0 sm:pr-0"
-        >
-          <FilterLink {...set("budget", undefined)} active={!filters.budget} className={pill}>
-            Tous
-          </FilterLink>
-          {BUDGET_OPTIONS.map((o) => (
-            <FilterLink key={o.value} {...set("budget", o.value)} active={filters.budget === o.value} className={pill} ariaLabel={`${o.label} FCFA`}>
-              {o.value} M
-            </FilterLink>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p aria-live="polite" className="text-base font-bold text-foreground">
-          <span key={tick} className={tick === 0 ? "inline-block" : "catalogue-pop inline-block"}>
-            {plural(results.length)}
-          </span>
-        </p>
-        <button
-          type="button"
-          aria-expanded={bedroomsOpen}
-          aria-controls="filtre-chambres"
-          onClick={() => setBedroomsOpen((open) => !open)}
-          className={`${pill} gap-1.5 ${filters.chambres ? "border-primary text-primary" : ""}`}
-        >
-          Chambres
-          {filters.chambres ? <span className="font-bold">· {bedrooms.find((b) => b.value === filters.chambres)?.label ?? filters.chambres}</span> : null}
-          <svg viewBox="0 0 20 20" aria-hidden className={`h-4 w-4 transition-transform ${bedroomsOpen ? "rotate-180" : ""}`}>
-            <path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-
-      {bedroomsOpen ? (
-        <div id="filtre-chambres" role="group" aria-label="Nombre de chambres" className="mt-2 flex flex-wrap gap-2">
-          <FilterLink {...set("chambres", undefined)} active={!filters.chambres} className={pill}>
-            Toutes
-          </FilterLink>
-          {bedrooms.map((o) => (
-            <FilterLink key={o.value} {...set("chambres", o.value)} active={filters.chambres === o.value} className={pill}>
-              {o.label}
-            </FilterLink>
-          ))}
-        </div>
-      ) : null}
-
-      {chips.length > 0 ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Filtres actifs">
-          {chips.map((chip) => (
+      <FilterReminder
+        summary={filterSummary(filters)}
+        count={plural(results.length)}
+        filtersRef={filtersRef}
+        resultsRef={resultsRef}
+      />
+      <div ref={filtersRef}>
+        {search ? (
+          <form action={basePath} onSubmit={(event) => event.preventDefault()} className="mb-3" role="search">
+            {Object.entries(filters).map(([key, value]) =>
+              key === "q" ? null : <input key={key} type="hidden" name={key} value={value} />,
+            )}
+            <input
+              type="search"
+              name="q"
+              value={filters.q ?? ""}
+              onChange={(event) => apply({ ...filters, q: event.target.value }, "recherche")}
+              placeholder="Rechercher (ex. V3-037)"
+              aria-label="Rechercher une référence ou un nom de modèle"
+              enterKeyHint="search"
+              className="input"
+            />
+          </form>
+        ) : null}
+        <div role="group" aria-label="Type de plan" className="grid grid-cols-3 gap-1 rounded-2xl bg-outline/60 p-1">
+          {TYPE_OPTIONS.map((o) => (
             <FilterLink
-              key={chip.key}
-              {...set(chip.key, undefined, `retirer_${chip.key}`)}
+              key={o.label}
+              {...set("categorie", o.value, "type")}
+              active={filters.categorie === o.value}
+              className="flex min-h-12 flex-col items-center justify-center rounded-xl px-1 text-center leading-tight"
+              activeClassName="bg-surface text-primary shadow-sm"
+              idleClassName="text-foreground/80"
+            >
+              <span className="text-sm font-semibold">{o.label}</span>
+              <span className="text-[11px] text-muted">{o.hint}</span>
+            </FilterLink>
+          ))}
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
+          <span className="shrink-0 text-sm font-medium text-muted">Budget max</span>
+          <div
+            role="group"
+            aria-label="Budget maximum"
+            className="no-scrollbar -mr-4 flex min-w-0 gap-2 overflow-x-auto pr-4 sm:mr-0 sm:pr-0"
+          >
+            <FilterLink {...set("budget", undefined)} active={!filters.budget} className={pill}>
+              Tous
+            </FilterLink>
+            {BUDGET_OPTIONS.map((o) => (
+              <FilterLink key={o.value} {...set("budget", o.value)} active={filters.budget === o.value} className={pill} ariaLabel={`${o.label} FCFA`}>
+                {o.value} M
+              </FilterLink>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p aria-live="polite" className="text-base font-bold text-foreground">
+            <span key={tick} className={tick === 0 ? "inline-block" : "catalogue-pop inline-block"}>
+              {plural(results.length)}
+            </span>
+          </p>
+          <button
+            type="button"
+            aria-expanded={bedroomsOpen}
+            aria-controls="filtre-chambres"
+            onClick={() => setBedroomsOpen((open) => !open)}
+            className={`${pill} gap-1.5 ${filters.chambres ? "border-primary text-primary" : ""}`}
+          >
+            Chambres
+            {filters.chambres ? <span className="font-bold">· {bedrooms.find((b) => b.value === filters.chambres)?.label ?? filters.chambres}</span> : null}
+            <svg viewBox="0 0 20 20" aria-hidden className={`h-4 w-4 transition-transform ${bedroomsOpen ? "rotate-180" : ""}`}>
+              <path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        {bedroomsOpen ? (
+          <div id="filtre-chambres" role="group" aria-label="Nombre de chambres" className="mt-2 flex flex-wrap gap-2">
+            <FilterLink {...set("chambres", undefined)} active={!filters.chambres} className={pill}>
+              Toutes
+            </FilterLink>
+            {bedrooms.map((o) => (
+              <FilterLink key={o.value} {...set("chambres", o.value)} active={filters.chambres === o.value} className={pill}>
+                {o.label}
+              </FilterLink>
+            ))}
+          </div>
+        ) : null}
+
+        {chips.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Filtres actifs">
+            {chips.map((chip) => (
+              <FilterLink
+                key={chip.key}
+                {...set(chip.key, undefined, `retirer_${chip.key}`)}
+                active={false}
+                ariaLabel={`Retirer le filtre ${chip.label}`}
+                className="relative inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 pl-3 pr-2 text-sm font-medium text-primary after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']"
+                idleClassName=""
+              >
+                {chip.label}
+                <span aria-hidden className="text-base leading-none">×</span>
+              </FilterLink>
+            ))}
+            <FilterLink
+              {...reset}
               active={false}
-              ariaLabel={`Retirer le filtre ${chip.label}`}
-              className="relative inline-flex h-8 items-center gap-1.5 rounded-full bg-primary/10 pl-3 pr-2 text-sm font-medium text-primary after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']"
+              className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-primary underline underline-offset-2"
               idleClassName=""
             >
-              {chip.label}
-              <span aria-hidden className="text-base leading-none">×</span>
+              Effacer
             </FilterLink>
-          ))}
-          <FilterLink
-            {...reset}
-            active={false}
-            className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-primary underline underline-offset-2"
-            idleClassName=""
-          >
-            Effacer
-          </FilterLink>
-        </div>
-      ) : null}
+          </div>
+        ) : null}
+
+      </div>
 
       {/* Deux animations identiques en alternance : relancées sans remonter les cartes ni recharger leurs images. */}
-      <div className={`mt-5 ${tick === 0 ? "" : tick % 2 ? "catalogue-refresh-a" : "catalogue-refresh-b"}`}>
+      <div ref={resultsRef} className={`mt-5 ${tick === 0 ? "" : tick % 2 ? "catalogue-refresh-a" : "catalogue-refresh-b"}`}>
         {results.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((plan) => (
@@ -212,6 +229,89 @@ export function CatalogueBrowser({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Bas du bandeau fixe du site (ou de l'espace Premium), sous lequel la barre se place. */
+const headerBottom = () => Math.max(0, document.querySelector("header")?.getBoundingClientRect().bottom ?? 0);
+
+/**
+ * Barre de rappel : une fois les filtres sortis de l'écran, rappelle le filtre appliqué et le nombre de plans,
+ * et remonte aux filtres d'un tap (catalogue long : des dizaines d'écrans sur téléphone).
+ * Masquée tant que les filtres sont visibles, et après la fin de la liste.
+ */
+function FilterReminder({
+  summary,
+  count,
+  filtersRef,
+  resultsRef,
+}: {
+  summary: string;
+  count: string;
+  filtersRef: RefObject<HTMLDivElement | null>;
+  resultsRef: RefObject<HTMLDivElement | null>;
+}) {
+  const [visible, setVisible] = useState(false);
+  const [top, setTop] = useState(0);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const filters = filtersRef.current;
+      const results = resultsRef.current;
+      if (!filters || !results) return;
+      const header = headerBottom();
+      setTop(header);
+      setVisible(filters.getBoundingClientRect().bottom < header && results.getBoundingClientRect().bottom > header + 120);
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [filtersRef, resultsRef]);
+
+  function showFilters() {
+    const filters = filtersRef.current;
+    if (!filters) return;
+    window.scrollTo({ top: filters.getBoundingClientRect().top + window.scrollY - headerBottom() - 12, behavior: "smooth" });
+  }
+
+  return (
+    <div
+      style={{ top }}
+      inert={!visible}
+      aria-hidden={!visible}
+      className={`fixed inset-x-0 z-30 border-b border-outline bg-surface/95 shadow-sm backdrop-blur transition duration-200 ${
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-2 opacity-0"
+      }`}
+    >
+      <div className="container-page flex h-14 items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-sm">
+          <span className="font-semibold text-foreground">{summary}</span>
+          <span className="text-muted"> · {count}</span>
+        </p>
+        <button
+          type="button"
+          onClick={showFilters}
+          data-cta="barre_filtres"
+          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-primary px-4 text-sm font-semibold text-primary"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden className="h-4 w-4">
+            <path d="M3 5h14M6 10h8M8.5 15h3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          Modifier
+          <span className="sr-only"> les filtres</span>
+        </button>
       </div>
     </div>
   );

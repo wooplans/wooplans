@@ -15,8 +15,8 @@ export default {
       url.hostname = "www.wooplans.com";
       return Response.redirect(url.toString(), 301);
     }
-    // Images publiques (immuables) : servies depuis le cache Cloudflare, sans repasser par Next ni D1.
-    if (request.method === "GET" && url.pathname.startsWith("/media/") && !request.headers.has("range")) {
+    // Images publiques et vignettes de partage (immuables) : servies depuis le cache Cloudflare, sans repasser par Next ni D1.
+    if (request.method === "GET" && (url.pathname.startsWith("/media/") || url.pathname.startsWith("/og/")) && !request.headers.has("range")) {
       const cache = (caches as unknown as { default: Cache }).default;
       const hit = await cache.match(request);
       if (hit) return hit;
