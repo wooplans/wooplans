@@ -9,6 +9,7 @@ import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
 import { getEnv, requireSecret, siteUrl } from "@/lib/env";
 import { deleteMedia, planMediaFolder } from "@/lib/media-store";
 import { attachFileToPlan } from "@/lib/plan-media";
+import { checkRender, mapLimit } from "@/lib/plan-renders";
 import { derivedPlanFields, isStanding } from "@/lib/plan-pricing";
 import { getCostSettings, getSetting } from "@/lib/settings";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
@@ -144,6 +145,37 @@ async function premiumFileIndex() {
     plans: plans.map((p) => ({ code: p.code, name: p.name, status: p.status, floor_plans: p.floorPlans.map((key, i) => ({ position: i + 1, ...describe(key) })) })),
     catalogue_files: catalogue.map((f) => ({ ...describe(f.key), label: f.label, updated_at: f.updatedAt ?? null })),
   };
+}
+
+/** Lien de téléchargement temporaire (jeton HMAC) d'un fichier R2 : ne le donner qu'au propriétaire. */
+async function temporaryLink(key: string, minutesArg: unknown) {
+  const minutes = Math.min(1440, Math.max(5, asNumber(minutesArg) ?? 30));
+  const expiresAt = Date.now() + Math.round(minutes * 60_000);
+  const token = await signFileToken(requireSecret("AUTH_SECRET"), { key, expiresAt });
+  return {
+    download_url: siteUrl(`${privateFileUrl(key, true)}&jeton=${encodeURIComponent(token)}`),
+    download_expires_at: new Date(expiresAt).toISOString(),
+  };
+}
+
+/** Libellé des copies d'archive d'un modèle (rendus importés de Framer, plus affichés sur le site). */
+const archiveLabel = (code: string) => `${code} (Framer)`;
+
+/**
+ * Rendus d'un modèle dans R2 : ceux de la fiche (position = ordre d'affichage), puis les copies
+ * d'archive non affichées (position null). Les URL externes sont ignorées.
+ */
+async function planRenderFiles(plan: { code: string; renders: string[] }) {
+  const site = plan.renders.filter((r) => !/^https?:\/\//.test(r)).map(mediaKeyOf);
+  const archive = await getDb().query.media.findMany({
+    where: eq(schema.media.label, archiveLabel(plan.code)),
+    columns: { key: true },
+    orderBy: [asc(schema.media.key)],
+  });
+  return [
+    ...site.map((key, i) => ({ key, position: (i + 1) as number | null })),
+    ...archive.filter((a) => !site.includes(a.key)).map((a) => ({ key: a.key, position: null })),
+  ];
 }
 
 function planDetails(p: typeof schema.plans.$inferSelect) {
@@ -944,17 +976,13 @@ export const TOOLS: McpTool[] = [
       if (!entry || !object) throw new Error(`Fichier absent du stockage : ${key}`);
       const contentType = entry.contentType || object.httpMetadata?.contentType || "application/octet-stream";
 
-      const minutes = Math.min(1440, Math.max(5, asNumber(args.minutes) ?? 30));
-      const expiresAt = Date.now() + Math.round(minutes * 60_000);
-      const token = await signFileToken(requireSecret("AUTH_SECRET"), { key, expiresAt });
       const info: Record<string, unknown> = {
         plan,
         key,
         label: entry.label,
         content_type: contentType,
         size: object.size,
-        download_url: siteUrl(`${privateFileUrl(key, true)}&jeton=${encodeURIComponent(token)}`),
-        download_expires_at: new Date(expiresAt).toISOString(),
+        ...(await temporaryLink(key, args.minutes)),
       };
 
       const isImage = /^image\/(png|jpeg|webp|gif)$/.test(contentType);
@@ -973,6 +1001,85 @@ export const TOOLS: McpTool[] = [
           ? { type: "image", data, mimeType: contentType }
           : { type: "resource", resource: { uri: `wooplans://premium/${key}`, mimeType: contentType, blob: data } },
       ]);
+    },
+  },
+
+  /* ─────────── Rendus d'origine (R2) ─────────── */
+  {
+    name: "list_plan_renders",
+    description:
+      "Liste les rendus 3D d'un modèle stockés dans R2 : ceux affichés sur la fiche (position = ordre d'affichage) et les copies d'archive non affichées (position null). " +
+      "Pour chacun : clé R2, nom, type, taille (octets), dimensions (px) et watermarked : true si la pastille « Visitez wooplans.com » est détectée dans l'image, false si aucune trace, null si indécidable. " +
+      "Signaler au propriétaire, pour chaque modèle, si les fichiers trouvés sont propres ou filigranés (ne pas le supposer). Ouvrir un fichier avec get_plan_render. " +
+      "Usage interne : ces fichiers servent à produire les contenus de Tao ; ne jamais transmettre un original à un client ou à un visiteur.",
+    inputSchema: obj({ code: str("Référence (ex. V3-037) ou slug (ex. villa-v3-037)") }, ["code"]),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const files = await planRenderFiles(plan);
+      const entries = files.length
+        ? await getDb().query.media.findMany({ where: inArray(schema.media.key, files.map((f) => f.key).slice(0, D1_MAX_PARAMS)), columns: { key: true, label: true, contentType: true } })
+        : [];
+      const byKey = new Map(entries.map((m) => [m.key, m]));
+      const renders = await mapLimit(files, 4, async (f) => {
+        const entry = byKey.get(f.key);
+        const check = await checkRender(f.key, entry?.contentType);
+        return {
+          position: f.position,
+          key: f.key,
+          name: entry?.label ?? f.key.split("/").pop()!,
+          ...(check ?? { content_type: entry?.contentType ?? null, size: null, width: null, height: null, watermarked: null, missing: true }),
+        };
+      });
+      const count = (v: boolean | null) => renders.filter((r) => r.watermarked === v).length;
+      return { code: plan.code, name: plan.name, watermark: { clean: count(false), watermarked: count(true), unknown: count(null) }, renders };
+    },
+  },
+  {
+    name: "get_plan_render",
+    description:
+      "Ouvre un rendu 3D d'un modèle stocké dans R2 (clé donnée par list_plan_renders). " +
+      `Si inline est vrai (défaut) et que l'image pèse moins de ${INLINE_IMAGE_MAX_BYTES / 1_000_000} Mo, elle est renvoyée pour être regardée directement ; ` +
+      "sinon, un lien de téléchargement temporaire (30 min par défaut, 1 440 max) : avec Claude Code, le récupérer avec curl -fsSLo <fichier> \"<lien>\". " +
+      "Indique aussi les dimensions et watermarked (pastille « Visitez wooplans.com » détectée : true / false / null = indécidable). " +
+      "Usage interne pour les contenus de Tao : ne jamais transmettre l'original ni le lien à un client ou à un visiteur.",
+    inputSchema: obj(
+      {
+        key: str("Clé R2 du rendu, voir list_plan_renders"),
+        inline: { type: "boolean", description: "Joindre l'image à la réponse si elle pèse moins de 3,75 Mo (défaut true)" },
+        minutes: { type: "number", minimum: 5, maximum: 1440, description: "Validité du lien de téléchargement en minutes (défaut 30, max 1440)" },
+      },
+      ["key"],
+    ),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => {
+      const raw = asString(args.key);
+      if (!raw) throw new Error("key requise, voir list_plan_renders");
+      const key = mediaKeyOf(raw.split("?")[0]);
+      const db = getDb();
+      const entry = await db.query.media.findFirst({ where: eq(schema.media.key, key) });
+      const owner = await db.query.plans.findFirst({
+        where: sql`instr(${schema.plans.renders}, ${JSON.stringify(`/media/${key}`)}) > 0`,
+        columns: { code: true },
+      });
+      const archived = entry?.label?.endsWith(" (Framer)") ? entry.label.slice(0, -" (Framer)".length) : null;
+      const plan = owner?.code ?? archived;
+      if (!entry || !plan) throw new Error(`Rendu introuvable : ${key}. Voir list_plan_renders.`);
+
+      const check = await checkRender(key, entry.contentType);
+      if (!check) throw new Error(`Fichier absent du stockage : ${key}`);
+      const info: Record<string, unknown> = { plan, key, name: entry.label ?? key.split("/").pop(), ...check };
+
+      const isImage = /^image\/(png|jpeg|webp|gif)$/.test(check.content_type);
+      if (args.inline === false || !isImage || check.size > INLINE_IMAGE_MAX_BYTES) {
+        info.inline = false;
+        if (args.inline !== false) info.note = isImage ? "Image trop lourde pour être jointe : utiliser download_url." : "Type non joignable : utiliser download_url.";
+        return { ...info, ...(await temporaryLink(key, args.minutes)) };
+      }
+      const object = await getEnv().MEDIA.get(key);
+      if (!object) throw new Error(`Fichier absent du stockage : ${key}`);
+      info.inline = true;
+      return new ToolContent(info, [{ type: "image", data: toBase64(new Uint8Array(await object.arrayBuffer())), mimeType: check.content_type }]);
     },
   },
 ];

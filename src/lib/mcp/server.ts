@@ -24,6 +24,8 @@ const INSTRUCTIONS =
   "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
   "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
   "Fichiers réservés à l'espace Premium (distributions cotées, catalogue PDF) : list_premium_files puis get_premium_file pour les regarder ou les télécharger (lien temporaire, à ne jamais transmettre à un client). " +
+  "Rendus 3D d'origine stockés dans R2 : list_plan_renders (clé, nom, type, taille, dimensions, position, watermarked = pastille « Visitez wooplans.com » détectée ou non) puis get_plan_render pour les ouvrir ; " +
+  "pour chaque modèle, dire au propriétaire si les fichiers trouvés sont propres ou filigranés, sans le supposer. Usage interne pour les contenus de Tao : ne jamais transmettre un original ni un lien temporaire à un client ou à un visiteur. " +
   "Dossier local de plusieurs modèles (agent avec accès aux fichiers : Cowork, Claude Code) : en général un sous-dossier par modèle contenant le PDF et les images. " +
   "Commencer par list_plans pour écarter les références déjà au catalogue, puis traiter les modèles un par un : lire le PDF, create_plan, create_upload_link, " +
   "puis envoyer chaque image avec la commande curl fournie (curl -T, jamais de base64) : les rendus d'abord, la plus belle vue de façade en premier (couverture), puis les distributions dans l'ordre des niveaux. " +
