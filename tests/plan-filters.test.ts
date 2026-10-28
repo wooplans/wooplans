@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { activeFilterChips, applyPlanFilters, bedroomOptions, catalogueHref, cleanFilters } from "../src/lib/plan-filters.ts";
+import { activeFilterChips, applyPlanFilters, bedroomOptions, catalogueHref, cleanFilters, filtersFromSearch } from "../src/lib/plan-filters.ts";
 
 const plans = [
   { id: "a", category: "villa" as const, bedrooms: 3, levels: 1, budgetMin: 18_000_000, budgetMax: 22_000_000, landArea: 300 },
@@ -38,4 +38,10 @@ test("recherche par référence ou nom", () => {
   ];
   assert.deepEqual(applyPlanFilters(named, { q: " v3-0 " }).map((p) => p.id), ["a"]);
   assert.deepEqual(applyPlanFilters(named, { q: "duplex" }).map((p) => p.id), ["b"]);
+});
+
+test("filtres relus depuis l'adresse, comme catalogueHref les écrit", () => {
+  const filters = { categorie: "villa", chambres: "4", budget: "30" };
+  assert.deepEqual(filtersFromSearch(new URL(`https://x${catalogueHref(filters)}`).search), filters);
+  assert.deepEqual(filtersFromSearch("?categorie=&utm_source=fb"), {});
 });

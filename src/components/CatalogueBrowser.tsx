@@ -9,6 +9,7 @@ import {
   bedroomOptions,
   catalogueHref,
   cleanFilters,
+  filtersFromSearch,
   type PlanFilterData,
   type PlanFilters,
 } from "@/lib/plan-filters";
@@ -35,8 +36,12 @@ export function CatalogueBrowser({
 }) {
   const plans = useMemo(() => items.map((item) => item.plan), [items]);
   const cards = useMemo(() => new Map(items.map((item) => [item.plan.id, item.card])), [items]);
-  const [filters, setFilters] = useState(() => cleanFilters(initialFilters));
-  const [bedroomsOpen, setBedroomsOpen] = useState(Boolean(initialFilters.chambres));
+  const [filters, setFilters] = useState(() =>
+    // Retour sur le catalogue après une fiche : Next réaffiche la page rendue au départ, avec ses filtres
+    // d'origine ; l'adresse (mise à jour à chaque filtre) fait foi, pour retrouver la même liste.
+    typeof window !== "undefined" && window.location.pathname === basePath ? filtersFromSearch(window.location.search) : cleanFilters(initialFilters),
+  );
+  const [bedroomsOpen, setBedroomsOpen] = useState(Boolean(filters.chambres));
   // Change à chaque tap, même sur l'option déjà active : relance l'animation des résultats (retour visible).
   const [tick, setTick] = useState(0);
 

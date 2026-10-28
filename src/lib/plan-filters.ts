@@ -72,6 +72,17 @@ export function cleanFilters(f: PlanFilters): PlanFilters {
   return out;
 }
 
+/** Filtres lus dans une adresse (?categorie=villa&chambres=4…), comme le serveur les reçoit. */
+export function filtersFromSearch(search: string): PlanFilters {
+  const params = new URLSearchParams(search);
+  const out: PlanFilters = {};
+  for (const key of FILTER_KEYS) {
+    const value = params.get(key);
+    if (value) out[key] = value;
+  }
+  return out;
+}
+
 export function catalogueHref(f: PlanFilters, basePath = "/catalogue") {
   const query = new URLSearchParams(cleanFilters(f) as Record<string, string>).toString();
   return query ? `${basePath}?${query}` : basePath;

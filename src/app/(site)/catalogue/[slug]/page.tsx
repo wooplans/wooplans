@@ -23,6 +23,7 @@ import {
   withPlanCount,
 } from "@/lib/plans";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
+import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
 import { cataloguePath } from "../view";
 
@@ -35,11 +36,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!plan) return { title: "Modèle introuvable", robots: { index: false } };
   const title = plan.seoTitle || planSeoTitle(plan);
   const description = plan.seoDescription || planSeoDescription(plan);
+  // Vignette JPEG légère (WhatsApp ignore le WebP et les images lourdes) ; couverture d'origine si elle n'est pas dans R2.
+  const sharePath = shareImagePath(plan.coverImage);
+  const image = sharePath
+    ? { url: sharePath, width: SHARE_IMAGE.width, height: SHARE_IMAGE.height, type: "image/jpeg", alt: planImageAlt(plan) }
+    : plan.coverImage
+      ? { url: plan.coverImage, alt: planImageAlt(plan) }
+      : null;
   return {
     title,
     description,
     alternates: { canonical: `/catalogue/${plan.slug}` },
-    openGraph: { title, description, images: plan.coverImage ? [{ url: plan.coverImage, alt: planImageAlt(plan) }] : undefined },
+    // openGraph remplace celui du layout racine : type, nom du site et langue sont repris ici.
+    openGraph: {
+      type: "website",
+      locale: SITE.locale,
+      siteName: SITE.name,
+      url: `/catalogue/${plan.slug}`,
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+    twitter: { card: "summary_large_image", title, description, images: image ? [image.url] : undefined },
   };
 }
 

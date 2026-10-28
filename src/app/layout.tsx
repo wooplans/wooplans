@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Suspense } from "react";
 import { ImageGuard } from "@/components/ImageGuard";
+import { ScrollMemory } from "@/components/ScrollMemory";
 import { Tracker } from "@/components/Tracker";
 import { siteUrl } from "@/lib/env";
 import { SITE } from "@/lib/site";
@@ -38,10 +39,13 @@ export const viewport: Viewport = { themeColor: "#0F5B59", width: "device-width"
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={montserrat.variable}>
+    // data-scroll-behavior : Next coupe le défilement doux (globals.css) pendant un changement de page,
+    // sinon l'arrivée sur une fiche défilait visiblement du bas vers le haut.
+    <html lang="fr" className={montserrat.variable} data-scroll-behavior="smooth">
       <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         {children}
         <ImageGuard />
+        <ScrollMemory />
         <Suspense fallback={null}>
           <Tracker />
         </Suspense>
