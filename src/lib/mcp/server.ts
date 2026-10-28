@@ -18,18 +18,20 @@ const INSTRUCTIONS =
   "Le revenu du catalogue et celui du plan et devis (ventes Chariow, comptés à part : planDevis* dans get_business_summary, product dans list_sales) sont distincts des encaissements des plans complets (CRM). " +
   "Avant toute action qui écrit à un client (send_lead_email, grant_premium_access, send_new_access_code) ou qui révoque un accès, confirmez avec le propriétaire. " +
   "Ajout d'un modèle au catalogue : 1) lire le PDF fourni (descriptif, surfaces, pièces, devis) ; 2) create_plan — la fiche est toujours créée en brouillon ; " +
-  "3) ajouter les rendus 3D (role=render : publics, le premier devient la couverture) puis les distributions cotées (role=floor_plan : privées, réservées aux membres Premium, PDF accepté). " +
+  "3) ajouter les rendus 3D (role=render : envoyer les ORIGINAUX en pleine résolution, sans filigrane ; le serveur les garde en privé dans R2 et fabrique la version du site, légère et filigranée ; le premier devient la couverture), " +
+  "puis les distributions cotées (role=floor_plan : privées, réservées aux membres Premium, PDF accepté), le PDF du modèle (role=document) et la vidéo de visite guidée s'il y en a une (role=video). " +
   "Fichiers sur l'ordinateur du propriétaire : create_upload_link — sur claude.ai, lui donner le lien de la page où il dépose ses fichiers puis attendre qu'il confirme ; avec Claude Code, envoyer chaque fichier local avec la commande curl fournie (jamais en base64). " +
   "Fichiers accessibles par une URL https directe : upload_plan_image ; " +
   "4) get_plan pour vérifier tous les champs, y compris Premium ; 5) présenter au propriétaire un résumé (référence, nom, surfaces, pièces, devis, budget, images) et les avertissements éventuels ; " +
   "6) publier (update_plan_content avec status=published) uniquement après son accord explicite. " +
   "Fichiers réservés à l'espace Premium (distributions cotées, catalogue PDF) : list_premium_files puis get_premium_file pour les regarder ou les télécharger (lien temporaire, à ne jamais transmettre à un client). " +
-  "Rendus 3D d'origine stockés dans R2 : list_plan_renders (clé, nom, type, taille, dimensions, position, watermarked = pastille « Visitez wooplans.com » détectée ou non) puis get_plan_render pour les ouvrir ; " +
-  "pour chaque modèle, dire au propriétaire si les fichiers trouvés sont propres ou filigranés, sans le supposer. Usage interne pour les contenus de Tao : ne jamais transmettre un original ni un lien temporaire à un client ou à un visiteur. " +
+  "Tout le dossier d'un modèle est dans R2 (originaux des rendus, versions du site, distributions, PDF, vidéos) : list_plan_files puis get_plan_file, sans passer par l'ordinateur du propriétaire ; " +
+  "pour chaque modèle, dire si les originaux trouvés sont propres ou filigranés (watermarked), sans le supposer. Usage interne pour les contenus de Tao : ne jamais transmettre un original, une vidéo, un PDF ou un lien temporaire à un client ou à un visiteur. " +
+  "Mise à jour des rendus d'un modèle en ligne : envoyer les nouveaux originaux (create_upload_link), vérifier avec list_plan_files, puis replace_plan_renders (keep_last = nombre de nouveaux rendus) ; les anciens restent 30 jours (restore_plan_file) puis sont supprimés. Volume stocké : get_storage_usage. " +
   "Dossier local de plusieurs modèles (agent avec accès aux fichiers : Cowork, Claude Code) : en général un sous-dossier par modèle contenant le PDF et les images. " +
   "Commencer par list_plans pour écarter les références déjà au catalogue, puis traiter les modèles un par un : lire le PDF, create_plan, create_upload_link, " +
   "puis envoyer chaque image avec la commande curl fournie (curl -T, jamais de base64) : les rendus d'abord, la plus belle vue de façade en premier (couverture), puis les distributions dans l'ordre des niveaux. " +
-  "Classer chaque fichier en regardant l'image (rendu 3D ou plan coté) et son nom ; en cas de doute, demander. Ignorer les fichiers sans rapport (vidéos, fichiers de travail). " +
+  "Classer chaque fichier en regardant l'image (rendu 3D ou plan coté) et son nom ; en cas de doute, demander. Envoyer aussi le PDF du modèle (role=document) et la vidéo de visite guidée (role=video) ; ignorer les fichiers de travail. " +
   "Si curl est bloqué par le réseau de l'agent, donner au propriétaire le lien « page » à la place. " +
   "À la fin, présenter un tableau récapitulatif (référence, nom, chambres, surface, budget, nombre de rendus et de distributions, avertissements, éléments manquants) et ne publier que les modèles que le propriétaire valide. " +
   "Conventions : référence en majuscules « V4-001 » (V = villa, D = duplex, chiffre = nombre de chambres), slug généré « villa-v4-001 », nom « Villa V4-001 » ou « Duplex D5-002 » ; " +

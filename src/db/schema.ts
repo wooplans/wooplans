@@ -81,6 +81,13 @@ export const plans = sqliteTable(
 );
 
 /** Registre des fichiers R2 : la visibilité est contrôlée côté serveur. */
+/**
+ * render_original : rendu d'origine (privé, haute résolution) ; render : version du site, tirée de l'original
+ * (allégée, filigranée, publique) ; floor_plan : distribution cotée ; document : PDF du modèle ; video : visite guidée.
+ */
+export const MEDIA_KINDS = ["render_original", "render", "floor_plan", "document", "video"] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
 export const media = sqliteTable(
   "media",
   {
@@ -89,9 +96,17 @@ export const media = sqliteTable(
     contentType: text("content_type").notNull().default("application/octet-stream"),
     size: integer("size").notNull().default(0),
     label: text("label"),
+    /** Modèle auquel le fichier appartient (fichiers envoyés depuis 10/2026). */
+    planId: text("plan_id"),
+    /** Rôle du fichier pour ce modèle (null : fichiers plus anciens). */
+    kind: text("kind", { enum: MEDIA_KINDS }),
+    /** Version du site : clé de l'original dont elle est tirée. */
+    sourceKey: text("source_key"),
+    /** Fichier retiré du modèle : supprimé de R2 par la tâche quotidienne après cette date. */
+    deleteAfter: integer("delete_after", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
   },
-  (t) => [index("media_visibility_idx").on(t.visibility)],
+  (t) => [index("media_visibility_idx").on(t.visibility), index("media_plan_idx").on(t.planId), index("media_delete_after_idx").on(t.deleteAfter)],
 );
 
 /* ─────────────────────────── Membres Premium ─────────────────────────── */
