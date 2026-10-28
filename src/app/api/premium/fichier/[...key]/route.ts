@@ -11,7 +11,7 @@ import { imageMarkForMember } from "@/lib/watermark";
  * Fichiers Premium (distributions cotées, PDF) : session membre active obligatoire.
  * Les images sont servies filigranées au nom du membre (incrustation dans les pixels) :
  * une distribution enregistrée depuis le navigateur porte la même marque que la fiche PDF.
- * Lien temporaire de l'agent (outil MCP get_premium_file, ?jeton=…) : fichier d'origine, sans filigrane, pour ce seul fichier.
+ * Lien temporaire de l'agent (outils MCP get_premium_file et get_plan_file, ?jeton=…) : fichier d'origine, sans filigrane, pour ce seul fichier.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const key = safeKey((await params).key);
@@ -23,6 +23,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   if (!key) return new Response("Introuvable", { status: 404 });
   const entry = await getDb().query.media.findFirst({ where: eq(schema.media.key, key) });
   if (!entry) return new Response("Introuvable", { status: 404 });
+  // Les membres ne voient que les distributions et le catalogue : originaux des rendus, PDF des modèles et vidéos restent réservés à l'agent.
+  if (member && entry.kind && entry.kind !== "floor_plan") return new Response("Introuvable", { status: 404 });
 
   if (member && entry.contentType.startsWith("image/")) {
     const asset = await loadPdfFloorPlan(key);

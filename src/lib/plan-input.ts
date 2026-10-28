@@ -321,21 +321,28 @@ export const PLAN_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 /** Fichiers envoyés par le lien d'envoi (navigateur ou curl), transmis en flux vers R2. */
 export const UPLOAD_LINK_MAX_BYTES = 40 * 1024 * 1024;
 export type ImageRole = "render" | "floor_plan";
+/** render : rendu 3D ; floor_plan : distribution cotée ; document : PDF du modèle ; video : visite guidée. */
+export type FileRole = ImageRole | "document" | "video";
+export const FILE_ROLES: readonly FileRole[] = ["render", "floor_plan", "document", "video"];
 export type SniffedType = { contentType: string; ext: string };
 
-/** Type réel d'un fichier d'après ses premiers octets (png, jpeg, webp, pdf). */
+/** Type réel d'un fichier d'après ses premiers octets (png, jpeg, webp, pdf, mp4, mov, webm). */
 export function sniffFileType(head: Uint8Array): SniffedType | null {
   const at = (i: number, bytes: number[]) => bytes.every((b, j) => head[i + j] === b);
   if (at(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return { contentType: "image/png", ext: "png" };
   if (at(0, [0xff, 0xd8, 0xff])) return { contentType: "image/jpeg", ext: "jpg" };
   if (at(0, [0x52, 0x49, 0x46, 0x46]) && at(8, [0x57, 0x45, 0x42, 0x50])) return { contentType: "image/webp", ext: "webp" };
   if (at(0, [0x25, 0x50, 0x44, 0x46, 0x2d])) return { contentType: "application/pdf", ext: "pdf" };
+  if (at(4, [0x66, 0x74, 0x79, 0x70])) return at(8, [0x71, 0x74, 0x20, 0x20]) ? { contentType: "video/quicktime", ext: "mov" } : { contentType: "video/mp4", ext: "mp4" };
+  if (at(0, [0x1a, 0x45, 0xdf, 0xa3])) return { contentType: "video/webm", ext: "webm" };
   return null;
 }
 
-/** Type accepté pour un rôle : images pour les rendus, images ou PDF pour les distributions. */
-export function acceptedForRole(type: SniffedType | null, role: ImageRole): type is SniffedType {
+/** Type accepté pour un rôle : images (rendus), images ou PDF (distributions), PDF (document), vidéo (visite guidée). */
+export function acceptedForRole(type: SniffedType | null, role: FileRole): type is SniffedType {
   if (!type) return false;
+  if (role === "document") return type.contentType === "application/pdf";
+  if (role === "video") return type.contentType.startsWith("video/");
   return type.contentType.startsWith("image/") || (role === "floor_plan" && type.contentType === "application/pdf");
 }
 

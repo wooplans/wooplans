@@ -207,3 +207,19 @@ test("parsePremiumUpdate : champs fournis seulement, total = somme des lots", as
   assert.throws(() => parsePremiumUpdate({ estimate_lots: [{ label: "A", amount: "2 M" }] }), PlanInputError);
   assert.throws(() => parsePremiumUpdate({ surface_total: 5 }), PlanInputError);
 });
+
+test("vidéos et PDF du modèle : type réel reconnu, rôle contrôlé", () => {
+  const mp4 = new Uint8Array([0, 0, 0, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0]);
+  const mov = new Uint8Array([0, 0, 0, 0x14, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20, 0, 0, 0, 0]);
+  const webm = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(sniffFileType(mp4), { contentType: "video/mp4", ext: "mp4" });
+  assert.deepEqual(sniffFileType(mov), { contentType: "video/quicktime", ext: "mov" });
+  assert.deepEqual(sniffFileType(webm), { contentType: "video/webm", ext: "webm" });
+  assert.ok(acceptedForRole(sniffFileType(mp4), "video"));
+  assert.ok(!acceptedForRole(sniffFileType(mp4), "render"));
+  assert.ok(!acceptedForRole(sniffFileType(mp4), "floor_plan"));
+  assert.ok(acceptedForRole(sniffFileType(pdf), "document"));
+  assert.ok(!acceptedForRole(sniffFileType(pdf), "render"));
+  assert.ok(!acceptedForRole({ contentType: "image/png", ext: "png" }, "document"));
+});

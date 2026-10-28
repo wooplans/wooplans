@@ -3,6 +3,7 @@ import { getDb, schema } from "@/db";
 import { timingSafeEqual } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
+import { purgeRetiredMedia } from "@/lib/media-store";
 import { runMemberDigest } from "@/lib/member-mailing";
 import { reconcileProspects } from "@/lib/prospects";
 import { formatFcfa } from "@/lib/plans";
@@ -11,7 +12,7 @@ import { formatFcfa } from "@/lib/plans";
  * Tâche quotidienne (déclenchée par le cron du Worker, voir worker.ts) :
  * nettoyage des codes affichés sur /merci et récapitulatif envoyé à l'admin
  * (ventes de la veille, paniers abandonnés à relancer, relances CRM du jour), et envoi par lots
- * des actualités mensuelles aux membres.
+ * des actualités mensuelles aux membres. Suppression des fichiers retirés des modèles depuis plus de 30 jours.
  */
 export async function POST(request: Request) {
   const env = getEnv();
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
     .where(and(isNotNull(schema.checkoutIntents.revealCode), lt(schema.checkoutIntents.revealUntil, now)));
   await db.delete(schema.rateLimits).where(lt(schema.rateLimits.windowStart, new Date(now.getTime() - 86400_000)));
 
+  const purge = await purgeRetiredMedia(now).catch((error) => {
+    console.error("Fichiers retirés : suppression impossible", error);
+    return null;
+  });
   await reconcileProspects().catch((error) => console.error("CRM prospects : rapprochement impossible", error));
   const digest = await runMemberDigest(now).catch((error) => {
     console.error("Actualités membres : échec", error);
@@ -72,5 +77,5 @@ export async function POST(request: Request) {
       template: "admin_digest",
     });
   }
-  return Response.json({ ok: true, sales: sales.length, abandoned: abandoned.length, due: due.length, digest });
+  return Response.json({ ok: true, sales: sales.length, abandoned: abandoned.length, due: due.length, digest, purge });
 }

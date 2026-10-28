@@ -7,8 +7,10 @@ import { parseRange } from "@/lib/date-range";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
 import { getEnv, requireSecret, siteUrl } from "@/lib/env";
-import { deleteMedia, planMediaFolder } from "@/lib/media-store";
+import { RETENTION_DAYS, restoreMedia, retireMedia } from "@/lib/media-store";
 import { attachFileToPlan } from "@/lib/plan-media";
+import { planFileIndex, planOfFile } from "@/lib/plan-files";
+import { checkRender } from "@/lib/plan-renders";
 import { derivedPlanFields, isStanding } from "@/lib/plan-pricing";
 import { getCostSettings, getSetting } from "@/lib/settings";
 import { grantAccess, normalizeEmail, revokeAccess, rotateAccessCode } from "@/lib/members";
@@ -144,6 +146,25 @@ async function premiumFileIndex() {
     plans: plans.map((p) => ({ code: p.code, name: p.name, status: p.status, floor_plans: p.floorPlans.map((key, i) => ({ position: i + 1, ...describe(key) })) })),
     catalogue_files: catalogue.map((f) => ({ ...describe(f.key), label: f.label, updated_at: f.updatedAt ?? null })),
   };
+}
+
+/** Lien de téléchargement temporaire (jeton HMAC) d'un fichier R2 : ne le donner qu'au propriétaire. */
+async function temporaryLink(key: string, minutesArg: unknown) {
+  const minutes = Math.min(1440, Math.max(5, asNumber(minutesArg) ?? 30));
+  const expiresAt = Date.now() + Math.round(minutes * 60_000);
+  const token = await signFileToken(requireSecret("AUTH_SECRET"), { key, expiresAt });
+  return {
+    download_url: siteUrl(`${privateFileUrl(key, true)}&jeton=${encodeURIComponent(token)}`),
+    download_expires_at: new Date(expiresAt).toISOString(),
+  };
+}
+
+/** Fichiers de ce modèle qu'aucun autre modèle n'affiche (une même image peut servir à deux fiches). */
+async function unsharedKeys(planId: string, keys: string[]) {
+  if (!keys.length) return [];
+  const others = await getDb().query.plans.findMany({ where: ne(schema.plans.id, planId), columns: { renders: true, floorPlans: true, coverImage: true } });
+  const used = new Set(others.flatMap((p) => [...p.renders, p.coverImage, ...p.floorPlans].map(mediaKeyOf)));
+  return keys.filter((k) => !used.has(k));
 }
 
 function planDetails(p: typeof schema.plans.$inferSelect) {
@@ -627,7 +648,7 @@ export const TOOLS: McpTool[] = [
         slug: values.slug,
         status: "draft",
         warnings,
-        next_steps: "Ajouter les rendus (upload_plan_image role=render) puis les distributions (role=floor_plan), vérifier avec get_plan, présenter un résumé au propriétaire et ne publier qu'après son accord.",
+        next_steps: "Ajouter les rendus originaux (create_upload_link, role=render), les distributions (role=floor_plan), le PDF du modèle (role=document) et la vidéo s'il y en a une (role=video), vérifier avec get_plan et list_plan_files, présenter un résumé au propriétaire et ne publier qu'après son accord.",
         admin_url: `/admin/plans/${id}`,
       };
     },
@@ -635,11 +656,11 @@ export const TOOLS: McpTool[] = [
   {
     name: "upload_plan_image",
     description:
-      "Ajoute un fichier à la galerie d'un modèle, depuis une URL https (téléchargée par le serveur) OU un contenu base64 (8 Mo max). role « render » : rendu 3D public (png, jpeg, webp), ajouté à la fin des rendus ; le premier devient la couverture s'il n'y en a pas. role « floor_plan » : distribution cotée PRIVÉE, visible des seuls membres Premium (png, jpeg, webp ou PDF). Le type réel du fichier est contrôlé. Pour des fichiers qui sont sur l'ordinateur du propriétaire, utiliser plutôt create_upload_link.",
+      "Ajoute un fichier à un modèle, depuis une URL https (téléchargée par le serveur) OU un contenu base64 (8 Mo max). role « render » : rendu 3D (png, jpeg, webp) : l'original est rangé en privé dans R2 et le serveur en tire la version du site (légère, filigranée), ajoutée à la fin des rendus ; le premier devient la couverture s'il n'y en a pas. role « floor_plan » : distribution cotée PRIVÉE, visible des seuls membres Premium (png, jpeg, webp ou PDF). role « document » : PDF du modèle, privé. Le type réel du fichier est contrôlé. Pour des fichiers qui sont sur l'ordinateur du propriétaire (et pour les vidéos), utiliser plutôt create_upload_link.",
     inputSchema: obj(
       {
         code: str("Référence du modèle"),
-        role: str("render | floor_plan", { enum: ["render", "floor_plan"] }),
+        role: str("render | floor_plan | document", { enum: ["render", "floor_plan", "document"] }),
         url: str("URL https du fichier (au lieu de content_base64)"),
         content_base64: str("Contenu du fichier en base64, préfixe data: accepté (au lieu de url)"),
         filename: str("Nom lisible du fichier, ex. « V4-001 rendu façade.jpg »"),
@@ -649,7 +670,7 @@ export const TOOLS: McpTool[] = [
     ),
     handler: async (args) => {
       const plan = await findPlan(args.code);
-      const role = asRole(args.role);
+      const role = args.role === "document" ? "document" : asRole(args.role);
       const url = asString(args.url);
       const base64 = asString(args.content_base64);
       if (Boolean(url) === Boolean(base64)) throw new Error("Fournir soit url, soit content_base64 (un seul des deux).");
@@ -669,10 +690,11 @@ export const TOOLS: McpTool[] = [
   {
     name: "create_upload_link",
     description:
-      "Crée un lien d'envoi temporaire pour ajouter à un modèle des fichiers qui sont sur l'ordinateur du propriétaire (rendus 3D et distributions). " +
+      "Crée un lien d'envoi temporaire pour ajouter à un modèle des fichiers qui sont sur l'ordinateur du propriétaire : rendus 3D, distributions cotées, PDF du modèle, vidéo de visite guidée. " +
+      "Rendus : envoyer les ORIGINAUX en pleine résolution et sans filigrane ; le serveur range l'original en privé dans R2 et fabrique lui-même la version du site (légère, filigranée). " +
       "Sur claude.ai : donner le lien « page » au propriétaire, qui y dépose ses fichiers depuis son navigateur. " +
-      "Avec Claude Code (accès aux fichiers locaux) : envoyer chaque fichier avec la commande curl fournie, sans passer son contenu dans la conversation. " +
-      "Le lien ne permet que d'ajouter des fichiers à ce modèle et expire (2 h par défaut). Ensuite, vérifier avec get_plan.",
+      "Avec Claude Code ou Cowork (accès aux fichiers locaux) : envoyer chaque fichier avec la commande curl fournie, sans passer son contenu dans la conversation. " +
+      "Le lien ne permet que d'ajouter des fichiers à ce modèle et expire (2 h par défaut). Ensuite, vérifier avec list_plan_files.",
     inputSchema: obj(
       {
         code: str("Référence du modèle"),
@@ -686,15 +708,26 @@ export const TOOLS: McpTool[] = [
       const expiresAt = Date.now() + Math.round(hours * 3600_000);
       const token = await signUploadToken(requireSecret("AUTH_SECRET"), { planId: plan.id, code: plan.code, expiresAt });
       const endpoint = siteUrl("/api/televersement");
+      const auth = `-H "Authorization: Bearer ${token}"`;
+      const curl = (role: string, sample: string) => `curl -fsS -T "${sample}" ${auth} "${endpoint}?role=${role}&filename=$(basename "${sample}" | sed 's/ /%20/g')"`;
       return {
         code: plan.code,
         expires_at: new Date(expiresAt).toISOString(),
         page: siteUrl(`/televersement#${token}`),
-        curl_render: `curl -fsS -T "<chemin/rendu.jpg>" -H "Authorization: Bearer ${token}" "${endpoint}?role=render"`,
-        curl_floor_plan: `curl -fsS -T "<chemin/distribution.pdf>" -H "Authorization: Bearer ${token}" "${endpoint}?role=floor_plan"`,
+        curl_render: curl("render", "<chemin/rendu.png>"),
+        curl_floor_plan: curl("floor_plan", "<chemin/distribution.pdf>"),
+        curl_document: curl("document", "<chemin/fiche-du-modele.pdf>"),
+        curl_video: curl("video", "<chemin/visite.mp4>"),
+        video_over_40_mb:
+          `F="<chemin/visite.mp4>"; T='${token}'; E='${endpoint}'; ` +
+          `U=$(curl -fsS -X POST -H "Authorization: Bearer $T" "$E?action=start&filename=$(basename "$F" | sed 's/ /%20/g')" | sed -E 's/.*"upload":"([^"]+)".*/\\1/'); ` +
+          `D=$(mktemp -d); split -b 50m -d -a 4 "$F" "$D/p"; N=0; P=""; for f in "$D"/p*; do N=$((N+1)); P="$P$(curl -fsS -T "$f" -H "Authorization: Bearer $T" "$E?action=part&upload=$U&part=$N"),"; done; ` +
+          `curl -fsS -X POST -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d "{\\"parts\\":[\${P%,}]}" "$E?action=complete&upload=$U"; rm -rf "$D"`,
         notes:
-          "Un fichier par commande curl ; l'ordre d'envoi est l'ordre d'affichage. Ajouter &cover=1 pour faire d'un rendu la couverture. Taille max " +
-          `${UPLOAD_LINK_MAX_BYTES / 1048576} Mo par fichier ; png, jpeg, webp (et PDF pour les distributions). Ne pas publier ce lien.`,
+          "Un fichier par commande curl ; pour les rendus, l'ordre d'envoi est l'ordre d'affichage. Ajouter &cover=1 pour faire d'un rendu la couverture. " +
+          `Taille max ${UPLOAD_LINK_MAX_BYTES / 1048576} Mo par fichier (vidéos plus lourdes : commande video_over_40_mb, en morceaux de 50 Mo). ` +
+          "Rendus : png, jpeg ou webp, originaux sans filigrane. Distributions : png, jpeg, webp ou PDF. document : PDF du modèle. video : mp4, mov ou webm. " +
+          "Pour remplacer les rendus d'un modèle : envoyer les nouveaux, vérifier avec list_plan_files, puis replace_plan_renders avec keep_last = nombre de nouveaux rendus. Ne pas publier ce lien.",
       };
     },
   },
@@ -739,7 +772,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "remove_plan_image",
     description:
-      "Retire un rendu ou une distribution d'un modèle. Le fichier est aussi supprimé de R2 s'il appartient au dossier de ce modèle et n'est utilisé par aucun autre modèle. Si c'était la couverture, le premier rendu restant la remplace. Action irréversible : confirmer avec le propriétaire si la fiche est publiée.",
+      `Retire un rendu ou une distribution d'un modèle. Le fichier (et l'original d'un rendu) reste ${RETENTION_DAYS} jours dans R2 (restore_plan_file pour annuler), puis est supprimé s'il n'est utilisé par aucun autre modèle. Si c'était la couverture, le premier rendu restant la remplace. Pour remplacer tous les rendus par de nouveaux : replace_plan_renders. Confirmer avec le propriétaire si la fiche est publiée.`,
     inputSchema: obj(
       {
         code: str("Référence du modèle"),
@@ -762,26 +795,17 @@ export const TOOLS: McpTool[] = [
       } else {
         update.floorPlans = remaining;
       }
-      const db = getDb();
-      await db.update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
-
-      const key = mediaKeyOf(target);
-      const visibility = role === "render" ? "public" : "private";
-      let fileDeleted = false;
-      if (key.startsWith(`${visibility}/${planMediaFolder(plan.code)}/`)) {
-        const others = await db.query.plans.findFirst({
-          where: and(
-            or(like(schema.plans.renders, `%${key}%`), like(schema.plans.floorPlans, `%${key}%`), like(schema.plans.coverImage, `%${key}%`)),
-            sql`${schema.plans.id} <> ${plan.id}`,
-          ),
-          columns: { id: true },
-        });
-        if (!others) {
-          await deleteMedia(key);
-          fileDeleted = true;
-        }
-      }
-      return { code: plan.code, role, removed: target, file_deleted: fileDeleted, cover_image: update.coverImage ?? plan.coverImage, remaining };
+      await getDb().update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
+      const retired = /^https?:\/\//.test(target) ? { keys: [], deleteAfter: null } : await retireMedia(await unsharedKeys(plan.id, [mediaKeyOf(target)]));
+      return {
+        code: plan.code,
+        role,
+        removed: target,
+        retired_files: retired.keys,
+        delete_after: retired.deleteAfter?.toISOString() ?? null,
+        cover_image: update.coverImage ?? plan.coverImage,
+        remaining,
+      };
     },
   },
   {
@@ -944,17 +968,13 @@ export const TOOLS: McpTool[] = [
       if (!entry || !object) throw new Error(`Fichier absent du stockage : ${key}`);
       const contentType = entry.contentType || object.httpMetadata?.contentType || "application/octet-stream";
 
-      const minutes = Math.min(1440, Math.max(5, asNumber(args.minutes) ?? 30));
-      const expiresAt = Date.now() + Math.round(minutes * 60_000);
-      const token = await signFileToken(requireSecret("AUTH_SECRET"), { key, expiresAt });
       const info: Record<string, unknown> = {
         plan,
         key,
         label: entry.label,
         content_type: contentType,
         size: object.size,
-        download_url: siteUrl(`${privateFileUrl(key, true)}&jeton=${encodeURIComponent(token)}`),
-        download_expires_at: new Date(expiresAt).toISOString(),
+        ...(await temporaryLink(key, args.minutes)),
       };
 
       const isImage = /^image\/(png|jpeg|webp|gif)$/.test(contentType);
@@ -973,6 +993,185 @@ export const TOOLS: McpTool[] = [
           ? { type: "image", data, mimeType: contentType }
           : { type: "resource", resource: { uri: `wooplans://premium/${key}`, mimeType: contentType, blob: data } },
       ]);
+    },
+  },
+
+  /* ─────────── Dossier d'un modèle dans R2 ─────────── */
+  {
+    name: "list_plan_files",
+    description:
+      "Inventaire d'un modèle dans R2, pour travailler sans l'ordinateur du propriétaire : rendus (version du site + original haute résolution), distributions cotées, PDF du modèle, vidéos de visite guidée, archives et fichiers retirés (supprimés 30 jours après leur retrait). " +
+      "Chaque fichier : clé R2, nom, type, taille, dimensions, position. watermarked = pastille « Visitez wooplans.com » détectée (true), aucune trace (false), indécidable (null) ; les versions du site fabriquées par le serveur sont filigranées. " +
+      "summary.originals_missing > 0 : rendus en ligne sans original dans R2 (à rattraper depuis le dossier du propriétaire). Dire au propriétaire si les originaux trouvés sont propres ou filigranés, sans le supposer. Ouvrir un fichier avec get_plan_file. " +
+      "Usage interne pour les contenus de Tao : ne jamais transmettre un original, une vidéo, un PDF ou un lien temporaire à un client ou à un visiteur.",
+    inputSchema: obj({ code: str("Référence (ex. V3-037) ou slug (ex. villa-v3-037)") }, ["code"]),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => planFileIndex(await findPlan(args.code)),
+  },
+  {
+    name: "get_plan_file",
+    description:
+      "Ouvre un fichier d'un modèle stocké dans R2 (clé donnée par list_plan_files) : original ou version du site d'un rendu, distribution, PDF du modèle, vidéo, archive, fichier retiré. " +
+      `Image de moins de ${INLINE_IMAGE_MAX_BYTES / 1_000_000} Mo (ou réduite avec width) et inline vrai : renvoyée pour être regardée ; PDF de moins de ${INLINE_PDF_MAX_BYTES / 1_000_000} Mo : joint. ` +
+      "Sinon (originaux lourds, vidéos) : lien de téléchargement temporaire (30 min par défaut, 1 440 max) ; avec Claude Code ou Cowork, le récupérer avec curl -fsSLo <fichier> \"<lien>\". " +
+      "Usage interne pour les contenus de Tao : ne jamais transmettre le fichier ni le lien à un client ou à un visiteur.",
+    inputSchema: obj(
+      {
+        key: str("Clé R2 du fichier, voir list_plan_files"),
+        inline: { type: "boolean", description: "Joindre le contenu à la réponse quand c'est possible (défaut true)" },
+        width: { type: "integer", minimum: 200, maximum: 3000, description: "Images : renvoyer un aperçu réduit à cette largeur (JPEG, sans filigrane ajouté) au lieu du fichier entier" },
+        minutes: { type: "number", minimum: 5, maximum: 1440, description: "Validité du lien de téléchargement en minutes (défaut 30, max 1440)" },
+      },
+      ["key"],
+    ),
+    annotations: { readOnlyHint: true },
+    handler: async (args) => {
+      const raw = asString(args.key);
+      if (!raw) throw new Error("key requise, voir list_plan_files");
+      const key = mediaKeyOf(raw.replace(/^\/api\/premium\/fichier\//, "").split("?")[0]).split("/").map(decodeURIComponent).join("/");
+      const found = await planOfFile(key);
+      if (!found) throw new Error(`Fichier introuvable pour un modèle : ${key}. Voir list_plan_files.`);
+      const { entry, code } = found;
+      const isImage = /^image\/(png|jpeg|webp|gif)$/.test(entry.contentType);
+      const check = isImage
+        ? await checkRender(key, entry.contentType, entry.kind === "render" ? true : undefined)
+        : await getEnv()
+            .MEDIA.head(key)
+            .then((h) => (h ? { content_type: entry.contentType, size: h.size, width: null, height: null, watermarked: null } : null));
+      if (!check) throw new Error(`Fichier absent du stockage : ${key}`);
+      const info: Record<string, unknown> = {
+        plan: code,
+        key,
+        name: entry.label ?? key.split("/").pop(),
+        kind: entry.kind ?? (entry.visibility === "public" ? "render" : "floor_plan"),
+        ...check,
+        ...(entry.deleteAfter ? { delete_after: entry.deleteAfter.toISOString() } : {}),
+      };
+      const link = async (note?: string) => ({ ...info, inline: false, ...(note && args.inline !== false ? { note } : {}), ...(await temporaryLink(key, args.minutes)) });
+      if (args.inline === false) return link();
+
+      const width = asNumber(args.width);
+      if (isImage && width) {
+        const images = getEnv().IMAGES;
+        const object = await getEnv().MEDIA.get(key);
+        if (!images || !object) return link("Aperçu impossible : utiliser download_url.");
+        const preview = await images
+          .input(object.body)
+          .transform({ width: Math.round(width), fit: "scale-down" })
+          .output({ format: "image/jpeg", quality: 85 });
+        const bytes = new Uint8Array(await preview.response().arrayBuffer());
+        if (bytes.byteLength > INLINE_IMAGE_MAX_BYTES) return link("Aperçu trop lourd : réduire width ou utiliser download_url.");
+        return new ToolContent({ ...info, inline: true, preview_width: Math.round(width) }, [{ type: "image", data: toBase64(bytes), mimeType: "image/jpeg" }]);
+      }
+      const isPdf = entry.contentType === "application/pdf";
+      const limit = isImage ? INLINE_IMAGE_MAX_BYTES : isPdf ? INLINE_PDF_MAX_BYTES : 0;
+      if (!limit) return link("Type non joignable (vidéo…) : utiliser download_url.");
+      if (check.size > limit) return link(isImage ? "Image trop lourde pour être jointe : utiliser width pour un aperçu, ou download_url." : "PDF trop lourd pour être joint : utiliser download_url.");
+      const object = await getEnv().MEDIA.get(key);
+      if (!object) throw new Error(`Fichier absent du stockage : ${key}`);
+      const data = toBase64(new Uint8Array(await object.arrayBuffer()));
+      return new ToolContent({ ...info, inline: true }, [
+        isImage
+          ? { type: "image", data, mimeType: entry.contentType }
+          : { type: "resource", resource: { uri: `wooplans://modele/${key}`, mimeType: entry.contentType, blob: data } },
+      ]);
+    },
+  },
+  {
+    name: "replace_plan_renders",
+    description:
+      "Remplace les rendus d'un modèle par les nouveaux, une fois ceux-ci envoyés (ils s'ajoutent à la fin de la liste) : garde les keep_last derniers rendus, retire tous les autres du site, et le premier rendu gardé devient la couverture. " +
+      `Les anciens rendus (versions du site et originaux) restent ${RETENTION_DAYS} jours dans R2 (restore_plan_file pour annuler) puis sont supprimés. ` +
+      "Vérifier d'abord avec list_plan_files que les nouveaux rendus sont bien en ligne. Fiche publiée : confirmer avec le propriétaire.",
+    inputSchema: obj(
+      {
+        code: str("Référence du modèle"),
+        keep_last: { type: "integer", minimum: 1, description: "Nombre de rendus envoyés en dernier à garder (les nouveaux)" },
+      },
+      ["code", "keep_last"],
+    ),
+    annotations: { destructiveHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const keep = asNumber(args.keep_last);
+      if (!keep || keep < 1 || !Number.isInteger(keep)) throw new Error("keep_last : nombre entier ≥ 1");
+      if (keep > plan.renders.length) throw new Error(`${plan.code} n'a que ${plan.renders.length} rendu(s).`);
+      const kept = plan.renders.slice(-keep);
+      const removed = plan.renders.slice(0, plan.renders.length - keep);
+      await getDb().update(schema.plans).set({ renders: kept, coverImage: kept[0], updatedAt: new Date() }).where(eq(schema.plans.id, plan.id));
+      const retired = await retireMedia(await unsharedKeys(plan.id, removed.filter((r) => !/^https?:\/\//.test(r)).map(mediaKeyOf)));
+      return { code: plan.code, renders: kept, cover_image: kept[0], removed: removed.length, retired_files: retired.keys.length, delete_after: retired.deleteAfter?.toISOString() ?? null };
+    },
+  },
+  {
+    name: "remove_plan_file",
+    description:
+      `Retire un fichier d'un modèle (clé donnée par list_plan_files) : PDF du modèle, vidéo, original inutilisé, rendu ou distribution (retiré aussi de la fiche). Il reste ${RETENTION_DAYS} jours dans R2 (restore_plan_file pour annuler) puis est supprimé. ` +
+      "Fiche publiée : confirmer avec le propriétaire.",
+    inputSchema: obj({ code: str("Référence du modèle"), key: str("Clé R2 du fichier") }, ["code", "key"]),
+    annotations: { destructiveHint: true },
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const key = mediaKeyOf(asString(args.key) ?? "");
+      const found = await planOfFile(key);
+      if (!found || found.code !== plan.code) throw new Error(`${key} n'appartient pas à ${plan.code}. Voir list_plan_files.`);
+      const renders = plan.renders.filter((r) => r !== `/media/${key}`);
+      const floorPlans = plan.floorPlans.filter((k) => k !== key);
+      const update: Partial<typeof schema.plans.$inferInsert> = { renders, floorPlans, updatedAt: new Date() };
+      if (plan.coverImage === `/media/${key}`) update.coverImage = renders[0] ?? "";
+      if (renders.length !== plan.renders.length || floorPlans.length !== plan.floorPlans.length) {
+        await getDb().update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
+      }
+      const retired = await retireMedia(await unsharedKeys(plan.id, [key]));
+      return { code: plan.code, retired: retired.keys, delete_after: retired.deleteAfter?.toISOString() ?? null, cover_image: update.coverImage ?? plan.coverImage };
+    },
+  },
+  {
+    name: "restore_plan_file",
+    description: `Annule le retrait d'un fichier avant sa suppression (${RETENTION_DAYS} jours) : il n'est plus supprimé, et un rendu ou une distribution est remis à la fin de la liste de la fiche.`,
+    inputSchema: obj({ code: str("Référence du modèle"), key: str("Clé R2 du fichier retiré, voir list_plan_files (retired)") }, ["code", "key"]),
+    handler: async (args) => {
+      const plan = await findPlan(args.code);
+      const key = mediaKeyOf(asString(args.key) ?? "");
+      const found = await planOfFile(key);
+      if (!found || found.code !== plan.code) throw new Error(`${key} n'appartient pas à ${plan.code}. Voir list_plan_files.`);
+      if (!found.entry.deleteAfter) throw new Error(`${key} n'est pas retiré.`);
+      const restored = await restoreMedia(key);
+      const update: Partial<typeof schema.plans.$inferInsert> = { updatedAt: new Date() };
+      if (found.entry.visibility === "public" && !plan.renders.includes(`/media/${key}`)) update.renders = [...plan.renders, `/media/${key}`];
+      if (found.entry.kind === "floor_plan" && !plan.floorPlans.includes(key)) update.floorPlans = [...plan.floorPlans, key];
+      if (update.renders && !plan.coverImage) update.coverImage = `/media/${key}`;
+      if (update.renders || update.floorPlans) await getDb().update(schema.plans).set(update).where(eq(schema.plans.id, plan.id));
+      return { code: plan.code, restored, renders: update.renders?.length ?? plan.renders.length, floor_plans: update.floorPlans?.length ?? plan.floorPlans.length };
+    },
+  },
+  {
+    name: "get_storage_usage",
+    description:
+      `Occupation du stockage R2 des fichiers du site (modèles, catalogue) : nombre et volume par type, volume en attente de suppression (fichiers retirés, effacés après ${RETENTION_DAYS} jours). R2 : 10 Go gratuits, puis environ 0,015 $ par Go et par mois, sans plafond de capacité.`,
+    inputSchema: obj({}),
+    annotations: { readOnlyHint: true },
+    handler: async () => {
+      const rows = await getDb()
+        .select({
+          kind: schema.media.kind,
+          visibility: schema.media.visibility,
+          files: sql<number>`count(*)`,
+          bytes: sql<number>`coalesce(sum(${schema.media.size}), 0)`,
+          retiredBytes: sql<number>`coalesce(sum(case when ${schema.media.deleteAfter} is not null then ${schema.media.size} else 0 end), 0)`,
+        })
+        .from(schema.media)
+        .groupBy(schema.media.kind, schema.media.visibility);
+      const gb = (b: number) => Math.round((b / 1_073_741_824) * 100) / 100;
+      const total = rows.reduce((t, r) => t + Number(r.bytes), 0);
+      const retired = rows.reduce((t, r) => t + Number(r.retiredBytes), 0);
+      const label = (r: (typeof rows)[number]) => r.kind ?? (r.visibility === "public" ? "render (ancien)" : "distribution ou catalogue (ancien)");
+      return {
+        total_gb: gb(total),
+        pending_deletion_gb: gb(retired),
+        free_tier_gb: 10,
+        by_kind: rows.map((r) => ({ kind: label(r), files: Number(r.files), mb: Math.round(Number(r.bytes) / 1_048_576) })).sort((a, b) => b.mb - a.mb),
+      };
     },
   },
 ];
