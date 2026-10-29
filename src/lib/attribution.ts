@@ -129,3 +129,12 @@ export function parseAttribution(url: string, referrer: string | null): Attribut
     fbclid,
   };
 }
+
+/**
+ * Lien d'une fiche modèle à partager dans les groupes WhatsApp : sans UTM, ces visites arrivent sans
+ * référent et sont comptées en « Direct ». Campagne = référence du modèle (comme les liens YouTube).
+ */
+export function whatsappGroupLink(siteUrl: string, plan: { slug: string; code: string }) {
+  const params = new URLSearchParams({ utm_source: "whatsapp", utm_medium: "groupe", utm_campaign: plan.code.toUpperCase() });
+  return `${siteUrl.replace(/\/$/, "")}/catalogue/${plan.slug}?${params}`;
+}

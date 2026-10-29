@@ -1,7 +1,9 @@
 import { asc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { UtmLinkBuilder } from "@/components/admin/UtmLinkBuilder";
+import { WhatsAppGroupLinks } from "@/components/admin/WhatsAppGroupLinks";
 import { PageTitle } from "@/components/admin/ui";
+import { whatsappGroupLink } from "@/lib/attribution";
 import { siteUrl } from "@/lib/env";
 
 const EXAMPLES = [
@@ -14,7 +16,7 @@ const EXAMPLES = [
 export default async function LinksPage() {
   const plans = await getDb().query.plans.findMany({
     where: eq(schema.plans.status, "published"),
-    columns: { slug: true, name: true },
+    columns: { slug: true, code: true, name: true },
     orderBy: asc(schema.plans.code),
   });
   return (
@@ -23,6 +25,13 @@ export default async function LinksPage() {
         title="Liens de suivi (UTM)"
         subtitle="Un lien par plateforme et par campagne : le tableau de bord sait alors d'où viennent vos visiteurs et vos ventes."
       />
+      <section className="mb-6">
+        <h2 className="mb-1 font-semibold">Partages dans les groupes WhatsApp</h2>
+        <p className="mb-3 text-sm text-muted">
+          Partagez ces liens plutôt que l&apos;adresse copiée depuis le site : sans eux, les visiteurs venus de WhatsApp sont comptés en « Direct ».
+        </p>
+        <WhatsAppGroupLinks links={plans.map((p) => ({ code: p.code, name: p.name, url: whatsappGroupLink(siteUrl(), p) }))} />
+      </section>
       <UtmLinkBuilder siteUrl={siteUrl()} plans={plans} />
       <section className="card mt-6 p-5 text-sm">
         <h2 className="font-semibold">Pourquoi un lien spécial ?</h2>

@@ -92,6 +92,12 @@ export const FUNNEL_EVENTS = {
   purchase: "purchase_success",
   planRequest: "plan_request_submit",
   whatsapp: "whatsapp_click",
+  // Formulaire du plan et devis (fiche modèle) : ouverture, champs touchés, erreurs, abandon.
+  planDevisFormOpen: "plan_devis_form_open",
+  planDevisField: "plan_devis_field",
+  planDevisInvalid: "plan_devis_invalid",
+  planDevisError: "plan_devis_error",
+  planDevisFormClose: "plan_devis_form_close",
 } as const;
 
 export const POSTHOG_DEFAULT_HOST = "https://eu.i.posthog.com";

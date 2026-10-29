@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { channelOf, classifySource, parseAttribution } from "../src/lib/attribution.ts";
+import { channelOf, classifySource, parseAttribution, whatsappGroupLink } from "../src/lib/attribution.ts";
 
 test("UTM Facebook payante → social_ads", () => {
   const a = parseAttribution("https://www.wooplans.com/catalogue-premium?utm_source=facebook&utm_medium=paid&utm_campaign=cp-oct", null);
@@ -51,4 +51,13 @@ test("canal lisible : Facebook, YouTube, Instagram, Email, Google, Direct", () =
   assert.equal(c("social_ads", null, false, null).channel, "TikTok");
   assert.deepEqual(c("direct", null, false, "https://www.wooplans.com/catalogue"), { channel: "Direct", paid: false });
   assert.deepEqual(c("direct", null, false, null), { channel: "Direct", paid: false });
+});
+
+test("lien de partage dans les groupes WhatsApp → canal WhatsApp, campagne = référence du modèle", () => {
+  const link = whatsappGroupLink("https://www.wooplans.com/", { slug: "villa-v3-037", code: "v3-037" });
+  assert.equal(link, "https://www.wooplans.com/catalogue/villa-v3-037?utm_source=whatsapp&utm_medium=groupe&utm_campaign=V3-037");
+  const a = parseAttribution(link, null);
+  assert.equal(a.source, "social");
+  assert.equal(a.utmCampaign, "V3-037");
+  assert.equal(channelOf({ source: a.source, utmSource: a.utmSource, fbclid: false, referrer: null }).channel, "WhatsApp");
 });
