@@ -64,7 +64,7 @@ const sales = await get("/catalogue-premium");
 const salesHtml = await sales.text();
 ok("GET /catalogue-premium", sales.status === 200, String(sales.status));
 ok("formulaire de paiement court (/api/checkout)", salesHtml.includes("/api/checkout"));
-ok("Pixel Meta présent", salesHtml.includes("1025626273769966") || (await (await get("/")).text()).includes("1025626273769966"));
+ok("Pixel Meta présent", salesHtml.includes("1127775973645411") || (await (await get("/")).text()).includes("1127775973645411"));
 ok("page de vente : WhatsApp du support 237694327885", salesHtml.includes("237694327885") && !salesHtml.includes("237653769998"));
 const count = salesHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
 ok("page de vente : nombre de modèles lu en base", Number(count) > 0, count || "absent");
