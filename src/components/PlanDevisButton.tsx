@@ -38,11 +38,31 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
+  // Mesure du formulaire : quels champs ont été touchés avant l'abandon (jamais leur contenu).
+  const openedAt = useRef(0);
+  const touched = useRef<string[]>([]);
+  const submitted = useRef(false);
+  const track = (event: string, properties: Record<string, unknown> = {}) =>
+    phCapture(event, { cta_id: ctaId, plan: plan.slug, offer: "plan_devis", ...properties });
 
   useEffect(() => {
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
+
+  // Page quittée formulaire ouvert (retour arrière, autre appli) : compté comme une fermeture.
+  useEffect(() => {
+    if (!open) return;
+    const onLeave = () => closed(true);
+    window.addEventListener("pagehide", onLeave);
+    return () => window.removeEventListener("pagehide", onLeave);
+  });
+
+  function closed(pageLeft = false) {
+    if (!openedAt.current || submitted.current) return;
+    track(FUNNEL_EVENTS.planDevisFormClose, { open_ms: Date.now() - openedAt.current, fields: touched.current, page_left: pageLeft });
+    openedAt.current = 0;
+  }
 
   // Pays du visiteur, lu à l'ouverture (la page est en cache, partagée entre pays) : présélectionné
   // tant que le visiteur n'a pas choisi lui-même.
@@ -83,28 +103,55 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
     }).catch(() => null);
     const body = (await response?.json().catch(() => null)) as { url?: string; mode?: string; error?: string } | null;
     if (!response?.ok || !body?.url) {
+      track(FUNNEL_EVENTS.planDevisError, { status: response?.status ?? "network" });
       setError(body?.error || "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.");
       setSending(false);
       return;
     }
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
+    submitted.current = true;
     phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
     window.location.href = body.url;
   }
 
   return (
     <>
-      <button type="button" data-cta={ctaId} data-plan={plan.slug} className={className} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        data-cta={ctaId}
+        data-plan={plan.slug}
+        className={className}
+        onClick={() => {
+          openedAt.current = Date.now();
+          touched.current = [];
+          submitted.current = false;
+          track(FUNNEL_EVENTS.planDevisFormOpen);
+          setOpen(true);
+        }}
+      >
         {label}
       </button>
       <dialog
         ref={dialog}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          closed();
+          setOpen(false);
+        }}
         onClick={(e) => e.target === dialog.current && setOpen(false)}
         className="m-auto w-[min(100%-24px,440px)] rounded-2xl p-0 backdrop:bg-black/60"
         aria-labelledby={`pd-title-${plan.slug}`}
       >
-        <form onSubmit={onSubmit} className="grid gap-4 p-5 text-left sm:p-6">
+        <form
+          onSubmit={onSubmit}
+          onFocusCapture={(e) => {
+            const field = (e.target as Element).getAttribute("name");
+            if (!field || touched.current.includes(field)) return;
+            touched.current.push(field);
+            track(FUNNEL_EVENTS.planDevisField, { field, order: touched.current.length });
+          }}
+          onInvalidCapture={(e) => track(FUNNEL_EVENTS.planDevisInvalid, { field: (e.target as Element).getAttribute("name") })}
+          className="grid gap-4 p-5 text-left sm:p-6"
+        >
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="eyebrow">Modèle {plan.code}</p>
