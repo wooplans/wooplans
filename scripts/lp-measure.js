@@ -6,7 +6,7 @@
  *   identifiant = identifiant anonyme first-party (wp_vid) renvoyé par /api/t.
  * Événements : wpCapture(nom, propriétés) — mis en attente tant que PostHog n'est pas chargé. */
 (function(){
-  var PH_KEY='__POSTHOG_KEY__',PH_HOST='__POSTHOG_HOST__',PIXEL='1025626273769966';
+  var PH_KEY='__POSTHOG_KEY__',PH_HOST='__POSTHOG_HOST__',PIXEL='1127775973645411';
   var CK='wp_consent',started=false,pending=[];
   function consent(){var m=document.cookie.match(/(?:^|;\s*)wp_consent=(granted|denied)/);return m?m[1]:null;}
   function euTz(){try{return /^(Europe\/|Atlantic\/(Canary|Madeira|Azores|Reykjavik|Faroe))/.test(Intl.DateTimeFormat().resolvedOptions().timeZone);}catch(e){return false;}}

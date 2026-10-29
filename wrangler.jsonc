@@ -28,7 +28,7 @@
     // Offre « plan et devis » (10 000 FCFA, puis plans complets) sur les fiches villas et duplex :
     // "1" = visible, "0" = ancien encart « Inclus dans le Catalogue Premium ».
     "OFFRE_PROJET": "1",
-    "FB_PIXEL_ID": "1025626273769966",
+    "FB_PIXEL_ID": "1127775973645411",
     // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
     "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",
     "POSTHOG_HOST": "https://eu.i.posthog.com",
