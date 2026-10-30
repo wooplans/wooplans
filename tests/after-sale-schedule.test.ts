@@ -6,10 +6,10 @@ import { WELCOME_DELAYS_HOURS, welcomeKindForStep } from "../src/lib/prospect-se
 const DAY = 86_400_000;
 const bought = new Date("2026-11-01T09:00:00Z");
 
-test("après l'achat : J+3, J+17, J+47, J+107 puis fin", () => {
+test("après l'achat : J+1, J+17, J+47, J+107 puis fin", () => {
   assert.deepEqual(
     AFTER_SALE_DAYS.map((_, i) => (afterSaleDueAt(bought, i)!.getTime() - bought.getTime()) / DAY),
-    [3, 17, 47, 107],
+    [1, 17, 47, 107],
   );
   assert.equal(afterSaleDueAt(bought, 4), null);
 });

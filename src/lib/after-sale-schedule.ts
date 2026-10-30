@@ -3,8 +3,8 @@
  * puis des rappels espacés pour ménager le quota d'emails. Module sans dépendance pour pouvoir être testé isolément.
  */
 
-/** Jours après l'achat : J+3 (demande d'avis), J+17 (rappel), puis J+47 et J+107. */
-export const AFTER_SALE_DAYS = [3, 17, 47, 107];
+/** Jours après l'achat : J+1 (demande d'avis, à chaud), J+17 (rappel), puis J+47 et J+107. */
+export const AFTER_SALE_DAYS = [1, 17, 47, 107];
 
 const DAY = 86_400_000;
 
