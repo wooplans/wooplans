@@ -7,10 +7,11 @@ import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanDescription } from "@/components/PlanDescription";
+import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
-import { customPlanOffer, memberBalance, projectStartPrice } from "@/lib/custom-plans";
+import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
@@ -222,7 +223,9 @@ export default async function PlanPage({ params }: Props) {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 p-3 backdrop-blur sm:hidden">
-        {project ? (
+        {project && planGiftEnabled() ? (
+          <GiftPlanButton plan={plan} label="Recevoir gratuitement le plan et devis" ctaId="plan_cadeau_sticky" className="btn-cta w-full py-3.5" />
+        ) : project ? (
           <PlanDevisButton
             plan={plan}
             label={`Télécharger plan et devis · ${formatFcfa(projectStartPrice())}`}

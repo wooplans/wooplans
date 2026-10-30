@@ -76,3 +76,16 @@ export function emailKindForStep(step: number, total: number, hasDiscount: boole
   if (step >= 2 && hasDiscount) return "offer";
   return "value";
 }
+
+/**
+ * Séquence de bienvenue (plan et devis offert) : le cadeau part tout de suite, puis 4 emails
+ * jusqu'à la proposition du Catalogue Premium. Délais depuis la demande du cadeau (heures).
+ */
+export const WELCOME_DELAYS_HOURS = [48, 120, 216, 336];
+
+/** Contenu de l'email de bienvenue n° `step` (0 = premier après le cadeau). */
+export type WelcomeEmailKind = "guide" | "compare" | "faq" | "last";
+
+export function welcomeKindForStep(step: number): WelcomeEmailKind {
+  return (["guide", "compare", "faq", "last"] as const)[Math.min(Math.max(step, 0), 3)];
+}

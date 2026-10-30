@@ -132,10 +132,19 @@ export const members = sqliteTable(
     /** Demande de témoignage envoyée par WhatsApp depuis l'admin : dernière date et nombre de demandes. */
     testimonialAskedAt: integer("testimonial_asked_at", { mode: "timestamp_ms" }),
     testimonialAskCount: integer("testimonial_ask_count").notNull().default(0),
+    /** Avis reçu (marqué depuis l'admin) : arrête les demandes par email. */
+    testimonialReceivedAt: integer("testimonial_received_at", { mode: "timestamp_ms" }),
+    /** Séquence après l'achat (demande d'avis puis rappels espacés) : emails envoyés et prochain envoi (null = aucun). */
+    afterSaleStep: integer("after_sale_step").notNull().default(0),
+    afterSaleNextAt: integer("after_sale_next_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [uniqueIndex("members_email_idx").on(t.email), index("members_status_idx").on(t.status)],
+  (t) => [
+    uniqueIndex("members_email_idx").on(t.email),
+    index("members_status_idx").on(t.status),
+    index("members_after_sale_idx").on(t.afterSaleNextAt),
+  ],
 );
 
 export const favorites = sqliteTable(
@@ -235,7 +244,8 @@ export const checkoutIntents = sqliteTable(
     planSlug: text("plan_slug"),
     /** Téléchargements du plan et devis (lien personnel = identifiant de l'intention), plafonnés. */
     downloads: integer("downloads").notNull().default(0),
-    status: text("status", { enum: ["started", "paid", "failed", "abandoned"] }).notNull().default("started"),
+    /** gift = plan et devis offert (formulaire « Recevez gratuitement ») : téléchargeable comme un achat payé. */
+    status: text("status", { enum: ["started", "paid", "failed", "abandoned", "gift"] }).notNull().default("started"),
     saleId: text("sale_id"),
     /** Code en clair, conservé quelques heures pour l'affichage sur /merci puis effacé. */
     revealCode: text("reveal_code"),
@@ -306,13 +316,15 @@ export const prospects = sqliteTable(
     country: text("country"),
     status: text("status", { enum: PROSPECT_STATUSES }).notNull().default("open"),
     /** Dernier évènement connu : paiement abandonné, échoué, ou email laissé sur le site. */
-    lastEvent: text("last_event", { enum: ["abandoned", "failed", "started"] }).notNull(),
+    lastEvent: text("last_event", { enum: ["abandoned", "failed", "started", "gift"] }).notNull(),
     lastEventAt: integer("last_event_at", { mode: "timestamp_ms" }).notNull(),
     lastSaleId: text("last_sale_id"),
     amount: integer("amount"),
-    source: text("source", { enum: ["webhook", "chariow_import", "site"] }).notNull(),
+    source: text("source", { enum: ["webhook", "chariow_import", "site", "gift"] }).notNull(),
     utmSource: text("utm_source"),
     utmCampaign: text("utm_campaign"),
+    /** relance = paiement abandonné ou échoué ; bienvenue = plan et devis offert, jusqu'à la proposition du catalogue. */
+    sequenceKind: text("sequence_kind", { enum: ["relance", "bienvenue"] }).notNull().default("relance"),
     /** Séquence de relance : nombre d'emails déjà envoyés, début et prochain envoi (null = arrêtée). */
     sequenceStep: integer("sequence_step").notNull().default(0),
     sequenceStartedAt: integer("sequence_started_at", { mode: "timestamp_ms" }),

@@ -186,6 +186,21 @@ export function leadFollowUpEmail(params: { name: string; subject: string; messa
   return { subject: params.subject, html, text: `Bonjour ${params.name},\n\n${params.message}\n\nWhatsApp : ${whatsapp}` };
 }
 
+/** Contenu du Catalogue Premium, repris dans les relances et la séquence de bienvenue. */
+function catalogueBenefits(planCount: number) {
+  return [
+    `${planCount > 0 ? `${planCount} modèles` : "Tous les modèles"} de villas et duplex, avec rendus 3D`,
+    "Les distributions cotées de chaque niveau",
+    "Le devis détaillé par lot pour estimer votre budget",
+    "La fiche PDF de chaque modèle à télécharger",
+    "Les nouveaux modèles ajoutés automatiquement",
+  ];
+}
+
+function bulletList(items: string[]) {
+  return `<ul style="padding-left:20px">${items.map((b) => `<li style="margin:0 0 6px">${escape(b)}</li>`).join("")}</ul>`;
+}
+
 /* ─────────────── Relances prospects du catalogue ─────────────── */
 
 export type ProspectEmailParams = {
@@ -210,14 +225,8 @@ export function prospectEmail(p: ProspectEmailParams) {
     : "";
   const offerText = p.discountCode ? `${p.discountLabel || "Réduction"} : code ${p.discountCode}, à saisir au moment du paiement.` : "";
   const help = `<p style="color:#6B7280;font-size:14px">Une question ou un souci de paiement ? <a href="${p.whatsappUrl}" style="color:#0F5B59;font-weight:600">Écrivez-nous sur WhatsApp</a>, nous répondons rapidement.</p>`;
-  const benefits = [
-    `${p.planCount > 0 ? `${p.planCount} modèles` : "Tous les modèles"} de villas et duplex, avec rendus 3D`,
-    "Les distributions cotées de chaque niveau",
-    "Le devis détaillé par lot pour estimer votre budget",
-    "La fiche PDF de chaque modèle à télécharger",
-    "Les nouveaux modèles ajoutés automatiquement",
-  ];
-  const list = `<ul style="padding-left:20px">${benefits.map((b) => `<li style="margin:0 0 6px">${escape(b)}</li>`).join("")}</ul>`;
+  const benefits = catalogueBenefits(p.planCount);
+  const list = bulletList(benefits);
 
   let subject: string;
   let body: string;
@@ -247,6 +256,131 @@ export function prospectEmail(p: ProspectEmailParams) {
     text = `${helloText}\n\nC'est notre dernier message à ce sujet. ${offerText}\n\n${p.checkoutUrl}`;
   }
   return { subject, html: layout(subject, body, p.unsubscribe), text: `${text}\n\nNe plus recevoir ces emails : ${p.unsubscribe}` };
+}
+
+/* ─────────────── Plan et devis offert, puis séquence de bienvenue ─────────────── */
+
+/** Cadeau : le plan et devis du modèle choisi, avec le lien de téléchargement personnel. */
+export function giftPlanEmail(p: {
+  name?: string | null;
+  planName: string;
+  planCode: string;
+  downloadUrl: string;
+  catalogueUrl: string;
+  price: string;
+  planCount: number;
+  unsubscribe: string;
+}) {
+  const subject = `Votre plan et devis gratuit du modèle ${p.planCode}`;
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const models = p.planCount > 0 ? `nos ${p.planCount} modèles` : "tous nos modèles";
+  const body = `<p>${hello}</p><p>Voici le plan et devis du modèle <strong>${escape(p.planName)}</strong> (réf. ${escape(p.planCode)}) : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé.</p>
+${button(p.downloadUrl, "Télécharger mon plan et devis")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
+<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Envie de comparer avec d'autres modèles ?</p><p style="margin:6px 0 0;font-size:14px">Le Catalogue Premium vous donne accès au plan et devis de ${escape(models)}, pour ${escape(p.price)} en paiement unique. <a href="${p.catalogueUrl}" style="color:#0F5B59;font-weight:600">Découvrir le Catalogue Premium</a></p></div>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Voici le plan et devis du modèle ${p.planName} (réf. ${p.planCode}).`,
+    `Télécharger : ${p.downloadUrl}`,
+    "Ce lien est personnel. Le document est marqué à votre nom.",
+    `Le Catalogue Premium vous donne accès au plan et devis de ${models}, pour ${p.price} : ${p.catalogueUrl}`,
+    `Ne plus recevoir ces emails : ${p.unsubscribe}`,
+  ].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
+/** Les 4 emails de bienvenue après le cadeau, jusqu'à la proposition du catalogue. Aucune fausse urgence. */
+export function welcomeEmail(p: {
+  kind: "guide" | "compare" | "faq" | "last";
+  name?: string | null;
+  planCode?: string | null;
+  checkoutUrl: string;
+  price: string;
+  planCount: number;
+  discountCode?: string;
+  discountLabel?: string;
+  unsubscribe: string;
+}) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const model = p.planCode ? `du modèle ${p.planCode}` : "de votre modèle";
+  const priceLine = `Prix du Catalogue Premium : ${p.price}, paiement unique, accès à vie.`;
+  const benefits = catalogueBenefits(p.planCount);
+
+  let subject: string;
+  let paragraphs: string[];
+  let items: string[] = [];
+  let cta = "Découvrir le Catalogue Premium";
+  if (p.kind === "guide") {
+    subject = "Comment lire votre plan et devis";
+    paragraphs = [
+      `Vous avez reçu le plan et devis ${model}. Voici comment en tirer le meilleur :`,
+    ];
+    items = [
+      "Le plan de distribution : vérifiez que les pièces et leurs dimensions correspondent à votre façon de vivre.",
+      "Le tableau des surfaces : comparez-les à la taille de votre terrain.",
+      "Le devis poste par poste (fondation, élévation, toiture, finitions) : il vous donne une première idée du budget à prévoir.",
+    ];
+    paragraphs.push("Un seul modèle ne suffit pas toujours pour choisir. Le Catalogue Premium réunit le plan et devis de tous nos modèles, pour comparer à votre rythme.");
+  } else if (p.kind === "compare") {
+    subject = "Comparez plusieurs modèles avant de construire";
+    paragraphs = ["Choisir le bon plan, c'est la première étape de votre construction. Avec le Catalogue Premium, vous avez accès à :"];
+    items = benefits;
+    cta = "Obtenir le Catalogue Premium";
+  } else if (p.kind === "faq") {
+    subject = "Vos questions sur le Catalogue Premium";
+    paragraphs = ["Voici les réponses aux questions qu'on nous pose le plus souvent :"];
+    items = [
+      "Quand ai-je accès ? Juste après le paiement : votre code d'accès vous est envoyé par email.",
+      "Comment payer ? Par Mobile Money ou carte bancaire.",
+      "Les nouveaux modèles sont-ils inclus ? Oui, ils sont ajoutés à votre espace sans frais.",
+      "Et pour construire ? Nos architectes adaptent le modèle choisi à votre terrain (plans complets) ; le prix du catalogue est déduit.",
+    ];
+    cta = "Obtenir le Catalogue Premium";
+  } else {
+    subject = p.discountLabel ? `Pour vous : ${p.discountLabel} sur le Catalogue Premium` : "Notre dernier message sur le Catalogue Premium";
+    paragraphs = ["C'est notre dernier message à ce sujet. Si vous préparez la construction de votre maison, le Catalogue Premium vous fera gagner du temps pour choisir votre plan et estimer votre budget."];
+    cta = p.discountCode ? "Profiter de la réduction" : "Obtenir le Catalogue Premium";
+  }
+  const offer = p.kind === "last" && p.discountCode
+    ? `<div style="margin:20px 0;padding:16px;border:2px dashed #F08A2E;border-radius:12px;text-align:center"><p style="margin:0;color:#6B7280">${escape(p.discountLabel || "Votre réduction")}</p><p style="margin:6px 0 0;font-size:26px;font-weight:800;letter-spacing:4px;color:#0F5B59">${escape(p.discountCode)}</p><p style="margin:6px 0 0;font-size:13px;color:#6B7280">À saisir dans le champ « code promo » au moment du paiement.</p></div>`
+    : "";
+  const offerText = p.kind === "last" && p.discountCode ? `${p.discountLabel || "Réduction"} : code ${p.discountCode}, à saisir au moment du paiement.` : "";
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${offer}${button(p.checkoutUrl, cta)}<p>${escape(priceLine)}</p>`;
+  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), offerText, `${cta} : ${p.checkoutUrl}`, priceLine, `Ne plus recevoir ces emails : ${p.unsubscribe}`]
+    .filter(Boolean)
+    .join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
+/* ─────────────── Après l'achat : demande d'avis puis rappels espacés ─────────────── */
+
+/** Email n° `step` après l'achat : avis en priorité (page /temoignage, vocal WhatsApp), puis rappel des plans complets. */
+export function afterSaleEmail(p: { step: number; name?: string | null; testimonialUrl: string; loginUrl: string; customPlansUrl: string; unsubscribe: string }) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const subjects = [
+    "2 minutes pour nous donner votre avis ?",
+    "Votre avis peut aider une famille à se lancer",
+    "Avez-vous trouvé votre modèle ?",
+    "Où en est votre projet de construction ?",
+  ];
+  const subject = subjects[Math.min(p.step, subjects.length - 1)];
+  const intro = [
+    "Merci encore pour votre confiance. Beaucoup de familles hésitent à payer en ligne : votre avis sur le Catalogue Premium les aidera à se lancer. Un simple vocal suffit, en répondant à quelques questions.",
+    "Il y a deux semaines, nous vous avons demandé votre avis sur le Catalogue Premium. Si vous avez 2 minutes, il compte vraiment pour nous et pour les familles qui hésitent encore.",
+    "Nous espérons que le Catalogue Premium vous aide à choisir votre plan. Si un modèle vous plaît, nos architectes l'adaptent à votre terrain (plans complets), prix du catalogue déduit. Et si vous avez 2 minutes, votre avis nous aide beaucoup.",
+    "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, prix du catalogue déduit. Votre avis reste aussi le bienvenu.",
+  ][Math.min(p.step, 3)];
+  const extra =
+    p.step >= 2
+      ? `<p style="font-size:14px"><a href="${p.loginUrl}" style="color:#0F5B59;font-weight:600">Ouvrir mon espace Premium</a> · <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">Les plans complets</a></p>`
+      : "";
+  const body = `<p>${hello}</p><p>${escape(intro)}</p>${button(p.testimonialUrl, "Donner mon avis")}${extra}`;
+  const text = [helloText, intro, `Donner mon avis : ${p.testimonialUrl}`, p.step >= 2 ? `Mon espace : ${p.loginUrl}\nLes plans complets : ${p.customPlansUrl}` : "", `Ne plus recevoir ces emails : ${p.unsubscribe}`]
+    .filter(Boolean)
+    .join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
 /* ─────────────── Actualités mensuelles des membres ─────────────── */

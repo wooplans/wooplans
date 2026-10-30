@@ -7,7 +7,7 @@ import { IntroAudioField } from "@/components/admin/IntroAudioField";
 import { siteUrl } from "@/lib/env";
 import { getSetting } from "@/lib/settings";
 import { TESTIMONIAL_RELAUNCH_DAYS, testimonialBroadcastMessage } from "@/lib/testimonial-request";
-import { saveIntroAudio } from "./actions";
+import { markTestimonialReceived, saveIntroAudio } from "./actions";
 
 const VIEWS = [
   { id: "", label: "À solliciter" },
@@ -31,7 +31,10 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
   const pdfByMember = new Map(pdfCounts.map((r) => [r.memberId, r.n]));
   const now = Date.now();
   const relaunchDue = (m: (typeof members)[number]) =>
-    m.testimonialAskedAt !== null && m.testimonialAskCount < 3 && now - m.testimonialAskedAt.getTime() > TESTIMONIAL_RELAUNCH_DAYS * DAY;
+    !m.testimonialReceivedAt &&
+    m.testimonialAskedAt !== null &&
+    m.testimonialAskCount < 3 &&
+    now - m.testimonialAskedAt.getTime() > TESTIMONIAL_RELAUNCH_DAYS * DAY;
 
   // Les clients qui ont vraiment utilisé le catalogue (fiches téléchargées, connexions) sont sollicités en premier :
   // ils ont le plus de choses à raconter et le plus de chances de répondre.
@@ -104,7 +107,16 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
                 <span className="text-muted">connexion : {fmtDate(m.lastLoginAt)}</span>
               </td>
               <td className="px-4 py-2.5">{fmtDate(m.createdAt)}</td>
-              <td className="px-4 py-2.5 text-xs">{m.testimonialAskedAt ? `${fmtDate(m.testimonialAskedAt)} (×${m.testimonialAskCount})` : "—"}</td>
+              <td className="px-4 py-2.5 text-xs">
+                {m.testimonialReceivedAt ? (
+                  <span className="font-semibold text-primary">Avis reçu le {fmtDate(m.testimonialReceivedAt)}</span>
+                ) : m.testimonialAskedAt ? (
+                  `${fmtDate(m.testimonialAskedAt)} (×${m.testimonialAskCount})`
+                ) : (
+                  "—"
+                )}
+                {!m.testimonialReceivedAt && m.afterSaleNextAt ? <p className="text-muted">email prévu le {fmtDate(m.afterSaleNextAt)}</p> : null}
+              </td>
               <td className="px-4 py-2.5">
                 <a
                   href={`/api/admin/temoignages/demander?member=${encodeURIComponent(m.id)}`}
@@ -114,6 +126,14 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
                 >
                   {m.testimonialAskCount > 0 ? "Relancer sur WhatsApp" : "Demander sur WhatsApp"}
                 </a>
+                {m.testimonialReceivedAt ? null : (
+                  <form action={markTestimonialReceived} className="mt-1.5">
+                    <input type="hidden" name="member" value={m.id} />
+                    <button type="submit" className="whitespace-nowrap text-xs font-semibold text-primary underline">
+                      Avis reçu
+                    </button>
+                  </form>
+                )}
               </td>
             </tr>
           ))}

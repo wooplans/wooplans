@@ -8,14 +8,14 @@ import { getPremiumPlan } from "@/lib/plans";
 const MAX_DOWNLOADS = 10;
 
 /**
- * Plan et devis d'un modèle acheté : le lien personnel est l'identifiant de l'achat (aléatoire,
+ * Plan et devis d'un modèle acheté ou offert : le lien personnel est l'identifiant de l'achat (aléatoire,
  * 128 bits), envoyé par email et affiché sur /merci. Document filigrané au nom de l'acheteur.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const db = getDb();
   const id = (await params).id;
   const intent = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, id) });
-  if (!intent?.planSlug || intent.status !== "paid") return new Response("Lien invalide ou paiement non confirmé.", { status: 404 });
+  if (!intent?.planSlug || (intent.status !== "paid" && intent.status !== "gift")) return new Response("Lien invalide ou paiement non confirmé.", { status: 404 });
   const plan = await getPremiumPlan(intent.planSlug);
   if (!plan) return new Response("Modèle introuvable.", { status: 404 });
 
@@ -31,7 +31,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const sale = intent.saleId ? await db.query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, intent.saleId) }) : null;
-  const { bytes } = await renderPlanPdf(plan, { id: intent.id, email: intent.email || "client", name: sale?.name });
+  // Cadeau : le nom saisi dans le formulaire est gardé sur la fiche prospect.
+  const prospect = !sale && intent.email ? await db.query.prospects.findFirst({ where: eq(schema.prospects.email, intent.email), columns: { name: true } }) : null;
+  const { bytes } = await renderPlanPdf(plan, { id: intent.id, email: intent.email || "client", name: sale?.name ?? prospect?.name });
   return new Response(bytes, {
     headers: {
       "Content-Type": "application/pdf",

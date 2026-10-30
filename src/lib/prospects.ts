@@ -2,7 +2,7 @@ import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, or } f
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { prospectEmail, sendEmail } from "@/lib/email";
+import { prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
@@ -14,6 +14,8 @@ import {
   sanitizeSequenceSettings,
   shouldStartSequence,
   stepDueAt,
+  WELCOME_DELAYS_HOURS,
+  welcomeKindForStep,
   type ProspectSequenceSettings,
 } from "@/lib/prospect-sequence";
 import { getSetting, setSetting } from "@/lib/settings";
@@ -37,16 +39,21 @@ type ProspectEventInput = {
   name?: string | null;
   phone?: string | null;
   country?: string | null;
-  event: "abandoned" | "failed" | "started";
+  event: "abandoned" | "failed" | "started" | "gift";
   occurredAt: Date;
   saleId?: string | null;
   amount?: number | null;
-  source: "webhook" | "chariow_import" | "site";
+  source: "webhook" | "chariow_import" | "site" | "gift";
   utmSource?: string | null;
   utmCampaign?: string | null;
   /** Démarre la séquence d'emails (notifications en direct) ; l'historique importé reste en attente. */
   startSequence: boolean;
+  /** Séquence à démarrer : relance (paiement abandonné, par défaut) ou bienvenue (plan et devis offert). */
+  kind?: "relance" | "bienvenue";
 };
+
+const delaysFor = (kind: "relance" | "bienvenue", settings: ProspectSequenceSettings) =>
+  kind === "bienvenue" ? WELCOME_DELAYS_HOURS : settings.delaysHours;
 
 /**
  * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
@@ -100,6 +107,7 @@ export async function recordProspectEvent(input: ProspectEventInput) {
   const existing = await db.query.prospects.findFirst({ where: eq(schema.prospects.email, email) });
   const now = new Date();
 
+  const kind = input.kind ?? "relance";
   if (!existing) {
     const start = input.startSequence && settings.enabled;
     await db
@@ -117,8 +125,9 @@ export async function recordProspectEvent(input: ProspectEventInput) {
         source: input.source,
         utmSource: input.utmSource ?? null,
         utmCampaign: input.utmCampaign ?? null,
+        sequenceKind: kind,
         sequenceStartedAt: start ? input.occurredAt : null,
-        nextEmailAt: start ? stepDueAt(input.occurredAt, 0, settings.delaysHours) : null,
+        nextEmailAt: start ? stepDueAt(input.occurredAt, 0, delaysFor(kind, settings)) : null,
       })
       .onConflictDoNothing();
     return "created";
@@ -128,8 +137,14 @@ export async function recordProspectEvent(input: ProspectEventInput) {
   const newer = input.occurredAt.getTime() >= existing.lastEventAt.getTime();
   const reopen = existing.status === "converted" || existing.status === "lost";
   const status = existing.status === "unsubscribed" ? "unsubscribed" : reopen && newer ? "open" : existing.status;
+  // Un abandon de paiement pendant la séquence de bienvenue la remplace par la relance (aide au paiement).
+  const switchToRelance = kind === "relance" && existing.sequenceKind === "bienvenue" && input.event !== "started";
   const start =
-    input.startSequence && settings.enabled && status === "open" && newer && (reopen || shouldStartSequence(existing, now));
+    input.startSequence &&
+    settings.enabled &&
+    status === "open" &&
+    newer &&
+    (reopen || switchToRelance || shouldStartSequence(existing, now));
   await db
     .update(schema.prospects)
     .set({
@@ -149,9 +164,10 @@ export async function recordProspectEvent(input: ProspectEventInput) {
         : {}),
       ...(start
         ? {
+            sequenceKind: kind,
             sequenceStep: 0,
             sequenceStartedAt: input.occurredAt,
-            nextEmailAt: stepDueAt(input.occurredAt, 0, settings.delaysHours),
+            nextEmailAt: stepDueAt(input.occurredAt, 0, delaysFor(kind, settings)),
             convertedAt: null,
           }
         : {}),
@@ -178,6 +194,19 @@ export async function stopProspectSequence(id: string, status: "open" | "lost" =
     .update(schema.prospects)
     .set({ status, nextEmailAt: null, updatedAt: new Date() })
     .where(and(eq(schema.prospects.id, id), inArray(schema.prospects.status, ["open", "lost"])));
+}
+
+/** Référence du modèle offert à ce prospect (dernier cadeau), pour personnaliser la séquence de bienvenue. */
+async function giftPlanCode(email: string) {
+  const db = getDb();
+  const gift = await db.query.checkoutIntents.findFirst({
+    where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.status, "gift")),
+    orderBy: desc(schema.checkoutIntents.createdAt),
+    columns: { planSlug: true },
+  });
+  if (!gift?.planSlug) return null;
+  const plan = await db.query.plans.findFirst({ where: eq(schema.plans.slug, gift.planSlug), columns: { code: true } });
+  return plan?.code ?? null;
 }
 
 async function publishedPlanCount() {
@@ -215,7 +244,6 @@ export async function runProspectSequence(now = new Date()) {
   const [optedOut, planCount] = await Promise.all([optedOutEmails(emails, "prospects"), publishedPlanCount()]);
   const customers = new Set<string>();
   for (const p of due) if (await isCustomer(p.email, p.phone)) customers.add(p.email);
-  const total = settings.delaysHours.length;
   const price = formatFcfa(cataloguePrice());
 
   for (const p of due) {
@@ -233,6 +261,8 @@ export async function runProspectSequence(now = new Date()) {
       continue;
     }
     const step = p.sequenceStep;
+    const delays = delaysFor(p.sequenceKind, settings);
+    const total = delays.length;
     if (step >= total || !p.sequenceStartedAt) {
       await db.update(schema.prospects).set({ nextEmailAt: null, updatedAt: now }).where(eq(schema.prospects.id, p.id));
       result.finished++;
@@ -245,34 +275,48 @@ export async function runProspectSequence(now = new Date()) {
       .returning({ id: schema.prospects.id });
     if (claimed.length === 0) continue;
 
+    const welcome = p.sequenceKind === "bienvenue";
     const kind = emailKindForStep(step, total, Boolean(settings.discountCode));
-    const withDiscount = (kind === "offer" || kind === "last") && settings.discountCode;
-    const mail = prospectEmail({
-      kind,
-      name: p.name,
-      lastEvent: p.lastEvent,
-      checkoutUrl: siteUrl(`/catalogue-premium?utm_source=email&utm_medium=relance&utm_campaign=prospect_${step + 1}`),
-      whatsappUrl: whatsappLink(
-        p.lastEvent === "failed"
-          ? "Bonjour WOOPLANS, mon paiement du Catalogue Premium n'a pas abouti, pouvez-vous m'aider ?"
-          : "Bonjour WOOPLANS, j'ai une question sur le Catalogue Premium.",
-        getEnv().WHATSAPP_NUMBER || undefined,
-      ),
-      price,
-      planCount,
-      discountCode: withDiscount ? settings.discountCode : undefined,
-      discountLabel: withDiscount ? settings.discountLabel : undefined,
-      unsubscribe: await unsubscribeUrl(p.email, "prospects"),
-    });
+    const withDiscount = welcome ? step === total - 1 && settings.discountCode : (kind === "offer" || kind === "last") && settings.discountCode;
+    const unsubscribe = await unsubscribeUrl(p.email, "prospects");
+    const mail = welcome
+      ? welcomeEmail({
+          kind: welcomeKindForStep(step),
+          name: p.name,
+          planCode: await giftPlanCode(p.email),
+          checkoutUrl: siteUrl(`/catalogue-premium?utm_source=email&utm_medium=bienvenue&utm_campaign=bienvenue_${step + 1}`),
+          price,
+          planCount,
+          discountCode: withDiscount ? settings.discountCode : undefined,
+          discountLabel: withDiscount ? settings.discountLabel : undefined,
+          unsubscribe,
+        })
+      : prospectEmail({
+          kind,
+          name: p.name,
+          lastEvent: p.lastEvent === "gift" ? "started" : p.lastEvent,
+          checkoutUrl: siteUrl(`/catalogue-premium?utm_source=email&utm_medium=relance&utm_campaign=prospect_${step + 1}`),
+          whatsappUrl: whatsappLink(
+            p.lastEvent === "failed"
+              ? "Bonjour WOOPLANS, mon paiement du Catalogue Premium n'a pas abouti, pouvez-vous m'aider ?"
+              : "Bonjour WOOPLANS, j'ai une question sur le Catalogue Premium.",
+            getEnv().WHATSAPP_NUMBER || undefined,
+          ),
+          price,
+          planCount,
+          discountCode: withDiscount ? settings.discountCode : undefined,
+          discountLabel: withDiscount ? settings.discountLabel : undefined,
+          unsubscribe,
+      });
     const sent = await sendEmail({
       to: p.email,
       ...mail,
-      template: `prospect_${step + 1}`,
+      template: welcome ? `bienvenue_${step + 1}` : `prospect_${step + 1}`,
       headers: await unsubscribeHeaders(p.email, "prospects"),
     });
 
     if (sent.ok) {
-      const next = stepDueAt(p.sequenceStartedAt, step + 1, settings.delaysHours);
+      const next = stepDueAt(p.sequenceStartedAt, step + 1, delays);
       await db
         .update(schema.prospects)
         // Un envoi en retard ne déclenche pas le suivant aussitôt : au moins 12 h d'écart.

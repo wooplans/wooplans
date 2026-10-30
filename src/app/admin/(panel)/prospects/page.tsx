@@ -22,9 +22,10 @@ const EVENTS = {
   abandoned: { label: "Abandonné", tone: "warn" },
   failed: { label: "Échoué", tone: "bad" },
   started: { label: "Email laissé", tone: "neutral" },
+  gift: { label: "Plan et devis offert", tone: "neutral" },
 } as const;
 
-const SOURCES = { webhook: "Chariow (direct)", chariow_import: "Historique Chariow", site: "Site" } as const;
+const SOURCES = { webhook: "Chariow (direct)", chariow_import: "Historique Chariow", site: "Site", gift: "Cadeau (fiche modèle)" } as const;
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
   const { vue = "ouverts", q } = await searchParams;

@@ -98,6 +98,10 @@ export const FUNNEL_EVENTS = {
   planDevisInvalid: "plan_devis_invalid",
   planDevisError: "plan_devis_error",
   planDevisFormClose: "plan_devis_form_close",
+  // Plan et devis offert (fiche modèle) : ouverture du formulaire, envoi réussi, erreur.
+  giftFormOpen: "gift_form_open",
+  giftSent: "gift_sent",
+  giftError: "gift_error",
 } as const;
 
 export const POSTHOG_DEFAULT_HOST = "https://eu.i.posthog.com";

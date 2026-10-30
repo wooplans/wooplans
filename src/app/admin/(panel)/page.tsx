@@ -48,7 +48,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Stat
           label="Revenu plan et devis"
           value={formatFcfa(k.planDevisRevenue)}
-          hint={`${n(k.planDevisPurchases)} achats · ${n(k.planDevisCheckouts)} paiements démarrés`}
+          hint={`${n(k.planDevisPurchases)} achats · ${n(k.planDevisCheckouts)} paiements démarrés · ${n(k.giftLeads)} offerts`}
         />
         <Stat label="Encaissements plans complets" value={formatFcfa(k.customPlanRevenue)} hint="saisis dans le CRM" />
         <Stat label="Conversion page de vente" value={pct(k.salesPageConversion)} hint="achats / visiteurs de la page" />
