@@ -4,6 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { FUNNEL_EVENTS, isPrivatePath, pageType, planSlugFromPath } from "@/lib/behavior";
 import { phCapture, phRegisterPage } from "@/lib/posthog-browser";
+import { pixelTrack } from "@/lib/pixel";
 
 /** Adresse de la page sans fragment (#) : le lien de connexion y transporte le code d'accès. */
 const pageUrl = () => window.location.origin + window.location.pathname + window.location.search;
@@ -61,6 +62,8 @@ export function Tracker() {
     }
     // La première vue est envoyée par le script du Pixel lui-même.
     if (!firstView.current) window.fbq?.("track", "PageView");
+    // Fiche modèle : ViewContent, pour le reciblage et l'optimisation des publicités Meta.
+    if (planSlug && !isPrivatePath(pathname)) pixelTrack("ViewContent", { content_ids: [planSlug], content_type: "product", content_category: "Modèle" });
     firstView.current = false;
   }, [pathname, searchParams]);
 
