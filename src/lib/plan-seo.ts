@@ -230,9 +230,10 @@ export function planStats(plans: SeoPlan[]): PlanStats {
 export type FaqEntry = { question: string; answer: string };
 
 /** Questions fréquentes d'une page thématique, chiffrées à partir des modèles du catalogue. */
-/** cataloguePrice : prix du Catalogue Premium en FCFA (cataloguePrice() de lib/site). */
-export function landingFaq(page: LandingPage, stats: PlanStats, cataloguePrice: number): FaqEntry[] {
+/** cataloguePrice : prix du Catalogue Premium en FCFA (cataloguePrice() de lib/site) ; gift : plan et devis offert sur les fiches. */
+export function landingFaq(page: LandingPage, stats: PlanStats, cataloguePrice: number, gift = false): FaqEntry[] {
   const faq: FaqEntry[] = [];
+  const price = `${cataloguePrice.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
   if (stats.budget) {
     faq.push({
       question: `Combien coûte la construction d'un ${page.subject} ?`,
@@ -250,8 +251,9 @@ export function landingFaq(page: LandingPage, stats: PlanStats, cataloguePrice: 
   faq.push(
     {
       question: "Les plans sont-ils gratuits ?",
-      answer:
-        `Les rendus 3D, les surfaces et le budget indicatif de chaque modèle sont consultables gratuitement. Les distributions cotées (plan de chaque niveau avec les cotes) et les devis détaillés sont réunis dans le Catalogue Premium (${cataloguePrice.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA, paiement unique, accès à vie).`,
+      answer: gift
+        ? `Les rendus 3D, les surfaces et le budget indicatif de chaque modèle sont consultables gratuitement. Le plan et devis d'un modèle (distribution avec les dimensions et devis détaillé) vous est offert par email depuis sa fiche, un par adresse email. Pour comparer plusieurs modèles, le Catalogue Premium les réunit tous (${price}, paiement unique, accès à vie).`
+        : `Les rendus 3D, les surfaces et le budget indicatif de chaque modèle sont consultables gratuitement. Les distributions cotées (plan de chaque niveau avec les cotes) et les devis détaillés sont réunis dans le Catalogue Premium (${price}, paiement unique, accès à vie).`,
     },
     {
       question: "Peut-on adapter le plan à mon terrain ?",

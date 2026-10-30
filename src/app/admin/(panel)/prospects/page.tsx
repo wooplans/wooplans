@@ -7,6 +7,7 @@ import { whatsappUrl } from "@/lib/phone";
 import { formatFcfa } from "@/lib/plans";
 import { automatedEmailAllowance } from "@/lib/email-budget";
 import { getProspectSettings } from "@/lib/prospects";
+import { WELCOME_DELAYS_HOURS } from "@/lib/prospect-sequence";
 import { importProspects, markLost, saveSettings, startOne, startRecent, stopOne } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,9 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const notice = (await cookies()).get("wp_notice")?.value;
   const db = getDb();
   const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
-  const total = settings.delaysHours.length;
+  // Deux séquences : relance (paiement abandonné ou échoué, délais réglables) et bienvenue (plan et devis offert).
+  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length };
+  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue" } as const;
 
   const filters: SQL[] = [];
   if (vue === "ouverts") filters.push(eq(schema.prospects.status, "open"));
@@ -59,6 +62,24 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const recentNeverStarted = count(
     (p) => p.status === "open" && !p.sequenceStartedAt && p.lastEventAt.getTime() > Date.now() - 30 * 86400_000,
   );
+  // Modèle(s) offert(s) à chaque prospect : plans et devis gratuits demandés avec son adresse.
+  const giftEmails = rows.filter((p) => p.source === "gift" || p.lastEvent === "gift").map((p) => p.email);
+  const gifts = giftEmails.length
+    ? await db
+        .select({ email: schema.checkoutIntents.email, slug: schema.checkoutIntents.planSlug, code: schema.plans.code, name: schema.plans.name })
+        .from(schema.checkoutIntents)
+        .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+        .where(and(eq(schema.checkoutIntents.status, "gift"), inArray(schema.checkoutIntents.email, giftEmails)))
+        .orderBy(desc(schema.checkoutIntents.createdAt))
+    : [];
+  const giftsByEmail = new Map<string, { slug: string; code: string; name: string }[]>();
+  for (const g of gifts) {
+    if (!g.email || !g.slug) continue;
+    const list = giftsByEmail.get(g.email) ?? [];
+    if (!list.some((x) => x.slug === g.slug)) list.push({ slug: g.slug, code: g.code ?? g.slug, name: g.name ?? "" });
+    giftsByEmail.set(g.email, list);
+  }
+
   const neverStarted = await db.query.prospects.findMany({
     where: and(eq(schema.prospects.status, "open"), isNull(schema.prospects.sequenceStartedAt)),
     columns: { id: true },
@@ -68,7 +89,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     <>
       <PageTitle
         title="Prospects Catalogue Premium"
-        subtitle="Paiements abandonnés ou échoués. Relance automatique par email, arrêtée dès que la personne paie ou se désinscrit."
+        subtitle="Plans et devis offerts (séquence de bienvenue) et paiements abandonnés ou échoués (relance). Emails automatiques, arrêtés dès que la personne paie ou se désinscrit."
         actions={
           <form action={importProspects}>
             <button className="btn-ghost py-2">Importer l&apos;historique Chariow</button>
@@ -124,15 +145,19 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         </form>
       </div>
 
-      <Table head={["Prospect", "WhatsApp", "Paiement", "Relance email", "Provenance", "Actions"]} empty={rows.length === 0}>
+      <Table head={["Prospect", "WhatsApp", "Dernier évènement", "Emails automatiques", "Provenance", "Actions"]} empty={rows.length === 0}>
         {rows.map((p) => {
           const ev = EVENTS[p.lastEvent];
           const firstName = (p.name || "").split(" ")[0];
+          const models = giftsByEmail.get(p.email) ?? [];
+          const total = totals[p.sequenceKind];
           const wa = whatsappUrl(
             p.phone,
             p.lastEvent === "failed"
               ? `Bonjour ${firstName}, ici WOOPLANS. Votre paiement du Catalogue Premium n'a pas abouti : puis-je vous aider à le finaliser ?`
-              : `Bonjour ${firstName}, ici WOOPLANS. Vous avez commencé à commander le Catalogue Premium : avez-vous rencontré un souci ? Je peux vous aider.`,
+              : p.lastEvent === "gift"
+                ? `Bonjour ${firstName}, ici WOOPLANS. Avez-vous bien reçu le plan et devis${models[0] ? ` du modèle ${models[0].code}` : ""} ? Avez-vous des questions sur ce modèle ?`
+                : `Bonjour ${firstName}, ici WOOPLANS. Vous avez commencé à commander le Catalogue Premium : avez-vous rencontré un souci ? Je peux vous aider.`,
           );
           return (
             <tr key={p.id}>
@@ -165,17 +190,33 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
                   <Badge>Perdu</Badge>
                 ) : p.nextEmailAt ? (
                   <>
-                    <p className="font-semibold">Email {Math.min(p.sequenceStep + 1, total)}/{total}</p>
+                    <p className="font-semibold">
+                      {SEQUENCES[p.sequenceKind]} {Math.min(p.sequenceStep + 1, total)}/{total}
+                    </p>
                     <p className="text-muted">le {fmtDateTime(p.nextEmailAt)}</p>
                   </>
                 ) : p.sequenceStartedAt ? (
-                  <p className="text-muted">Terminée ({p.sequenceStep}/{total} envoyés)</p>
+                  <p className="text-muted">
+                    {SEQUENCES[p.sequenceKind]} terminée ({p.sequenceStep}/{total} envoyés)
+                  </p>
                 ) : (
                   <p className="text-muted">Non démarrée</p>
                 )}
               </td>
               <td className="px-4 py-2.5 text-xs">
                 <p>{SOURCES[p.source]}</p>
+                {models.length ? (
+                  <p className="font-semibold">
+                    {models.map((m, i) => (
+                      <span key={m.slug}>
+                        {i ? ", " : ""}
+                        <Link href={`/catalogue/${m.slug}`} target="_blank" className="text-primary hover:underline" title={m.name}>
+                          {m.code}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                ) : null}
                 {p.utmSource ? <p className="text-muted">{[p.utmSource, p.utmCampaign].filter(Boolean).join(" / ")}</p> : null}
               </td>
               <td className="px-4 py-2.5">
@@ -200,17 +241,23 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
       </Table>
 
       <section className="card mt-8 p-5">
-        <h2 className="font-semibold">Relances automatiques</h2>
+        <h2 className="font-semibold">Emails automatiques</h2>
         <p className="mt-1 text-sm text-muted">
-          Emails envoyés après un paiement abandonné ou échoué : 1) aide au paiement, 2) ce que contient le catalogue,
-          3) offre avec le code de réduction, 4) dernier rappel. La séquence s&apos;arrête dès le paiement ou la désinscription.
+          <strong>Bienvenue</strong> (plan et devis offert) : le cadeau part tout de suite, puis 4 emails à J+
+          {WELCOME_DELAYS_HOURS.map((h) => h / 24).join(", J+")} : 1) comment lire le plan et devis, 2) comparer plusieurs modèles,
+          3) questions fréquentes, 4) dernier message avec le code de réduction.
         </p>
+        <p className="mt-2 text-sm text-muted">
+          <strong>Relance</strong> (paiement abandonné ou échoué) : 1) aide au paiement, 2) ce que contient le catalogue,
+          3) offre avec le code de réduction, 4) dernier rappel. Ses délais se règlent ci-dessous.
+        </p>
+        <p className="mt-2 text-sm text-muted">Les deux s&apos;arrêtent dès le paiement ou la désinscription.</p>
         <form action={saveSettings} className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input type="checkbox" name="enabled" defaultChecked={settings.enabled} /> Envois automatiques actifs
           </label>
           <label className="text-sm">
-            <span className="label">Délais des emails (heures après l&apos;abandon)</span>
+            <span className="label">Délais de la relance (heures après l&apos;abandon)</span>
             <input name="delays" defaultValue={settings.delaysHours.join(", ")} className="input" />
             <span className="mt-1 block text-xs text-muted">Ex. 1, 24, 72, 168 = 1 h, 1 jour, 3 jours, 7 jours.</span>
           </label>

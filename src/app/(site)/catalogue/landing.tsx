@@ -5,6 +5,7 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanGrid } from "@/components/PlanCard";
 import { siteUrl } from "@/lib/env";
 import { cataloguePrice } from "@/lib/site";
+import { planGiftEnabled } from "@/lib/custom-plans";
 import { LANDING_PAGES, landingFaq, landingPage, planImageAlt, planStats, selectLandingPlans } from "@/lib/plan-seo";
 import { formatBudgetRange, listPublicPlans } from "@/lib/plans";
 
@@ -23,7 +24,7 @@ export async function LandingView({ path }: { path: string }) {
   const page = landingPage(path);
   const plans = selectLandingPlans(await listPublicPlans({ category: page.select.category }), page.select);
   const stats = planStats(plans);
-  const faq = landingFaq(page, stats, cataloguePrice());
+  const faq = landingFaq(page, stats, cataloguePrice(), planGiftEnabled());
   const budget = stats.budget ? formatBudgetRange(stats.budget[0], stats.budget[1]) : null;
   const related = LANDING_PAGES.filter((p) => p.path !== page.path);
 

@@ -5,6 +5,7 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanGrid } from "@/components/PlanCard";
 import { Testimonials } from "@/components/Testimonials";
 import { CATALOGUE_FAQ } from "@/lib/faq";
+import { planGiftEnabled } from "@/lib/custom-plans";
 import { countPublishedPlans, listPublicPlans, withPlanCount } from "@/lib/plans";
 import { SITE } from "@/lib/site";
 
@@ -18,7 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
 const STEPS = [
   {
     title: "Explorez les modèles",
-    text: "Parcourez gratuitement les villas et duplex : rendus 3D, nombre de chambres, niveaux, surfaces et budget indicatif.",
+    text: `Parcourez gratuitement les villas et duplex : rendus 3D, nombre de chambres, niveaux, surfaces et budget indicatif.${
+      planGiftEnabled() ? " Le plan et devis d'un modèle vous est offert par email depuis sa fiche." : ""
+    }`,
   },
   {
     title: "Choisissez avec le Catalogue Premium",
