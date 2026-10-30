@@ -234,6 +234,97 @@ function table(ctx: Ctx, rows: [string, string][], opts: { total?: [string, stri
   ctx.y -= 8;
 }
 
+/** Postes du gros œuvre (repris des devis du catalogue) ; les autres postes sont des finitions. */
+const GROS_OEUVRE = new Set(["fondation", "elevations", "charpente et toiture"]);
+const lotKey = (label: string) => label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+/**
+ * Devis par poste : numéro (100, 200…), poste, montant, part du total avec une barre, sous-totaux
+ * gros œuvre / finitions quand les postes du catalogue sont reconnus, puis total.
+ */
+function estimateTable(ctx: Ctx, lots: { label: string; amount: number }[], total: number | null) {
+  const width = A4[0] - 2 * M;
+  const sum = total || lots.reduce((s, l) => s + (l.amount || 0), 0);
+  const xNum = M + 8;
+  const xLabel = M + 46;
+  const amountRight = M + width - 118;
+  const barX = M + width - 104;
+  const barW = 56;
+  const pctRight = M + width - 8;
+  const rowH = 22;
+  const header = () => {
+    ensure(ctx, 30 + rowH);
+    ctx.page.drawRectangle({ x: M, y: ctx.y - 8, width, height: 22, color: TEAL });
+    const white = rgb(1, 1, 1);
+    ctx.page.drawText("N°", { x: xNum, y: ctx.y, size: 8.5, font: ctx.bold, color: white });
+    ctx.page.drawText("POSTE", { x: xLabel, y: ctx.y, size: 8.5, font: ctx.bold, color: white });
+    const a = "MONTANT";
+    ctx.page.drawText(a, { x: amountRight - ctx.bold.widthOfTextAtSize(a, 8.5), y: ctx.y, size: 8.5, font: ctx.bold, color: white });
+    const p = "PART";
+    ctx.page.drawText(p, { x: pctRight - ctx.bold.widthOfTextAtSize(p, 8.5), y: ctx.y, size: 8.5, font: ctx.bold, color: white });
+    ctx.y -= 26;
+  };
+  const right = (text: string, xr: number, size: number, font: PDFFont, color = DARK) => {
+    const t = pdfSafe(text);
+    ctx.page.drawText(t, { x: xr - font.widthOfTextAtSize(t, size), y: ctx.y, size, font, color });
+  };
+  const pct = (amount: number) => (sum > 0 ? amount / sum : 0);
+  const pctText = (amount: number) => `${(pct(amount) * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %`;
+
+  const known = lots.length > 0 && lots.every((l) => l.label);
+  const gros = lots.filter((l) => GROS_OEUVRE.has(lotKey(l.label)));
+  const groups =
+    known && gros.length > 0 && gros.length < lots.length
+      ? [
+          { title: "Gros œuvre", lots: gros },
+          { title: "Finitions", lots: lots.filter((l) => !GROS_OEUVRE.has(lotKey(l.label))) },
+        ]
+      : [{ title: "", lots }];
+
+  header();
+  let n = 0;
+  for (const group of groups) {
+    if (group.title) {
+      ensure(ctx, rowH * 2);
+      ctx.page.drawText(pdfSafe(group.title).toUpperCase(), { x: xNum, y: ctx.y, size: 8.5, font: ctx.bold, color: ORANGE });
+      ctx.y -= 18;
+    }
+    for (const lot of group.lots) {
+      n += 1;
+      if (ctx.y - rowH < M + 30) {
+        newPage(ctx, "Devis estimatif (suite)");
+        header();
+      }
+      if (n % 2 === 1) ctx.page.drawRectangle({ x: M, y: ctx.y - 8, width, height: rowH, color: LIGHT });
+      ctx.page.drawText(String(n * 100), { x: xNum, y: ctx.y, size: 9, font: ctx.font, color: GRAY });
+      ctx.page.drawText(pdfSafe(lot.label), { x: xLabel, y: ctx.y, size: 10, font: ctx.font, color: DARK });
+      right(fcfa(lot.amount), amountRight, 10, ctx.bold);
+      ctx.page.drawRectangle({ x: barX, y: ctx.y - 1, width: barW, height: 6, color: rgb(0.88, 0.91, 0.91) });
+      ctx.page.drawRectangle({ x: barX, y: ctx.y - 1, width: Math.max(1, barW * Math.min(1, pct(lot.amount) / 0.25)), height: 6, color: TEAL });
+      right(pctText(lot.amount), pctRight, 8.5, ctx.font, GRAY);
+      ctx.y -= rowH;
+    }
+    if (group.title) {
+      const subtotal = group.lots.reduce((s, l) => s + (l.amount || 0), 0);
+      ensure(ctx, rowH);
+      ctx.page.drawRectangle({ x: M, y: ctx.y - 8, width, height: rowH, color: CREAM });
+      ctx.page.drawText(pdfSafe(`Sous-total ${group.title.toLowerCase()}`), { x: xLabel, y: ctx.y, size: 10, font: ctx.bold, color: DARK });
+      right(fcfa(subtotal), amountRight, 10, ctx.bold);
+      right(pctText(subtotal), pctRight, 8.5, ctx.bold, DARK);
+      ctx.y -= rowH + 6;
+    }
+  }
+  if (sum > 0) {
+    ensure(ctx, 32);
+    ctx.page.drawRectangle({ x: M, y: ctx.y - 10, width, height: 28, color: TEAL });
+    const white = rgb(1, 1, 1);
+    ctx.page.drawText("Total estimatif clé en main", { x: xLabel, y: ctx.y, size: 11.5, font: ctx.bold, color: white });
+    right(fcfa(sum), pctRight, 12, ctx.bold, white);
+    ctx.y -= 34;
+  }
+  ctx.y -= 6;
+}
+
 /** Image ajustée dans un cadre (proportions conservées), centrée horizontalement. */
 function drawFitted(page: PDFPage, image: PDFImage, x: number, top: number, maxW: number, maxH: number) {
   const scale = Math.min(maxW / image.width, maxH / image.height);
@@ -411,10 +502,18 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
   /* 2. Distributions cotées : une page chacune, la plus grande possible. */
   for (const [i, fp] of (input.floorPlans ?? []).entries()) {
     if (fp.type === "pdf") {
+      // Une distribution doit être une image recadrée (dessin seul). Un PDF source complet (couverture, images,
+      // ancien devis, ancien habillage) n'est jamais recopié tel quel : seule sa 1re page est posée sur une page
+      // WOOPLANS, en attendant son remplacement par une image propre.
       try {
         const source = await PDFDocument.load(fp.bytes, { ignoreEncryption: true });
-        const pages = await doc.copyPages(source, source.getPageIndices());
-        pages.forEach((p) => doc.addPage(p));
+        const [embedded] = await doc.embedPdf(source, [0]);
+        await embedded.embed(); // erreur ici (page vide, PDF abîmé) plutôt qu'à l'enregistrement du document
+        newPage(ctx, "Distribution cotée");
+        const maxW = contentW;
+        const maxH = ctx.y - M - 30;
+        const scale = Math.min(maxW / embedded.width, maxH / embedded.height);
+        ctx.page.drawPage(embedded, { x: M + (maxW - embedded.width * scale) / 2, y: ctx.y - embedded.height * scale, xScale: scale, yScale: scale });
       } catch {
         /* PDF illisible : ignoré, la distribution reste consultable dans l'espace Premium. */
       }
@@ -450,11 +549,7 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
   const estimate = plan.estimateTotal || lotsTotal || null;
   if (plan.estimateLots.length || estimate) {
     heading(ctx, "Devis estimatif de construction");
-    table(
-      ctx,
-      plan.estimateLots.map((lot) => [lot.label, fcfa(lot.amount)]),
-      { total: estimate ? ["Total estimatif", fcfa(estimate)] : undefined, continueTitle: "Devis estimatif (suite)" },
-    );
+    estimateTable(ctx, plan.estimateLots, estimate);
     paragraph(ctx, "Hors terrain, honoraires et raccordements. Montants indicatifs à confirmer avec votre entrepreneur selon les prix locaux.", 8.5, GRAY);
     if (plan.costAssumptions) {
       ctx.y -= 4;

@@ -71,8 +71,9 @@ test("filigrane : empreinte stable par membre et par modèle", () => {
 test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", async () => {
   const jpg = new Uint8Array(readFileSync(new URL("../public/assets/digital/floor-plan.jpg", import.meta.url)));
   const logo = new Uint8Array(readFileSync(new URL("../public/assets/wooplans-logo-white.png", import.meta.url)));
+  // PDF source complet (3 pages) : seule sa 1re page doit entrer dans la fiche, sur une page WOOPLANS.
   const annex = await PDFDocument.create();
-  annex.addPage([400, 300]);
+  for (let i = 0; i < 3; i++) annex.addPage([400, 300]).drawText(`Page source ${i + 1}`, { x: 20, y: 150 });
   const annexBytes = await annex.save();
   const mark = watermarkForMember({ id: "m1", email: "awa@exemple.com" }, plan.code);
   const bytes = await buildPlanPdf({
