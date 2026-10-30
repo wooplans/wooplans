@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { PDFDocument } from "pdf-lib";
-import { buildPlanPdf, fcfa, fileName, pdfSafe, planSpecs, usageTerms, type PlanPdfData } from "../src/lib/plan-pdf.ts";
+import { buildPlanPdf, fcfa, fileName, minimumLand, pdfSafe, planSpecs, usageTerms, type PlanPdfData } from "../src/lib/plan-pdf.ts";
 import { fingerprint, imageMarkForMember, watermarkForMember } from "../src/lib/watermark.ts";
 import { encodePng, imageSize, rasterText, renderOverlay, watermarkOverlayPng } from "../src/lib/watermark-raster.ts";
 
@@ -89,8 +89,8 @@ test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", asy
   });
   assert.equal(new TextDecoder().decode(bytes.subarray(0, 5)), "%PDF-");
   const doc = await PDFDocument.load(bytes);
-  // couverture + distribution image + distribution PDF + pièces/devis + 2 pages de rendus + conditions
-  assert.equal(doc.getPageCount(), 7);
+  // couverture + distribution image + distribution PDF + terrain + pièces/devis + 2 pages de rendus + conditions
+  assert.equal(doc.getPageCount(), 8);
   assert.match(doc.getSubject() || "", /awa@exemple\.com/);
   assert.match(doc.getKeywords() || "", new RegExp(mark.id));
   // Lien « Source » cliquable sur chaque page.
@@ -134,4 +134,11 @@ test("imageSize : lit les dimensions d'un JPEG", () => {
   const size = imageSize(jpg);
   assert.ok(size && size.width > 0 && size.height > 0);
   assert.equal(imageSize(new Uint8Array([1, 2, 3])), null);
+});
+
+test("terrain minimum : 1,5 m sur les côtés, 5 m devant, 2 m derrière", () => {
+  const land = minimumLand(14.45, 12.86);
+  assert.equal(land.width, 17.45);
+  assert.equal(Math.round(land.depth * 100) / 100, 19.86);
+  assert.equal(Math.ceil(land.area), 347);
 });

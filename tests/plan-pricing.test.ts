@@ -11,9 +11,9 @@ import {
 } from "../src/lib/plan-pricing.ts";
 
 test("terrain : bâtiment + 3 m × + 7 m, surface arrondie au multiple de 50 inférieur", () => {
-  assert.deepEqual(computeLand(10, 13), { landWidth: 13, landDepth: 20, landArea: 250 }); // 260 m² → 250
-  assert.deepEqual(computeLand(10, 14), { landWidth: 13, landDepth: 21, landArea: 250 }); // 273 m² → 250
-  assert.deepEqual(computeLand(12.5, 18), { landWidth: 15.5, landDepth: 25, landArea: 350 }); // 387,5 m² → 350
+  assert.deepEqual(computeLand(10, 13), { landWidth: 13, landDepth: 20, landArea: 300 }); // 260 m² → 300
+  assert.deepEqual(computeLand(10, 14), { landWidth: 13, landDepth: 21, landArea: 300 }); // 273 m² → 300
+  assert.deepEqual(computeLand(12.5, 18), { landWidth: 15.5, landDepth: 25, landArea: 400 }); // 387,5 m² → 400
   assert.equal(computeLand(null, 13), null);
   assert.equal(computeLand(10, 0), null);
 });
@@ -58,7 +58,7 @@ test("réglages invalides ou absents : valeurs par défaut", () => {
 test("champs calculés : budget ± 10 %, terrain seulement avec les dimensions du bâtiment", () => {
   assert.deepEqual(budgetRange(23_200_000), { budgetMin: 20_900_000, budgetMax: 25_500_000 });
   const villa = derivedPlanFields({ category: "villa", surfaceTotal: 116, standing: "standard", buildingWidth: 10, buildingDepth: 13 }, DEFAULT_COST_SETTINGS);
-  assert.equal(villa.landArea, 250);
+  assert.equal(villa.landArea, 300); // 13 × 20 = 260 m² → 300
   assert.equal(villa.estimateTotal, 23_200_000);
   assert.equal(villa.budgetMin, 20_900_000);
   const other = derivedPlanFields({ category: "immeuble", surfaceTotal: 400, standing: null, buildingWidth: null, buildingDepth: null }, DEFAULT_COST_SETTINGS);

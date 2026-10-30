@@ -81,12 +81,15 @@ export function hasAutomaticEstimate(category: string): category is "villa" | "d
   return category === "villa" || category === "duplex";
 }
 
-/** Terrain : bâtiment + 3 m en largeur et + 7 m en profondeur ; surface arrondie au multiple de 50 m² inférieur. */
+/**
+ * Terrain minimum : bâtiment + 3 m en largeur (1,5 m de chaque côté) et + 7 m en profondeur (5 m devant, 2 m derrière) ;
+ * surface arrondie au multiple de 50 m² supérieur, pour ne jamais annoncer moins que le schéma « Terrain » de la fiche.
+ */
 export function computeLand(buildingWidth: number | null | undefined, buildingDepth: number | null | undefined) {
   if (!buildingWidth || !buildingDepth || buildingWidth <= 0 || buildingDepth <= 0) return null;
   const landWidth = buildingWidth + 3;
   const landDepth = buildingDepth + 7;
-  return { landWidth, landDepth, landArea: Math.floor((landWidth * landDepth) / 50) * 50 };
+  return { landWidth, landDepth, landArea: Math.ceil((landWidth * landDepth) / 50) * 50 };
 }
 
 /** Devis : total arrondi au millier, postes à la centaine ; le dernier poste absorbe l'arrondi. */

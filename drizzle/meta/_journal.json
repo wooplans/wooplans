@@ -57,6 +57,13 @@
       "when": 1793327288232,
       "tag": "0007_cadeau_bienvenue_apres_achat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793334660602,
+      "tag": "0008_terrain_arrondi_superieur",
+      "breakpoints": true
     }
   ]
 }
