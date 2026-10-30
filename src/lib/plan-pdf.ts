@@ -325,6 +325,131 @@ function estimateTable(ctx: Ctx, lots: { label: string; amount: number }[], tota
   ctx.y -= 6;
 }
 
+/** Reculs utilisés pour estimer le terrain minimum (mètres). */
+export const SETBACKS = { front: 5, back: 2, side: 1.5 };
+
+/** Terrain minimum estimé : largeur (façade), profondeur et surface, à partir de l'encombrement de la maison. */
+export function minimumLand(buildingWidth: number, buildingDepth: number) {
+  const width = buildingWidth + 2 * SETBACKS.side;
+  const depth = buildingDepth + SETBACKS.front + SETBACKS.back;
+  return { width, depth, area: width * depth };
+}
+
+const m = (v: number) => `${num(v)} m`;
+const GREEN = rgb(0.9, 0.95, 0.91);
+const GREEN_LINE = rgb(0.33, 0.6, 0.38);
+const ROAD = rgb(0.84, 0.85, 0.86);
+
+/**
+ * Schéma du terrain minimum : parcelle (reculs 5 m devant, 2 m derrière, 1,5 m sur les côtés), emprise de la
+ * maison, route devant la façade, cotes et encadré « estimation ». Façade = largeur du bâtiment, côté route.
+ */
+function terrainSketch(ctx: Ctx, buildingWidth: number, buildingDepth: number) {
+  const { page, font, bold } = ctx;
+  const land = minimumLand(buildingWidth, buildingDepth);
+  const contentW = A4[0] - 2 * M;
+  const centered = (text: string, cx: number, y: number, size: number, f = font, color = DARK) => {
+    const t = pdfSafe(text);
+    page.drawText(t, { x: cx - f.widthOfTextAtSize(t, size) / 2, y, size, font: f, color });
+  };
+  const arrowHead = (x: number, y: number, dir: "up" | "down" | "left" | "right", color = DARK, size = 4) => {
+    const pts = {
+      up: [[x, y], [x - size, y - size * 1.6], [x + size, y - size * 1.6]],
+      down: [[x, y], [x - size, y + size * 1.6], [x + size, y + size * 1.6]],
+      left: [[x, y], [x + size * 1.6, y - size], [x + size * 1.6, y + size]],
+      right: [[x, y], [x - size * 1.6, y - size], [x - size * 1.6, y + size]],
+    }[dir];
+    // Coordonnées SVG (y vers le bas) relatives à l'origine (0, hauteur de page).
+    const path = `M ${pts[0][0]} ${-pts[0][1]} L ${pts[1][0]} ${-pts[1][1]} L ${pts[2][0]} ${-pts[2][1]} Z`;
+    page.drawSvgPath(path, { x: 0, y: 0, color, borderWidth: 0 });
+  };
+  /** Cote horizontale (flèches aux deux bouts, texte au-dessus). */
+  const hDim = (x1: number, x2: number, y: number, label: string, color = DARK, labelX?: number, align: "left" | "right" = "left") => {
+    page.drawLine({ start: { x: x1, y }, end: { x: x2, y }, thickness: 0.7, color });
+    arrowHead(x1, y, "left", color, 3);
+    arrowHead(x2, y, "right", color, 3);
+    if (labelX === undefined) return centered(label, (x1 + x2) / 2, y + 4, 8.5, bold, color);
+    // Recul étroit : texte posé à côté de la cote, dans la maison, pour ne pas chevaucher la limite du terrain.
+    const t = pdfSafe(label);
+    const w = bold.widthOfTextAtSize(t, 8.5);
+    page.drawText(t, { x: align === "left" ? labelX : labelX - w, y: y - 3, size: 8.5, font: bold, color });
+  };
+  /** Cote verticale (flèches aux deux bouts, texte tourné à gauche de la ligne). */
+  const vDim = (x: number, y1: number, y2: number, label: string, color = DARK) => {
+    page.drawLine({ start: { x, y: y1 }, end: { x, y: y2 }, thickness: 0.7, color });
+    arrowHead(x, Math.min(y1, y2), "down", color, 3);
+    arrowHead(x, Math.max(y1, y2), "up", color, 3);
+    const t = pdfSafe(label);
+    const w = bold.widthOfTextAtSize(t, 8.5);
+    page.drawText(t, { x: x - 4, y: (y1 + y2) / 2 - w / 2, size: 8.5, font: bold, color, rotate: degrees(90) });
+  };
+
+  // Cadre du dessin : place pour les cotes à gauche et en haut, la route et la flèche en bas.
+  const top = ctx.y - 26;
+  const roadH = 34;
+  const boxH = 400;
+  const left = M + 40;
+  const availW = contentW - 80;
+  const scale = Math.min(availW / land.width, (boxH - roadH - 40) / land.depth);
+  const plotW = land.width * scale;
+  const plotH = land.depth * scale;
+  const px = left + (availW - plotW) / 2;
+  const py = top - plotH; // bas de la parcelle (côté route)
+
+  // Parcelle.
+  page.drawRectangle({ x: px, y: py, width: plotW, height: plotH, color: GREEN, borderColor: GREEN_LINE, borderWidth: 1.4, borderDashArray: [6, 3] });
+  // Maison : 1,5 m des côtés, 5 m de l'avant (route), 2 m de l'arrière.
+  const hx = px + SETBACKS.side * scale;
+  const hy = py + SETBACKS.front * scale;
+  const hw = buildingWidth * scale;
+  const hh = buildingDepth * scale;
+  page.drawRectangle({ x: hx, y: hy, width: hw, height: hh, color: rgb(0.85, 0.92, 0.92), borderColor: TEAL, borderWidth: 2 });
+  centered("MAISON (emprise)", hx + hw / 2, hy + hh / 2 + 6, 10, bold, TEAL);
+  centered(`${m(buildingWidth)} × ${m(buildingDepth)}`, hx + hw / 2, hy + hh / 2 - 9, 9.5, font, TEAL);
+
+  // Reculs (cotes en orange).
+  const setbackColor = ORANGE;
+  vDim(hx + hw / 2, py, hy, `${m(SETBACKS.front)} devant`, setbackColor);
+  vDim(hx + hw / 2, hy + hh, py + plotH, `${m(SETBACKS.back)}`, setbackColor);
+  hDim(px, hx, hy + hh * 0.25, m(SETBACKS.side), setbackColor, hx + 5, "left");
+  hDim(hx + hw, px + plotW, hy + hh * 0.25, m(SETBACKS.side), setbackColor, hx + hw - 5, "right");
+
+  // Cotes du terrain (en haut et à gauche).
+  hDim(px, px + plotW, py + plotH + 14, `Largeur du terrain (façade) : ${m(land.width)}`, GREEN_LINE);
+  vDim(px - 16, py, py + plotH, `Profondeur : ${m(land.depth)}`, GREEN_LINE);
+
+  // Route devant la parcelle, et flèche vers la façade.
+  const roadY = py - 10 - roadH;
+  page.drawRectangle({ x: M, y: roadY, width: contentW, height: roadH, color: ROAD });
+  page.drawLine({ start: { x: M, y: roadY + roadH / 2 }, end: { x: M + contentW, y: roadY + roadH / 2 }, thickness: 1, color: rgb(1, 1, 1), dashArray: [10, 8] });
+  centered("ROUTE / VOIE D'ACCÈS", M + 70, roadY + roadH / 2 + 4, 8, bold, GRAY);
+  const ax = hx + hw * 0.78;
+  page.drawLine({ start: { x: ax, y: roadY + roadH - 4 }, end: { x: ax, y: hy - 4 }, thickness: 1.6, color: DARK });
+  arrowHead(ax, hy - 2, "up", DARK, 5);
+  centered("Façade principale", ax, roadY + 6, 8.5, bold, DARK);
+
+  // Encadré : surface estimée et avertissement.
+  ctx.y = roadY - 22;
+  const area = Math.ceil(land.area);
+  const lines = [
+    [`Terrain minimum estimé : ${m(land.width)} × ${m(land.depth)}, soit environ ${num(area)} m²`, true],
+    [`Reculs retenus : ${m(SETBACKS.front)} devant (côté route), ${m(SETBACKS.back)} derrière, ${m(SETBACKS.side)} de chaque côté.`, false],
+    ["Il s'agit d'une ESTIMATION indicative du plus petit terrain rectangulaire adapté à ce modèle. Les reculs réels dépendent des règles d'urbanisme de votre commune, de la forme et de la pente de la parcelle et de l'emplacement de la fosse septique. Faites-les vérifier avant d'acheter votre terrain.", false],
+  ] as const;
+  const wrapped = lines.map(([text, strong]) => ({ strong, rows: wrapText(text, strong ? bold : font, strong ? 11 : 9, contentW - 24) }));
+  const h = wrapped.reduce((sum, w) => sum + w.rows.length * (w.strong ? 15 : 12.5) + 6, 18);
+  page.drawRectangle({ x: M, y: ctx.y - h + 12, width: contentW, height: h, color: CREAM, borderColor: ORANGE, borderWidth: 0.8 });
+  let y = ctx.y - 4;
+  for (const w of wrapped) {
+    for (const row of w.rows) {
+      page.drawText(row, { x: M + 12, y, size: w.strong ? 11 : 9, font: w.strong ? bold : font, color: w.strong ? TEAL : DARK });
+      y -= w.strong ? 15 : 12.5;
+    }
+    y -= 6;
+  }
+  ctx.y = y - 10;
+}
+
 /** Image ajustée dans un cadre (proportions conservées), centrée horizontalement. */
 function drawFitted(page: PDFPage, image: PDFImage, x: number, top: number, maxW: number, maxH: number) {
   const scale = Math.min(maxW / image.width, maxH / image.height);
@@ -523,6 +648,12 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
     if (!image) continue;
     newPage(ctx, `Distribution cotée ${(input.floorPlans?.length ?? 0) > 1 ? i + 1 : ""}`.trim());
     drawFitted(ctx.page, image, M, ctx.y, contentW, ctx.y - M - 30);
+  }
+
+  /* 2 bis. Terrain minimum estimé (gabarit de la maison dans sa parcelle). */
+  if (plan.buildingWidth && plan.buildingDepth) {
+    newPage(ctx, "Terrain minimum estimé");
+    terrainSketch(ctx, plan.buildingWidth, plan.buildingDepth);
   }
 
   /* 3. Pièces, devis, atouts et points de vigilance. */
