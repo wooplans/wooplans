@@ -240,17 +240,10 @@ export const checkoutIntents = sqliteTable(
     /** Code en clair, conservé quelques heures pour l'affichage sur /merci puis effacé. */
     revealCode: text("reveal_code"),
     revealUntil: integer("reveal_until", { mode: "timestamp_ms" }),
-    /** Relance du plan et devis abandonné : emails déjà envoyés et prochain envoi (null = aucune relance prévue). */
-    relanceStep: integer("relance_step").notNull().default(0),
-    relanceNextAt: integer("relance_next_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [
-    index("intents_email_idx").on(t.email),
-    index("intents_created_idx").on(t.createdAt),
-    index("intents_relance_idx").on(t.relanceNextAt),
-  ],
+  (t) => [index("intents_email_idx").on(t.email), index("intents_created_idx").on(t.createdAt)],
 );
 
 /** Ventes du catalogue (Chariow). */

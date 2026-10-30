@@ -249,55 +249,6 @@ export function prospectEmail(p: ProspectEmailParams) {
   return { subject, html: layout(subject, body, p.unsubscribe), text: `${text}\n\nNe plus recevoir ces emails : ${p.unsubscribe}` };
 }
 
-/* ─────────────── Relance du plan et devis abandonné ─────────────── */
-
-/** Les 2 emails de la relance du plan et devis : aide au paiement, puis contenu du document. Aucune fausse urgence. */
-export function planDevisRelanceEmail(p: {
-  step: number;
-  name?: string | null;
-  lastEvent: "abandoned" | "failed";
-  planName: string;
-  planCode: string;
-  planUrl: string;
-  whatsappUrl: string;
-  price: string;
-  unsubscribe: string;
-}) {
-  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
-  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
-  const model = `le modèle ${p.planName} (réf. ${p.planCode})`;
-  const help = `<p style="color:#6B7280;font-size:14px">Une question ou un souci de paiement ? <a href="${p.whatsappUrl}" style="color:#0F5B59;font-weight:600">Écrivez-nous sur WhatsApp</a>, nous répondons rapidement.</p>`;
-  const priceLine = `Prix : ${p.price}, déduit des plans complets de ce modèle.`;
-
-  let subject: string;
-  let body: string;
-  let text: string;
-  if (p.step === 0) {
-    const failed = p.lastEvent === "failed";
-    subject = failed ? "Votre paiement n'a pas abouti : on vous aide" : `Votre plan et devis du modèle ${p.planCode} vous attend`;
-    const intro = failed
-      ? `Votre paiement du plan et devis pour ${model} n'a pas abouti. Cela arrive souvent avec le Mobile Money : solde insuffisant, validation non confirmée sur le téléphone ou réseau lent.`
-      : `Vous avez commencé à commander le plan et devis pour ${model}, mais le paiement n'a pas été finalisé.`;
-    const tips = failed
-      ? `<p>Pour réessayer :</p><ul style="padding-left:20px"><li>vérifiez votre solde Mobile Money et gardez votre téléphone à portée pour valider ;</li><li>ou choisissez un autre moyen de paiement (autre opérateur, carte bancaire).</li></ul>`
-      : "<p>Vous pouvez reprendre votre commande depuis la fiche du modèle :</p>";
-    body = `<p>${hello}</p><p>${escape(intro)}</p>${tips}${button(p.planUrl, "Reprendre ma commande")}<p>${escape(priceLine)}</p>${help}`;
-    text = `${helloText}\n\n${intro}\n\nReprendre ma commande : ${p.planUrl}\n\n${priceLine}\nWhatsApp : ${p.whatsappUrl}`;
-  } else {
-    subject = `Ce que contient le plan et devis du modèle ${p.planCode}`;
-    const items = [
-      "Le plan de distribution avec les dimensions",
-      "Les surfaces de chaque pièce",
-      "Le devis détaillé pour estimer votre budget",
-      "L'échange avec nos architectes sur WhatsApp pour adapter le modèle à votre terrain",
-    ];
-    const list = `<ul style="padding-left:20px">${items.map((b) => `<li style="margin:0 0 6px">${escape(b)}</li>`).join("")}</ul>`;
-    body = `<p>${hello}</p><p>Vous vous intéressez à ${escape(model)}. Avec son plan et devis, vous recevez :</p>${list}${button(p.planUrl, "Obtenir le plan et devis")}<p>${escape(priceLine)}</p>${help}`;
-    text = `${helloText}\n\nAvec le plan et devis de ${model}, vous recevez :\n${items.map((b) => `- ${b}`).join("\n")}\n\n${p.planUrl}\n${priceLine}`;
-  }
-  return { subject, html: layout(subject, body, p.unsubscribe), text: `${text}\n\nNe plus recevoir ces emails : ${p.unsubscribe}` };
-}
-
 /* ─────────────── Actualités mensuelles des membres ─────────────── */
 
 export type DigestPlan = { name: string; url: string; image: string | null; details: string; budget: string | null };
