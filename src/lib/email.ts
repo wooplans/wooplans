@@ -277,7 +277,7 @@ export function giftPlanEmail(p: {
   const body = `<p>${hello}</p><p>Voici le plan et devis du modèle <strong>${escape(p.planName)}</strong> (réf. ${escape(p.planCode)}) : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé.</p>
 ${button(p.downloadUrl, "Télécharger mon plan et devis")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
-<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Envie de comparer avec d'autres modèles ?</p><p style="margin:6px 0 0;font-size:14px">Le Catalogue Premium vous donne accès au plan et devis de ${escape(models)}, pour ${escape(p.price)} en paiement unique. <a href="${p.catalogueUrl}" style="color:#0F5B59;font-weight:600">Découvrir le Catalogue Premium</a></p></div>`;
+<p>Si vous voulez comparer avec d'autres modèles, le <a href="${p.catalogueUrl}" style="color:#0F5B59">Catalogue Premium</a> réunit le plan et devis de ${escape(models)} (${escape(p.price)}, paiement unique).</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
     `Voici le plan et devis du modèle ${p.planName} (réf. ${p.planCode}).`,

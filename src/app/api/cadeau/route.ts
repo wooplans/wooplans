@@ -12,7 +12,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { VISITOR_COOKIE } from "@/lib/session";
 import { cataloguePrice } from "@/lib/site";
 import { recordServerEvent } from "@/lib/tracking";
-import { unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
+import { unsubscribeUrl } from "@/lib/unsubscribe";
 
 type Body = { slug?: string; name?: string; email?: string };
 
@@ -98,7 +98,9 @@ export async function POST(request: NextRequest) {
     planCount: published?.n ?? 0,
     unsubscribe,
   });
-  const sent = await sendEmail({ to: email, ...mail, template: "cadeau_plan_devis", headers: await unsubscribeHeaders(email, "prospects") });
+  // Email demandé par la personne (document) : sans en-têtes de liste de diffusion, qui le classent en « Promotions ».
+  // Le lien de désinscription reste en bas de l'email ; la séquence de bienvenue garde ses en-têtes.
+  const sent = await sendEmail({ to: email, ...mail, template: "cadeau_plan_devis" });
   if (!sent.ok) {
     // Pas de cadeau compté si l'email n'est pas parti : la personne peut réessayer.
     await db.delete(schema.checkoutIntents).where(eq(schema.checkoutIntents.id, intentId));
