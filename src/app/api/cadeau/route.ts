@@ -18,6 +18,9 @@ type Body = { slug?: string; name?: string; email?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Adresses du propriétaire : cadeaux illimités (contrôle des documents de chaque modèle), sans limite de débit. */
+const UNLIMITED_EMAILS = new Set(["wooplans237@gmail.com", "romualdtwk@gmail.com"]);
+
 /**
  * « Recevez gratuitement le plan et devis » (fiche modèle) : un cadeau par adresse email, envoyé par email
  * (lien personnel, document marqué au nom du visiteur), puis séquence de bienvenue vers le Catalogue Premium.
@@ -33,7 +36,8 @@ export async function POST(request: NextRequest) {
   }
   const plan = await getPublicPlan((body.slug || "").slice(0, 120));
   if (!plan || !customPlanOffer(plan.category)) return NextResponse.json({ error: "Modèle introuvable." }, { status: 404 });
-  if (!(await rateLimit(`cadeau:${clientIp(request.headers)}`, 5, 60 * 60 * 1000))) {
+  const owner = UNLIMITED_EMAILS.has(email);
+  if (!owner && !(await rateLimit(`cadeau:${clientIp(request.headers)}`, 5, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "Trop de demandes. Réessayez dans quelques minutes." }, { status: 429 });
   }
 
@@ -42,7 +46,7 @@ export async function POST(request: NextRequest) {
     where: and(eq(schema.members.email, email), eq(schema.members.status, "active")),
     columns: { id: true },
   });
-  if (member) {
+  if (member && !owner) {
     return NextResponse.json({ status: "member", message: "Vous êtes déjà membre Premium : ce modèle est dans votre espace." });
   }
   // Un seul cadeau par adresse email (tous modèles confondus) : la suite logique est le Catalogue Premium.
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
     orderBy: desc(schema.checkoutIntents.createdAt),
     columns: { planSlug: true },
   });
-  if (previous) {
+  if (previous && !owner) {
     const first = previous.planSlug ? await getPublicPlan(previous.planSlug) : null;
     return NextResponse.json({
       status: "already",

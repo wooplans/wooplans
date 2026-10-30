@@ -122,7 +122,7 @@ function GiftOffer({ plan, planCount }: Omit<Props, "online" | "offer">) {
       <Checklist items={GIFT_ITEMS} />
       <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-4 w-full px-4 py-3.5 text-base" />
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
-        Plusieurs modèles vous plaisent ?{" "}
+        Plusieurs modèles vous intéressent ?{" "}
         <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
           Le Catalogue Premium
         </Link>{" "}
