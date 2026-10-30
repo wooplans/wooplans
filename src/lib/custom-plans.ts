@@ -52,6 +52,14 @@ export function projectStartPrice(): number {
   return projet.price;
 }
 
+/**
+ * Plan et devis offert (aimant à contacts) : le formulaire de la fiche l'envoie gratuitement par email
+ * au lieu de le vendre. Réglé dans src/config/projet.json (« gift ») ; false = retour à l'achat à 10 000 FCFA.
+ */
+export function planGiftEnabled(): boolean {
+  return Boolean((projet as { gift?: boolean }).gift);
+}
+
 /** Ce qu'il reste à payer pour les plans complets après le plan et devis du modèle. */
 export function projectBalance(offer: CustomPlanOffer) {
   return Math.max(0, offer.price - projectStartPrice());

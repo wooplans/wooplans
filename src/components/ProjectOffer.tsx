@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { projectBalance, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
+import { planGiftEnabled, projectBalance, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
+import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
 
@@ -56,6 +57,8 @@ function Price({ value }: { value: string }) {
  */
 export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   const start = formatFcfa(projectStartPrice());
+  // Plan et devis offert (src/config/projet.json) : formulaire email au lieu du paiement.
+  const gift = planGiftEnabled();
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
@@ -66,8 +69,8 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">1</span>
           <div className="min-w-0">
-            <p className="font-semibold leading-snug">Téléchargez son plan et devis</p>
-            <Price value={start} />
+            <p className="font-semibold leading-snug">{gift ? "Recevez gratuitement son plan et devis" : "Téléchargez son plan et devis"}</p>
+            <Price value={gift ? "Gratuit" : start} />
             <Checklist items={STEP_ONE} />
           </div>
         </li>
@@ -81,14 +84,18 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
         </li>
       </ol>
 
-      <PlanDevisButton
-        plan={plan}
-        label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
-        price={start}
-        ctaId="plan_projet"
-        className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
-        fallbackHref={online ? undefined : projectStartLink(plan)}
-      />
+      {gift ? (
+        <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-5 w-full px-4 py-3.5 text-base" />
+      ) : (
+        <PlanDevisButton
+          plan={plan}
+          label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
+          price={start}
+          ctaId="plan_projet"
+          className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
+          fallbackHref={online ? undefined : projectStartLink(plan)}
+        />
+      )}
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
         Vous hésitez entre plusieurs modèles ?{" "}
@@ -105,14 +112,15 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
 /** FAQ du modèle : remplace les blocs « Distribution cotée » et « Plans complets personnalisés ». */
 export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): FaqItem[] {
   const start = formatFcfa(projectStartPrice());
+  const gift = planGiftEnabled();
   return [
     {
       question: "Que contient le plan et devis que je télécharge ?",
-      answer: `Un document PDF du modèle ${plan.code}, disponible dès le paiement : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
+      answer: `Un document PDF du modèle ${plan.code}, ${gift ? "envoyé gratuitement par email (un par adresse email)" : "disponible dès le paiement"} : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
     },
     {
       question: "C'est quoi les plans complets personnalisés ?",
-      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ")}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle. Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`,
+      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ")}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle.${gift ? "" : ` Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`}`,
     },
     {
       question: "Que contient le Catalogue Premium ?",

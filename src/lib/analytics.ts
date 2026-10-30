@@ -47,7 +47,12 @@ export async function getFunnelKpis(range: Range) {
   const [planDevisCheckouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(isNotNull(schema.checkoutIntents.planSlug), within(schema.checkoutIntents.createdAt, range)));
+    .where(and(isNotNull(schema.checkoutIntents.planSlug), ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)));
+  // Plans et devis offerts (formulaire email des fiches) : contacts captés, comptés à part des paiements.
+  const [gifts] = await db
+    .select({ n: count() })
+    .from(schema.checkoutIntents)
+    .where(and(eq(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)));
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
@@ -79,6 +84,7 @@ export async function getFunnelKpis(range: Range) {
     purchases,
     catalogueRevenue: Number(catalogue?.revenue ?? 0),
     planDevisCheckouts: planDevisCheckouts?.n ?? 0,
+    giftLeads: gifts?.n ?? 0,
     planDevisPurchases: planDevis?.n ?? 0,
     planDevisRevenue: Number(planDevis?.revenue ?? 0),
     customPlanRevenue: Number(customPlans?.revenue ?? 0),
@@ -114,7 +120,7 @@ export async function getChannelBreakdown(range: Range) {
       .select({ ...dims, n: count() })
       .from(schema.checkoutIntents)
       .leftJoin(v, eq(v.id, schema.checkoutIntents.visitorId))
-      .where(within(schema.checkoutIntents.createdAt, range))
+      .where(and(ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)))
       .groupBy(...groupBy),
     db
       .select({ ...dims, n: count(), revenue: sum(schema.sales.amount) })

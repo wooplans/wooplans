@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { afterSaleDueAt } from "@/lib/after-sale-schedule";
 import { normalizeAccessCode, randomAccessCode, randomId, sha256Hex } from "@/lib/crypto";
 import { requireSecret } from "@/lib/env";
 
@@ -67,6 +68,8 @@ export async function grantAccess(input: GrantInput) {
       source: input.source,
       chariowCustomerId: input.chariowCustomerId || null,
       codeHash,
+      // Achat payé : séquence après l'achat (demande d'avis en priorité), voir after-sale.ts.
+      afterSaleNextAt: input.source === "chariow" || input.source === "wajub" ? afterSaleDueAt(new Date(), 0) : null,
     })
     .returning();
   return { member, code, created: true };
