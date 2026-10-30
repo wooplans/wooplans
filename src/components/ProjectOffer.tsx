@@ -28,10 +28,8 @@ const STEP_ONE = [
 
 const STEP_TWO = ["Plans personnalisés selon vos besoins et votre terrain", "Dossier prêt à remettre à vos techniciens"];
 
-/** Plan et devis offert : le tunnel en 3 étapes (cadeau, Catalogue Premium, plans complets). */
-const GIFT_STEP_ONE = ["Plan de distribution avec les dimensions", "Devis fondation, élévation, toiture, etc.", "Envoyé par email en quelques minutes"];
-const GIFT_STEP_TWO = ["Le plan et devis de chaque modèle", "Accès à vie, nouveaux modèles inclus"];
-const GIFT_STEP_THREE = ["Le modèle choisi adapté à votre terrain", "Dossier prêt à remettre à vos techniciens"];
+/** Plan et devis offert : contenu du cadeau. */
+const GIFT_ITEMS = ["Plan de distribution avec les dimensions", "Devis fondation, élévation, toiture, etc.", "Envoyé par email en quelques minutes"];
 
 function Checklist({ items }: { items: string[] }) {
   return (
@@ -62,8 +60,8 @@ function Price({ value }: { value: string }) {
  */
 export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   const start = formatFcfa(projectStartPrice());
-  // Plan et devis offert (src/config/projet.json) : carte du tunnel cadeau → catalogue → plans complets.
-  if (planGiftEnabled()) return <GiftOffer plan={plan} offer={offer} planCount={planCount} />;
+  // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
+  if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
@@ -110,64 +108,27 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   );
 }
 
-/** Numéro d'étape : plein pour l'action proposée ici, cerclé pour les étapes suivantes. */
-function StepNumber({ n, active }: { n: number; active?: boolean }) {
-  return active ? (
-    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">{n}</span>
-  ) : (
-    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-primary text-sm font-bold text-primary">{n}</span>
-  );
-}
-
 /**
- * Carte du tunnel avec le plan et devis offert : une seule action principale (le cadeau), puis les deux
- * étapes suivantes en liens discrets, dans l'ordre du parcours : Catalogue Premium, puis plans complets.
+ * Carte de la fiche avec le plan et devis offert : une seule décision (recevoir le cadeau), puis une ligne
+ * discrète vers le Catalogue Premium. Les plans complets restent dans la FAQ, le menu et les emails :
+ * trois prix sur la même carte (gratuit, catalogue, plans complets) brouilleraient le premier pas.
  */
-function GiftOffer({ plan, offer, planCount }: Omit<Props, "online">) {
-  const models = withPlanCount(planCount, "modèles", "tous les");
+function GiftOffer({ plan, planCount }: Omit<Props, "online" | "offer">) {
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
-        Ce modèle <span className="whitespace-nowrap">{plan.code}</span> vous intéresse ?
+        Recevez gratuitement le plan et devis du modèle <span className="whitespace-nowrap">{plan.code}</span>
       </h2>
-
-      <ol className="mt-4 space-y-5">
-        <li className="flex gap-3">
-          <StepNumber n={1} active />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold leading-snug">Recevez gratuitement son plan et devis</p>
-            <Price value="Gratuit" />
-            <Checklist items={GIFT_STEP_ONE} />
-            <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-4 w-full px-4 py-3.5 text-base" />
-          </div>
-        </li>
-        <li className="flex gap-3">
-          <StepNumber n={2} />
-          <div className="min-w-0">
-            <p className="font-semibold leading-snug">Comparez avec {models} du Catalogue Premium</p>
-            <Price value={formatFcfa(cataloguePrice())} />
-            <Checklist items={GIFT_STEP_TWO} />
-            <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
-              Découvrir le Catalogue Premium →
-            </Link>
-          </div>
-        </li>
-        <li className="flex gap-3">
-          <StepNumber n={3} />
-          <div className="min-w-0">
-            <p className="font-semibold leading-snug">Obtenez les plans complets</p>
-            <Price value={formatFcfa(offer.price)} />
-            <Checklist items={GIFT_STEP_THREE} />
-            <p className="mt-2 text-sm text-foreground/75">
-              Membre Premium : le prix du catalogue est déduit, il reste{" "}
-              <span className="whitespace-nowrap font-semibold">{formatFcfa(memberBalance(offer))}</span>.{" "}
-              <Link href="/plans-personnalises" data-cta="plan_complets" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
-                En savoir plus
-              </Link>
-            </p>
-          </div>
-        </li>
-      </ol>
+      <Checklist items={GIFT_ITEMS} />
+      <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-4 w-full px-4 py-3.5 text-base" />
+      <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
+        Plusieurs modèles vous plaisent ?{" "}
+        <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
+          Le Catalogue Premium
+        </Link>{" "}
+        réunit les plans et devis de {withPlanCount(planCount, "modèles", "tous les")} :{" "}
+        <span className="whitespace-nowrap font-semibold">{formatFcfa(cataloguePrice())}</span>.
+      </p>
     </div>
   );
 }
