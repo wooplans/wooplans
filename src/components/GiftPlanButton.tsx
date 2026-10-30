@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { phCapture } from "@/lib/posthog-browser";
 
+/** Étape suivante proposée quand le cadeau a déjà été reçu (2e modèle demandé) : le Catalogue Premium. */
+type NextStep = { text: string; href: string; label: string };
+
 type Props = {
   plan: { slug: string; code: string };
   label: string;
@@ -19,7 +22,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<{ message: string; next?: NextStep } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const track = (event: string, properties: Record<string, unknown> = {}) =>
     phCapture(event, { cta_id: ctaId, plan: plan.slug, offer: "cadeau", ...properties });
@@ -39,7 +42,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, slug: plan.slug }),
     }).catch(() => null);
-    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; error?: string } | null;
+    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; next?: NextStep; error?: string } | null;
     setSending(false);
     if (!response?.ok || !body?.message) {
       track(FUNNEL_EVENTS.giftError, { status: response?.status ?? "network" });
@@ -47,7 +50,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
       return;
     }
     track(FUNNEL_EVENTS.giftSent, { result: body.status });
-    setDone(body.message);
+    setDone({ message: body.message, next: body.next });
   }
 
   return (
@@ -89,8 +92,17 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
 
           {done ? (
             <div className="grid gap-4">
-              <p className="rounded-xl bg-primary/10 px-4 py-3 font-semibold leading-snug text-primary">{done}</p>
-              <p className="text-sm text-muted">L&apos;email part de WOOPLANS. S&apos;il n&apos;arrive pas d&apos;ici quelques minutes, regardez dans vos spams ou l&apos;onglet Promotions.</p>
+              <p className="rounded-xl bg-primary/10 px-4 py-3 font-semibold leading-snug text-primary">{done.message}</p>
+              {done.next ? (
+                <>
+                  <p className="text-sm leading-relaxed text-foreground/80">{done.next.text}</p>
+                  <a href={done.next.href} data-cta="cadeau_catalogue" data-plan={plan.slug} className="btn-cta w-full py-3.5 text-center text-base">
+                    {done.next.label}
+                  </a>
+                </>
+              ) : (
+                <p className="text-sm text-muted">L&apos;email part de WOOPLANS. S&apos;il n&apos;arrive pas d&apos;ici quelques minutes, regardez dans vos spams ou l&apos;onglet Promotions.</p>
+              )}
               <button type="button" onClick={() => setOpen(false)} className="btn-ghost w-full py-3">
                 Continuer la visite
               </button>

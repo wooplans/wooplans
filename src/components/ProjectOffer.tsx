@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { planGiftEnabled, projectBalance, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
+import { memberBalance, planGiftEnabled, projectBalance, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
@@ -27,6 +27,11 @@ const STEP_ONE = [
 ];
 
 const STEP_TWO = ["Plans personnalisés selon vos besoins et votre terrain", "Dossier prêt à remettre à vos techniciens"];
+
+/** Plan et devis offert : le tunnel en 3 étapes (cadeau, Catalogue Premium, plans complets). */
+const GIFT_STEP_ONE = ["Plan de distribution avec les dimensions", "Devis fondation, élévation, toiture, etc.", "Envoyé par email en quelques minutes"];
+const GIFT_STEP_TWO = ["Le plan et devis de chaque modèle", "Accès à vie, nouveaux modèles inclus"];
+const GIFT_STEP_THREE = ["Le modèle choisi adapté à votre terrain", "Dossier prêt à remettre à vos techniciens"];
 
 function Checklist({ items }: { items: string[] }) {
   return (
@@ -57,8 +62,8 @@ function Price({ value }: { value: string }) {
  */
 export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   const start = formatFcfa(projectStartPrice());
-  // Plan et devis offert (src/config/projet.json) : formulaire email au lieu du paiement.
-  const gift = planGiftEnabled();
+  // Plan et devis offert (src/config/projet.json) : carte du tunnel cadeau → catalogue → plans complets.
+  if (planGiftEnabled()) return <GiftOffer plan={plan} offer={offer} planCount={planCount} />;
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
@@ -69,8 +74,8 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">1</span>
           <div className="min-w-0">
-            <p className="font-semibold leading-snug">{gift ? "Recevez gratuitement son plan et devis" : "Téléchargez son plan et devis"}</p>
-            <Price value={gift ? "Gratuit" : start} />
+            <p className="font-semibold leading-snug">Téléchargez son plan et devis</p>
+            <Price value={start} />
             <Checklist items={STEP_ONE} />
           </div>
         </li>
@@ -84,18 +89,14 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
         </li>
       </ol>
 
-      {gift ? (
-        <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-5 w-full px-4 py-3.5 text-base" />
-      ) : (
-        <PlanDevisButton
-          plan={plan}
-          label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
-          price={start}
-          ctaId="plan_projet"
-          className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
-          fallbackHref={online ? undefined : projectStartLink(plan)}
-        />
-      )}
+      <PlanDevisButton
+        plan={plan}
+        label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
+        price={start}
+        ctaId="plan_projet"
+        className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
+        fallbackHref={online ? undefined : projectStartLink(plan)}
+      />
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
         Vous hésitez entre plusieurs modèles ?{" "}
@@ -109,22 +110,90 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
   );
 }
 
+/** Numéro d'étape : plein pour l'action proposée ici, cerclé pour les étapes suivantes. */
+function StepNumber({ n, active }: { n: number; active?: boolean }) {
+  return active ? (
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">{n}</span>
+  ) : (
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-primary text-sm font-bold text-primary">{n}</span>
+  );
+}
+
+/**
+ * Carte du tunnel avec le plan et devis offert : une seule action principale (le cadeau), puis les deux
+ * étapes suivantes en liens discrets, dans l'ordre du parcours : Catalogue Premium, puis plans complets.
+ */
+function GiftOffer({ plan, offer, planCount }: Omit<Props, "online">) {
+  const models = withPlanCount(planCount, "modèles", "tous les");
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
+      <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
+        Ce modèle <span className="whitespace-nowrap">{plan.code}</span> vous intéresse ?
+      </h2>
+
+      <ol className="mt-4 space-y-5">
+        <li className="flex gap-3">
+          <StepNumber n={1} active />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold leading-snug">Recevez gratuitement son plan et devis</p>
+            <Price value="Gratuit" />
+            <Checklist items={GIFT_STEP_ONE} />
+            <GiftPlanButton plan={plan} label="Recevoir gratuitement" ctaId="plan_cadeau" className="btn-cta mt-4 w-full px-4 py-3.5 text-base" />
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <StepNumber n={2} />
+          <div className="min-w-0">
+            <p className="font-semibold leading-snug">Comparez avec {models} du Catalogue Premium</p>
+            <Price value={formatFcfa(cataloguePrice())} />
+            <Checklist items={GIFT_STEP_TWO} />
+            <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
+              Découvrir le Catalogue Premium →
+            </Link>
+          </div>
+        </li>
+        <li className="flex gap-3">
+          <StepNumber n={3} />
+          <div className="min-w-0">
+            <p className="font-semibold leading-snug">Obtenez les plans complets</p>
+            <Price value={formatFcfa(offer.price)} />
+            <Checklist items={GIFT_STEP_THREE} />
+            <p className="mt-2 text-sm text-foreground/75">
+              Membre Premium : le prix du catalogue est déduit, il reste{" "}
+              <span className="whitespace-nowrap font-semibold">{formatFcfa(memberBalance(offer))}</span>.{" "}
+              <Link href="/plans-personnalises" data-cta="plan_complets" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
+                En savoir plus
+              </Link>
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
 /** FAQ du modèle : remplace les blocs « Distribution cotée » et « Plans complets personnalisés ». */
 export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): FaqItem[] {
   const start = formatFcfa(projectStartPrice());
   const gift = planGiftEnabled();
   return [
     {
-      question: "Que contient le plan et devis que je télécharge ?",
-      answer: `Un document PDF du modèle ${plan.code}, ${gift ? "envoyé gratuitement par email (un par adresse email)" : "disponible dès le paiement"} : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
+      question: gift ? "Que contient le plan et devis offert ?" : "Que contient le plan et devis que je télécharge ?",
+      answer: gift
+        ? `Un document PDF du modèle ${plan.code}, envoyé gratuitement par email : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Un plan et devis est offert par adresse email ; pour comparer plusieurs modèles, le Catalogue Premium réunit ceux de ${withPlanCount(planCount, "modèles", "tous les")}.`
+        : `Un document PDF du modèle ${plan.code}, disponible dès le paiement : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
     },
     {
       question: "C'est quoi les plans complets personnalisés ?",
-      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ")}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle.${gift ? "" : ` Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`}`,
+      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ")}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle.${
+        gift
+          ? ` Membre Premium : les ${formatFcfa(cataloguePrice())} du catalogue sont déduits, il reste ${formatFcfa(memberBalance(offer))} à payer.`
+          : ` Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`
+      }`,
     },
     {
       question: "Que contient le Catalogue Premium ?",
-      answer: `Les plans de distribution et les devis détaillés de ${withPlanCount(planCount, "modèles", "tous les")}, pour ${formatFcfa(cataloguePrice())} en paiement unique, avec un accès à vie et les nouveaux modèles inclus. Idéal si plusieurs modèles vous intéressent. Son prix est lui aussi déduit de vos plans complets.`,
+      answer: `Les plans de distribution et les devis détaillés de ${withPlanCount(planCount, "modèles", "tous les")}, pour ${formatFcfa(cataloguePrice())} en paiement unique, avec un accès à vie et les nouveaux modèles inclus. Idéal si plusieurs modèles vous intéressent. Son prix est ${gift ? "" : "lui aussi "}déduit de vos plans complets.`,
     },
   ];
 }

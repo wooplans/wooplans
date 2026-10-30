@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { customPlanOffer, planGiftEnabled } from "@/lib/custom-plans";
@@ -45,15 +45,22 @@ export async function POST(request: NextRequest) {
   if (member) {
     return NextResponse.json({ status: "member", message: "Vous êtes déjà membre Premium : ce modèle est dans votre espace." });
   }
-  // Un seul cadeau par adresse email (tous modèles confondus).
-  const [previous] = await db
-    .select({ n: count() })
-    .from(schema.checkoutIntents)
-    .where(and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.status, "gift")));
-  if ((previous?.n ?? 0) > 0) {
+  // Un seul cadeau par adresse email (tous modèles confondus) : la suite logique est le Catalogue Premium.
+  const previous = await db.query.checkoutIntents.findFirst({
+    where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.status, "gift")),
+    orderBy: desc(schema.checkoutIntents.createdAt),
+    columns: { planSlug: true },
+  });
+  if (previous) {
+    const first = previous.planSlug ? await getPublicPlan(previous.planSlug) : null;
     return NextResponse.json({
       status: "already",
-      message: "Un plan et devis gratuit a déjà été envoyé à cette adresse. Pensez à regarder dans vos spams.",
+      message: `Vous avez déjà reçu votre plan et devis gratuit${first ? ` (modèle ${first.code})` : ""}. Pensez à regarder dans vos spams.`,
+      next: {
+        text: `Pour recevoir aussi celui du modèle ${plan.code} et de tous les autres modèles, rejoignez le Catalogue Premium : ${formatFcfa(cataloguePrice())}, paiement unique.`,
+        href: "/catalogue-premium?utm_source=site&utm_medium=cadeau&utm_campaign=deuxieme_plan",
+        label: "Découvrir le Catalogue Premium",
+      },
     });
   }
 
