@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { phCapture } from "@/lib/posthog-browser";
+import { pixelTrack } from "@/lib/pixel";
 
 /** Étape suivante proposée quand le cadeau a déjà été reçu (2e modèle demandé) : le Catalogue Premium. */
 type NextStep = { text: string; href: string; label: string };
@@ -50,6 +51,8 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
       return;
     }
     track(FUNNEL_EVENTS.giftSent, { result: body.status });
+    // Contact gagné (premier cadeau de cette adresse) : évènement Lead du Pixel, objectif des publicités Meta.
+    if (body.status === "sent") pixelTrack("Lead", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.slug], content_category: "Plan et devis offert" });
     setDone({ message: body.message, next: body.next });
   }
 
