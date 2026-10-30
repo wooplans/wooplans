@@ -368,7 +368,7 @@ export function afterSaleEmail(p: { step: number; name?: string | null; testimon
   const subject = subjects[Math.min(p.step, subjects.length - 1)];
   const intro = [
     "Merci encore pour votre confiance. Beaucoup de familles hésitent à payer en ligne : votre avis sur le Catalogue Premium les aidera à se lancer. Un simple vocal suffit, en répondant à quelques questions.",
-    "Il y a quelques jours, nous vous avons demandé votre avis sur le Catalogue Premium. Si vous avez 2 minutes, il compte vraiment pour nous et pour les familles qui hésitent encore.",
+    "Il y a deux semaines, nous vous avons demandé votre avis sur le Catalogue Premium. Si vous avez 2 minutes, il compte vraiment pour nous et pour les familles qui hésitent encore.",
     "Nous espérons que le Catalogue Premium vous aide à choisir votre plan. Si un modèle vous plaît, nos architectes l'adaptent à votre terrain (plans complets), prix du catalogue déduit. Et si vous avez 2 minutes, votre avis nous aide beaucoup.",
     "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, prix du catalogue déduit. Votre avis reste aussi le bienvenu.",
   ][Math.min(p.step, 3)];
