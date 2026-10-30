@@ -136,25 +136,45 @@ function GiftOffer({ plan, planCount }: Omit<Props, "online" | "offer">) {
 /** FAQ du modèle : remplace les blocs « Distribution cotée » et « Plans complets personnalisés ». */
 export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): FaqItem[] {
   const start = formatFcfa(projectStartPrice());
-  const gift = planGiftEnabled();
+  const catalogue = formatFcfa(cataloguePrice());
+  const models = withPlanCount(planCount, "modèles", "tous les");
+  const deliverables = offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ");
+  if (planGiftEnabled()) {
+    return [
+      {
+        question: "Le plan et devis est-il vraiment gratuit ?",
+        answer: `Oui. Indiquez votre nom et votre email : le plan et devis du modèle ${plan.code} vous est envoyé en quelques minutes, sans paiement. Un plan et devis est offert par adresse email. Pensez à regarder dans l'onglet Promotions ou dans les spams.`,
+      },
+      {
+        question: "Que contient le plan et devis offert ?",
+        answer: `Un document PDF du modèle ${plan.code}, marqué à votre nom : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, le terrain minimum estimé (avec les reculs) et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…).`,
+      },
+      {
+        question: "Puis-je construire avec ce plan et devis ?",
+        answer: `Non. Il sert à vérifier que le modèle vous convient et à estimer votre budget. Pour construire, il faut les plans complets : ${deliverables}.`,
+      },
+      {
+        question: "Plusieurs modèles m'intéressent, comment les comparer ?",
+        answer: `Le Catalogue Premium réunit les plans et devis de ${models}, pour ${catalogue} en paiement unique, avec un accès à vie et les nouveaux modèles inclus.`,
+      },
+      {
+        question: "Combien coûtent les plans complets de ce modèle ?",
+        answer: `${formatFcfa(offer.price)}, prix fixe : nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Si vous avez le Catalogue Premium, ses ${catalogue} sont déduits : il reste ${formatFcfa(memberBalance(offer))} à payer.`,
+      },
+    ];
+  }
   return [
     {
-      question: gift ? "Que contient le plan et devis offert ?" : "Que contient le plan et devis que je télécharge ?",
-      answer: gift
-        ? `Un document PDF du modèle ${plan.code}, envoyé gratuitement par email : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Un plan et devis est offert par adresse email ; pour comparer plusieurs modèles, le Catalogue Premium réunit ceux de ${withPlanCount(planCount, "modèles", "tous les")}.`
-        : `Un document PDF du modèle ${plan.code}, disponible dès le paiement : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
+      question: "Que contient le plan et devis que je télécharge ?",
+      answer: `Un document PDF du modèle ${plan.code}, disponible dès le paiement : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
     },
     {
       question: "C'est quoi les plans complets personnalisés ?",
-      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ")}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle.${
-        gift
-          ? ` Membre Premium : les ${formatFcfa(cataloguePrice())} du catalogue sont déduits, il reste ${formatFcfa(memberBalance(offer))} à payer.`
-          : ` Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`
-      }`,
+      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${deliverables}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle. Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`,
     },
     {
       question: "Que contient le Catalogue Premium ?",
-      answer: `Les plans de distribution et les devis détaillés de ${withPlanCount(planCount, "modèles", "tous les")}, pour ${formatFcfa(cataloguePrice())} en paiement unique, avec un accès à vie et les nouveaux modèles inclus. Idéal si plusieurs modèles vous intéressent. Son prix est ${gift ? "" : "lui aussi "}déduit de vos plans complets.`,
+      answer: `Les plans de distribution et les devis détaillés de ${models}, pour ${catalogue} en paiement unique, avec un accès à vie et les nouveaux modèles inclus. Idéal si plusieurs modèles vous intéressent. Son prix est lui aussi déduit de vos plans complets.`,
     },
   ];
 }

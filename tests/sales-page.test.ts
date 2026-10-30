@@ -4,7 +4,7 @@ import { test } from "node:test";
 import catalogue from "../src/config/catalogue.json" with { type: "json" };
 
 const CATALOGUE_PRICE = catalogue.price;
-import { budgetLabel, galleryHtml, perModelLabel, previewHtml, priceStep } from "../src/lib/sales-page.ts";
+import { budgetLabel, galleryHtml, perModelLabel, previewHtml } from "../src/lib/sales-page.ts";
 
 test("galerie : cartes échappées avec budget, modèles sans rendu ignorés", () => {
   const html = galleryHtml([
@@ -73,7 +73,8 @@ test("page de vente : la feuille de route et la FAQ reprennent les prix fixes de
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
   assert.match(b, /id="contenu-plans"/);
-  assert.equal(b.match(/data-wp-threshold/g)?.length, 5);
+  // Pas de palier de prix annoncé : le prix reste celui de src/config/catalogue.json.
+  assert.doesNotMatch(b, /data-wp-threshold|60[  ]000|Prix avant/);
 });
 
 test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
@@ -85,7 +86,7 @@ test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suiv
   assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
   assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
   // La voix off renvoie au compteur « juste sous la vidéo ».
-  assert.match(b, /<\/div>\s*<p class="vsl-count" data-wp-threshold>.*data-wp-count.*data-wp-left/);
+  assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);
   assert.match(b, /trackVideo\(box\.querySelector\('video'\),'vsl'\)/);
 });
 
@@ -95,13 +96,6 @@ test("pages de vente : prix du catalogue repris de src/config/catalogue.json, sa
   assert.doesNotMatch(html, /\{\{[A-Z_]+\}\}/);
   assert.match(html, new RegExp(`${fcfa(CATALOGUE_PRICE)}( |<)`));
   assert.match(html, new RegExp(`value:${CATALOGUE_PRICE},`));
-});
-
-test("palier de prix : modèles restants accordés, jauge bornée, palier atteint", () => {
-  assert.deepEqual(priceStep(63), { reached: false, leftLabel: "37 modèles", percent: 63 });
-  assert.deepEqual(priceStep(99), { reached: false, leftLabel: "1 modèle", percent: 99 });
-  assert.deepEqual(priceStep(100), { reached: true, leftLabel: "0 modèle", percent: 100 });
-  assert.equal(priceStep(130).percent, 100);
 });
 
 test("prix par modèle : arrondi à la dizaine", () => {

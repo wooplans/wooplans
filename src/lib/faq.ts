@@ -1,9 +1,20 @@
 import type { FaqItem } from "@/components/Faq";
 import { formatFcfa } from "@/lib/plans";
-import { CUSTOM_PLAN_OFFERS, memberBalance } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_OFFERS, memberBalance, planGiftEnabled } from "@/lib/custom-plans";
 import { cataloguePrice } from "@/lib/site";
 
 const [villa, duplex] = CUSTOM_PLAN_OFFERS;
+
+/** Plan et devis offert sur les fiches : question affichée tant que le cadeau est actif (src/config/projet.json). */
+const GIFT_FAQ: FaqItem[] = planGiftEnabled()
+  ? [
+      {
+        question: "Puis-je voir un plan et devis avant d'acheter le catalogue ?",
+        answer:
+          "Oui. Sur la fiche de chaque modèle, demandez gratuitement son plan et devis : distribution avec les dimensions, surfaces des pièces, terrain minimum estimé et devis détaillé, envoyés par email en quelques minutes. Un plan et devis est offert par adresse email ; le Catalogue Premium réunit ceux de tous les modèles.",
+      },
+    ]
+  : [];
 
 export const CATALOGUE_FAQ: FaqItem[] = [
   {
@@ -11,6 +22,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
     answer:
       "Tous les modèles de villas et duplex du catalogue. Pour chaque modèle : rendus 3D, caractéristiques, distributions cotées, surfaces (totale, emprise au sol, terrain nécessaire), devis estimatif détaillé par lot, hypothèses de coût, atouts et points d'attention. Tout est consultable dans votre espace Premium en ligne, et chaque modèle se télécharge en fiche PDF.",
   },
+  ...GIFT_FAQ,
   {
     question: "Combien coûte le catalogue et combien de temps y ai-je accès ?",
     answer: `${formatFcfa(cataloguePrice())} en paiement unique. L'accès est à vie, y compris aux nouveaux modèles ajoutés au catalogue.`,

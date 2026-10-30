@@ -36,8 +36,6 @@ section{padding:56px 0}
 .stars{color:#F5B400;letter-spacing:1px}
 
 /* Barre d'urgence */
-.urgency{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:7px 10px}
-.urgency strong{font-variant-numeric:tabular-nums;color:#FFE1B8;margin-left:4px}
 
 /* Hero */
 .hero{background:radial-gradient(120% 80% at 50% 0%,#14706D 0%,var(--teal) 45%,var(--teal-dk) 100%);color:#fff;padding:clamp(12px,2.2svh,28px) 0 clamp(14px,2.4svh,28px)}
@@ -69,10 +67,8 @@ section{padding:56px 0}
 .vsl .play i{width:66px;height:66px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(240,138,46,.5)}
 .vsl .play i::after{content:"";margin-left:5px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
 .price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:clamp(10px,1.8svh,16px);white-space:nowrap;line-height:1.1}
-.price s{color:rgba(255,255,255,.55);font-size:14px}
 .price .now{font-size:clamp(30px,8.6vw,46px);font-weight:900;letter-spacing:-.03em;white-space:nowrap}
 .price .now small{font-size:14px;font-weight:700;margin-left:3px}
-.badge{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px}
 .cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:14px 20px;border-radius:14px;background:var(--orange);color:#fff;font-size:17.5px;font-weight:800;box-shadow:0 10px 26px rgba(240,138,46,.38);transition:transform .12s,background .2s}
 .cta:active{transform:scale(.98);background:var(--orange-dk)}
 .cta svg{width:20px;height:20px;fill:currentColor;flex-shrink:0}
@@ -196,21 +192,13 @@ section{padding:56px 0}
 .offer-card{background:#fff;color:var(--dark);border-radius:22px;padding:22px 18px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .offer-card .label{font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
 .offer-card .price{justify-content:flex-start;margin:6px 0 2px}
-.offer-card .price s{color:var(--gray)}
 .offer-card .price .now{color:var(--dark)}
-.save{font-size:13px;font-weight:800;color:var(--red)}
+.save{font-size:13px;font-weight:800;color:var(--teal)}
 .incl{margin:16px 0;display:grid;gap:9px}
 .incl li{list-style:none;display:flex;gap:10px;font-size:15px}
 .incl li::before{content:"✓";color:var(--teal);font-weight:900}
 .incl li.bonus{background:#FFF6E8;border:1px dashed var(--orange);border-radius:12px;padding:10px 12px}
 .incl li.bonus::before{content:"🎁"}
-.meter{margin:0 0 14px;display:grid;gap:7px}
-.meter-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:13.5px;font-weight:700;color:var(--dark)}
-.meter-top b{color:var(--teal);font-variant-numeric:tabular-nums}
-.meter-top span:last-child{color:var(--red)}
-.meter .track{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
-.meter .track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--red))}
-.meter p{font-size:13px;color:var(--gray)}
 .guar{display:flex;gap:12px;align-items:center;margin-top:14px;padding:12px;border-radius:12px;background:var(--bg);font-size:13.5px}
 .guar b{display:block}
 .seal{flex-shrink:0;width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--teal-xdk);font-weight:900;font-size:13px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -404,8 +392,6 @@ footer a{color:rgba(255,255,255,.7)}
 </head>
 <body>
 
-<div class="urgency" role="status" data-wp-threshold>Plus que <strong data-wp-left>quelques modèles</strong> avant le passage à 60&nbsp;000&nbsp;FCFA</div>
-
 <header class="hero">
   <div class="wrap wide">
     <img class="logo desk" src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width="100" height="30">
@@ -421,8 +407,8 @@ footer a{color:rgba(255,255,255,.7)}
           <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu.mp4?v=29000"></video>
           <div class="play"><i></i>Voir la présentation</div>
         </div>
-        <p class="vsl-count" data-wp-threshold><b><span data-wp-count>Plus de 60</span> modèles</b> · plus que <b data-wp-left>quelques modèles</b> avant le passage à 60&nbsp;000&nbsp;FCFA</p>
-        <div class="price"><s>60 000 FCFA</s><span class="now">29 000<small>FCFA</small></span><span class="badge">–52 %</span></div>
+        <p class="vsl-count"><b><span data-wp-count>Plus de 90</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
+        <div class="price"><span class="now">29 000<small>FCFA</small></span></div>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
         <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
         <div class="trust desk"><span>Accès immédiat</span><span>Paiement unique</span><span>Garantie 7 jours</span></div>
@@ -552,8 +538,8 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap">
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
-      <div class="price"><s>60 000 FCFA</s><span class="now">29 000<small>FCFA</small></span><span class="badge">–52 %</span></div>
-      <span class="save">Vous économisez 31 000 FCFA aujourd'hui</span>
+      <div class="price"><span class="now">29 000<small>FCFA</small></span></div>
+      <span class="save">Prix actuel, paiement unique</span>
       <ul class="incl">
         <li>Accès immédiat à l'espace Premium, à vie</li>
         <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex</span></li>
@@ -563,11 +549,6 @@ footer a{color:rgba(255,255,255,.7)}
         <li><span><b>Déduit de vos plans complets</b> si vous les commandez ensuite</span></li>
         <li class="bonus"><span><b>Bonus :</b> les nouveaux modèles ajoutés automatiquement, sans rien payer de plus</span></li>
       </ul>
-      <div class="meter" data-wp-threshold>
-        <div class="meter-top"><span><b data-wp-count>Plus de 60</b> modèles sur 100</span><span>puis 60&nbsp;000&nbsp;FCFA</span></div>
-        <div class="track" aria-hidden="true"><i data-wp-progress style="width:63%"></i></div>
-        <p>À 100 modèles, le prix passe à 60&nbsp;000&nbsp;FCFA. Votre accès reste à vie, nouveaux modèles compris.</p>
-      </div>
       <button class="cta" data-cta="offer" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
       <div class="guar"><div class="seal">7<small>JOURS</small></div><div><b>Satisfait ou remboursé</b>Un simple message WhatsApp dans les 7 jours suffit. Aucune question posée.</div></div>
     </div>
@@ -598,7 +579,7 @@ footer a{color:rgba(255,255,255,.7)}
       <details><summary>Mon paiement a échoué, que faire ?</summary><p>Si le paiement échoue, rien n'est débité. Causes fréquentes : confirmation non validée à temps, solde insuffisant ou réseau instable. Réessayez, ou <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="faq_payment" target="_blank" rel="noopener">écrivez-nous sur WhatsApp</a> : nous vous aidons à finaliser.</p></details>
       <details><summary>Comment vais-je recevoir les nouveaux modèles ?</summary><p>Ils apparaissent automatiquement dans votre espace Premium, avec leur fiche PDF, à vie et sans frais supplémentaires.</p></details>
       <details><summary>Les devis sont-ils fiables ?</summary><p>Ils reposent sur 10 ans d'expérience dans le BTP et des prix actualisés. Ils vous donnent une base solide pour négocier avec votre entrepreneur, à ajuster selon votre ville et vos finitions.</p></details>
-      <details data-wp-threshold><summary>Le prix va augmenter ?</summary><p>Oui. Le catalogue est à 29&nbsp;000&nbsp;FCFA tant qu'il compte moins de 100 modèles. Il en compte aujourd'hui <span data-wp-count>plus de 60</span> et de nouveaux sont ajoutés chaque mois. À 100 modèles, le prix passe à 60&nbsp;000&nbsp;FCFA. Si vous l'achetez avant, votre accès reste à vie, nouveaux modèles compris, sans rien payer de plus.</p></details>
+      <details><summary>Le prix peut-il changer ?</summary><p>Le prix actuel est de 29&nbsp;000&nbsp;FCFA, en paiement unique. S'il change un jour, votre accès reste acquis à vie, nouveaux modèles compris, sans rien payer de plus.</p></details>
       <details><summary>Et si je ne suis pas satisfait ?</summary><p>Un simple message WhatsApp dans les 7 jours et on vous rembourse intégralement. Aucune question posée.</p></details>
     </div>
   </div>
@@ -619,7 +600,7 @@ footer a{color:rgba(255,255,255,.7)}
 </footer>
 
 <div class="sticky" id="sticky">
-  <div class="p"><b>29 000 FCFA</b><small data-wp-threshold>Prix avant 100 modèles</small></div>
+  <div class="p"><b>29 000 FCFA</b><small>Paiement unique</small></div>
   <button class="cta" data-cta="sticky" onclick="buy(this)">Obtenir</button>
 </div>
 

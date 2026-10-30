@@ -153,7 +153,7 @@ export function planDevisEmail(params: { name?: string | null; planName: string;
   const subject = `Votre plan et devis du modèle ${params.planCode}`;
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
   const whatsapp = `https://wa.me/${getEnv().WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${params.planCode} et je souhaite parler de mon projet.`)}`;
-  const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Le plan et devis du modèle <strong>${escape(params.planName)}</strong> (réf. ${escape(params.planCode)}) est prêt : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé.</p>
+  const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Le plan et devis du modèle <strong>${escape(params.planName)}</strong> (réf. ${escape(params.planCode)}) est prêt : plan de distribution avec les dimensions, surfaces des pièces, terrain minimum estimé et devis détaillé.</p>
 ${button(params.downloadUrl, "Télécharger mon plan et devis")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
 <p style="margin-top:24px;font-weight:700">Des modifications à faire ?</p>
@@ -274,7 +274,7 @@ export function giftPlanEmail(p: {
   const subject = `Votre plan et devis gratuit du modèle ${p.planCode}`;
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const models = p.planCount > 0 ? `nos ${p.planCount} modèles` : "tous nos modèles";
-  const body = `<p>${hello}</p><p>Voici le plan et devis du modèle <strong>${escape(p.planName)}</strong> (réf. ${escape(p.planCode)}) : plan de distribution avec les dimensions, surfaces des pièces et devis détaillé.</p>
+  const body = `<p>${hello}</p><p>Voici le plan et devis du modèle <strong>${escape(p.planName)}</strong> (réf. ${escape(p.planCode)}) : plan de distribution avec les dimensions, surfaces des pièces, terrain minimum estimé et devis détaillé.</p>
 ${button(p.downloadUrl, "Télécharger mon plan et devis")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
 <p>Si vous voulez comparer avec d'autres modèles, le <a href="${p.catalogueUrl}" style="color:#0F5B59">Catalogue Premium</a> réunit le plan et devis de ${escape(models)} (${escape(p.price)}, paiement unique).</p>`;
@@ -318,7 +318,8 @@ export function welcomeEmail(p: {
     ];
     items = [
       "Le plan de distribution : vérifiez que les pièces et leurs dimensions correspondent à votre façon de vivre.",
-      "Le tableau des surfaces : comparez-les à la taille de votre terrain.",
+      "Le tableau des surfaces : chaque pièce avec sa surface, pour imaginer votre mobilier.",
+      "La page Terrain : le terrain minimum estimé pour ce modèle, avec les reculs, à comparer avec votre parcelle.",
       "Le devis poste par poste (fondation, élévation, toiture, finitions) : il vous donne une première idée du budget à prévoir.",
     ];
     paragraphs.push("Un seul modèle ne suffit pas toujours pour choisir. Le Catalogue Premium réunit le plan et devis de tous nos modèles, pour comparer à votre rythme.");
