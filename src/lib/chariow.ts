@@ -9,6 +9,7 @@ import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
 import { captureServerEvents } from "@/lib/posthog";
 import { recordProspectEvent } from "@/lib/prospects";
+import { schedulePlanRelance } from "@/lib/plan-relance";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -345,6 +346,11 @@ async function processPlanSale(
         .update(schema.checkoutIntents)
         .set({ status, saleId: sale.id, updatedAt: new Date() })
         .where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    // Relance courte par email (2 emails), sauf si la vente est déjà payée.
+    const to = email ?? intent?.email;
+    if (intent && to && status !== "completed" && nextStatus !== "completed") {
+      await schedulePlanRelance(intent.id, to, values.occurredAt).catch((error) => console.error("Relance plan et devis : programmation impossible", error));
     }
     return "recorded";
   }
