@@ -1,0 +1,432 @@
+<!doctype html>
+<!-- Généré par build.mjs : ne pas modifier à la main (modifier script.json, style.css ou build.mjs). -->
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1080, height=1350">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<style>
+/* Charte WOOPLANS : vert #0F5B59, orange #F08A2E (appel à l'action), or #E7C36C (Premium), Plus Jakarta Sans. */
+@font-face { font-family: "Jakarta"; src: url("fonts/PlusJakartaSans-latin.woff2") format("woff2"); font-weight: 200 800; }
+:root { --teal: #0F5B59; --teal-dk: #0A4442; --teal-xdk: #062B2A; --orange: #F08A2E; --gold: #E7C36C; --red: #E5484D; --ink: #0E1B1B; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1350px; overflow: hidden; background: var(--teal-xdk); }
+#root { position: relative; width: 1080px; height: 1350px; overflow: hidden; font-family: "Jakarta", sans-serif; color: #fff; }
+.bg { position: absolute; inset: 0; background: radial-gradient(110% 70% at 50% 10%, #14706D 0%, var(--teal) 42%, var(--teal-xdk) 100%); }
+.bg::after { content: ""; position: absolute; inset: 0; opacity: .09;
+  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 54px 54px; }
+.scene { position: absolute; inset: 0; overflow: hidden; }
+em { font-style: normal; color: var(--gold); }
+
+#logo { position: absolute; left: 44px; top: 40px; width: 150px; z-index: 30; }
+#progress { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: rgba(255,255,255,.12); z-index: 30; }
+#progress i { display: block; height: 100%; background: var(--orange); transform-origin: 0 50%; }
+
+/* Sous-titres */
+.caps { position: absolute; left: 0; right: 0; bottom: 46px; height: 200px; z-index: 25; }
+.cap { position: absolute; left: 60px; right: 60px; bottom: 0; display: flex; justify-content: center; align-items: flex-end; }
+.cap span { display: inline-block; text-align: center; font-size: 46px; line-height: 1.22; font-weight: 800; letter-spacing: -.01em;
+  background: rgba(6, 43, 42, .82); padding: 14px 26px 16px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.cap.q span { font-weight: 700; font-style: italic; background: rgba(255,255,255,.95); color: var(--ink); font-size: 42px; }
+
+/* 1. Accroche */
+.wall { position: absolute; left: -160px; top: -260px; width: 1400px; height: 1900px; display: flex; gap: 26px; transform: rotate(-9deg); }
+.col { display: flex; flex-direction: column; gap: 26px; width: 440px; }
+.col img { width: 440px; height: 248px; object-fit: cover; border-radius: 22px; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+.shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,43,42,.55) 0%, rgba(6,43,42,.35) 40%, rgba(6,43,42,.9) 100%); opacity: .75; }
+.hook { position: absolute; left: 0; right: 0; top: 330px; text-align: center; }
+.hook .w { font-weight: 800; letter-spacing: -.03em; line-height: 1.02; text-shadow: 0 8px 30px rgba(0,0,0,.45); }
+.hook .w1 { font-size: 150px; }
+.hook .w2 { font-size: 132px; }
+.hook .w3 { font-size: 46px; font-weight: 700; margin-top: 26px; color: #E4F1F0; }
+.cmp { position: absolute; left: 0; right: 0; top: 250px; text-align: center; }
+.cmp-row { display: flex; justify-content: center; align-items: center; gap: 26px; }
+.chip { display: inline-block; font-size: 84px; font-weight: 800; padding: 18px 44px; border-radius: 28px; background: #fff; color: var(--teal); box-shadow: 0 18px 40px rgba(0,0,0,.3); }
+.c-devis { background: var(--gold); color: var(--teal-xdk); }
+.plus { font-size: 90px; font-weight: 800; color: var(--gold); }
+.count { margin-top: 70px; display: flex; flex-direction: column; align-items: center; }
+.count small { font-size: 46px; font-weight: 700; color: #DCEDEC; }
+.count b { font-size: 250px; line-height: .95; font-weight: 800; letter-spacing: -.05em; color: #fff; font-variant-numeric: tabular-nums; }
+.cmp-tag { margin-top: 26px; display: inline-block; font-size: 38px; font-weight: 700; padding: 12px 30px; border-radius: 999px; border: 3px solid var(--gold); color: var(--gold); }
+
+/* 2. Catalogue Premium */
+.premium { position: absolute; left: 0; right: 0; top: 120px; text-align: center; overflow: hidden; padding: 10px 0; }
+.premium span { display: block; font-size: 58px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: #E4F1F0; }
+.premium b { display: block; font-size: 150px; font-weight: 800; letter-spacing: -.03em; line-height: 1; text-transform: uppercase;
+  background: linear-gradient(180deg, #F6DE9C, var(--gold) 55%, #B8913A); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.premium .shine { position: absolute; top: 0; left: 0; width: 140px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-20deg); }
+.phone { position: absolute; left: 340px; top: 395px; width: 400px; height: 700px; border-radius: 56px; background: #0b1414; padding: 16px; box-shadow: 0 30px 70px rgba(0,0,0,.5), 0 0 0 4px #2a3a3a; }
+.notch { position: absolute; left: 50%; top: 24px; width: 120px; height: 28px; margin-left: -60px; border-radius: 20px; background: #0b1414; z-index: 2; }
+.screen { width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #F4F7F6; }
+.fiche { padding: 58px 12px 20px; color: var(--ink); }
+.fi-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 14px; background: var(--teal); color: #fff; font-size: 22px; }
+.fi-bar span { font-size: 15px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: var(--gold); color: var(--teal-xdk); }
+.fi-cover, .fi-render { display: block; width: 100%; height: 205px; object-fit: cover; border-radius: 14px; margin-top: 10px; }
+.fi-chips { display: flex; gap: 8px; margin-top: 10px; }
+.fi-chips span { font-size: 17px; font-weight: 800; padding: 6px 12px; border-radius: 10px; background: #E3EFEE; color: var(--teal); }
+.fi-h { margin: 18px 0 6px; font-size: 19px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: .03em; }
+.fi-plan { display: block; width: 100%; height: 380px; object-fit: contain; background: #fff; border-radius: 14px; border: 2px solid #DCE4E3; }
+.fi-row { display: flex; justify-content: space-between; font-size: 17px; padding: 7px 4px; border-bottom: 1px dashed #CBD6D5; }
+.fi-row b { font-variant-numeric: tabular-nums; }
+#ecran { position: absolute; left: 356px; top: 411px; width: 368px; height: 668px; border-radius: 42px; object-fit: cover; z-index: 3; }
+.fly { z-index: 4; opacity: 0; position: absolute; width: 220px; height: 124px; object-fit: cover; border-radius: 16px; box-shadow: 0 14px 30px rgba(0,0,0,.4); border: 4px solid #fff; }
+
+/* 3–5. Fonctionnalités */
+.pill { position: absolute; left: 50%; top: 120px; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; white-space: nowrap;
+  font-size: 50px; font-weight: 800; padding: 14px 36px 14px 16px; border-radius: 999px; background: #fff; color: var(--teal); box-shadow: 0 14px 34px rgba(0,0,0,.28); }
+.pill span { width: 66px; height: 66px; border-radius: 50%; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.sheet { position: absolute; background: #fff; border-radius: 28px; box-shadow: 0 30px 70px rgba(0,0,0,.4); color: var(--ink); }
+.plan-sheet { width: 480px; height: 500px; padding: 14px; overflow: hidden; }
+.ps1 { left: 50px; top: 250px; } .ps2 { left: 550px; top: 330px; }
+.lvl { position: absolute; left: 14px; top: 14px; font-size: 26px; font-weight: 800; padding: 4px 14px; border-radius: 10px; background: var(--teal); color: #fff; }
+.plan-img { width: 100%; height: 100%; object-fit: contain; }
+.scan { position: absolute; left: 0; right: 0; height: 6px; background: var(--orange); box-shadow: 0 0 24px var(--orange); }
+.tagc { position: absolute; font-size: 36px; font-weight: 700; padding: 14px 24px; border-radius: 18px; background: var(--gold); color: var(--teal-xdk); box-shadow: 0 12px 26px rgba(0,0,0,.3); }
+.tagc b { font-weight: 800; }
+.tg1 { left: 60px; top: 880px; } .tg2 { left: 395px; top: 880px; } .tg3 { left: 640px; top: 880px; }
+.ref { position: absolute; right: 60px; top: 260px; font-size: 30px; font-weight: 700; color: #CFE5E3; }
+.devis-sheet { left: 90px; top: 250px; width: 900px; padding: 30px 40px; }
+.dv-head { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: .04em; padding-bottom: 14px; border-bottom: 3px solid var(--teal); margin-bottom: 6px; }
+.dv-row { display: flex; justify-content: space-between; font-size: 33px; padding: 9px 0; border-bottom: 2px dashed #DCE4E3; }
+.dv-row b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.dv-total { display: flex; justify-content: space-between; margin-top: 18px; padding: 18px 22px; border-radius: 16px; background: var(--teal); color: #fff; font-size: 40px; font-weight: 800; }
+.dv-total b { color: var(--gold); font-variant-numeric: tabular-nums; }
+.land { position: absolute; left: 0; top: 40px; }
+.lot { fill: rgba(231,195,108,.16); stroke: var(--gold); stroke-width: 6; stroke-dasharray: 2600; }
+.house { fill: #fff; stroke: #fff; }
+.land .hl { fill: var(--teal); font-size: 30px; font-weight: 800; text-anchor: middle; dominant-baseline: middle; }
+.dimw line, .dimd line { stroke: #fff; stroke-width: 3; }
+.dimw text, .dimd text { fill: #fff; font-size: 44px; font-weight: 800; text-anchor: middle; }
+.land-badge { position: absolute; left: 50%; top: 1040px; transform: translateX(-50%); white-space: nowrap; font-size: 44px; font-weight: 700; padding: 16px 34px; border-radius: 20px; background: var(--gold); color: var(--teal-xdk); box-shadow: 0 14px 30px rgba(0,0,0,.3); }
+
+/* 6. Clarté */
+.bgimg { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(26px) brightness(.45); }
+.hero-img { position: absolute; left: 50px; top: 180px; width: 980px; height: 552px; border-radius: 30px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,.5); border: 6px solid #fff; }
+.hero-img img { width: 100%; height: 100%; object-fit: cover; }
+.budget { position: absolute; left: 50%; top: 780px; transform: translateX(-50%); text-align: center; white-space: nowrap; background: #fff; color: var(--ink); padding: 20px 44px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,.4); }
+.budget small { display: block; font-size: 30px; font-weight: 700; color: #4C6563; }
+.budget b { font-size: 64px; font-weight: 800; color: var(--teal); letter-spacing: -.02em; }
+.checks { position: absolute; left: 0; right: 0; top: 960px; display: flex; justify-content: center; gap: 22px; }
+.ck { font-size: 40px; font-weight: 800; padding: 12px 28px; border-radius: 999px; background: var(--teal); border: 3px solid var(--gold); }
+.ck::before { content: "✓ "; color: var(--gold); }
+
+/* 7. Témoignages */
+.t-title { position: absolute; left: 0; right: 0; top: 330px; text-align: center; }
+.t-title small { display: block; font-size: 48px; font-weight: 700; color: #DCEDEC; }
+.t-title b { display: block; font-size: 140px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.t-title .stars { display: block; font-size: 90px; color: #F5B400; letter-spacing: .08em; margin-top: 10px; }
+.tcard { position: absolute; left: 285px; top: 120px; width: 510px; height: 906px; border-radius: 36px; overflow: hidden; background-size: cover; background-position: center;
+  box-shadow: 0 30px 70px rgba(0,0,0,.5); border: 6px solid #fff; opacity: 0; }
+.tvid { position: absolute; left: 291px; top: 126px; width: 498px; height: 894px; border-radius: 30px; object-fit: cover; z-index: 8; }
+.tname { position: absolute; left: 291px; top: 860px; width: 498px; height: 160px; border-radius: 0 0 30px 30px; padding: 56px 26px 22px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.75)); z-index: 9; opacity: 0; }
+.tname b { display: block; font-size: 42px; font-weight: 800; }
+.tname span { font-size: 26px; font-weight: 600; color: var(--gold); }
+
+/* 8. Nouveaux plans */
+.n-title { position: absolute; left: 0; right: 0; top: 130px; text-align: center; }
+.n-title b { display: block; font-size: 100px; font-weight: 800; letter-spacing: -.03em; }
+.n-title small { display: block; font-size: 42px; font-weight: 700; color: #DCEDEC; }
+.ngrid { position: absolute; left: 60px; top: 390px; width: 960px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.nc { position: relative; height: 200px; border-radius: 20px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,.35); border: 4px solid #fff; }
+.nc img { width: 100%; height: 100%; object-fit: cover; }
+.new { position: absolute; left: 10px; top: 10px; font-size: 24px; font-weight: 800; text-transform: uppercase; padding: 6px 14px; border-radius: 10px; background: var(--orange); }
+.stamp { position: absolute; left: 600px; top: 760px; width: 330px; height: 330px; border-radius: 50%; border: 10px solid var(--gold); background: rgba(6,43,42,.9);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 76px; font-weight: 800; text-transform: uppercase; color: var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+.stamp small { font-size: 36px; font-weight: 700; text-transform: none; color: #fff; }
+
+/* 9. Offre */
+.offer { position: absolute; left: 110px; top: 220px; width: 860px; padding: 44px 40px 50px; text-align: center; background: #fff; color: var(--ink); border-radius: 40px; box-shadow: 0 40px 90px rgba(0,0,0,.5); }
+.o-label { font-size: 40px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); }
+.o-old { position: relative; display: inline-block; margin-top: 18px; font-size: 64px; font-weight: 700; color: #6B7F7D; }
+.strike { position: absolute; left: -10px; right: -10px; top: 52%; height: 8px; border-radius: 4px; background: var(--red); transform: rotate(-6deg) scaleX(0); transform-origin: 0 50%; }
+.o-now { white-space: nowrap; font-size: 176px; font-weight: 800; letter-spacing: -.05em; line-height: 1; color: var(--teal-xdk); margin-top: 6px; }
+.o-now small { font-size: 56px; font-weight: 800; margin-left: 10px; letter-spacing: 0; }
+.o-badge { position: absolute; right: -30px; top: -30px; font-size: 54px; font-weight: 800; padding: 18px 26px; border-radius: 26px; background: var(--red); color: #fff; box-shadow: 0 14px 30px rgba(0,0,0,.3); }
+.o-today { display: inline-block; margin-top: 20px; font-size: 42px; font-weight: 800; padding: 10px 30px; border-radius: 999px; background: var(--orange); color: #fff; }
+.barrow { position: absolute; left: 90px; right: 90px; top: 790px; display: flex; align-items: center; gap: 34px; padding: 26px 36px; border-radius: 30px; background: rgba(6,43,42,.85); border: 3px solid var(--gold); }
+.barrow span { font-size: 46px; font-weight: 700; line-height: 1.2; }
+.barrow b { color: var(--gold); }
+.cta-wrap { position: absolute; left: 0; right: 0; top: 760px; display: flex; flex-direction: column; align-items: center; }
+.cta { font-size: 64px; font-weight: 800; padding: 34px 70px; border-radius: 30px; background: var(--orange); color: #fff; box-shadow: 0 20px 50px rgba(240,138,46,.5); white-space: nowrap; }
+.arrow { font-size: 90px; font-weight: 800; color: var(--orange); line-height: 1; margin-top: 16px; }
+.pay { display: flex; gap: 14px; margin-top: 18px; }
+.pay span { font-size: 30px; font-weight: 700; padding: 10px 20px; border-radius: 14px; background: rgba(255,255,255,.14); }
+.site { margin-top: 26px; font-size: 40px; font-weight: 800; letter-spacing: .02em; color: var(--gold); }
+
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="87.944" data-width="1080" data-height="1350" data-fps="30">
+<div class="bg"></div>
+
+<div id="sc-accroche" class="scene clip" data-start="0" data-duration="10.366" data-track-index="1" style="z-index:1">
+  <div class="wall"><div class="col c1"><img src="media/covers/00.webp" alt=""><img src="media/covers/01.webp" alt=""><img src="media/covers/02.webp" alt=""><img src="media/covers/03.webp" alt=""><img src="media/covers/04.webp" alt=""><img src="media/covers/05.webp" alt=""></div><div class="col c2"><img src="media/covers/05.webp" alt=""><img src="media/covers/06.webp" alt=""><img src="media/covers/07.webp" alt=""><img src="media/covers/08.webp" alt=""><img src="media/covers/09.webp" alt=""><img src="media/covers/10.webp" alt=""></div><div class="col c3"><img src="media/covers/10.webp" alt=""><img src="media/covers/11.webp" alt=""><img src="media/covers/12.webp" alt=""><img src="media/covers/13.webp" alt=""><img src="media/covers/14.webp" alt=""><img src="media/covers/15.webp" alt=""></div></div>
+  <div class="shade"></div>
+  <div class="hook"><div class="w w1">Besoin</div><div class="w w2">d'<em>inspiration</em>&nbsp;?</div><div class="w w3">pour votre projet de construction</div></div>
+  <div class="cmp">
+    <div class="cmp-row"><span class="chip c-plan">Plans</span><span class="plus">+</span><span class="chip c-devis">Devis</span></div>
+    <div class="count"><small>près de</small><b id="cnt">100</b><small>modèles de maisons</small></div>
+    <div class="cmp-tag">à comparer avant de choisir</div>
+  </div>
+</div>
+<div id="sc-catalogue" class="scene clip" data-start="10.016" data-duration="8.814" data-track-index="1" style="z-index:2">
+  <div class="premium"><span>Catalogue</span><b>Premium</b><i class="shine"></i></div>
+  <div class="phone"><div class="notch"></div><div class="screen"><div class="fiche">
+  <div class="fi-bar"><b>Duplex D4-006</b><span>Premium</span></div>
+  <img class="fi-cover" src="media/showcase/facade.png" alt="">
+  <div class="fi-chips"><span>4 ch.</span><span>195 m²</span><span>R+1</span></div>
+  <div class="fi-h">Distribution RDC</div><img class="fi-plan" src="media/showcase/plan-rdc.webp" alt="">
+  <div class="fi-h">Distribution étage</div><img class="fi-plan" src="media/showcase/plan-etage.webp" alt="">
+  <div class="fi-h">Devis poste par poste</div>
+  <div class="fi-row"><span>Fondation</span><b>3 601 300</b></div><div class="fi-row"><span>Élévation RDC</span><b>2 653 600</b></div><div class="fi-row"><span>Dalle</span><b>5 117 600</b></div><div class="fi-row"><span>Élévation étage</span><b>3 032 600</b></div><div class="fi-row"><span>Charpente et toiture</span><b>4 549 000</b></div><div class="fi-row"><span>Crépissage et antivols</span><b>5 559 800</b></div>
+  <div class="fi-h">Rendus 3D</div><img class="fi-render" src="media/showcase/nuit.png" alt=""><img class="fi-render" src="media/showcase/r-1793181949463-0vjFIrwP.webp" alt=""><img class="fi-render" src="media/showcase/r-1793181999999-N3uT74sj.webp" alt=""><img class="fi-render" src="media/showcase/r-1793182021806-f91UA-uy.webp" alt="">
+</div></div></div>
+
+</div>
+<div id="sc-plan" class="scene clip" data-start="18.48" data-duration="4.449" data-track-index="1" style="z-index:3">
+  <div class="pill"><span>1</span>Plan de distribution</div>
+  <div class="sheet plan-sheet ps1"><img class="plan-img" src="media/showcase/plan-rdc.webp" alt=""><div class="scan"></div><span class="lvl">RDC</span></div>
+  <div class="sheet plan-sheet ps2"><img class="plan-img" src="media/showcase/plan-etage.webp" alt=""><div class="scan"></div><span class="lvl">Étage</span></div>
+  <div class="tagc tg1"><b>4</b> chambres</div>
+  <div class="tagc tg2"><b>195 m²</b></div>
+  <div class="tagc tg3"><b>3</b> salles de bain</div>
+  <div class="ref">Duplex D4-006</div>
+</div>
+<div id="sc-devis" class="scene clip" data-start="22.579" data-duration="3.709" data-track-index="1" style="z-index:4">
+  <div class="pill"><span>2</span>Devis poste par poste</div>
+  <div class="sheet devis-sheet">
+    <div class="dv-head"><span>Devis de construction</span><span>Duplex D4-006</span></div>
+    <div class="dv-row r0"><span>Fondation</span><b>3 601 300</b></div><div class="dv-row r1"><span>Élévation RDC</span><b>2 653 600</b></div><div class="dv-row r2"><span>Dalle</span><b>5 117 600</b></div><div class="dv-row r3"><span>Élévation étage</span><b>3 032 600</b></div><div class="dv-row r4"><span>Charpente et toiture</span><b>4 549 000</b></div><div class="dv-row r5"><span>Crépissage et antivols</span><b>5 559 800</b></div><div class="dv-row r6"><span>Portes et fenêtres</span><b>4 169 900</b></div><div class="dv-row r7"><span>Plomberie et électricité</span><b>3 474 900</b></div><div class="dv-row r8"><span>Plafond et peinture</span><b>4 864 900</b></div><div class="dv-row r9"><span>Carrelage</span><b>5 096 400</b></div>
+    <div class="dv-total"><span>Total estimé</span><b><span id="dvt">0</span> FCFA</b></div>
+  </div>
+</div>
+<div id="sc-terrain" class="scene clip" data-start="25.938" data-duration="4.229" data-track-index="1" style="z-index:5">
+  <div class="pill"><span>3</span>Terrain nécessaire</div>
+  <svg class="land" width="1080" height="1060" viewBox="0 0 1080 1060">
+    <rect class="lot" x="348" y="300" width="384" height="672" rx="6"/>
+    <rect class="house" x="396" y="376.8" width="288" height="448" rx="4"/>
+    <text class="hl" x="540" y="600.8">Maison 9 × 14 m</text>
+    <g class="dimw"><line x1="348" y1="266" x2="732" y2="266"/><text x="540" y="250">12 m</text></g>
+    <g class="dimd"><line x1="314" y1="300" x2="314" y2="972"/><text x="296" y="636" transform="rotate(-90 296 636)">21 m</text></g>
+  </svg>
+  <div class="land-badge">Terrain minimum&nbsp;: <b>300 m²</b></div>
+</div>
+<div id="sc-clarte" class="scene clip" data-start="29.817" data-duration="8.271" data-track-index="1" style="z-index:6">
+  <div class="bgimg" style="background-image:url(media/showcase/facade.png)"></div>
+  <div class="hero-img"><img src="media/showcase/facade.png" alt=""></div>
+  <div class="budget"><small>Budget de construction estimé</small><b>37,9 – 46,3 M FCFA</b></div>
+  <div class="checks"><span class="ck k1">Plan</span><span class="ck k2">Devis</span><span class="ck k3">Terrain</span></div>
+</div>
+<div id="sc-temoignages" class="scene clip" data-start="37.738" data-duration="30.57" data-track-index="1" style="z-index:7">
+  <div class="t-title"><small>Ils ont obtenu le catalogue</small><b>Ils en parlent</b><span class="stars">★★★★★</span></div>
+  <div class="tcard tc0" style="background-image:url(media/temoignages/ibrahim.jpg)"></div><div class="tcard tc1" style="background-image:url(media/temoignages/bassirou.jpg)"></div><div class="tcard tc2" style="background-image:url(media/temoignages/francis.jpg)"></div><div class="tcard tc3 audio" style="background-image:url(media/renaud.webp)">
+</div>
+</div>
+<video id="v-ibrahim" class="clip tvid tc0" src="media/temoignages/ibrahim.mp4" data-start="41.658" data-duration="3.75" data-has-audio="true" data-track-index="3" playsinline></video>
+<div class="tname tc0" ><b>Ibrahim</b><span>Client du Catalogue Premium</span></div>
+<video id="v-bassirou" class="clip tvid tc1" src="media/temoignages/bassirou.mp4" data-start="45.958" data-duration="7.85" data-has-audio="true" data-track-index="4" playsinline></video>
+<div class="tname tc1" ><b>Mamadou Bassirou</b><span>Client du Catalogue Premium</span></div>
+<video id="v-francis" class="clip tvid tc2" src="media/temoignages/francis.mp4" data-start="54.358" data-duration="5.95" data-has-audio="true" data-track-index="5" playsinline></video>
+<div class="tname tc2" ><b>Francis</b><span>Client du Catalogue Premium</span></div>
+<div class="tname tc3" ><b>Renaud</b><span>Témoignage audio</span></div>
+<video id="ecran" class="clip" src="media/ecran/catalogue.mp4" muted playsinline data-start="10.016" data-duration="8.814" data-track-index="2"></video>
+<img class="fly f0" src="media/covers/12.webp" alt="" style="left:60px;top:250px"><img class="fly f1" src="media/covers/13.webp" alt="" style="left:800px;top:210px"><img class="fly f2" src="media/covers/14.webp" alt="" style="left:40px;top:620px"><img class="fly f3" src="media/covers/15.webp" alt="" style="left:830px;top:560px"><img class="fly f4" src="media/covers/16.webp" alt="" style="left:70px;top:960px"><img class="fly f5" src="media/covers/17.webp" alt="" style="left:810px;top:930px">
+
+<div id="sc-nouveaux" class="scene clip" data-start="67.958" data-duration="6.027" data-track-index="1" style="z-index:8">
+  <div class="n-title"><b>Nouveaux plans</b><small>ajoutés régulièrement au catalogue</small></div>
+  <div class="ngrid"><div class="nc n0"><img src="media/covers/06.webp" alt=""></div><div class="nc n1"><img src="media/covers/07.webp" alt=""></div><div class="nc n2"><img src="media/covers/08.webp" alt=""><span class="new">Nouveau</span></div><div class="nc n3"><img src="media/covers/09.webp" alt=""></div><div class="nc n4"><img src="media/covers/10.webp" alt=""><span class="new">Nouveau</span></div><div class="nc n5"><img src="media/covers/11.webp" alt=""></div><div class="nc n6"><img src="media/covers/12.webp" alt=""></div><div class="nc n7"><img src="media/covers/13.webp" alt=""><span class="new">Nouveau</span></div><div class="nc n8"><img src="media/covers/14.webp" alt=""></div></div>
+  <div class="stamp">Gratuit<small>à vie</small></div>
+</div>
+<div id="sc-offre" class="scene clip" data-start="73.635" data-duration="14.309" data-track-index="1" style="z-index:9">
+  <div class="offer">
+    <div class="o-label">Prix promotionnel</div>
+    <div class="o-old"><span>60 000 FCFA</span><i class="strike"></i></div>
+    <div class="o-now">29 000<small>FCFA</small></div>
+    <div class="o-badge">–52&nbsp;%</div>
+    <div class="o-today">Aujourd'hui</div>
+  </div>
+  <div class="barrow">
+    <svg viewBox="0 0 220 130" width="220" height="130" fill="none" stroke="#E7C36C" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M44 30h140l-26 50H74z" fill="#E7C36C" fill-opacity=".35"/><path d="M74 80 6 58M74 80l116 26M84 82l-8 38"/><circle cx="192" cy="106" r="17"/></svg>
+    <span>Moins que le prix<br>d'une <b>brouette de chantier</b></span>
+  </div>
+  <div class="cta-wrap">
+    <div class="cta">Obtenir le catalogue</div>
+    <div class="arrow">↓</div>
+    <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
+    <div class="site">wooplans.com</div>
+  </div>
+</div>
+<img id="logo" src="media/logo.png" alt="WOOPLANS">
+<div id="progress"><i></i></div>
+<div class="caps">
+<div class="cap clip" data-start="0.5" data-duration="3.385" data-track-index="10"><span>Vous avez besoin d'<em>inspiration</em> pour votre projet de construction ?</span></div>
+<div class="cap clip" data-start="3.945" data-duration="3.676" data-track-index="10"><span>Et si vous pouviez comparer les <em>plans et les devis</em> de <em>près de 100 modèles</em></span></div>
+<div class="cap clip" data-start="7.621" data-duration="2.235" data-track-index="10"><span>de maisons, avant de faire votre choix ?</span></div>
+<div class="cap clip" data-start="10.366" data-duration="4.112" data-track-index="10"><span>C'est exactement pour cela que nous avons créé le <em>Catalogue Premium</em>.</span></div>
+<div class="cap clip" data-start="14.538" data-duration="3.782" data-track-index="10"><span>Nous avons regroupé nos meilleurs modèles dans <em>un seul catalogue</em>.</span></div>
+<div class="cap clip" data-start="18.83" data-duration="3.589" data-track-index="10"><span>Pour chaque modèle, vous pouvez consulter le <em>plan de distribution</em>,</span></div>
+<div class="cap clip" data-start="22.929" data-duration="2.849" data-track-index="10"><span>le devis de construction, <em>poste par poste</em>,</span></div>
+<div class="cap clip" data-start="26.288" data-duration="3.369" data-track-index="10"><span>et voir les <em>dimensions du terrain</em> nécessaire pour construire.</span></div>
+<div class="cap clip" data-start="30.167" data-duration="3.849" data-track-index="10"><span>Ainsi, avant de vous engager financièrement dans votre projet,</span></div>
+<div class="cap clip" data-start="34.076" data-duration="3.502" data-track-index="10"><span>vous avez une idée <em>claire et précise</em>, grâce au catalogue.</span></div>
+<div class="cap clip" data-start="38.088" data-duration="3.26" data-track-index="10"><span>Ceux qui ont déjà obtenu le catalogue peuvent en <em>témoigner</em>.</span></div>
+<div class="cap clip" data-start="68.308" data-duration="3.206" data-track-index="10"><span>Et ce n'est pas tout : vous avez aussi accès <em>gratuitement</em> aux nouveaux</span></div>
+<div class="cap clip" data-start="71.514" data-duration="1.961" data-track-index="10"><span>plans que nous ajoutons régulièrement.</span></div>
+<div class="cap clip" data-start="73.985" data-duration="5.278" data-track-index="10"><span>Alors, n'attendez plus. Profitez du <em>Catalogue Premium</em> au prix promotionnel</span></div>
+<div class="cap clip" data-start="79.263" data-duration="2.217" data-track-index="10"><span>de <em>29 000 FCFA</em>, <em>aujourd'hui</em>.</span></div>
+<div class="cap clip" data-start="81.54" data-duration="2.424" data-track-index="10"><span>C'est moins que le prix d'une <em>brouette de chantier</em> !</span></div>
+<div class="cap clip q" data-start="41.658" data-duration="3.9" data-track-index="10"><span>« Lorsque je l'ai obtenu, j'ai tout simplement été émerveillé. »</span></div>
+<div class="cap clip q" data-start="45.958" data-duration="4.448" data-track-index="10"><span>« Je confirme honnêtement que ce sont de beaux plans,</span></div>
+<div class="cap clip q" data-start="50.406" data-duration="3.552" data-track-index="10"><span>faits par de véritables professionnels. »</span></div>
+<div class="cap clip q" data-start="54.358" data-duration="4.554" data-track-index="10"><span>« Je vous recommande. J'ai été très satisfait par la qualité des</span></div>
+<div class="cap clip q" data-start="58.912" data-duration="1.546" data-track-index="10"><span>devis et des plans. »</span></div>
+<div class="cap clip q" data-start="60.858" data-duration="4.006" data-track-index="10"><span>« J'ai découvert ce site et je vous le recommande fortement :</span></div>
+<div class="cap clip q" data-start="64.864" data-duration="2.594" data-track-index="10"><span>il y a de très belles choses à voir. »</span></div>
+</div>
+<audio id="a-q1" class="clip" src="media/voix/q1.wav" data-start="0.5" data-duration="3.165" data-track-index="20" data-volume="1"></audio>
+<audio id="a-q2" class="clip" src="media/voix/q2.wav" data-start="3.945" data-duration="5.691" data-track-index="20" data-volume="1"></audio>
+<audio id="a-c1" class="clip" src="media/voix/c1.wav" data-start="10.366" data-duration="3.892" data-track-index="20" data-volume="1"></audio>
+<audio id="a-c2" class="clip" src="media/voix/c2.wav" data-start="14.538" data-duration="3.562" data-track-index="20" data-volume="1"></audio>
+<audio id="a-f1" class="clip" src="media/voix/f1.wav" data-start="18.83" data-duration="3.369" data-track-index="20" data-volume="1"></audio>
+<audio id="a-f2" class="clip" src="media/voix/f2.wav" data-start="22.929" data-duration="2.629" data-track-index="20" data-volume="1"></audio>
+<audio id="a-f3" class="clip" src="media/voix/f3.wav" data-start="26.288" data-duration="3.149" data-track-index="20" data-volume="1"></audio>
+<audio id="a-b1" class="clip" src="media/voix/b1.wav" data-start="30.167" data-duration="3.629" data-track-index="20" data-volume="1"></audio>
+<audio id="a-b2" class="clip" src="media/voix/b2.wav" data-start="34.076" data-duration="3.282" data-track-index="20" data-volume="1"></audio>
+<audio id="a-t0" class="clip" src="media/voix/t0.wav" data-start="38.088" data-duration="3.04" data-track-index="20" data-volume="1"></audio>
+<audio id="a-n1" class="clip" src="media/voix/n1.wav" data-start="68.308" data-duration="4.947" data-track-index="20" data-volume="1"></audio>
+<audio id="a-o1" class="clip" src="media/voix/o1.wav" data-start="73.985" data-duration="7.275" data-track-index="20" data-volume="1"></audio>
+<audio id="a-o2" class="clip" src="media/voix/o2.wav" data-start="81.54" data-duration="2.204" data-track-index="20" data-volume="1"></audio>
+<audio id="a-renaud" class="clip" src="media/temoignages/renaud.wav" data-start="60.858" data-duration="6.45" data-track-index="22"></audio>
+<audio id="m-0" class="clip" src="media/music.mp3" data-start="0" data-duration="41.358" data-media-start="0" data-volume="0.16" data-fade-in="0.8" data-fade-out="0.4" data-track-index="21"></audio>
+<audio id="m-1" class="clip" src="media/music.mp3" data-start="41.358" data-duration="26.25" data-media-start="41.358" data-volume="0.035" data-fade-in="0.4" data-fade-out="0.4" data-track-index="21"></audio>
+<audio id="m-2" class="clip" src="media/music.mp3" data-start="67.608" data-duration="20.336" data-media-start="67.608" data-volume="0.16" data-fade-in="0.4" data-fade-out="2.5" data-track-index="21"></audio>
+</div>
+<script>
+const T = {"q1":{"s":0.5,"e":3.665},"q2":{"s":3.945,"e":9.636},"c1":{"s":10.366,"e":14.258},"c2":{"s":14.538,"e":18.1},"f1":{"s":18.83,"e":22.199},"f2":{"s":22.929,"e":25.558},"f3":{"s":26.288,"e":29.437},"b1":{"s":30.167,"e":33.796},"b2":{"s":34.076,"e":37.358},"t0":{"s":38.088,"e":41.128},"ibrahim":{"s":41.658,"e":45.408},"bassirou":{"s":45.958,"e":53.808},"francis":{"s":54.358,"e":60.308},"renaud":{"s":60.858,"e":67.308},"n1":{"s":68.308,"e":73.255},"o1":{"s":73.985,"e":81.26},"o2":{"s":81.54,"e":83.744},"cta":{"s":83.994,"e":87.944}};
+const S = {"accroche":{"s":0,"e":10.016},"catalogue":{"s":10.016,"e":18.48},"plan":{"s":18.48,"e":22.579},"devis":{"s":22.579,"e":25.938},"terrain":{"s":25.938,"e":29.817},"clarte":{"s":29.817,"e":37.738},"temoignages":{"s":37.738,"e":67.958},"nouveaux":{"s":67.958,"e":73.635},"offre":{"s":73.635,"e":87.944}};
+const tl = gsap.timeline({ paused: true });
+const E = "power3.out", B = "back.out(1.7)";
+const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+// Fondu d'entrée de chaque scène (la précédente reste dessous pendant le fondu).
+["accroche","catalogue","plan","devis","terrain","clarte","temoignages","nouveaux","offre"].forEach((id, i) => { if (i) tl.fromTo("#sc-" + id, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "none" }, S[id].s); });
+
+// Logo et barre de progression
+tl.fromTo("#logo", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 0.2);
+tl.fromTo("#progress i", { scaleX: 0 }, { scaleX: 1, duration: 87.944, ease: "none" }, 0);
+
+// 1. Accroche
+tl.fromTo(".wall", { scale: 1.25, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.6, ease: E }, 0);
+tl.fromTo(".c1", { y: 0 }, { y: -520, duration: S.accroche.e - S.accroche.s + 0.4, ease: "none" }, 0);
+tl.fromTo(".c2", { y: -560 }, { y: 0, duration: S.accroche.e - S.accroche.s + 0.4, ease: "none" }, 0);
+tl.fromTo(".c3", { y: -80 }, { y: -600, duration: S.accroche.e - S.accroche.s + 0.4, ease: "none" }, 0);
+tl.fromTo(".hook .w", { opacity: 0, y: 70, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: B, stagger: 0.35 }, T.q1.s);
+tl.to(".hook", { opacity: 0, y: -160, scale: 0.85, duration: 0.5, ease: "power2.in" }, T.q2.s - 0.1);
+tl.to(".shade", { opacity: 0.9, duration: 0.6 }, T.q2.s);
+tl.fromTo(".c-plan", { opacity: 0, x: -200, rotation: -12 }, { opacity: 1, x: 0, rotation: -4, duration: 0.6, ease: B }, T.q2.s + 1.3);
+tl.fromTo(".plus", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.4, ease: B }, T.q2.s + 1.65);
+tl.fromTo(".c-devis", { opacity: 0, x: 200, rotation: 12 }, { opacity: 1, x: 0, rotation: 4, duration: 0.6, ease: B }, T.q2.s + 1.85);
+tl.fromTo(".count", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, T.q2.s + 2.5);
+const cnt = { v: 0 };
+tl.fromTo(cnt, { v: 0 }, { v: 100, duration: 1.3, ease: "power2.out", onUpdate: () => { document.getElementById("cnt").textContent = Math.round(cnt.v); } }, T.q2.s + 2.6);
+tl.fromTo(".cmp-tag", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, T.q2.s + 4.2);
+
+// 2. Le Catalogue Premium
+tl.fromTo(".premium span", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, T.c1.s + 2.0);
+tl.fromTo(".premium b", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.6, ease: B }, T.c1.s + 2.35);
+tl.fromTo(".premium .shine", { x: -700 }, { x: 900, duration: 1.1, ease: "power2.inOut" }, T.c1.s + 2.9);
+tl.fromTo(".phone, #ecran", { y: 900, rotation: 8 }, { y: 0, rotation: 0, duration: 0.9, ease: E }, S.catalogue.s + 0.1);
+// Défilement de la fiche : couverture, puis distribution RDC, étage, devis et rendus.
+[[S.catalogue.s + 1.6, -300], [T.c1.e - 0.6, -770], [T.c2.s + 1.2, -1230], [T.c2.e - 0.4, -1700]].forEach(([at, y]) => tl.to(".fiche", { y, duration: 0.9, ease: "power2.inOut" }, at));
+tl.fromTo(".fly", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.08 }, T.c2.s);
+tl.to(".f0", { x: 370, y: 450, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.40);
+tl.to(".f1", { x: -370, y: 490, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.52);
+tl.to(".f2", { x: 390, y: 80, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.64);
+tl.to(".f3", { x: -400, y: 140, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.76);
+tl.to(".f4", { x: 360, y: -260, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.88);
+tl.to(".f5", { x: -380, y: -230, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 2.00);
+tl.to(".phone, #ecran", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "power1.inOut" }, T.c2.s + 1.9);
+
+// 3. Plan de distribution
+tl.fromTo("#sc-plan .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.plan.s + 0.2);
+tl.fromTo(".ps1", { opacity: 0, y: 80, rotation: -6 }, { opacity: 1, y: 0, rotation: -2, duration: 0.7, ease: E }, S.plan.s + 0.2);
+tl.fromTo(".ps2", { opacity: 0, y: 80, rotation: 6 }, { opacity: 1, y: 0, rotation: 2, duration: 0.7, ease: E }, S.plan.s + 0.6);
+[".ps1", ".ps2"].forEach((p, i) => {
+  tl.fromTo(p + " .plan-img", { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.fromTo(p + " .scan", { y: 0, opacity: 1 }, { y: 470, duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.to(p + " .scan", { opacity: 0, duration: 0.2 }, S.plan.s + 1.9 + i * 0.4);
+});
+tl.fromTo(".tagc", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.3 }, S.plan.s + 1.6);
+tl.fromTo("#sc-plan .ref", { opacity: 0 }, { opacity: 1, duration: 0.4 }, S.plan.s + 1.0);
+
+// 4. Devis poste par poste
+tl.fromTo("#sc-devis .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.devis.s + 0.15);
+tl.fromTo(".devis-sheet", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, S.devis.s + 0.1);
+tl.fromTo(".dv-row", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.35, ease: E, stagger: 0.13 }, S.devis.s + 0.45);
+tl.fromTo(".dv-total", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: B }, S.devis.s + 1.6);
+const dv = { v: 0 };
+tl.fromTo(dv, { v: 0 }, { v: 42120000, duration: 1.2, ease: "power2.out", onUpdate: () => { document.getElementById("dvt").textContent = fmt(dv.v); } }, S.devis.s + 1.7);
+
+// 5. Terrain
+tl.fromTo("#sc-terrain .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.terrain.s + 0.15);
+tl.fromTo(".lot", { strokeDashoffset: 2600 }, { strokeDashoffset: 0, duration: 1.3, ease: "power2.inOut" }, S.terrain.s + 0.3);
+tl.fromTo(".lot", { fillOpacity: 0 }, { fillOpacity: 1, duration: 0.6 }, S.terrain.s + 1.3);
+tl.fromTo(".dimw, .dimd", { opacity: 0 }, { opacity: 1, duration: 0.4, stagger: 0.25 }, S.terrain.s + 1.0);
+tl.fromTo(".house", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.5, ease: B }, S.terrain.s + 1.6);
+tl.fromTo(".land .hl", { opacity: 0 }, { opacity: 1, duration: 0.4 }, S.terrain.s + 1.9);
+tl.fromTo(".land-badge", { opacity: 0, y: 40, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: B }, S.terrain.s + 2.3);
+
+// 6. Une idée claire et précise
+tl.fromTo(".bgimg", { scale: 1.3 }, { scale: 1.1, duration: S.clarte.e - S.clarte.s + 0.4, ease: "none" }, S.clarte.s);
+tl.fromTo(".hero-img", { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: E }, S.clarte.s + 0.1);
+tl.fromTo(".hero-img img", { scale: 1.15 }, { scale: 1, duration: S.clarte.e - S.clarte.s, ease: "none" }, S.clarte.s);
+tl.fromTo(".budget", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.6, ease: B }, T.b1.s + 1.6);
+tl.fromTo(".ck", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: B, stagger: 0.25 }, T.b2.s + 0.3);
+
+// 7. Témoignages
+tl.fromTo(".t-title > *", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: B, stagger: 0.18 }, S.temoignages.s + 0.2);
+tl.to(".t-title", { opacity: 0, y: -120, duration: 0.4, ease: "power2.in" }, T.ibrahim.s - 0.45);
+
+tl.fromTo(".tc0", { opacity: 0, x: 720 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, T.ibrahim.s - 0.45);
+tl.to(".tc0", { opacity: 0, x: -720, duration: 0.45, ease: "power2.in" }, T.ibrahim.e + 0.05);
+tl.fromTo(".tc1", { opacity: 0, x: 720 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, T.bassirou.s - 0.45);
+tl.to(".tc1", { opacity: 0, x: -720, duration: 0.45, ease: "power2.in" }, T.bassirou.e + 0.05);
+tl.fromTo(".tc2", { opacity: 0, x: 720 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, T.francis.s - 0.45);
+tl.to(".tc2", { opacity: 0, x: -720, duration: 0.45, ease: "power2.in" }, T.francis.e + 0.05);
+tl.fromTo(".tc3", { opacity: 0, x: 720 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, T.renaud.s - 0.45);
+tl.to(".tc3", { opacity: 0, duration: 0.35 }, S.nouveaux.s);
+// Carte audio de Renaud : léger battement pendant l'extrait.
+tl.fromTo(".tcard.audio", { scale: 1 }, { scale: 1.025, duration: 0.5, yoyo: true, repeat: Math.floor((T.renaud.e - T.renaud.s) / 0.5), ease: "sine.inOut" }, T.renaud.s);
+
+// 8. Nouveaux plans, gratuits
+tl.fromTo(".n-title > *", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: E, stagger: 0.15 }, S.nouveaux.s + 0.15);
+tl.fromTo(".nc", { opacity: 0, y: -260, rotation: -6 }, { opacity: 1, y: 0, rotation: 0, duration: 0.5, ease: "bounce.out", stagger: 0.12 }, S.nouveaux.s + 0.4);
+tl.fromTo(".new", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.35, ease: B, stagger: 0.2 }, T.n1.s + 2.2);
+tl.fromTo(".stamp", { opacity: 0, scale: 3, rotation: -40 }, { opacity: 1, scale: 1, rotation: -12, duration: 0.45, ease: "power4.in" }, T.n1.s + 1.75);
+tl.to(".ngrid", { x: 10, duration: 0.05, yoyo: true, repeat: 5 }, T.n1.s + 2.2);
+
+// 9. Offre et appel à l'action
+tl.fromTo(".offer", { opacity: 0, scale: 0.85, y: 60 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: B }, S.offre.s + 0.2);
+tl.fromTo(".o-label", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 }, T.o1.s + 2.0);
+tl.fromTo(".o-old", { opacity: 0 }, { opacity: 1, duration: 0.4 }, T.o1.s + 2.4);
+tl.fromTo(".strike", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power2.inOut" }, T.o1.s + 3.6);
+tl.to(".o-old", { opacity: 0.55, duration: 0.3 }, T.o1.s + 4.0);
+tl.fromTo(".o-now", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.55, ease: "back.out(2)" }, T.o1.s + 4.25);
+tl.fromTo(".o-badge", { opacity: 0, scale: 0, rotation: -30 }, { opacity: 1, scale: 1, rotation: 8, duration: 0.45, ease: B }, T.o1.s + 4.9);
+tl.fromTo(".o-today", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: B }, T.o1.s + 6.3);
+tl.to(".offer", { y: -150, scale: 0.86, duration: 0.6, ease: E }, T.o2.s - 0.2);
+tl.fromTo(".barrow", { opacity: 0, x: -600 }, { opacity: 1, x: 0, duration: 0.6, ease: E }, T.o2.s);
+tl.to(".barrow", { opacity: 0, y: 40, duration: 0.35 }, T.cta.s - 0.1);
+tl.fromTo(".cta-wrap", { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.6, ease: B }, T.cta.s);
+tl.to(".cta", { scale: 1.06, duration: 0.45, yoyo: true, repeat: 7, ease: "sine.inOut" }, T.cta.s + 0.6);
+tl.fromTo(".arrow", { y: -10 }, { y: 18, duration: 0.4, yoyo: true, repeat: 9, ease: "sine.inOut" }, T.cta.s + 0.4);
+
+// Sous-titres : entrée de chaque bloc
+document.querySelectorAll(".cap").forEach((c) => tl.fromTo(c, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.18, ease: E }, Number(c.dataset.start)));
+
+window.__timelines = window.__timelines || {};
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>

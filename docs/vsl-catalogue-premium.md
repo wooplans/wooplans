@@ -1,5 +1,7 @@
 # VSL du Catalogue Premium (section héro de /catalogue-premium)
 
+> **31 octobre 2026 : VSL refaite** sur le texte de voix off fourni par le propriétaire (inspiration → Catalogue Premium → plan, devis, terrain → témoignages → nouveaux plans gratuits → prix promotionnel de 29 000 FCFA au lieu de 60 000 FCFA). Motion design avec HyperFrames, extraits des 4 témoignages (Ibrahim, Mamadou Bassirou, Francis, Renaud). Production et commandes : `video/vsl/README.md`. Fichiers : `vsl-catalogue-premium-v2.mp4` et `vsl-catalogue-premium-apercu-v2.mp4` (bucket `cpbook-videos`). Le script ci-dessous est l'ancienne version (octobre 2026), gardé pour l'historique.
+
 Remplace `/videos/vsl-cpbook-digital.mp4` (29 s, 16:9, avatar IA, logo Veo visible, livre papier « Édition 2024 », « 50 modèles », « télécharger », sans prix ni garantie).
 
 ## Le message à faire passer

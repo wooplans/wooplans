@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
 import { cataloguePrice } from "@/lib/site";
 import { PAY_COOKIE, paymentProvider } from "@/lib/wajub";
-import { galleryHtml, perModelLabel, previewHtml, type GalleryPlan } from "@/lib/sales-page";
+import { galleryHtml, perModelLabel, previewHtml, SHOWCASE_CODE, type GalleryPlan } from "@/lib/sales-page";
 
 const GALLERY_SIZE = 8;
 const DATA_TTL_MS = 5 * 60_000;
@@ -14,27 +14,32 @@ async function salesPageData() {
   if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached;
   const db = getDb();
   const published = eq(schema.plans.status, "published");
-  const [[total], plans] = await Promise.all([
+  const columns = {
+    name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true, bathrooms: true,
+    budgetMin: true, budgetMax: true, rooms: true, floorPlans: true, estimateLots: true,
+  } as const;
+  const [[total], plans, demo] = await Promise.all([
     db.select({ n: count() }).from(schema.plans).where(published),
     db.query.plans.findMany({
-      columns: {
-        name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true, bathrooms: true,
-        budgetMin: true, budgetMax: true, rooms: true, floorPlans: true, estimateLots: true,
-      },
+      columns,
       where: and(published),
       orderBy: [desc(schema.plans.featured), asc(schema.plans.sortOrder), desc(schema.plans.publishedAt)],
       limit: GALLERY_SIZE * 3,
     }),
+    db.query.plans.findFirst({ columns, where: and(published, eq(schema.plans.code, SHOWCASE_CODE)) }),
   ]);
   const withCover = plans.filter((p) => p.coverImage);
-  // Aperçu : le premier modèle (en vedette d'abord) qui a plan coté et devis par lots.
-  const showcase = withCover.find((p) => p.floorPlans.length > 0 && p.estimateLots.length > 0) ?? null;
+  // Aperçu : le modèle de démonstration de la VSL (SHOWCASE_CODE), montré en entier : plans cotés
+  // (servis filigranés par /api/apercu/plan/<n>) et devis avec ses montants. Sans lui, pas d'aperçu.
+  const complete = (p: typeof demo) => Boolean(p?.coverImage && p.floorPlans.length > 0 && p.estimateLots.length > 0);
+  const showcase = complete(demo) ? demo! : null;
   const preview = previewHtml(
     showcase && {
       ...showcase,
       roomsCount: showcase.rooms.length,
-      floorPlansCount: showcase.floorPlans.length,
-      lotLabels: showcase.estimateLots.map((l) => l.label),
+      floorPlanUrls: showcase.floorPlans.map((_, i) => `/api/apercu/plan/${i + 1}`),
+      lots: showcase.estimateLots,
+      modelsCount: total?.n ?? 0,
     },
   );
   cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover.slice(0, GALLERY_SIZE) as GalleryPlan[]), preview };

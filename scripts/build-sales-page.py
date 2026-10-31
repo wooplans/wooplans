@@ -2,8 +2,9 @@
 Génère public/lp/catalogue-premium.html, la page de vente /catalogue-premium
 (source écrite à la main : scripts/sales-page.source.html).
 
-Page pensée pour l'acheteur mobile. Structure : promesse et prix → aperçu réel d'un modèle
-(ce que l'on débloque) → modèles avec leur budget → témoignages → étapes → pour qui / valeur
+Page pensée pour l'acheteur mobile. Structure : promesse, VSL et prix promotionnel (prix normal barré,
+src/config/catalogue.json « priceBefore ») → témoignages → parcours en 3 étapes → modèles avec leur budget
+→ aperçu réel d'un modèle → pour qui / valeur
 → offre → FAQ → appel final, avec barre collante, WhatsApp et paiement en formulaire court
 (nom, email, numéro) puis page Chariow. Urgence, avis et prix barré conservés (décision du propriétaire).
 
@@ -65,11 +66,12 @@ for forbidden in ("50+", "237653769998", "Télécharger le Catalogue", "clarity.
 
 # Prix du catalogue et montants qui en découlent. Source unique : src/config/catalogue.json
 # (lue aussi par le site et la VSL) ; prix des plans complets : src/lib/custom-plans.ts.
-PRICE = int(json.loads((ROOT / "src" / "config" / "catalogue.json").read_text(encoding="utf-8"))["price"])
-PRICE_AFTER_STEP = 60000  # prix au palier de 100 modèles (src/lib/sales-page.ts)
+CATALOGUE = json.loads((ROOT / "src" / "config" / "catalogue.json").read_text(encoding="utf-8"))
+PRICE = int(CATALOGUE["price"])
+PRICE_BEFORE = int(CATALOGUE["priceBefore"])  # prix normal, barré : le prix actuel est promotionnel
 VALUE = 500000  # valeur affichée du catalogue (tableau de valeur)
 plan_prices = [int(x) for x in re.findall(r"price: (\d+)", (ROOT / "src" / "lib" / "custom-plans.ts").read_text(encoding="utf-8"))]
-if len(plan_prices) != 2 or not 0 < PRICE < PRICE_AFTER_STEP:
+if len(plan_prices) != 2 or not 0 < PRICE < PRICE_BEFORE:
     raise SystemExit("prix du catalogue ou des plans complets introuvable ou incohérent")
 villa, duplex = plan_prices
 
@@ -82,9 +84,11 @@ PRICE_TOKENS = {
     "{{PRIX_XAF}}": str(PRICE),
     "{{RESTE_VILLA_NBSP}}": fcfa(villa - PRICE, "&nbsp;"),
     "{{RESTE_DUPLEX_NBSP}}": fcfa(duplex - PRICE, "&nbsp;"),
-    "{{REMISE}}": str(round((PRICE_AFTER_STEP - PRICE) / PRICE_AFTER_STEP * 100)),
+    "{{PRIX_AVANT}}": fcfa(PRICE_BEFORE),
+    "{{PRIX_AVANT_NBSP}}": fcfa(PRICE_BEFORE, "&nbsp;"),
+    "{{REMISE}}": str(round((PRICE_BEFORE - PRICE) / PRICE_BEFORE * 100)),
     "{{PART_VALEUR}}": f"{PRICE / VALUE * 100:.1f}",
-    "{{ECONOMIE}}": fcfa(PRICE_AFTER_STEP - PRICE),
+    "{{ECONOMIE}}": fcfa(PRICE_BEFORE - PRICE),
     "{{ECONOMIE_VALEUR}}": fcfa(VALUE - PRICE),
     # Repli si la base est indisponible (sinon la route calcule le prix réel par modèle) : 60 modèles et plus.
     "{{PAR_MODELE_MAX}}": str(-(-PRICE // 60 // 50) * 50),

@@ -26,15 +26,20 @@ test("budget : fourchette arrondie en millions", () => {
   assert.equal(budgetLabel(null, null), null);
 });
 
-test("aperçu : intitulés des postes visibles, jamais les montants", () => {
+test("aperçu : échantillon complet (plans cotés, devis avec montants, fiche PDF pour tous les modèles)", () => {
   const html = previewHtml({
-    name: "Villa V3-037", category: "villa", coverImage: "/media/c.webp", levels: 1, surfaceTotal: 164, bedrooms: 3, bathrooms: 2,
-    budgetMin: 29_500_000, budgetMax: 36_100_000, roomsCount: 16, floorPlansCount: 2, lotLabels: ["Fondation", "Élévations"],
-  });
-  assert.match(html, /Fondation/);
-  assert.match(html, /16 pièces/);
-  assert.match(html, /Fiche-WOOPLANS-V3-037\.pdf/);
-  assert.doesNotMatch(html, /4 005 200|4005200|32 816 000/);
+    name: "Duplex D4-006", category: "duplex", coverImage: "/media/c.webp", levels: 2, surfaceTotal: 195, bedrooms: 4, bathrooms: 3,
+    budgetMin: 37_900_000, budgetMax: 46_300_000, roomsCount: 0, floorPlanUrls: ["/api/apercu/plan/1", "/api/apercu/plan/2"],
+    lots: [{ label: "Fondation", amount: 3_601_300 }, { label: "Dalle", amount: 5_117_600 }], modelsCount: 98,
+  }).replace(/\u00a0/g, " ");
+  assert.match(html, /src="\/api\/apercu\/plan\/1"/);
+  assert.match(html, /Rez-de-chaussée/);
+  assert.match(html, /Étage/);
+  assert.match(html, /Fondation<\/span><b>3 601 300 FCFA/);
+  assert.match(html, /Total estimatif<\/span><b>8 718 900 FCFA/);
+  assert.match(html, /Fiche-WOOPLANS-D4-006\.pdf/);
+  assert.match(html, /pour chacun des 98 modèles/);
+  assert.doesNotMatch(html, /après achat|maçon/);
   assert.equal(previewHtml(null), "");
 });
 
@@ -73,17 +78,29 @@ test("page de vente : la feuille de route et la FAQ reprennent les prix fixes de
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
   assert.match(b, /id="contenu-plans"/);
-  // Pas de palier de prix annoncé : le prix reste celui de src/config/catalogue.json.
-  assert.doesNotMatch(b, /data-wp-threshold|60[  ]000|Prix avant/);
+  // Pas de palier ni de compte à rebours : prix promotionnel avec le prix normal barré (src/config/catalogue.json).
+  assert.doesNotMatch(b, /data-wp-threshold|data-wp-left|Prix avant 100/);
+  const before = catalogue.priceBefore.toLocaleString("fr-FR").replace(/\s/g, " ");
+  assert.ok(catalogue.priceBefore > CATALOGUE_PRICE);
+  assert.match(b, new RegExp(`class="promo"[^>]*>[^\\n]*<s>${before}</s>`)); // bandeau
+  assert.equal(b.match(new RegExp(`<s>${before} FCFA</s>`, "g"))?.length, 3); // héro, offre, barre collante
+  assert.match(b, new RegExp(`–${Math.round((1 - CATALOGUE_PRICE / catalogue.priceBefore) * 100)} %`));
+});
+
+test("page de vente : témoignages juste après le héro, puis le parcours", () => {
+  const b = readFileSync(PAGE, "utf8");
+  const hero = b.indexOf("</header>"), temo = b.indexOf('id="temoignages"'), road = b.indexOf('id="parcours"');
+  assert.ok(hero > 0 && temo > hero && road > temo);
+  assert.doesNotMatch(b.slice(hero, temo).replace(/<section $/, ""), /<section/);
 });
 
 test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
   const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
   // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
-  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
+  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, /\/assets\/digital\/vsl-poster-v2\.webp/);
   assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
   // La voix off renvoie au compteur « juste sous la vidéo ».
   assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);

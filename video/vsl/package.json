@@ -2,12 +2,16 @@
   "name": "wooplans-vsl",
   "private": true,
   "type": "module",
-  "description": "VSL du Catalogue Premium en motion design : scènes HTML rendues image par image, assemblées avec ffmpeg.",
+  "description": "VSL du Catalogue Premium en motion design, composée avec HyperFrames (HTML + GSAP) et rendue en MP4.",
   "scripts": {
-    "render": "node render.mjs",
-    "subs": "node export-subs.mjs"
+    "prepare-media": "node prepare.mjs",
+    "voice": "node voice.mjs",
+    "build": "node build.mjs",
+    "check": "hyperframes lint .",
+    "render": "hyperframes render -q delivery -o out/vsl-master.mp4",
+    "finish": "node finish.mjs"
   },
   "dependencies": {
-    "playwright-core": "1.56.1"
+    "hyperframes": "0.8.223"
   }
 }

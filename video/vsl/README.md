@@ -1,44 +1,57 @@
-# VSL du Catalogue Premium (motion design)
+# VSL du Catalogue Premium (HyperFrames, motion design)
 
-Vidéo de vente de la section héro de `/catalogue-premium`. Script de référence : `docs/vsl-catalogue-premium.md`.
+Vidéo de vente de la section héro de `/catalogue-premium` : 88 s, 4:5 (1080 × 1350), sous-titres incrustés.
+Composée avec [HyperFrames](https://hyperframes.heygen.com) (HTML + GSAP, rendu image par image par Chrome puis ffmpeg).
 
-Tout est produit en code, de façon reproductible : chaque image est une fonction pure du temps (`renderFrame(t)` dans `src/scenes.js`), rendue par Chromium puis assemblée par ffmpeg.
+## Déroulé
+
+| Scène | Voix off (Gradium, voix `TsRKBRWZGYldAeEI`) | Motion design |
+|---|---|---|
+| Accroche | Besoin d'inspiration ? Comparer plans et devis de près de 100 modèles | Mur de rendus 3D qui défile, « Plans + Devis », compteur jusqu'à 100 |
+| Catalogue | Nous avons créé le Catalogue Premium, nos meilleurs modèles réunis | Titre or « Premium », enregistrement d'écran réel du catalogue qui défile dans le téléphone (à défaut : la fiche Premium du D4-006) |
+| Plan / Devis / Terrain | Plan de distribution, devis poste par poste, terrain nécessaire | Distributions cotées RDC et étage du Duplex D4-006, ses 10 postes de devis (42 120 000 FCFA), terrain 12 × 21 m (300 m²) |
+| Clarté | Avant de vous engager, une idée claire et précise | Rendu du D4-006, budget 37,9 – 46,3 M FCFA, ✓ Plan ✓ Devis ✓ Terrain |
+| Témoignages | « Ceux qui ont déjà obtenu le catalogue peuvent en témoigner » | Extraits réels : Ibrahim, Mamadou Bassirou, Francis (vidéo), Renaud (audio) |
+| Nouveaux plans | Accès gratuit aux nouveaux plans | Grille de modèles « Nouveau », tampon « Gratuit à vie » |
+| Offre | Prix promotionnel de 29 000 FCFA aujourd'hui, moins qu'une brouette | 60 000 FCFA barré, 29 000 FCFA, –52 %, brouette, bouton « Obtenir le catalogue » |
+
+Musique : mixkit « Let's Play Africa » (licence libre mixkit), baissée pendant les témoignages.
 
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `src/timeline.js` | Texte de la voix off (affiché et prononcé), découpage en sous-titres, minutage. Source unique pour l'animation, les sous-titres et la voix. |
-| `src/scenes.js`, `src/index.html` | Les 11 plans en HTML/CSS/SVG, la feuille de route en 3 étapes, les modes `main`, `preview` et `poster`. |
-| `render.mjs` | Rendu image par image (Playwright + Chromium préinstallé) vers `out/`. |
-| `assemble.mjs` | Voix + musique + compression aux poids visés, aperçu muet, poster. |
-| `export-subs.mjs` | Sous-titres `out/vsl.srt` et `out/vsl.vtt` (incrustés dans la vidéo ; fichiers fournis en plus). |
-| `voice.mjs` | Voix off Gradium (voix `TsRKBRWZGYldAeEI`), un appel par bloc de sous-titre, assemblée dans `out/voice.wav`. Lit `GRADIUM_API_KEY`. |
-| `timings/voice.json` | (écrit par `voice.mjs`) durée réelle de chaque bloc ; l'animation et les sous-titres se recalent au rendu suivant. |
-| `fonts/` | Plus Jakarta Sans (licence OFL), sous-ensemble latin. |
+| `script.json` | Texte de la voix off (prononcé et sous-titré), extraits des témoignages (début / fin, sous-titre), données du modèle de démonstration, prix. |
+| `timings.json` | Durée réelle de chaque phrase (écrite par `voice.mjs`) : tout le minutage en découle. |
+| `build.mjs`, `style.css` | Génèrent `index.html`, la composition HyperFrames (ne pas modifier `index.html` à la main). `timeline.json` : minutage calculé. |
+| `prepare.mjs` | Prépare aussi l'enregistrement d'écran du catalogue (`media/ecran/source.mp4`, fourni par le propriétaire, accéléré × 2,5) montré dans le téléphone. Télécharge dans `media/` (non versionné) les témoignages publiés sur le site et les découpe, les rendus de couverture, la photo de Renaud, la musique. |
+| `voice.mjs` | Voix off Gradium, une phrase par appel (`GRADIUM_API_KEY`), réutilise les phrases inchangées. |
+| `finish.mjs` | Fichiers livrés dans `out/` : vidéo 720 × 900 (≈ 7,7 Mo), aperçu muet de 6 s (0,3 Mo), image d'attente. |
 
-`out/` (rendus) et `node_modules/` ne sont pas versionnés.
+Le prix vient de `src/config/catalogue.json` (`price`, `priceBefore`) : `lib.mjs` refuse de construire si `script.json` ne correspond plus (la voix dit le prix : la regénérer).
+
+Médias Premium du modèle de démonstration (D4-006) à déposer à la main dans `media/showcase/` (outil MCP wooplans `get_plan_file`) : `plan-rdc.webp` et `plan-etage.webp` (distributions cotées), `facade.png` et `nuit.png` (rendus originaux), et `r-*.webp` (autres rendus du site, facultatifs).
 
 ## Commandes
 
 ```sh
-cd video/vsl && npm install          # playwright-core seulement, Chromium est préinstallé
-node render.mjs --stills 2,20,40     # images clés pour vérifier une modification
-node render.mjs                      # vidéo complète muette, 30 i/s (≈ 4 min)
-node render.mjs --mode preview       # aperçu muet de 6 s
-node render.mjs --mode poster        # image d'aperçu
-node assemble.mjs main|preview|poster
-node export-subs.mjs
-GRADIUM_API_KEY=… node voice.mjs --sample   # accroche seule, pour valider la voix
-GRADIUM_API_KEY=… node voice.mjs            # voix complète, puis relancer render + assemble
+cd video/vsl && npm install
+node prepare.mjs                      # médias (+ déposer media/showcase/plan.webp et facade.png)
+GRADIUM_API_KEY=… node voice.mjs      # voix off → timings.json
+node build.mjs                        # index.html
+npx hyperframes lint .                # 0 erreur attendu
+npx hyperframes snapshot --at 2.5,13,22,44,82   # images clés à regarder
+npx hyperframes render -q delivery -w 4 -o out/vsl-master.mp4   # ≈ 2 min 30
+node finish.mjs                       # fichiers livrés
 ```
 
-Sans `out/voice.wav`, `assemble.mjs main` produit l'animatique muette. Avec la voix (et `audio/music.mp3` si présent), il produit la version finale : H.264 deux passes ≈ 1,15 Mb/s + AAC 96 kb/s, `faststart`.
+## Mise en ligne
 
-## Médias réels (non versionnés, dans `out/`)
+Les vidéos sont servies depuis le bucket R2 `cpbook-videos` par `/videos/<clé>.mp4`, avec un cache immuable : une nouvelle version prend une nouvelle clé.
 
-- `out/ecran/ecran.mp4` : enregistrement (1080 × 2400) d'écran de l'espace Premium (fiche Duplex D4-040), monté dans le téléphone du plan 4 et calé sur la voix (`cuts` dans `src/scenes.js`). Il affiche le prénom du compte : à garder hors du dépôt.
-- `out/temoignages/francis.mp4` et `renaud.mp4` (téléchargés depuis `/videos/testimonials/`) : Francis 10,4–15,4 s (vidéo), Renaud 42,3–46,7 s (audio seul, carte animée). Repères trouvés par transcription.
-- `assets/d4-040-cover.webp` : rendu 3D de D4-040 (plan 7).
+```sh
+npx wrangler r2 object put cpbook-videos/vsl-catalogue-premium-v2.mp4 --file out/vsl-catalogue-premium.mp4 --content-type video/mp4 --remote
+npx wrangler r2 object put cpbook-videos/vsl-catalogue-premium-apercu-v2.mp4 --file out/vsl-catalogue-premium-apercu.mp4 --content-type video/mp4 --remote
+```
 
-`render.mjs` extrait les images de ces vidéos au premier rendu.
+L'image d'attente est `public/assets/digital/vsl-poster-v2.webp` (copie de `out/vsl-poster.webp`).
