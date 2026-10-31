@@ -5,7 +5,7 @@
   },
   "price": 29000,
   "priceBefore": 60000,
-  "showcase": "V3-001",
+  "showcase": "D4-006",
   "lines": [
     {
       "id": "q1",
@@ -110,58 +110,68 @@
     }
   ],
   "showcaseData": {
-    "code": "V3-001",
-    "bedrooms": 3,
-    "bathrooms": 2,
-    "surface": 92,
+    "code": "D4-006",
+    "kind": "Duplex",
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "surface": 195,
+    "levels": "R+1",
     "building": [
       9,
-      13
+      14
     ],
     "land": [
       12,
-      20
+      21
     ],
-    "landArea": 250,
+    "landArea": 300,
     "budget": [
-      10600000,
-      13000000
+      37900000,
+      46300000
     ],
     "lots": [
       [
         "Fondation",
-        1483800
+        3601300
       ],
       [
-        "Élévations",
-        2172700
+        "Élévation RDC",
+        2653600
+      ],
+      [
+        "Dalle",
+        5117600
+      ],
+      [
+        "Élévation étage",
+        3032600
       ],
       [
         "Charpente et toiture",
-        1642800
+        4549000
       ],
       [
         "Crépissage et antivols",
-        1554400
+        5559800
       ],
       [
         "Portes et fenêtres",
-        1165800
+        4169900
       ],
       [
         "Plomberie et électricité",
-        971500
+        3474900
       ],
       [
         "Plafond et peinture",
-        1360100
+        4864900
       ],
       [
         "Carrelage",
-        1424900
+        5096400
       ]
     ],
-    "total": 11776000,
-    "source": "Fiche V3-001 (outil MCP wooplans get_plan, 31 oct. 2026)"
+    "total": 42120000,
+    "source": "Fiche D4-006 (outil MCP wooplans get_plan, 31 oct. 2026)"
   }
 }

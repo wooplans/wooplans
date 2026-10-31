@@ -2,9 +2,8 @@
 // - extraits des 4 témoignages publiés sur la page (/videos/testimonials/), découpés et au même niveau sonore ;
 // - rendus 3D de couverture des modèles publiés (page /catalogue) ;
 // - photo du témoignage audio de Renaud, logo, musique (mixkit « Let's Play Africa », licence libre mixkit).
-// Le plan coté et le rendu original du modèle de démonstration (V3-001) sont réservés aux membres Premium :
-// les déposer à la main dans media/showcase/ (plan.webp, facade.png), via l'outil MCP wooplans get_plan_file.
-// Sans eux, la couverture publique du modèle est utilisée et la scène du plan reste vide.
+// Le plan coté et le rendu original du modèle de démonstration (D4-006) sont réservés aux membres Premium :
+// les déposer à la main dans media/showcase/ (plan-rdc.webp, plan-etage.webp, facade.png, nuit.png), via l'outil MCP wooplans get_plan_file.
 import fs from "node:fs";
 import path from "node:path";
 import { here, media, run, script } from "./lib.mjs";
@@ -41,7 +40,7 @@ get(`${SITE}/assets/digital/temoignage-renaud.webp`, path.join(media, "renaud.we
 fs.copyFileSync(path.join(here, "..", "..", "public", "assets", "wooplans-logo-white.png"), path.join(media, "logo.png"));
 get("https://assets.mixkit.co/music/218/218.mp3", path.join(media, "music.mp3"));
 
-const missing = ["plan.webp", "facade.png"].filter((f) => !fs.existsSync(path.join(media, "showcase", f)));
+const missing = ["plan-rdc.webp", "plan-etage.webp", "facade.png"].filter((f) => !fs.existsSync(path.join(media, "showcase", f)));
 console.log(`médias prêts dans media/ (${picked.length} modèles trouvés, ${Math.min(COVERS, picked.length)} couvertures)`);
 if (missing.length) console.log(`à déposer à la main dans media/showcase/ : ${missing.join(", ")} (fichiers Premium de ${script.showcase})`);
 

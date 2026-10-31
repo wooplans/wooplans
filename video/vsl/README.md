@@ -8,9 +8,9 @@ Composée avec [HyperFrames](https://hyperframes.heygen.com) (HTML + GSAP, rendu
 | Scène | Voix off (Gradium, voix `TsRKBRWZGYldAeEI`) | Motion design |
 |---|---|---|
 | Accroche | Besoin d'inspiration ? Comparer plans et devis de près de 100 modèles | Mur de rendus 3D qui défile, « Plans + Devis », compteur jusqu'à 100 |
-| Catalogue | Nous avons créé le Catalogue Premium, nos meilleurs modèles réunis | Titre or « Premium », téléphone qui défile, rendus qui s'y rangent |
-| Plan / Devis / Terrain | Plan de distribution, devis poste par poste, terrain nécessaire | Vrai plan coté de la V3-001, ses 8 postes de devis et son total, terrain 12 × 20 m (250 m²) |
-| Clarté | Avant de vous engager, une idée claire et précise | Rendu de la V3-001, budget 10,6 – 13 M FCFA, ✓ Plan ✓ Devis ✓ Terrain |
+| Catalogue | Nous avons créé le Catalogue Premium, nos meilleurs modèles réunis | Titre or « Premium », fiche Premium du D4-006 qui défile dans le téléphone (rendus, plans RDC et étage, devis) |
+| Plan / Devis / Terrain | Plan de distribution, devis poste par poste, terrain nécessaire | Distributions cotées RDC et étage du Duplex D4-006, ses 10 postes de devis (42 120 000 FCFA), terrain 12 × 21 m (300 m²) |
+| Clarté | Avant de vous engager, une idée claire et précise | Rendu du D4-006, budget 37,9 – 46,3 M FCFA, ✓ Plan ✓ Devis ✓ Terrain |
 | Témoignages | « Ceux qui ont déjà obtenu le catalogue peuvent en témoigner » | Extraits réels : Ibrahim, Mamadou Bassirou, Francis (vidéo), Renaud (audio) |
 | Nouveaux plans | Accès gratuit aux nouveaux plans | Grille de modèles « Nouveau », tampon « Gratuit à vie » |
 | Offre | Prix promotionnel de 29 000 FCFA aujourd'hui, moins qu'une brouette | 60 000 FCFA barré, 29 000 FCFA, –52 %, brouette, bouton « Obtenir le catalogue » |
@@ -30,7 +30,7 @@ Musique : mixkit « Let's Play Africa » (licence libre mixkit), baissée pendan
 
 Le prix vient de `src/config/catalogue.json` (`price`, `priceBefore`) : `lib.mjs` refuse de construire si `script.json` ne correspond plus (la voix dit le prix : la regénérer).
 
-Médias Premium de la V3-001 à déposer à la main dans `media/showcase/` (outil MCP wooplans `get_plan_file`) : `plan.webp` (distribution cotée) et `facade.png` (rendu original).
+Médias Premium du modèle de démonstration (D4-006) à déposer à la main dans `media/showcase/` (outil MCP wooplans `get_plan_file`) : `plan-rdc.webp` et `plan-etage.webp` (distributions cotées), `facade.png` et `nuit.png` (rendus originaux), et `r-*.webp` (autres rendus du site, facultatifs).
 
 ## Commandes
 

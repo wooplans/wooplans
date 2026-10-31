@@ -12,8 +12,13 @@ const W = 1080, H = 1350;
 const r2 = (n) => Math.round(n * 1000) / 1000;
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const sd = script.showcaseData;
-const hasPlan = fs.existsSync(path.join(here, "media", "showcase", "plan.webp"));
-const facade = fs.existsSync(path.join(here, "media", "showcase", "facade.png")) ? "media/showcase/facade.png" : "media/showcase/cover.webp";
+// Modèle de démonstration (script.json « showcase ») : fichiers Premium déposés dans media/showcase/
+// (plan-rdc.webp, plan-etage.webp, facade.png, nuit.png, r-*.webp : voir README).
+const SC = path.join(here, "media", "showcase");
+for (const f of ["plan-rdc.webp", "plan-etage.webp", "facade.png"]) if (!fs.existsSync(path.join(SC, f))) throw new Error(`media/showcase/${f} manquant (fichiers Premium de ${script.showcase})`);
+const facade = "media/showcase/facade.png";
+const extraRenders = fs.readdirSync(SC).filter((f) => /^r-.*\.webp$/.test(f) || f === "nuit.png").sort().map((f) => `media/showcase/${f}`);
+const label = `${sd.kind} ${sd.code}`;
 const covers = fs.readdirSync(path.join(here, "media", "covers")).filter((f) => f.endsWith(".webp")).sort().map((f) => `media/covers/${f}`);
 if (covers.length < 12) throw new Error("couvertures manquantes : lancer node prepare.mjs");
 const cover = (i) => covers[i % covers.length];
@@ -108,31 +113,42 @@ const scAccroche = scene("accroche", `
     <div class="cmp-tag">à comparer avant de choisir</div>
   </div>`, 1);
 
-const screenImgs = Array.from({ length: 10 }, (_, i) => `<img src="${cover(i + 3)}" alt="">`).join("");
+// Écran du téléphone : la fiche Premium du modèle qui défile (rendus, distributions cotées, devis).
+const screenFiche = `<div class="fiche">
+  <div class="fi-bar"><b>${label}</b><span>Premium</span></div>
+  <img class="fi-cover" src="${facade}" alt="">
+  <div class="fi-chips"><span>${sd.bedrooms} ch.</span><span>${sd.surface} m²</span><span>${sd.levels}</span></div>
+  <div class="fi-h">Distribution RDC</div><img class="fi-plan" src="media/showcase/plan-rdc.webp" alt="">
+  <div class="fi-h">Distribution étage</div><img class="fi-plan" src="media/showcase/plan-etage.webp" alt="">
+  <div class="fi-h">Devis poste par poste</div>
+  ${sd.lots.slice(0, 6).map(([l, a]) => `<div class="fi-row"><span>${esc(l)}</span><b>${fcfa(a)}</b></div>`).join("")}
+  <div class="fi-h">Rendus 3D</div>${extraRenders.map((r) => `<img class="fi-render" src="${r}" alt="">`).join("")}
+</div>`;
 const flyPos = [[60, 250], [800, 210], [40, 620], [830, 560], [70, 960], [810, 930]];
 const scCatalogue = scene("catalogue", `
   <div class="premium"><span>Catalogue</span><b>Premium</b><i class="shine"></i></div>
-  <div class="phone"><div class="notch"></div><div class="screen"><div class="grid">${screenImgs}${screenImgs}</div></div></div>
+  <div class="phone"><div class="notch"></div><div class="screen">${screenFiche}</div></div>
   ${flyPos.map(([x, y], i) => `<img class="fly f${i}" src="${cover(i + 12)}" alt="" style="left:${x}px;top:${y}px">`).join("")}`, 2);
 
 const pill = (n, txt) => `<div class="pill"><span>${n}</span>${txt}</div>`;
 const scPlan = scene("plan", `
   ${pill(1, "Plan de distribution")}
-  <div class="sheet plan-sheet"><img class="plan-img" src="${hasPlan ? "media/showcase/plan.webp" : "media/showcase/cover.webp"}" alt=""><div class="scan"></div></div>
+  <div class="sheet plan-sheet ps1"><img class="plan-img" src="media/showcase/plan-rdc.webp" alt=""><div class="scan"></div><span class="lvl">RDC</span></div>
+  <div class="sheet plan-sheet ps2"><img class="plan-img" src="media/showcase/plan-etage.webp" alt=""><div class="scan"></div><span class="lvl">Étage</span></div>
   <div class="tagc tg1"><b>${sd.bedrooms}</b> chambres</div>
-  <div class="tagc tg2"><b>${sd.surface} m²</b> habitables</div>
+  <div class="tagc tg2"><b>${sd.surface} m²</b></div>
   <div class="tagc tg3"><b>${sd.bathrooms}</b> salles de bain</div>
-  <div class="ref">Villa ${sd.code}</div>`, 3);
+  <div class="ref">${label}</div>`, 3);
 
 const scDevis = scene("devis", `
   ${pill(2, "Devis poste par poste")}
   <div class="sheet devis-sheet">
-    <div class="dv-head"><span>Devis de construction</span><span>Villa ${sd.code}</span></div>
+    <div class="dv-head"><span>Devis de construction</span><span>${label}</span></div>
     ${sd.lots.map(([l, a], i) => `<div class="dv-row r${i}"><span>${esc(l)}</span><b>${fcfa(a)}</b></div>`).join("")}
     <div class="dv-total"><span>Total estimé</span><b><span id="dvt">0</span> FCFA</b></div>
   </div>`, 4);
 
-const px = 34, [lw, ld] = sd.land, [bw, bd] = sd.building;
+const px = 32, [lw, ld] = sd.land, [bw, bd] = sd.building;
 const LX = (W - lw * px) / 2, LY = 300;
 const scTerrain = scene("terrain", `
   ${pill(3, "Terrain nécessaire")}
@@ -236,24 +252,28 @@ tl.fromTo(".premium span", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 
 tl.fromTo(".premium b", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.6, ease: B }, T.c1.s + 2.35);
 tl.fromTo(".premium .shine", { x: -700 }, { x: 900, duration: 1.1, ease: "power2.inOut" }, T.c1.s + 2.9);
 tl.fromTo(".phone", { y: 900, rotation: 8 }, { y: 0, rotation: 0, duration: 0.9, ease: E }, S.catalogue.s + 0.1);
-tl.fromTo(".screen .grid", { y: 0 }, { y: -470, duration: S.catalogue.e - S.catalogue.s, ease: "none" }, S.catalogue.s);
+// Défilement de la fiche : couverture, puis distribution RDC, étage, devis et rendus.
+[[S.catalogue.s + 1.6, -300], [T.c1.e - 0.6, -770], [T.c2.s + 1.2, -1230], [T.c2.e - 0.4, -1700]].forEach(([at, y]) => tl.to(".fiche", { y, duration: 0.9, ease: "power2.inOut" }, at));
 tl.fromTo(".fly", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.08 }, T.c2.s);
 ${flyPos.map(([x, y], i) => `tl.to(".f${i}", { x: ${W / 2 - 110 - x}, y: ${700 - y}, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + ${(1.4 + i * 0.12).toFixed(2)});`).join("\n")}
 tl.to(".phone", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "power1.inOut" }, T.c2.s + 1.9);
 
 // 3. Plan de distribution
 tl.fromTo("#sc-plan .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.plan.s + 0.2);
-tl.fromTo(".plan-sheet", { opacity: 0, y: 80, rotation: -3 }, { opacity: 1, y: 0, rotation: 0, duration: 0.7, ease: E }, S.plan.s + 0.2);
-tl.fromTo(".plan-img", { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.inOut" }, S.plan.s + 0.6);
-tl.fromTo(".scan", { y: 0, opacity: 1 }, { y: 764, duration: 1.6, ease: "power2.inOut" }, S.plan.s + 0.6);
-tl.to(".scan", { opacity: 0, duration: 0.2 }, S.plan.s + 2.2);
+tl.fromTo(".ps1", { opacity: 0, y: 80, rotation: -6 }, { opacity: 1, y: 0, rotation: -2, duration: 0.7, ease: E }, S.plan.s + 0.2);
+tl.fromTo(".ps2", { opacity: 0, y: 80, rotation: 6 }, { opacity: 1, y: 0, rotation: 2, duration: 0.7, ease: E }, S.plan.s + 0.6);
+[".ps1", ".ps2"].forEach((p, i) => {
+  tl.fromTo(p + " .plan-img", { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.fromTo(p + " .scan", { y: 0, opacity: 1 }, { y: 470, duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.to(p + " .scan", { opacity: 0, duration: 0.2 }, S.plan.s + 1.9 + i * 0.4);
+});
 tl.fromTo(".tagc", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.3 }, S.plan.s + 1.6);
 tl.fromTo("#sc-plan .ref", { opacity: 0 }, { opacity: 1, duration: 0.4 }, S.plan.s + 1.0);
 
 // 4. Devis poste par poste
 tl.fromTo("#sc-devis .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.devis.s + 0.15);
 tl.fromTo(".devis-sheet", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, S.devis.s + 0.1);
-tl.fromTo(".dv-row", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.35, ease: E, stagger: 0.16 }, S.devis.s + 0.45);
+tl.fromTo(".dv-row", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.35, ease: E, stagger: 0.13 }, S.devis.s + 0.45);
 tl.fromTo(".dv-total", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: B }, S.devis.s + 1.6);
 const dv = { v: 0 };
 tl.fromTo(dv, { v: 0 }, { v: ${sd.total}, duration: 1.2, ease: "power2.out", onUpdate: () => { document.getElementById("dvt").textContent = fmt(dv.v); } }, S.devis.s + 1.7);

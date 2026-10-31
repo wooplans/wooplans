@@ -55,11 +55,19 @@ em { font-style: normal; color: var(--gold); }
 .premium b { display: block; font-size: 150px; font-weight: 800; letter-spacing: -.03em; line-height: 1; text-transform: uppercase;
   background: linear-gradient(180deg, #F6DE9C, var(--gold) 55%, #B8913A); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .premium .shine { position: absolute; top: 0; left: 0; width: 140px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-20deg); }
-.phone { position: absolute; left: 330px; top: 430px; width: 420px; height: 760px; border-radius: 56px; background: #0b1414; padding: 16px; box-shadow: 0 30px 70px rgba(0,0,0,.5), 0 0 0 4px #2a3a3a; }
+.phone { position: absolute; left: 340px; top: 395px; width: 400px; height: 700px; border-radius: 56px; background: #0b1414; padding: 16px; box-shadow: 0 30px 70px rgba(0,0,0,.5), 0 0 0 4px #2a3a3a; }
 .notch { position: absolute; left: 50%; top: 24px; width: 120px; height: 28px; margin-left: -60px; border-radius: 20px; background: #0b1414; z-index: 2; }
 .screen { width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #F4F7F6; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 60px 12px 12px; }
-.grid img { width: 100%; height: 106px; object-fit: cover; border-radius: 12px; }
+.fiche { padding: 58px 12px 20px; color: var(--ink); }
+.fi-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 14px; background: var(--teal); color: #fff; font-size: 22px; }
+.fi-bar span { font-size: 15px; font-weight: 800; padding: 4px 10px; border-radius: 999px; background: var(--gold); color: var(--teal-xdk); }
+.fi-cover, .fi-render { display: block; width: 100%; height: 205px; object-fit: cover; border-radius: 14px; margin-top: 10px; }
+.fi-chips { display: flex; gap: 8px; margin-top: 10px; }
+.fi-chips span { font-size: 17px; font-weight: 800; padding: 6px 12px; border-radius: 10px; background: #E3EFEE; color: var(--teal); }
+.fi-h { margin: 18px 0 6px; font-size: 19px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: .03em; }
+.fi-plan { display: block; width: 100%; height: 380px; object-fit: contain; background: #fff; border-radius: 14px; border: 2px solid #DCE4E3; }
+.fi-row { display: flex; justify-content: space-between; font-size: 17px; padding: 7px 4px; border-bottom: 1px dashed #CBD6D5; }
+.fi-row b { font-variant-numeric: tabular-nums; }
 .fly { position: absolute; width: 220px; height: 124px; object-fit: cover; border-radius: 16px; box-shadow: 0 14px 30px rgba(0,0,0,.4); border: 4px solid #fff; }
 
 /* 3–5. Fonctionnalités */
@@ -67,16 +75,18 @@ em { font-style: normal; color: var(--gold); }
   font-size: 50px; font-weight: 800; padding: 14px 36px 14px 16px; border-radius: 999px; background: #fff; color: var(--teal); box-shadow: 0 14px 34px rgba(0,0,0,.28); }
 .pill span { width: 66px; height: 66px; border-radius: 50%; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; }
 .sheet { position: absolute; background: #fff; border-radius: 28px; box-shadow: 0 30px 70px rgba(0,0,0,.4); color: var(--ink); }
-.plan-sheet { left: 220px; top: 250px; width: 640px; height: 770px; padding: 18px; overflow: hidden; }
+.plan-sheet { width: 480px; height: 500px; padding: 14px; overflow: hidden; }
+.ps1 { left: 50px; top: 250px; } .ps2 { left: 550px; top: 330px; }
+.lvl { position: absolute; left: 14px; top: 14px; font-size: 26px; font-weight: 800; padding: 4px 14px; border-radius: 10px; background: var(--teal); color: #fff; }
 .plan-img { width: 100%; height: 100%; object-fit: contain; }
 .scan { position: absolute; left: 0; right: 0; height: 6px; background: var(--orange); box-shadow: 0 0 24px var(--orange); }
 .tagc { position: absolute; font-size: 36px; font-weight: 700; padding: 14px 24px; border-radius: 18px; background: var(--gold); color: var(--teal-xdk); box-shadow: 0 12px 26px rgba(0,0,0,.3); }
 .tagc b { font-weight: 800; }
-.tg1 { left: 60px; top: 380px; } .tg2 { right: 50px; top: 600px; } .tg3 { left: 70px; top: 820px; }
-.ref { position: absolute; right: 230px; top: 1030px; font-size: 30px; font-weight: 700; color: #CFE5E3; }
+.tg1 { left: 60px; top: 880px; } .tg2 { left: 395px; top: 880px; } .tg3 { left: 640px; top: 880px; }
+.ref { position: absolute; right: 60px; top: 260px; font-size: 30px; font-weight: 700; color: #CFE5E3; }
 .devis-sheet { left: 90px; top: 250px; width: 900px; padding: 30px 40px; }
 .dv-head { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: .04em; padding-bottom: 14px; border-bottom: 3px solid var(--teal); margin-bottom: 6px; }
-.dv-row { display: flex; justify-content: space-between; font-size: 36px; padding: 13px 0; border-bottom: 2px dashed #DCE4E3; }
+.dv-row { display: flex; justify-content: space-between; font-size: 33px; padding: 9px 0; border-bottom: 2px dashed #DCE4E3; }
 .dv-row b { font-weight: 800; font-variant-numeric: tabular-nums; }
 .dv-total { display: flex; justify-content: space-between; margin-top: 18px; padding: 18px 22px; border-radius: 16px; background: var(--teal); color: #fff; font-size: 40px; font-weight: 800; }
 .dv-total b { color: var(--gold); font-variant-numeric: tabular-nums; }
@@ -160,40 +170,50 @@ em { font-style: normal; color: var(--gold); }
 </div>
 <div id="sc-catalogue" class="scene clip" data-start="10.016" data-duration="8.814" data-track-index="1" style="z-index:2">
   <div class="premium"><span>Catalogue</span><b>Premium</b><i class="shine"></i></div>
-  <div class="phone"><div class="notch"></div><div class="screen"><div class="grid"><img src="media/covers/03.webp" alt=""><img src="media/covers/04.webp" alt=""><img src="media/covers/05.webp" alt=""><img src="media/covers/06.webp" alt=""><img src="media/covers/07.webp" alt=""><img src="media/covers/08.webp" alt=""><img src="media/covers/09.webp" alt=""><img src="media/covers/10.webp" alt=""><img src="media/covers/11.webp" alt=""><img src="media/covers/12.webp" alt=""><img src="media/covers/03.webp" alt=""><img src="media/covers/04.webp" alt=""><img src="media/covers/05.webp" alt=""><img src="media/covers/06.webp" alt=""><img src="media/covers/07.webp" alt=""><img src="media/covers/08.webp" alt=""><img src="media/covers/09.webp" alt=""><img src="media/covers/10.webp" alt=""><img src="media/covers/11.webp" alt=""><img src="media/covers/12.webp" alt=""></div></div></div>
+  <div class="phone"><div class="notch"></div><div class="screen"><div class="fiche">
+  <div class="fi-bar"><b>Duplex D4-006</b><span>Premium</span></div>
+  <img class="fi-cover" src="media/showcase/facade.png" alt="">
+  <div class="fi-chips"><span>4 ch.</span><span>195 m²</span><span>R+1</span></div>
+  <div class="fi-h">Distribution RDC</div><img class="fi-plan" src="media/showcase/plan-rdc.webp" alt="">
+  <div class="fi-h">Distribution étage</div><img class="fi-plan" src="media/showcase/plan-etage.webp" alt="">
+  <div class="fi-h">Devis poste par poste</div>
+  <div class="fi-row"><span>Fondation</span><b>3 601 300</b></div><div class="fi-row"><span>Élévation RDC</span><b>2 653 600</b></div><div class="fi-row"><span>Dalle</span><b>5 117 600</b></div><div class="fi-row"><span>Élévation étage</span><b>3 032 600</b></div><div class="fi-row"><span>Charpente et toiture</span><b>4 549 000</b></div><div class="fi-row"><span>Crépissage et antivols</span><b>5 559 800</b></div>
+  <div class="fi-h">Rendus 3D</div><img class="fi-render" src="media/showcase/nuit.png" alt=""><img class="fi-render" src="media/showcase/r-1793181949463-0vjFIrwP.webp" alt=""><img class="fi-render" src="media/showcase/r-1793181999999-N3uT74sj.webp" alt=""><img class="fi-render" src="media/showcase/r-1793182021806-f91UA-uy.webp" alt="">
+</div></div></div>
   <img class="fly f0" src="media/covers/12.webp" alt="" style="left:60px;top:250px"><img class="fly f1" src="media/covers/13.webp" alt="" style="left:800px;top:210px"><img class="fly f2" src="media/covers/14.webp" alt="" style="left:40px;top:620px"><img class="fly f3" src="media/covers/15.webp" alt="" style="left:830px;top:560px"><img class="fly f4" src="media/covers/16.webp" alt="" style="left:70px;top:960px"><img class="fly f5" src="media/covers/17.webp" alt="" style="left:810px;top:930px">
 </div>
 <div id="sc-plan" class="scene clip" data-start="18.48" data-duration="4.449" data-track-index="1" style="z-index:3">
   <div class="pill"><span>1</span>Plan de distribution</div>
-  <div class="sheet plan-sheet"><img class="plan-img" src="media/showcase/plan.webp" alt=""><div class="scan"></div></div>
-  <div class="tagc tg1"><b>3</b> chambres</div>
-  <div class="tagc tg2"><b>92 m²</b> habitables</div>
-  <div class="tagc tg3"><b>2</b> salles de bain</div>
-  <div class="ref">Villa V3-001</div>
+  <div class="sheet plan-sheet ps1"><img class="plan-img" src="media/showcase/plan-rdc.webp" alt=""><div class="scan"></div><span class="lvl">RDC</span></div>
+  <div class="sheet plan-sheet ps2"><img class="plan-img" src="media/showcase/plan-etage.webp" alt=""><div class="scan"></div><span class="lvl">Étage</span></div>
+  <div class="tagc tg1"><b>4</b> chambres</div>
+  <div class="tagc tg2"><b>195 m²</b></div>
+  <div class="tagc tg3"><b>3</b> salles de bain</div>
+  <div class="ref">Duplex D4-006</div>
 </div>
 <div id="sc-devis" class="scene clip" data-start="22.579" data-duration="3.709" data-track-index="1" style="z-index:4">
   <div class="pill"><span>2</span>Devis poste par poste</div>
   <div class="sheet devis-sheet">
-    <div class="dv-head"><span>Devis de construction</span><span>Villa V3-001</span></div>
-    <div class="dv-row r0"><span>Fondation</span><b>1 483 800</b></div><div class="dv-row r1"><span>Élévations</span><b>2 172 700</b></div><div class="dv-row r2"><span>Charpente et toiture</span><b>1 642 800</b></div><div class="dv-row r3"><span>Crépissage et antivols</span><b>1 554 400</b></div><div class="dv-row r4"><span>Portes et fenêtres</span><b>1 165 800</b></div><div class="dv-row r5"><span>Plomberie et électricité</span><b>971 500</b></div><div class="dv-row r6"><span>Plafond et peinture</span><b>1 360 100</b></div><div class="dv-row r7"><span>Carrelage</span><b>1 424 900</b></div>
+    <div class="dv-head"><span>Devis de construction</span><span>Duplex D4-006</span></div>
+    <div class="dv-row r0"><span>Fondation</span><b>3 601 300</b></div><div class="dv-row r1"><span>Élévation RDC</span><b>2 653 600</b></div><div class="dv-row r2"><span>Dalle</span><b>5 117 600</b></div><div class="dv-row r3"><span>Élévation étage</span><b>3 032 600</b></div><div class="dv-row r4"><span>Charpente et toiture</span><b>4 549 000</b></div><div class="dv-row r5"><span>Crépissage et antivols</span><b>5 559 800</b></div><div class="dv-row r6"><span>Portes et fenêtres</span><b>4 169 900</b></div><div class="dv-row r7"><span>Plomberie et électricité</span><b>3 474 900</b></div><div class="dv-row r8"><span>Plafond et peinture</span><b>4 864 900</b></div><div class="dv-row r9"><span>Carrelage</span><b>5 096 400</b></div>
     <div class="dv-total"><span>Total estimé</span><b><span id="dvt">0</span> FCFA</b></div>
   </div>
 </div>
 <div id="sc-terrain" class="scene clip" data-start="25.938" data-duration="4.229" data-track-index="1" style="z-index:5">
   <div class="pill"><span>3</span>Terrain nécessaire</div>
   <svg class="land" width="1080" height="1060" viewBox="0 0 1080 1060">
-    <rect class="lot" x="336" y="300" width="408" height="680" rx="6"/>
-    <rect class="house" x="387" y="381.6" width="306" height="442" rx="4"/>
-    <text class="hl" x="540" y="602.6">Maison 9 × 13 m</text>
-    <g class="dimw"><line x1="336" y1="266" x2="744" y2="266"/><text x="540" y="250">12 m</text></g>
-    <g class="dimd"><line x1="302" y1="300" x2="302" y2="980"/><text x="284" y="640" transform="rotate(-90 284 640)">20 m</text></g>
+    <rect class="lot" x="348" y="300" width="384" height="672" rx="6"/>
+    <rect class="house" x="396" y="376.8" width="288" height="448" rx="4"/>
+    <text class="hl" x="540" y="600.8">Maison 9 × 14 m</text>
+    <g class="dimw"><line x1="348" y1="266" x2="732" y2="266"/><text x="540" y="250">12 m</text></g>
+    <g class="dimd"><line x1="314" y1="300" x2="314" y2="972"/><text x="296" y="636" transform="rotate(-90 296 636)">21 m</text></g>
   </svg>
-  <div class="land-badge">Terrain minimum&nbsp;: <b>250 m²</b></div>
+  <div class="land-badge">Terrain minimum&nbsp;: <b>300 m²</b></div>
 </div>
 <div id="sc-clarte" class="scene clip" data-start="29.817" data-duration="8.271" data-track-index="1" style="z-index:6">
   <div class="bgimg" style="background-image:url(media/showcase/facade.png)"></div>
   <div class="hero-img"><img src="media/showcase/facade.png" alt=""></div>
-  <div class="budget"><small>Budget de construction estimé</small><b>10,6 – 13,0 M FCFA</b></div>
+  <div class="budget"><small>Budget de construction estimé</small><b>37,9 – 46,3 M FCFA</b></div>
   <div class="checks"><span class="ck k1">Plan</span><span class="ck k2">Devis</span><span class="ck k3">Terrain</span></div>
 </div>
 <div id="sc-temoignages" class="scene clip" data-start="37.738" data-duration="30.57" data-track-index="1" style="z-index:7">
@@ -313,7 +333,8 @@ tl.fromTo(".premium span", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 
 tl.fromTo(".premium b", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.6, ease: B }, T.c1.s + 2.35);
 tl.fromTo(".premium .shine", { x: -700 }, { x: 900, duration: 1.1, ease: "power2.inOut" }, T.c1.s + 2.9);
 tl.fromTo(".phone", { y: 900, rotation: 8 }, { y: 0, rotation: 0, duration: 0.9, ease: E }, S.catalogue.s + 0.1);
-tl.fromTo(".screen .grid", { y: 0 }, { y: -470, duration: S.catalogue.e - S.catalogue.s, ease: "none" }, S.catalogue.s);
+// Défilement de la fiche : couverture, puis distribution RDC, étage, devis et rendus.
+[[S.catalogue.s + 1.6, -300], [T.c1.e - 0.6, -770], [T.c2.s + 1.2, -1230], [T.c2.e - 0.4, -1700]].forEach(([at, y]) => tl.to(".fiche", { y, duration: 0.9, ease: "power2.inOut" }, at));
 tl.fromTo(".fly", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.08 }, T.c2.s);
 tl.to(".f0", { x: 370, y: 450, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.40);
 tl.to(".f1", { x: -370, y: 490, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + 1.52);
@@ -325,20 +346,23 @@ tl.to(".phone", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "pow
 
 // 3. Plan de distribution
 tl.fromTo("#sc-plan .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.plan.s + 0.2);
-tl.fromTo(".plan-sheet", { opacity: 0, y: 80, rotation: -3 }, { opacity: 1, y: 0, rotation: 0, duration: 0.7, ease: E }, S.plan.s + 0.2);
-tl.fromTo(".plan-img", { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.inOut" }, S.plan.s + 0.6);
-tl.fromTo(".scan", { y: 0, opacity: 1 }, { y: 764, duration: 1.6, ease: "power2.inOut" }, S.plan.s + 0.6);
-tl.to(".scan", { opacity: 0, duration: 0.2 }, S.plan.s + 2.2);
+tl.fromTo(".ps1", { opacity: 0, y: 80, rotation: -6 }, { opacity: 1, y: 0, rotation: -2, duration: 0.7, ease: E }, S.plan.s + 0.2);
+tl.fromTo(".ps2", { opacity: 0, y: 80, rotation: 6 }, { opacity: 1, y: 0, rotation: 2, duration: 0.7, ease: E }, S.plan.s + 0.6);
+[".ps1", ".ps2"].forEach((p, i) => {
+  tl.fromTo(p + " .plan-img", { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.fromTo(p + " .scan", { y: 0, opacity: 1 }, { y: 470, duration: 1.3, ease: "power2.inOut" }, S.plan.s + 0.6 + i * 0.4);
+  tl.to(p + " .scan", { opacity: 0, duration: 0.2 }, S.plan.s + 1.9 + i * 0.4);
+});
 tl.fromTo(".tagc", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.3 }, S.plan.s + 1.6);
 tl.fromTo("#sc-plan .ref", { opacity: 0 }, { opacity: 1, duration: 0.4 }, S.plan.s + 1.0);
 
 // 4. Devis poste par poste
 tl.fromTo("#sc-devis .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.devis.s + 0.15);
 tl.fromTo(".devis-sheet", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, S.devis.s + 0.1);
-tl.fromTo(".dv-row", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.35, ease: E, stagger: 0.16 }, S.devis.s + 0.45);
+tl.fromTo(".dv-row", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.35, ease: E, stagger: 0.13 }, S.devis.s + 0.45);
 tl.fromTo(".dv-total", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, ease: B }, S.devis.s + 1.6);
 const dv = { v: 0 };
-tl.fromTo(dv, { v: 0 }, { v: 11776000, duration: 1.2, ease: "power2.out", onUpdate: () => { document.getElementById("dvt").textContent = fmt(dv.v); } }, S.devis.s + 1.7);
+tl.fromTo(dv, { v: 0 }, { v: 42120000, duration: 1.2, ease: "power2.out", onUpdate: () => { document.getElementById("dvt").textContent = fmt(dv.v); } }, S.devis.s + 1.7);
 
 // 5. Terrain
 tl.fromTo("#sc-terrain .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.terrain.s + 0.15);
