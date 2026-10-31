@@ -73,17 +73,29 @@ test("page de vente : la feuille de route et la FAQ reprennent les prix fixes de
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
   assert.match(b, /id="contenu-plans"/);
-  // Pas de palier de prix annoncé : le prix reste celui de src/config/catalogue.json.
-  assert.doesNotMatch(b, /data-wp-threshold|60[  ]000|Prix avant/);
+  // Pas de palier ni de compte à rebours : prix promotionnel avec le prix normal barré (src/config/catalogue.json).
+  assert.doesNotMatch(b, /data-wp-threshold|data-wp-left|Prix avant 100/);
+  const before = catalogue.priceBefore.toLocaleString("fr-FR").replace(/\s/g, " ");
+  assert.ok(catalogue.priceBefore > CATALOGUE_PRICE);
+  assert.match(b, new RegExp(`class="promo"[^>]*>[^\\n]*<s>${before}</s>`)); // bandeau
+  assert.equal(b.match(new RegExp(`<s>${before} FCFA</s>`, "g"))?.length, 3); // héro, offre, barre collante
+  assert.match(b, new RegExp(`–${Math.round((1 - CATALOGUE_PRICE / catalogue.priceBefore) * 100)} %`));
+});
+
+test("page de vente : témoignages juste après le héro, puis le parcours", () => {
+  const b = readFileSync(PAGE, "utf8");
+  const hero = b.indexOf("</header>"), temo = b.indexOf('id="temoignages"'), road = b.indexOf('id="parcours"');
+  assert.ok(hero > 0 && temo > hero && road > temo);
+  assert.doesNotMatch(b.slice(hero, temo).replace(/<section $/, ""), /<section/);
 });
 
 test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
   const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
   // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
-  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, /\/assets\/digital\/vsl-poster\.webp/);
+  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
+  assert.match(b, /\/assets\/digital\/vsl-poster-v2\.webp/);
   assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
   // La voix off renvoie au compteur « juste sous la vidéo ».
   assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);

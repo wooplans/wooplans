@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0F5B59">
 <link rel="icon" href="/favicon.png">
-<link rel="preload" as="image" href="/assets/digital/vsl-poster.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/digital/vsl-poster-v2.webp" fetchpriority="high">
 <style>
 :root{--teal:#0F5B59;--teal-dk:#0A3F3E;--teal-xdk:#072E2D;--orange:#F08A2E;--orange-dk:#D4731A;--red:#C75B3A;--gold:#E7C36C;--dark:#1E2933;--gray:#6B7280;--line:#E5E9EE;--bg:#F5F7F9;--white:#fff;--r:16px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -36,8 +36,9 @@ section{padding:56px 0}
 .stars{color:#F5B400;letter-spacing:1px}
 
 /* Barre d'urgence */
-.urgency{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:7px 10px}
-.urgency strong{font-variant-numeric:tabular-nums;color:#FFE1B8;margin-left:4px}
+.promo{position:sticky;top:0;z-index:60;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:7px 10px}
+.promo s{opacity:.75;font-weight:600}
+.promo b{color:#FFE1B8;font-variant-numeric:tabular-nums}
 
 /* Hero */
 .hero{background:radial-gradient(120% 80% at 50% 0%,#14706D 0%,var(--teal) 45%,var(--teal-dk) 100%);color:#fff;padding:clamp(12px,2.2svh,28px) 0 clamp(14px,2.4svh,28px)}
@@ -73,6 +74,7 @@ section{padding:56px 0}
 .price .now{font-size:clamp(30px,8.6vw,46px);font-weight:900;letter-spacing:-.03em;white-space:nowrap}
 .price .now small{font-size:14px;font-weight:700;margin-left:3px}
 .badge{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px}
+.price-note{text-align:center;font-size:12.5px;font-weight:700;color:#FFE1B8;margin:-6px 0 clamp(8px,1.6svh,12px)}
 .cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:14px 20px;border-radius:14px;background:var(--orange);color:#fff;font-size:17.5px;font-weight:800;box-shadow:0 10px 26px rgba(240,138,46,.38);transition:transform .12s,background .2s}
 .cta:active{transform:scale(.98);background:var(--orange-dk)}
 .cta svg{width:20px;height:20px;fill:currentColor;flex-shrink:0}
@@ -156,14 +158,8 @@ section{padding:56px 0}
 .road h3{font-size:17px;margin:6px 0 4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .road .tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;background:var(--orange);color:#fff}
 .road p{font-size:14.5px;color:#46525E}
-.road .price{display:block;justify-content:flex-start;white-space:normal;margin:8px 0 0;font-size:14px;font-weight:800;color:var(--teal)}
-.road .deduct{display:grid;gap:4px;margin-top:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
-.road .deduct b{color:var(--teal)}
-.road .deliv-line{margin-top:8px}
-.road .deliv-line b{color:var(--dark)}
-.road .deliv-line a{color:var(--teal);font-weight:700}
-.road-note{margin-top:20px;border-left:4px solid var(--gold);background:#FFFBEF;border-radius:0 12px 12px 0;padding:12px 14px;font-size:14.5px}
-.road-note a{color:var(--teal);font-weight:700}
+.road p b{color:var(--teal)}
+.road p a{color:var(--teal);font-weight:700}
 .steps{counter-reset:s;display:grid;gap:12px;margin-top:20px}
 .step{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .step::before{counter-increment:s;content:counter(s);flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center}
@@ -204,13 +200,7 @@ section{padding:56px 0}
 .incl li::before{content:"✓";color:var(--teal);font-weight:900}
 .incl li.bonus{background:#FFF6E8;border:1px dashed var(--orange);border-radius:12px;padding:10px 12px}
 .incl li.bonus::before{content:"🎁"}
-.meter{margin:0 0 14px;display:grid;gap:7px}
-.meter-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:13.5px;font-weight:700;color:var(--dark)}
-.meter-top b{color:var(--teal);font-variant-numeric:tabular-nums}
-.meter-top span:last-child{color:var(--red)}
-.meter .track{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
-.meter .track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--red))}
-.meter p{font-size:13px;color:var(--gray)}
+.promo-note{margin:-6px 0 14px;font-size:13px;font-weight:700;color:var(--red)}
 .guar{display:flex;gap:12px;align-items:center;margin-top:14px;padding:12px;border-radius:12px;background:var(--bg);font-size:13.5px}
 .guar b{display:block}
 .seal{flex-shrink:0;width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--teal-xdk);font-weight:900;font-size:13px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -243,6 +233,7 @@ footer a{color:rgba(255,255,255,.7)}
 .sticky .p{flex:1;min-width:0;line-height:1.2}
 .sticky .p b{font-size:18px}
 .sticky .p small{display:block;font-size:12px;color:var(--red);font-weight:700;font-variant-numeric:tabular-nums}
+.sticky .p small s{color:var(--gray);font-weight:600}
 .sticky .cta{width:auto;min-height:48px;font-size:15.5px;padding:10px 18px;box-shadow:none}
 .wa{position:fixed;right:14px;bottom:92px;z-index:65;opacity:0;pointer-events:none;transition:opacity .3s;width:52px;height:52px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .wa svg{width:28px;height:28px;fill:#fff}
@@ -308,7 +299,7 @@ footer a{color:rgba(255,255,255,.7)}
 </head>
 <body>
 
-<div class="urgency" role="status" data-wp-threshold>Plus que <strong data-wp-left>quelques modèles</strong> avant le passage à 60&nbsp;000&nbsp;FCFA</div>
+<div class="promo" role="status">Prix promo aujourd'hui&nbsp;: <s>{{PRIX_AVANT_NBSP}}</s> <b>{{PRIX_NBSP}}&nbsp;FCFA</b> · –{{REMISE}}&nbsp;%</div>
 
 <header class="hero">
   <div class="wrap wide">
@@ -321,12 +312,13 @@ footer a{color:rgba(255,255,255,.7)}
       </div>
       <div>
         <div class="vsl" id="vsl" onclick="playVsl()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playVsl()}" role="button" tabindex="0" aria-label="Regarder la vidéo de présentation avec le son">
-          <img src="/assets/digital/vsl-poster.webp" alt="" width="540" height="675" fetchpriority="high">
-          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu.mp4?v={{PRIX_XAF}}"></video>
+          <img src="/assets/digital/vsl-poster-v2.webp" alt="" width="540" height="675" fetchpriority="high">
+          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu-v2.mp4?v={{PRIX_XAF}}"></video>
           <div class="play"><i></i>Voir la présentation</div>
         </div>
-        <p class="vsl-count" data-wp-threshold><b><span data-wp-count>Plus de 60</span> modèles</b> · plus que <b data-wp-left>quelques modèles</b> avant le passage à 60&nbsp;000&nbsp;FCFA</p>
-        <div class="price"><s>60 000 FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span><span class="badge">–{{REMISE}} %</span></div>
+        <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
+        <div class="price"><s>{{PRIX_AVANT}} FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span><span class="badge">–{{REMISE}} %</span></div>
+        <p class="price-note">Prix promotionnel · paiement unique</p>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
         <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
         <div class="trust desk"><span>Accès immédiat</span><span>Paiement unique</span><span>Garantie 7 jours</span></div>
@@ -340,36 +332,7 @@ footer a{color:rgba(255,255,255,.7)}
 </header>
 
 <main>
-<section id="parcours">
-  <div class="wrap">
-    <span class="eyebrow">Votre parcours</span>
-    <h2>De votre choix au démarrage du chantier.</h2>
-    <p class="lead">Le Catalogue Premium est la première étape : il sert à choisir votre maison et à connaître son budget. On construit ensuite avec les plans complets.</p>
-    <ol class="road">
-      <li class="here"><span class="dot">1</span><div>
-        <h3>Choisissez votre maison <span class="tag">Vous commencez ici</span></h3>
-        <p>Avec le Catalogue Premium, comparez les modèles, leurs plans cotés et leur devis poste par poste, et choisissez en famille la maison qui correspond à votre budget.</p>
-        <span class="price">Catalogue Premium · {{PRIX_NBSP}}&nbsp;FCFA</span>
-      </div></li>
-      <li><span class="dot">2</span><div>
-        <h3>Obtenez vos plans complets</h3>
-        <p>Nos architectes adaptent le modèle choisi à votre terrain et à vos besoins. Ce sont ces plans qui servent à construire.</p>
-        <p class="deliv-line"><b>10 plans livrés</b> : fondation, distribution, 4 façades, 2 coupes, toiture et fosse septique. <a href="#contenu-plans">Voir le détail</a></p>
-        <div class="deduct">
-          <span>Prix fixe, connu d'avance : <b>149&nbsp;000&nbsp;FCFA</b> pour une villa, <b>249&nbsp;000&nbsp;FCFA</b> pour un duplex.</span>
-          <span>Les {{PRIX_NBSP}}&nbsp;FCFA du catalogue sont déduits : vous payez <b>{{RESTE_VILLA_NBSP}}&nbsp;FCFA</b> ou <b>{{RESTE_DUPLEX_NBSP}}&nbsp;FCFA</b>.</span>
-        </div>
-      </div></li>
-      <li><span class="dot">3</span><div>
-        <h3>Lancez votre chantier</h3>
-        <p>Plans complets et devis en main, vous construisez avec votre entrepreneur en sachant exactement où vous allez.</p>
-      </div></li>
-    </ol>
-    <p class="road-note">Si vous commandez vos plans complets, <b>le catalogue vous revient à 0 FCFA</b>. <a href="/plans-personnalises">Voir le détail des plans complets</a></p>
-  </div>
-</section>
-
-<section class="alt">
+<section id="temoignages">
   <div class="wrap wide">
     <div class="center">
       <span class="eyebrow">Ils ont commandé</span>
@@ -389,6 +352,27 @@ footer a{color:rgba(255,255,255,.7)}
       <article class="review"><header><img src="/assets/avatars/avatar-4.jpeg" alt="" width="40" height="40" loading="lazy"><div><b>Mme Grâce</b><span>Yaoundé, Cameroun</span></div></header><span class="ok">✓ Achat vérifié</span> <span class="stars">★★★★★</span><blockquote>« Les plans et les devis m'ont aidé à poser les bonnes questions avant le chantier. »</blockquote></article>
       <article class="review"><header><img src="/assets/avatars/avatar-5.jpeg" alt="" width="40" height="40" loading="lazy"><div><b>Mme Aïcha</b><span>Douala, Cameroun</span></div></header><span class="ok">✓ Achat vérifié</span> <span class="stars">★★★★★</span><blockquote>« J'ai pu comparer plusieurs maisons au même endroit au lieu de choisir dans la précipitation. »</blockquote></article>
     </div>
+  </div>
+</section>
+
+<section id="parcours" class="alt">
+  <div class="wrap">
+    <span class="eyebrow">Votre parcours</span>
+    <h2>3 étapes, du choix au chantier.</h2>
+    <ol class="road">
+      <li class="here"><span class="dot">1</span><div>
+        <h3>Choisissez votre maison <span class="tag">Vous êtes ici</span></h3>
+        <p>Comparez plans, devis et budgets dans le Catalogue Premium (<b>{{PRIX_NBSP}}&nbsp;FCFA</b>).</p>
+      </div></li>
+      <li><span class="dot">2</span><div>
+        <h3>Obtenez vos plans complets</h3>
+        <p>Adaptés à votre terrain, à prix fixe&nbsp;: 149&nbsp;000&nbsp;FCFA (villa) ou 249&nbsp;000&nbsp;FCFA (duplex), catalogue déduit&nbsp;: <b>{{RESTE_VILLA_NBSP}}&nbsp;FCFA</b> ou <b>{{RESTE_DUPLEX_NBSP}}&nbsp;FCFA</b>. <a href="#contenu-plans">Ce qui est livré</a></p>
+      </div></li>
+      <li><span class="dot">3</span><div>
+        <h3>Lancez votre chantier</h3>
+        <p>Plans complets et devis en main, avec votre entrepreneur.</p>
+      </div></li>
+    </ol>
   </div>
 </section>
 
@@ -456,8 +440,8 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap">
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
-      <div class="price"><s>60 000 FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span><span class="badge">–{{REMISE}} %</span></div>
-      <span class="save">Vous économisez {{ECONOMIE}} FCFA aujourd'hui</span>
+      <div class="price"><s>{{PRIX_AVANT}} FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span><span class="badge">–{{REMISE}} %</span></div>
+      <span class="save">Prix promotionnel : vous économisez {{ECONOMIE}} FCFA aujourd'hui</span>
       <ul class="incl">
         <li>Accès immédiat à l'espace Premium, à vie</li>
         <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex</span></li>
@@ -467,11 +451,7 @@ footer a{color:rgba(255,255,255,.7)}
         <li><span><b>Déduit de vos plans complets</b> si vous les commandez ensuite</span></li>
         <li class="bonus"><span><b>Bonus :</b> les nouveaux modèles ajoutés automatiquement, sans rien payer de plus</span></li>
       </ul>
-      <div class="meter" data-wp-threshold>
-        <div class="meter-top"><span><b data-wp-count>Plus de 60</b> modèles sur 100</span><span>puis 60&nbsp;000&nbsp;FCFA</span></div>
-        <div class="track" aria-hidden="true"><i data-wp-progress style="width:63%"></i></div>
-        <p>À 100 modèles, le prix passe à 60&nbsp;000&nbsp;FCFA. Votre accès reste à vie, nouveaux modèles compris.</p>
-      </div>
+      <p class="promo-note">Ce prix promotionnel peut revenir à {{PRIX_AVANT_NBSP}}&nbsp;FCFA à tout moment. Votre accès, lui, reste acquis à vie.</p>
       <button class="cta" data-cta="offer" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
       <div class="guar"><div class="seal">7<small>JOURS</small></div><div><b>Satisfait ou remboursé</b>Un simple message WhatsApp dans les 7 jours suffit. Aucune question posée.</div></div>
     </div>
@@ -502,7 +482,7 @@ footer a{color:rgba(255,255,255,.7)}
       <details><summary>Mon paiement a échoué, que faire ?</summary><p>Si le paiement échoue, rien n'est débité. Causes fréquentes : confirmation non validée à temps, solde insuffisant ou réseau instable. Réessayez, ou <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="faq_payment" target="_blank" rel="noopener">écrivez-nous sur WhatsApp</a> : nous vous aidons à finaliser.</p></details>
       <details><summary>Comment vais-je recevoir les nouveaux modèles ?</summary><p>Ils apparaissent automatiquement dans votre espace Premium, avec leur fiche PDF, à vie et sans frais supplémentaires.</p></details>
       <details><summary>Les devis sont-ils fiables ?</summary><p>Ils reposent sur 10 ans d'expérience dans le BTP et des prix actualisés. Ils vous donnent une base solide pour négocier avec votre entrepreneur, à ajuster selon votre ville et vos finitions.</p></details>
-      <details data-wp-threshold><summary>Le prix va augmenter ?</summary><p>Oui. Le catalogue est à {{PRIX_NBSP}}&nbsp;FCFA tant qu'il compte moins de 100 modèles. Il en compte aujourd'hui <span data-wp-count>plus de 60</span> et de nouveaux sont ajoutés chaque mois. À 100 modèles, le prix passe à 60&nbsp;000&nbsp;FCFA. Si vous l'achetez avant, votre accès reste à vie, nouveaux modèles compris, sans rien payer de plus.</p></details>
+      <details><summary>Le prix peut-il changer ?</summary><p>Oui. {{PRIX_NBSP}}&nbsp;FCFA est un prix promotionnel&nbsp;: le prix normal du catalogue est de {{PRIX_AVANT_NBSP}}&nbsp;FCFA. Si vous l'achetez maintenant, votre accès reste acquis à vie, nouveaux modèles compris, sans rien payer de plus.</p></details>
       <details><summary>Et si je ne suis pas satisfait ?</summary><p>Un simple message WhatsApp dans les 7 jours et on vous rembourse intégralement. Aucune question posée.</p></details>
     </div>
   </div>
@@ -523,7 +503,7 @@ footer a{color:rgba(255,255,255,.7)}
 </footer>
 
 <div class="sticky" id="sticky">
-  <div class="p"><b>{{PRIX}} FCFA</b><small data-wp-threshold>Prix avant 100 modèles</small></div>
+  <div class="p"><b>{{PRIX}} FCFA</b><small><s>{{PRIX_AVANT}} FCFA</s> · Prix promo –{{REMISE}} %</small></div>
   <button class="cta" data-cta="sticky" onclick="buy(this)">Obtenir</button>
 </div>
 
@@ -618,7 +598,7 @@ function playVsl(){
   var box=document.getElementById('vsl');
   if(box.querySelector('video[controls]'))return;
   box.classList.remove('previewing');
-  box.innerHTML='<video src="/videos/vsl-catalogue-premium.mp4?v={{PRIX_XAF}}" poster="/assets/digital/vsl-poster.webp" controls playsinline autoplay></video>';
+  box.innerHTML='<video src="/videos/vsl-catalogue-premium-v2.mp4?v={{PRIX_XAF}}" poster="/assets/digital/vsl-poster-v2.webp" controls playsinline autoplay></video>';
   wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
   trackVideo(box.querySelector('video'),'vsl');
 }

@@ -1,0 +1,167 @@
+{
+  "voice": {
+    "provider": "gradium",
+    "voice_id": "TsRKBRWZGYldAeEI"
+  },
+  "price": 29000,
+  "priceBefore": 60000,
+  "showcase": "V3-001",
+  "lines": [
+    {
+      "id": "q1",
+      "scene": "accroche",
+      "text": "Vous avez besoin d'inspiration pour votre projet de construction ?"
+    },
+    {
+      "id": "q2",
+      "scene": "accroche",
+      "text": "Et si vous pouviez comparer les plans et les devis de près de cent modèles de maisons, avant de faire votre choix ?",
+      "caption": "Et si vous pouviez comparer les plans et les devis de près de 100 modèles de maisons, avant de faire votre choix ?"
+    },
+    {
+      "id": "c1",
+      "scene": "catalogue",
+      "text": "C'est exactement pour cela que nous avons créé le Catalogue Premium."
+    },
+    {
+      "id": "c2",
+      "scene": "catalogue",
+      "text": "Nous avons regroupé nos meilleurs modèles dans un seul catalogue."
+    },
+    {
+      "id": "f1",
+      "scene": "plan",
+      "text": "Pour chaque modèle, vous pouvez consulter le plan de distribution,"
+    },
+    {
+      "id": "f2",
+      "scene": "devis",
+      "text": "le devis de construction, poste par poste,"
+    },
+    {
+      "id": "f3",
+      "scene": "terrain",
+      "text": "et voir les dimensions du terrain nécessaire pour construire."
+    },
+    {
+      "id": "b1",
+      "scene": "clarte",
+      "text": "Ainsi, avant de vous engager financièrement dans votre projet,"
+    },
+    {
+      "id": "b2",
+      "scene": "clarte",
+      "text": "vous avez une idée claire et précise, grâce au catalogue."
+    },
+    {
+      "id": "t0",
+      "scene": "temoignages",
+      "text": "Ceux qui ont déjà obtenu le catalogue peuvent en témoigner."
+    },
+    {
+      "id": "n1",
+      "scene": "nouveaux",
+      "text": "Et ce n'est pas tout : vous avez aussi accès gratuitement aux nouveaux plans que nous ajoutons régulièrement."
+    },
+    {
+      "id": "o1",
+      "scene": "offre",
+      "text": "Alors, n'attendez plus. Profitez du Catalogue Premium au prix promotionnel de vingt-neuf mille francs CFA, aujourd'hui.",
+      "caption": "Alors, n'attendez plus. Profitez du Catalogue Premium au prix promotionnel de 29 000 FCFA, aujourd'hui."
+    },
+    {
+      "id": "o2",
+      "scene": "offre",
+      "text": "C'est moins que le prix d'une brouette de chantier !"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "ibrahim",
+      "name": "Ibrahim",
+      "kind": "video",
+      "from": 21.4,
+      "to": 25.15,
+      "caption": "Lorsque je l'ai obtenu, j'ai tout simplement été émerveillé."
+    },
+    {
+      "id": "bassirou",
+      "name": "Mamadou Bassirou",
+      "kind": "video",
+      "from": 38.4,
+      "to": 46.25,
+      "caption": "Je confirme honnêtement que ce sont de beaux plans, faits par de véritables professionnels."
+    },
+    {
+      "id": "francis",
+      "name": "Francis",
+      "kind": "video",
+      "from": 9.1,
+      "to": 15.05,
+      "caption": "Je vous recommande. J'ai été très satisfait par la qualité des devis et des plans."
+    },
+    {
+      "id": "renaud",
+      "name": "Renaud",
+      "kind": "audio",
+      "from": 42.6,
+      "to": 49.05,
+      "caption": "J'ai découvert ce site et je vous le recommande fortement : il y a de très belles choses à voir."
+    }
+  ],
+  "showcaseData": {
+    "code": "V3-001",
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "surface": 92,
+    "building": [
+      9,
+      13
+    ],
+    "land": [
+      12,
+      20
+    ],
+    "landArea": 250,
+    "budget": [
+      10600000,
+      13000000
+    ],
+    "lots": [
+      [
+        "Fondation",
+        1483800
+      ],
+      [
+        "Élévations",
+        2172700
+      ],
+      [
+        "Charpente et toiture",
+        1642800
+      ],
+      [
+        "Crépissage et antivols",
+        1554400
+      ],
+      [
+        "Portes et fenêtres",
+        1165800
+      ],
+      [
+        "Plomberie et électricité",
+        971500
+      ],
+      [
+        "Plafond et peinture",
+        1360100
+      ],
+      [
+        "Carrelage",
+        1424900
+      ]
+    ],
+    "total": 11776000,
+    "source": "Fiche V3-001 (outil MCP wooplans get_plan, 31 oct. 2026)"
+  }
+}
