@@ -26,15 +26,20 @@ test("budget : fourchette arrondie en millions", () => {
   assert.equal(budgetLabel(null, null), null);
 });
 
-test("aperçu : intitulés des postes visibles, jamais les montants", () => {
+test("aperçu : échantillon complet (plans cotés, devis avec montants, fiche PDF pour tous les modèles)", () => {
   const html = previewHtml({
-    name: "Villa V3-037", category: "villa", coverImage: "/media/c.webp", levels: 1, surfaceTotal: 164, bedrooms: 3, bathrooms: 2,
-    budgetMin: 29_500_000, budgetMax: 36_100_000, roomsCount: 16, floorPlansCount: 2, lotLabels: ["Fondation", "Élévations"],
-  });
-  assert.match(html, /Fondation/);
-  assert.match(html, /16 pièces/);
-  assert.match(html, /Fiche-WOOPLANS-V3-037\.pdf/);
-  assert.doesNotMatch(html, /4 005 200|4005200|32 816 000/);
+    name: "Duplex D4-006", category: "duplex", coverImage: "/media/c.webp", levels: 2, surfaceTotal: 195, bedrooms: 4, bathrooms: 3,
+    budgetMin: 37_900_000, budgetMax: 46_300_000, roomsCount: 0, floorPlanUrls: ["/api/apercu/plan/1", "/api/apercu/plan/2"],
+    lots: [{ label: "Fondation", amount: 3_601_300 }, { label: "Dalle", amount: 5_117_600 }], modelsCount: 98,
+  }).replace(/\u00a0/g, " ");
+  assert.match(html, /src="\/api\/apercu\/plan\/1"/);
+  assert.match(html, /Rez-de-chaussée/);
+  assert.match(html, /Étage/);
+  assert.match(html, /Fondation<\/span><b>3 601 300 FCFA/);
+  assert.match(html, /Total estimatif<\/span><b>8 718 900 FCFA/);
+  assert.match(html, /Fiche-WOOPLANS-D4-006\.pdf/);
+  assert.match(html, /pour chacun des 98 modèles/);
+  assert.doesNotMatch(html, /après achat|maçon/);
   assert.equal(previewHtml(null), "");
 });
 

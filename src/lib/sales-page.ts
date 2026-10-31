@@ -14,13 +14,21 @@ export type GalleryPlan = {
   budgetMax?: number | null;
 };
 
-/** Modèle montré en aperçu : seuls les intitulés des postes du devis sont exposés, jamais les montants. */
+/** Modèle de démonstration de la page de vente (le même que dans la VSL) : plans cotés et devis montrés en entier. */
+export const SHOWCASE_CODE = "D4-006";
+
+/** Modèle montré en aperçu : échantillon complet du catalogue (plans cotés filigranés, devis avec ses montants). */
 export type PreviewPlan = GalleryPlan & {
   bathrooms: number;
   roomsCount: number;
-  floorPlansCount: number;
-  lotLabels: string[];
+  /** Adresses publiques des plans cotés de l'échantillon (/api/apercu/plan/<n>), filigranées. */
+  floorPlanUrls: string[];
+  lots: { label: string; amount: number }[];
+  /** Nombre de modèles publiés (fiche PDF téléchargeable pour chacun). */
+  modelsCount?: number;
 };
+
+const fcfa = (n: number) => `${Math.round(n).toLocaleString("fr-FR").replace(/\s/g, "\u00a0")}\u00a0FCFA`;
 
 const CATEGORY: Record<string, string> = { villa: "Villa", duplex: "Duplex", immeuble: "Immeuble", autre: "Autre" };
 
@@ -63,26 +71,26 @@ export function galleryHtml(plans: GalleryPlan[]) {
     .join("");
 }
 
-/** Croquis de plan générique (flouté à l'affichage) : aucun plan réel n'est exposé. */
-const PLAN_SKETCH =
-  '<svg viewBox="0 0 320 150" aria-hidden="true"><g fill="none" stroke="#5E7487" stroke-width="4"><rect x="20" y="14" width="280" height="120"/><path d="M120 14v70M120 104v30M20 74h60M100 74h20M200 14v40M200 74v60M200 74h40M260 74h40"/></g><g fill="none" stroke="#9FB0BF" stroke-width="1.5"><path d="M20 4h280M20 0v8M300 0v8M310 14v120M306 14h8M306 134h8"/></g><g fill="#7C8EA0" font-size="9" font-family="Arial"><text x="45" y="48">Chambre</text><text x="140" y="48">Salon</text><text x="225" y="40">Cuisine</text><text x="45" y="108">Chambre</text><text x="140" y="124">SAM</text><text x="225" y="108">Garage</text></g></svg>';
-
-/** Aperçu d'un vrai modèle : ce que l'acheteur débloque, montants et plans masqués. */
+/** Aperçu d'un vrai modèle : un échantillon complet de ce que contient le catalogue pour chaque modèle. */
 export function previewHtml(p: PreviewPlan | null) {
   if (!p || !p.coverImage) return "";
   const chips = [...facts(p), p.bathrooms ? `${p.bathrooms} salle${p.bathrooms > 1 ? "s" : ""} de bain` : null, budgetLabel(p.budgetMin, p.budgetMax)]
     .filter((c): c is string => Boolean(c))
     .map((c) => `<span>${escapeHtml(c)}</span>`)
     .join("");
-  const lots = p.lotLabels
-    .slice(0, 8)
-    .map((label) => `<li><span>${escapeHtml(label)}</span><i></i></li>`)
+  const levelName = (i: number, n: number) => (n === 1 ? "Plan coté" : i === 0 ? "Rez-de-chaussée" : i === 1 && n === 2 ? "Étage" : `Niveau ${i}`);
+  const plans = p.floorPlanUrls
+    .map((url, i, all) => `<figure><img src="${escapeHtml(url)}" width="800" height="820" loading="lazy" decoding="async" alt="${escapeHtml(levelName(i, all.length))} coté : ${escapeHtml(p.name)}"><figcaption>${escapeHtml(levelName(i, all.length))}</figcaption></figure>`)
     .join("");
+  const total = p.lots.reduce((sum, l) => sum + l.amount, 0);
+  const lots = p.lots.map((l) => `<li><span>${escapeHtml(l.label)}</span><b>${fcfa(l.amount)}</b></li>`).join("");
+  const code = escapeHtml(p.name.split(" ").pop() ?? "");
+  const all = p.modelsCount ? `pour chacun des ${p.modelsCount} modèles du catalogue` : "pour chaque modèle du catalogue";
   return `<article class="preview"><div class="preview-media"><img src="${escapeHtml(imageUrl(p.coverImage))}" width="800" height="450" loading="lazy" decoding="async" alt="Rendu 3D : ${escapeHtml(p.name)}"><span class="tag">Exemple réel</span></div><div class="preview-body"><h3>${escapeHtml(p.name)}</h3><div class="chips">${chips}</div><div class="unlock">${
-    p.floorPlansCount ? `<h4>Plan coté <span class="lock">après achat</span></h4><div class="planlock">${PLAN_SKETCH}<span><b>Plan coté visible après achat</b></span></div>` : ""
+    plans ? `<h4>Plan de distribution coté</h4><div class="plans">${plans}</div>` : ""
   }${
-    lots ? `<h4>Devis détaillé par poste <span class="lock">montants après achat</span></h4><ul class="lots">${lots}<li class="total"><span>Total estimatif</span><i></i></li></ul>` : ""
-  }${p.roomsCount ? `<h4>${p.roomsCount} pièces avec leur surface <span class="lock">après achat</span></h4>` : ""}<h4>Fiche PDF</h4><div class="pdfline"><span class="doc"></span><span><b>Fiche-WOOPLANS-${escapeHtml(p.name.split(" ").pop() ?? "")}.pdf</b><br>Rendus, plan coté, devis : à imprimer ou à montrer à votre maçon.</span></div></div></div></article>`;
+    lots ? `<h4>Devis détaillé par poste</h4><ul class="lots">${lots}<li class="total"><span>Total estimatif</span><b>${fcfa(total)}</b></li></ul>` : ""
+  }${p.roomsCount ? `<h4>${p.roomsCount} pièces avec leur surface</h4>` : ""}<h4>Fiche PDF téléchargeable</h4><div class="pdfline"><span class="doc"></span><span><b>Fiche-WOOPLANS-${code}.pdf</b><br>Rendus 3D, plans cotés et devis : une fiche PDF à télécharger ${all}, dès votre accès au catalogue.</span></div></div></div></article>`;
 }
 
 /** Prix du catalogue ramené à un modèle, arrondi à la dizaine : « environ 620 ». */
