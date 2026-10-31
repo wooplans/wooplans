@@ -128,7 +128,12 @@ const flyPos = [[60, 250], [800, 210], [40, 620], [830, 560], [70, 960], [810, 9
 const scCatalogue = scene("catalogue", `
   <div class="premium"><span>Catalogue</span><b>Premium</b><i class="shine"></i></div>
   <div class="phone"><div class="notch"></div><div class="screen">${screenFiche}</div></div>
-  ${flyPos.map(([x, y], i) => `<img class="fly f${i}" src="${cover(i + 12)}" alt="" style="left:${x}px;top:${y}px">`).join("")}`, 2);
+`, 2);
+// Enregistrement d'écran du catalogue (media/ecran/catalogue.mp4, préparé par prepare.mjs) posé sur l'écran
+// du téléphone, enfant direct de la scène racine (exigence HyperFrames) et déplacé avec lui.
+const hasEcran = fs.existsSync(path.join(here, "media", "ecran", "catalogue.mp4"));
+const ecran = hasEcran ? `<video id="ecran" class="clip" src="media/ecran/catalogue.mp4" muted playsinline data-start="${S.catalogue.s}" data-duration="${r2(S.catalogue.e - S.catalogue.s + XFADE)}" data-track-index="2"></video>` : "";
+const flies = flyPos.map(([x, y], i) => `<img class="fly f${i}" src="${cover(i + 12)}" alt="" style="left:${x}px;top:${y}px">`).join("");
 
 const pill = (n, txt) => `<div class="pill"><span>${n}</span>${txt}</div>`;
 const scPlan = scene("plan", `
@@ -251,12 +256,12 @@ tl.fromTo(".cmp-tag", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, 
 tl.fromTo(".premium span", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, T.c1.s + 2.0);
 tl.fromTo(".premium b", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.6, ease: B }, T.c1.s + 2.35);
 tl.fromTo(".premium .shine", { x: -700 }, { x: 900, duration: 1.1, ease: "power2.inOut" }, T.c1.s + 2.9);
-tl.fromTo(".phone", { y: 900, rotation: 8 }, { y: 0, rotation: 0, duration: 0.9, ease: E }, S.catalogue.s + 0.1);
+tl.fromTo(".phone${hasEcran ? ", #ecran" : ""}", { y: 900, rotation: 8 }, { y: 0, rotation: 0, duration: 0.9, ease: E }, S.catalogue.s + 0.1);
 // Défilement de la fiche : couverture, puis distribution RDC, étage, devis et rendus.
 [[S.catalogue.s + 1.6, -300], [T.c1.e - 0.6, -770], [T.c2.s + 1.2, -1230], [T.c2.e - 0.4, -1700]].forEach(([at, y]) => tl.to(".fiche", { y, duration: 0.9, ease: "power2.inOut" }, at));
 tl.fromTo(".fly", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: B, stagger: 0.08 }, T.c2.s);
 ${flyPos.map(([x, y], i) => `tl.to(".f${i}", { x: ${W / 2 - 110 - x}, y: ${700 - y}, scale: 0.2, opacity: 0, rotation: 20, duration: 0.7, ease: "power2.in" }, T.c2.s + ${(1.4 + i * 0.12).toFixed(2)});`).join("\n")}
-tl.to(".phone", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "power1.inOut" }, T.c2.s + 1.9);
+tl.to(".phone${hasEcran ? ", #ecran" : ""}", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "power1.inOut" }, T.c2.s + 1.9);
 
 // 3. Plan de distribution
 tl.fromTo("#sc-plan .pill", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: B }, S.plan.s + 0.2);
@@ -352,6 +357,8 @@ ${css}
 <div class="bg"></div>
 ${scAccroche}${scCatalogue}${scPlan}${scDevis}${scTerrain}${scClarte}${scTemoignages}
 ${tvideos}
+${ecran}
+${flies}
 ${scNouveaux}${scOffre}
 <img id="logo" src="media/logo.png" alt="WOOPLANS">
 <div id="progress"><i></i></div>

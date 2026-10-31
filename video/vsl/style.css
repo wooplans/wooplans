@@ -60,7 +60,8 @@ em { font-style: normal; color: var(--gold); }
 .fi-plan { display: block; width: 100%; height: 380px; object-fit: contain; background: #fff; border-radius: 14px; border: 2px solid #DCE4E3; }
 .fi-row { display: flex; justify-content: space-between; font-size: 17px; padding: 7px 4px; border-bottom: 1px dashed #CBD6D5; }
 .fi-row b { font-variant-numeric: tabular-nums; }
-.fly { position: absolute; width: 220px; height: 124px; object-fit: cover; border-radius: 16px; box-shadow: 0 14px 30px rgba(0,0,0,.4); border: 4px solid #fff; }
+#ecran { position: absolute; left: 356px; top: 411px; width: 368px; height: 668px; border-radius: 42px; object-fit: cover; z-index: 3; }
+.fly { z-index: 4; opacity: 0; position: absolute; width: 220px; height: 124px; object-fit: cover; border-radius: 16px; box-shadow: 0 14px 30px rgba(0,0,0,.4); border: 4px solid #fff; }
 
 /* 3–5. Fonctionnalités */
 .pill { position: absolute; left: 50%; top: 120px; transform: translateX(-50%); display: flex; align-items: center; gap: 18px; white-space: nowrap;

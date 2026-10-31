@@ -8,7 +8,7 @@ Composée avec [HyperFrames](https://hyperframes.heygen.com) (HTML + GSAP, rendu
 | Scène | Voix off (Gradium, voix `TsRKBRWZGYldAeEI`) | Motion design |
 |---|---|---|
 | Accroche | Besoin d'inspiration ? Comparer plans et devis de près de 100 modèles | Mur de rendus 3D qui défile, « Plans + Devis », compteur jusqu'à 100 |
-| Catalogue | Nous avons créé le Catalogue Premium, nos meilleurs modèles réunis | Titre or « Premium », fiche Premium du D4-006 qui défile dans le téléphone (rendus, plans RDC et étage, devis) |
+| Catalogue | Nous avons créé le Catalogue Premium, nos meilleurs modèles réunis | Titre or « Premium », enregistrement d'écran réel du catalogue qui défile dans le téléphone (à défaut : la fiche Premium du D4-006) |
 | Plan / Devis / Terrain | Plan de distribution, devis poste par poste, terrain nécessaire | Distributions cotées RDC et étage du Duplex D4-006, ses 10 postes de devis (42 120 000 FCFA), terrain 12 × 21 m (300 m²) |
 | Clarté | Avant de vous engager, une idée claire et précise | Rendu du D4-006, budget 37,9 – 46,3 M FCFA, ✓ Plan ✓ Devis ✓ Terrain |
 | Témoignages | « Ceux qui ont déjà obtenu le catalogue peuvent en témoigner » | Extraits réels : Ibrahim, Mamadou Bassirou, Francis (vidéo), Renaud (audio) |
@@ -24,7 +24,7 @@ Musique : mixkit « Let's Play Africa » (licence libre mixkit), baissée pendan
 | `script.json` | Texte de la voix off (prononcé et sous-titré), extraits des témoignages (début / fin, sous-titre), données du modèle de démonstration, prix. |
 | `timings.json` | Durée réelle de chaque phrase (écrite par `voice.mjs`) : tout le minutage en découle. |
 | `build.mjs`, `style.css` | Génèrent `index.html`, la composition HyperFrames (ne pas modifier `index.html` à la main). `timeline.json` : minutage calculé. |
-| `prepare.mjs` | Télécharge dans `media/` (non versionné) les témoignages publiés sur le site et les découpe, les rendus de couverture, la photo de Renaud, la musique. |
+| `prepare.mjs` | Prépare aussi l'enregistrement d'écran du catalogue (`media/ecran/source.mp4`, fourni par le propriétaire, accéléré × 2,5) montré dans le téléphone. Télécharge dans `media/` (non versionné) les témoignages publiés sur le site et les découpe, les rendus de couverture, la photo de Renaud, la musique. |
 | `voice.mjs` | Voix off Gradium, une phrase par appel (`GRADIUM_API_KEY`), réutilise les phrases inchangées. |
 | `finish.mjs` | Fichiers livrés dans `out/` : vidéo 720 × 900 (≈ 7,7 Mo), aperçu muet de 6 s (0,3 Mo), image d'attente. |
 

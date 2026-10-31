@@ -48,3 +48,11 @@ if (missing.length) console.log(`à déposer à la main dans media/showcase/ : $
 for (const t of script.testimonials.filter((x) => x.kind === "video")) {
   run("ffmpeg", ["-v", "error", "-y", "-ss", "0.4", "-i", path.join(media, "temoignages", `${t.id}.mp4`), "-frames:v", "1", "-q:v", "3", path.join(media, "temoignages", `${t.id}.jpg`)]);
 }
+
+// Enregistrement d'écran du catalogue sur téléphone (fourni par le propriétaire, déposé dans
+// media/ecran/source.mp4) : accéléré × 2,5, sans son, 540 px de large, pour l'écran du téléphone.
+const ecranSrc = path.join(media, "ecran", "source.mp4");
+if (fs.existsSync(ecranSrc)) {
+  run("ffmpeg", ["-v", "error", "-y", "-i", ecranSrc, "-an", "-vf", "setpts=PTS/2.5,scale=540:-2,fps=30",
+    "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", path.join(media, "ecran", "catalogue.mp4")]);
+} else console.log("facultatif : media/ecran/source.mp4 (enregistrement d'écran du catalogue) absent, la fiche du modèle défile à la place");
