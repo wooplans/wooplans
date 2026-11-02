@@ -289,6 +289,26 @@ ${button(p.downloadUrl, "Télécharger mon plan et devis")}
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
+/**
+ * Premier email de bienvenue pour quelqu'un qui n'a pas encore ouvert son plan et devis : il prend la place de
+ * « Comment lire votre plan et devis » (qui n'a aucun sens avant d'avoir le document), donc sans email en plus.
+ */
+export function giftReminderEmail(p: { name?: string | null; planCode: string; downloadUrl: string; unsubscribe: string }) {
+  const subject = `Votre plan et devis du modèle ${p.planCode} vous attend`;
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Vous avez demandé le plan et devis du modèle <strong>${escape(p.planCode)}</strong>, mais il n'a pas encore été téléchargé. Le voici : plan de distribution avec les dimensions, terrain minimum estimé et devis poste par poste.</p>
+${button(p.downloadUrl, "Télécharger mon plan et devis")}
+<p style="color:#6B7280;font-size:13px">Si les emails de WOOPLANS arrivent dans « Promotions » ou dans les spams, déplacez-en un dans votre boîte principale : vous recevrez la suite sans la chercher.</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Vous avez demandé le plan et devis du modèle ${p.planCode}, mais il n'a pas encore été téléchargé.`,
+    `Télécharger : ${p.downloadUrl}`,
+    "Si les emails de WOOPLANS arrivent dans « Promotions » ou dans les spams, déplacez-en un dans votre boîte principale.",
+    `Ne plus recevoir ces emails : ${p.unsubscribe}`,
+  ].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
 /** Les 4 emails de bienvenue après le cadeau, jusqu'à la proposition du catalogue. Aucune fausse urgence. */
 export function welcomeEmail(p: {
   kind: "guide" | "compare" | "faq" | "last";

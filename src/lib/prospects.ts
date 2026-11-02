@@ -2,7 +2,7 @@ import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, or } f
 import { getDb, schema } from "@/db";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { giftReminderEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
@@ -197,16 +197,17 @@ export async function stopProspectSequence(id: string, status: "open" | "lost" =
 }
 
 /** Référence du modèle offert à ce prospect (dernier cadeau), pour personnaliser la séquence de bienvenue. */
-async function giftPlanCode(email: string) {
+async function giftInfo(email: string) {
   const db = getDb();
-  const gift = await db.query.checkoutIntents.findFirst({
+  const gifts = await db.query.checkoutIntents.findMany({
     where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.status, "gift")),
     orderBy: desc(schema.checkoutIntents.createdAt),
-    columns: { planSlug: true },
+    columns: { id: true, planSlug: true, downloads: true },
   });
-  if (!gift?.planSlug) return null;
+  const gift = gifts[0];
+  if (!gift?.planSlug) return { code: null, intentId: null, downloaded: false };
   const plan = await db.query.plans.findFirst({ where: eq(schema.plans.slug, gift.planSlug), columns: { code: true } });
-  return plan?.code ?? null;
+  return { code: plan?.code ?? null, intentId: gift.id, downloaded: gifts.some((g) => g.downloads > 0) };
 }
 
 async function publishedPlanCount() {
@@ -276,14 +277,20 @@ export async function runProspectSequence(now = new Date()) {
     if (claimed.length === 0) continue;
 
     const welcome = p.sequenceKind === "bienvenue";
+    const gift = welcome ? await giftInfo(p.email) : null;
+    // Premier email de bienvenue : quelqu'un qui n'a jamais ouvert son plan et devis reçoit un rappel avec le lien,
+    // à la place du guide de lecture (même nombre d'emails, donc aucun quota de plus).
+    const reminder = welcome && step === 0 && gift !== null && !gift.downloaded && gift.intentId !== null && gift.code !== null;
     const kind = emailKindForStep(step, total, Boolean(settings.discountCode));
     const withDiscount = welcome ? step === total - 1 && settings.discountCode : (kind === "offer" || kind === "last") && settings.discountCode;
     const unsubscribe = await unsubscribeUrl(p.email, "prospects");
-    const mail = welcome
+    const mail = reminder
+      ? giftReminderEmail({ name: p.name, planCode: gift!.code!, downloadUrl: siteUrl(`/api/plan-devis/${gift!.intentId}`), unsubscribe })
+      : welcome
       ? welcomeEmail({
           kind: welcomeKindForStep(step),
           name: p.name,
-          planCode: await giftPlanCode(p.email),
+          planCode: gift!.code,
           checkoutUrl: siteUrl(`/catalogue-premium?utm_source=email&utm_medium=bienvenue&utm_campaign=bienvenue_${step + 1}`),
           price,
           planCount,
@@ -311,7 +318,7 @@ export async function runProspectSequence(now = new Date()) {
     const sent = await sendEmail({
       to: p.email,
       ...mail,
-      template: welcome ? `bienvenue_${step + 1}` : `prospect_${step + 1}`,
+      template: reminder ? "bienvenue_1_rappel" : welcome ? `bienvenue_${step + 1}` : `prospect_${step + 1}`,
       headers: await unsubscribeHeaders(p.email, "prospects"),
     });
 

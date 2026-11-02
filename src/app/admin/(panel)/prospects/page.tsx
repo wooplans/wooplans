@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { and, desc, eq, inArray, isNull, like, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, like, or, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { Badge, fmtDate, fmtDateTime, PageTitle, pct, Stat, Table } from "@/components/admin/ui";
 import { whatsappUrl } from "@/lib/phone";
@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 
 const VIEWS = [
   { id: "ouverts", label: "À convertir" },
+  { id: "non_telecharges", label: "Plan non téléchargé" },
   { id: "convertis", label: "Convertis" },
   { id: "arretes", label: "Désinscrits / perdus" },
   { id: "tous", label: "Tous" },
@@ -46,7 +47,8 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     filters.push(or(like(schema.prospects.email, `%${term}%`), like(schema.prospects.name, `%${term}%`), like(schema.prospects.phone, `%${term}%`))!);
   }
 
-  const [rows, all] = await Promise.all([
+  if (vue === "non_telecharges") filters.push(eq(schema.prospects.status, "open"), eq(schema.prospects.source, "gift"));
+  const [fetched, all] = await Promise.all([
     db.query.prospects.findMany({
       where: filters.length ? and(...filters) : undefined,
       orderBy: desc(schema.prospects.lastEventAt),
@@ -62,23 +64,59 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const recentNeverStarted = count(
     (p) => p.status === "open" && !p.sequenceStartedAt && p.lastEventAt.getTime() > Date.now() - 30 * 86400_000,
   );
-  // Modèle(s) offert(s) à chaque prospect : plans et devis gratuits demandés avec son adresse.
-  const giftEmails = rows.filter((p) => p.source === "gift" || p.lastEvent === "gift").map((p) => p.email);
-  const gifts = giftEmails.length
-    ? await db
-        .select({ email: schema.checkoutIntents.email, slug: schema.checkoutIntents.planSlug, code: schema.plans.code, name: schema.plans.name })
-        .from(schema.checkoutIntents)
-        .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
-        .where(and(eq(schema.checkoutIntents.status, "gift"), inArray(schema.checkoutIntents.email, giftEmails)))
-        .orderBy(desc(schema.checkoutIntents.createdAt))
-    : [];
-  const giftsByEmail = new Map<string, { slug: string; code: string; name: string }[]>();
+  // Plans et devis offerts à chaque prospect (modèle, téléchargé ou non) et son parcours de paiement du catalogue.
+  const giftEmails = fetched.filter((p) => p.source === "gift" || p.lastEvent === "gift").map((p) => p.email);
+  const [gifts, payments] = giftEmails.length
+    ? await Promise.all([
+        db
+          .select({
+            email: schema.checkoutIntents.email,
+            slug: schema.checkoutIntents.planSlug,
+            downloads: schema.checkoutIntents.downloads,
+            code: schema.plans.code,
+            name: schema.plans.name,
+          })
+          .from(schema.checkoutIntents)
+          .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+          .where(and(eq(schema.checkoutIntents.status, "gift"), inArray(schema.checkoutIntents.email, giftEmails)))
+          .orderBy(desc(schema.checkoutIntents.createdAt)),
+        db
+          .select({ email: schema.checkoutIntents.email, status: schema.checkoutIntents.status })
+          .from(schema.checkoutIntents)
+          .where(
+            and(
+              isNull(schema.checkoutIntents.planSlug),
+              inArray(schema.checkoutIntents.status, ["started", "abandoned", "failed", "paid"]),
+              inArray(schema.checkoutIntents.email, giftEmails),
+            ),
+          ),
+      ])
+    : [[], []];
+  const giftsByEmail = new Map<string, { slug: string; code: string; name: string; downloads: number }[]>();
   for (const g of gifts) {
     if (!g.email || !g.slug) continue;
     const list = giftsByEmail.get(g.email) ?? [];
-    if (!list.some((x) => x.slug === g.slug)) list.push({ slug: g.slug, code: g.code ?? g.slug, name: g.name ?? "" });
+    const known = list.find((x) => x.slug === g.slug);
+    if (known) known.downloads += g.downloads;
+    else list.push({ slug: g.slug, code: g.code ?? g.slug, name: g.name ?? "", downloads: g.downloads });
     giftsByEmail.set(g.email, list);
   }
+  const paymentByEmail = new Map<string, "paid" | "started">();
+  for (const pay of payments) {
+    if (!pay.email) continue;
+    if (pay.status === "paid") paymentByEmail.set(pay.email, "paid");
+    else if (!paymentByEmail.has(pay.email)) paymentByEmail.set(pay.email, "started");
+  }
+  const rows =
+    vue === "non_telecharges" ? fetched.filter((p) => (giftsByEmail.get(p.email) ?? []).every((g) => g.downloads === 0)) : fetched;
+  // Efficacité du cadeau : parmi les adresses qui l'ont demandé, combien ont téléchargé le document ?
+  const giftStats = await db
+    .select({ email: schema.checkoutIntents.email, downloads: sql<number>`sum(${schema.checkoutIntents.downloads})` })
+    .from(schema.checkoutIntents)
+    .where(and(eq(schema.checkoutIntents.status, "gift"), sql`${schema.checkoutIntents.email} is not null`))
+    .groupBy(schema.checkoutIntents.email);
+  const giftTotal = giftStats.length;
+  const giftDownloaded = giftStats.filter((g) => Number(g.downloads) > 0).length;
 
   const neverStarted = await db.query.prospects.findMany({
     where: and(eq(schema.prospects.status, "open"), isNull(schema.prospects.sequenceStartedAt)),
@@ -113,6 +151,11 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         <Stat label="Convertis" value={String(converted)} hint={all.length ? `${pct(converted / all.length)} des prospects` : undefined} />
         <Stat label="Jamais relancés" value={String(neverStarted.length)} hint={`dont ${recentNeverStarted} de moins de 30 jours`} />
         <Stat label="Désinscrits / perdus" value={String(stopped)} />
+        <Stat
+          label="Plans téléchargés"
+          value={giftTotal ? pct(giftDownloaded / giftTotal) : "—"}
+          hint={`${giftDownloaded} sur ${giftTotal} adresses ayant demandé le cadeau`}
+        />
       </div>
 
       {recentNeverStarted > 0 ? (
@@ -145,7 +188,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         </form>
       </div>
 
-      <Table head={["Prospect", "WhatsApp", "Dernier évènement", "Emails automatiques", "Provenance", "Actions"]} empty={rows.length === 0}>
+      <Table head={["Prospect", "WhatsApp", "Dernier évènement", "Plan et devis", "Emails automatiques", "Provenance", "Actions"]} empty={rows.length === 0}>
         {rows.map((p) => {
           const ev = EVENTS[p.lastEvent];
           const firstName = (p.name || "").split(" ")[0];
@@ -182,6 +225,27 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
                 </p>
               </td>
               <td className="px-4 py-2.5 text-xs">
+                {models.length ? (
+                  <ul className="space-y-1">
+                    {models.map((m) => (
+                      <li key={m.slug}>
+                        <Link href={`/catalogue/${m.slug}`} target="_blank" className="font-semibold text-primary hover:underline" title={m.name}>
+                          {m.code}
+                        </Link>{" "}
+                        {m.downloads > 0 ? <Badge tone="good">Téléchargé{m.downloads > 1 ? ` ×${m.downloads}` : ""}</Badge> : <Badge tone="warn">Pas ouvert</Badge>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-muted">—</span>
+                )}
+                {paymentByEmail.get(p.email) === "paid" ? (
+                  <p className="mt-1"><Badge tone="good">Catalogue acheté</Badge></p>
+                ) : paymentByEmail.get(p.email) === "started" ? (
+                  <p className="mt-1"><Badge tone="warn">Paiement commencé</Badge></p>
+                ) : null}
+              </td>
+              <td className="px-4 py-2.5 text-xs">
                 {p.status === "converted" ? (
                   <Badge tone="good">Payé le {fmtDate(p.convertedAt)}</Badge>
                 ) : p.status === "unsubscribed" ? (
@@ -205,18 +269,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
               </td>
               <td className="px-4 py-2.5 text-xs">
                 <p>{SOURCES[p.source]}</p>
-                {models.length ? (
-                  <p className="font-semibold">
-                    {models.map((m, i) => (
-                      <span key={m.slug}>
-                        {i ? ", " : ""}
-                        <Link href={`/catalogue/${m.slug}`} target="_blank" className="text-primary hover:underline" title={m.name}>
-                          {m.code}
-                        </Link>
-                      </span>
-                    ))}
-                  </p>
-                ) : null}
+
                 {p.utmSource ? <p className="text-muted">{[p.utmSource, p.utmCampaign].filter(Boolean).join(" / ")}</p> : null}
               </td>
               <td className="px-4 py-2.5">
@@ -244,7 +297,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         <h2 className="font-semibold">Emails automatiques</h2>
         <p className="mt-1 text-sm text-muted">
           <strong>Bienvenue</strong> (plan et devis offert) : le cadeau part tout de suite, puis 4 emails à J+
-          {WELCOME_DELAYS_HOURS.map((h) => h / 24).join(", J+")} : 1) comment lire le plan et devis, 2) comparer plusieurs modèles,
+          {WELCOME_DELAYS_HOURS.map((h) => h / 24).join(", J+")} : 1) comment lire le plan et devis (ou, pour ceux qui ne l&apos;ont pas téléchargé, un rappel avec le lien : même nombre d&apos;emails), 2) comparer plusieurs modèles,
           3) questions fréquentes, 4) dernier message avec le code de réduction.
         </p>
         <p className="mt-2 text-sm text-muted">
