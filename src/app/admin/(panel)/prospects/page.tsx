@@ -297,7 +297,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         <h2 className="font-semibold">Emails automatiques</h2>
         <p className="mt-1 text-sm text-muted">
           <strong>Bienvenue</strong> (plan et devis offert) : le cadeau part tout de suite, puis 4 emails à J+
-          {WELCOME_DELAYS_HOURS.map((h) => h / 24).join(", J+")} : 1) comment lire le plan et devis (ou, pour ceux qui ne l'ont pas téléchargé, un rappel avec le lien : même nombre d'emails), 2) comparer plusieurs modèles,
+          {WELCOME_DELAYS_HOURS.map((h) => h / 24).join(", J+")} : 1) comment lire le plan et devis (ou, pour ceux qui ne l&apos;ont pas téléchargé, un rappel avec le lien : même nombre d&apos;emails), 2) comparer plusieurs modèles,
           3) questions fréquentes, 4) dernier message avec le code de réduction.
         </p>
         <p className="mt-2 text-sm text-muted">
