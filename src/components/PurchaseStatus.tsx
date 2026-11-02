@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
 import projet from "@/config/projet.json";
+import { pixelPurchase } from "@/lib/pixel";
 
 type Status = {
   status: "unknown" | "started" | "paid" | "failed" | "abandoned";
@@ -15,7 +16,7 @@ type Status = {
 };
 
 /** Interroge le serveur jusqu'à la confirmation du paiement (notification Chariow). */
-export function PurchaseStatus({ intentId }: { intentId?: string }) {
+export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixelId?: string }) {
   const [data, setData] = useState<Status | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -34,7 +35,7 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
-          window.fbq?.("track", "Purchase", { value: projet.price, currency: "XAF", content_name: `Plan et devis ${json.plan?.code ?? ""}`.trim() });
+          pixelPurchase(pixelId, key, { value: projet.price, currency: "XAF", content_name: `Plan et devis ${json.plan?.code ?? ""}`.trim() });
         }
         return;
       }
@@ -42,7 +43,7 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
-          window.fbq?.("track", "Purchase", { value: catalogue.price, currency: "XAF", content_name: "Catalogue Premium Wooplans" });
+          pixelPurchase(pixelId, key, { value: catalogue.price, currency: "XAF", content_name: "Catalogue Premium Wooplans" });
         }
         return;
       }
@@ -53,7 +54,7 @@ export function PurchaseStatus({ intentId }: { intentId?: string }) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [intentId]);
+  }, [intentId, pixelId]);
 
   if (data?.status === "paid" && data.plan && data.download) {
     const whatsapp = `https://wa.me/${process.env.WHATSAPP_NUMBER || "237694327885"}?text=${encodeURIComponent(

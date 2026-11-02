@@ -7,7 +7,7 @@ export default async function ThankYouPage({ searchParams }: { searchParams: Pro
   const { i } = await searchParams;
   return (
     <div className="container-page max-w-2xl py-14">
-      <PurchaseStatus intentId={i} />
+      <PurchaseStatus intentId={i} pixelId={process.env.FB_PIXEL_ID || undefined} />
     </div>
   );
 }
