@@ -24,6 +24,8 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ message: string; next?: NextStep } | null>(null);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const form = useRef<HTMLFormElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const track = (event: string, properties: Record<string, unknown> = {}) =>
     phCapture(event, { cta_id: ctaId, plan: plan.slug, offer: "cadeau", ...properties });
@@ -33,18 +35,22 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
     else dialog.current?.close();
   }, [open]);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function send(fields: Record<string, string>, confirmed = false) {
     setError(null);
+    setSuggestion(null);
     setSending(true);
-    const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
     const response = await fetch("/api/cadeau", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, slug: plan.slug }),
+      body: JSON.stringify({ ...fields, slug: plan.slug, confirmed }),
     }).catch(() => null);
-    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; next?: NextStep; error?: string } | null;
+    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; next?: NextStep; error?: string; suggestion?: string } | null;
     setSending(false);
+    if (response?.status === 409 && body?.suggestion) {
+      track("gift_email_suggestion");
+      setSuggestion(body.suggestion);
+      return;
+    }
     if (!response?.ok || !body?.message) {
       track(FUNNEL_EVENTS.giftError, { status: response?.status ?? "network" });
       setError(body?.error || "L'envoi n'a pas abouti. Réessayez dans un instant.");
@@ -54,6 +60,23 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
     // Contact gagné (premier cadeau de cette adresse) : évènement Lead du Pixel, objectif des publicités Meta.
     if (body.status === "sent") pixelTrack("Lead", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.slug], content_category: "Plan et devis offert" });
     setDone({ message: body.message, next: body.next });
+  }
+
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void send(Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>);
+  }
+
+  /** « Oui » : on renvoie avec l'adresse corrigée ; « Non » : on garde l'adresse saisie. */
+  function answerSuggestion(accept: boolean) {
+    if (!form.current || !suggestion) return;
+    const fields = Object.fromEntries(new FormData(form.current)) as Record<string, string>;
+    if (accept) {
+      fields.email = suggestion;
+      const input = form.current.elements.namedItem("email") as HTMLInputElement | null;
+      if (input) input.value = suggestion;
+    }
+    void send(fields, true);
   }
 
   return (
@@ -111,7 +134,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
               </button>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="grid gap-4">
+            <form ref={form} onSubmit={onSubmit} className="grid gap-4">
               <p className="rounded-xl bg-primary/5 px-4 py-3 text-sm leading-snug text-foreground/80">
                 Plan de distribution avec les dimensions, surfaces des pièces et devis détaillé, envoyés par email.
               </p>
@@ -133,6 +156,21 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
                 />
                 <p className="mt-1 text-xs text-muted">Le document vous y est envoyé. Un plan et devis offert par adresse email.</p>
               </div>
+              {suggestion ? (
+                <div role="alert" className="rounded-xl border border-highlight/70 bg-highlight/10 px-4 py-3 text-sm">
+                  <p>
+                    Vouliez-vous dire <strong className="break-all">{suggestion}</strong> ?
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button type="button" onClick={() => answerSuggestion(true)} className="btn-cta flex-1 py-2.5">
+                      Oui, corriger
+                    </button>
+                    <button type="button" onClick={() => answerSuggestion(false)} className="btn-ghost flex-1 py-2.5">
+                      Non, c&apos;est exact
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               {error ? <p className="rounded-xl bg-secondary/10 px-4 py-3 text-sm text-secondary">{error}</p> : null}
               <button type="submit" disabled={sending} className="btn-cta mt-1 w-full py-3.5 text-base">
                 {sending ? "Envoi…" : "Recevoir gratuitement"}

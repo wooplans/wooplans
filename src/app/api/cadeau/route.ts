@@ -3,6 +3,7 @@ import { and, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { customPlanOffer, planGiftEnabled } from "@/lib/custom-plans";
+import { domainAcceptsMail, suggestEmail } from "@/lib/email-check";
 import { giftPlanEmail, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
@@ -14,7 +15,8 @@ import { cataloguePrice } from "@/lib/site";
 import { recordServerEvent } from "@/lib/tracking";
 import { unsubscribeUrl } from "@/lib/unsubscribe";
 
-type Body = { slug?: string; name?: string; email?: string };
+/** confirmed : la personne a vu la correction proposée et garde son adresse telle quelle. */
+type Body = { slug?: string; name?: string; email?: string; confirmed?: boolean };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,9 +36,20 @@ export async function POST(request: NextRequest) {
   if (name.length < 2 || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Merci de renseigner votre nom et un email valide." }, { status: 400 });
   }
+  // Faute de frappe probable dans le domaine (gmial.com) : on propose la correction avant d'envoyer, car un email
+  // qui rebondit abîme la réputation de l'expéditeur. Domaine inexistant : refusé, l'email ne pourrait pas arriver.
+  const owner = UNLIMITED_EMAILS.has(email);
+  if (!owner) {
+    const suggestion = body.confirmed ? null : suggestEmail(email);
+    if (suggestion) {
+      return NextResponse.json({ status: "suggest", suggestion, error: `Vouliez-vous dire ${suggestion} ?` }, { status: 409 });
+    }
+    if (!(await domainAcceptsMail(email.slice(email.lastIndexOf("@") + 1)))) {
+      return NextResponse.json({ error: "Cette adresse email ne semble pas exister. Vérifiez-la et réessayez." }, { status: 400 });
+    }
+  }
   const plan = await getPublicPlan((body.slug || "").slice(0, 120));
   if (!plan || !customPlanOffer(plan.category)) return NextResponse.json({ error: "Modèle introuvable." }, { status: 404 });
-  const owner = UNLIMITED_EMAILS.has(email);
   if (!owner && !(await rateLimit(`cadeau:${clientIp(request.headers)}`, 5, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "Trop de demandes. Réessayez dans quelques minutes." }, { status: 429 });
   }
