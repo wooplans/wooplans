@@ -21,8 +21,7 @@ export function Testimonials() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={t.poster} alt="" className="h-full w-full object-cover" />
             ) : (
-              // Rien n'est téléchargé avant le clic (connexions lentes) : la vignette reste noire sous le bouton de lecture.
-              <video src={t.video} muted playsInline preload="none" className="h-full w-full object-cover opacity-85" />
+              <video src={`${t.video}#t=1`} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-85" />
             )}
             <span className="absolute inset-0 flex items-center justify-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur transition-transform group-hover:scale-110">
