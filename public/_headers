@@ -1,0 +1,7 @@
+# Cache navigateur et Cloudflare (servi par les Workers Assets, voir wrangler.jsonc).
+# Fichiers de _next/static : le nom contient une empreinte du contenu, donc jamais modifiés sur place.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+# Images du site : noms sans empreinte, 30 jours (un remplacement apparaît au plus tard après ce délai).
+/images/*
+  Cache-Control: public, max-age=2592000
