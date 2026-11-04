@@ -59,7 +59,10 @@ export function BehaviorAnalytics({ posthogKey, posthogHost, pixelId }: { postho
     const requiresConsent = timeZoneRequiresConsent(Intl.DateTimeFormat().resolvedOptions().timeZone);
     if (!measurementAllowed({ requiresConsent, consent })) return;
     started.current = true;
-    if (pixelId) loadPixel(pixelId);
+    // Pixel Meta et PostHog attendent le premier geste ou le repos du navigateur : sur une connexion
+    // lente, ils ne se disputent plus la bande passante avec l'affichage de la page.
+    // (Les évènements émis avant le chargement du Pixel sont gardés en attente par lib/pixel.ts.)
+    if (pixelId) whenIdle(() => loadPixel(pixelId));
     if (!posthogKey) return;
     whenIdle(() => {
       const timeout = new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 3000));
