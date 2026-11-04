@@ -34,7 +34,7 @@ export async function grantAccess(input: GrantInput) {
   await db
     .update(schema.prospects)
     .set({ status: "converted", convertedAt: new Date(), nextEmailAt: null, updatedAt: new Date() })
-    .where(and(eq(schema.prospects.email, email), inArray(schema.prospects.status, ["open", "lost"])));
+    .where(and(eq(schema.prospects.email, email), inArray(schema.prospects.status, ["open", "lost", "bounced"])));
   const existing = await db.query.members.findFirst({ where: eq(schema.members.email, email) });
 
   if (existing) {

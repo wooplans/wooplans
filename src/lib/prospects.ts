@@ -10,6 +10,7 @@ import { automatedEmailAllowance } from "@/lib/email-budget";
 import { formatFcfa } from "@/lib/plans";
 import {
   DEFAULT_PROSPECT_SEQUENCE,
+  deliveryStopsSequence,
   emailKindForStep,
   sanitizeSequenceSettings,
   shouldStartSequence,
@@ -77,7 +78,7 @@ async function isCustomer(email: string, phone: string | null | undefined) {
 export async function reconcileProspects() {
   const db = getDb();
   const open = await db.query.prospects.findMany({
-    where: inArray(schema.prospects.status, ["open", "lost"]),
+    where: inArray(schema.prospects.status, ["open", "lost", "bounced"]),
     columns: { id: true, email: true, phone: true },
   });
   if (open.length === 0) return 0;
@@ -136,7 +137,9 @@ export async function recordProspectEvent(input: ProspectEventInput) {
   // Un évènement plus ancien que celui déjà connu (import d'historique) ne change que les champs vides.
   const newer = input.occurredAt.getTime() >= existing.lastEventAt.getTime();
   const reopen = existing.status === "converted" || existing.status === "lost";
-  const status = existing.status === "unsubscribed" ? "unsubscribed" : reopen && newer ? "open" : existing.status;
+  // Désinscription et adresse qui rejette nos emails : définitives.
+  const sticky = existing.status === "unsubscribed" || existing.status === "bounced";
+  const status = sticky ? existing.status : reopen && newer ? "open" : existing.status;
   // Un abandon de paiement pendant la séquence de bienvenue la remplace par la relance (aide au paiement).
   const switchToRelance = kind === "relance" && existing.sequenceKind === "bienvenue" && input.event !== "started";
   const start =
@@ -221,12 +224,37 @@ async function publishedPlanCount() {
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
+ * Dernier évènement Resend (delivered, bounced, complained…) du dernier email envoyé à cette adresse,
+ * cadeau compris. null si inconnu (aucun email, clé absente, Resend injoignable) : l'envoi n'est alors pas bloqué.
+ */
+async function lastDeliveryEvent(email: string): Promise<string | null> {
+  const key = getEnv().RESEND_API_KEY;
+  if (!key) return null;
+  const last = await getDb().query.emailLog.findFirst({
+    where: and(eq(schema.emailLog.to, email), eq(schema.emailLog.status, "sent"), isNotNull(schema.emailLog.providerId)),
+    orderBy: desc(schema.emailLog.createdAt),
+    columns: { providerId: true },
+  });
+  if (!last?.providerId) return null;
+  try {
+    const response = await fetch(`https://api.resend.com/emails/${encodeURIComponent(last.providerId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) return null;
+    const data = (await response.json().catch(() => ({}))) as { last_event?: string };
+    return data.last_event ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Passage du cron (toutes les 15 min) : envoie les emails dus de la séquence.
  * Chaque prospect est « réclamé » avant l'envoi (pas de doublon si deux passages se chevauchent).
  */
 export async function runProspectSequence(now = new Date()) {
   const settings = await getProspectSettings();
-  const result = { sent: 0, failed: 0, converted: 0, unsubscribed: 0, finished: 0, budgetLeft: 0 };
+  const result = { sent: 0, failed: 0, converted: 0, unsubscribed: 0, bounced: 0, finished: 0, budgetLeft: 0 };
   if (!settings.enabled) return result;
   const db = getDb();
 
@@ -259,6 +287,23 @@ export async function runProspectSequence(now = new Date()) {
     if (optedOut.has(p.email)) {
       await db.update(schema.prospects).set({ status: "unsubscribed", nextEmailAt: null, updatedAt: now }).where(eq(schema.prospects.id, p.id));
       result.unsubscribed++;
+      continue;
+    }
+    // Adresse qui a rejeté le dernier email (cadeau compris) ou l'a signalé comme spam : on arrête d'y écrire,
+    // chaque rejet abîme la réputation de wooplans.com (emails classés en spam pour tout le monde).
+    const delivery = await lastDeliveryEvent(p.email);
+    await pause(250); // Limite de débit de Resend (lecture + envoi).
+    if (deliveryStopsSequence(delivery)) {
+      await db
+        .update(schema.prospects)
+        .set({
+          status: "bounced",
+          nextEmailAt: null,
+          notes: `${p.notes ? `${p.notes}\n` : ""}${now.toISOString().slice(0, 10)} : séquence arrêtée, email ${delivery === "complained" ? "signalé comme spam" : "rejeté (adresse invalide)"}.`,
+          updatedAt: now,
+        })
+        .where(eq(schema.prospects.id, p.id));
+      result.bounced++;
       continue;
     }
     const step = p.sequenceStep;

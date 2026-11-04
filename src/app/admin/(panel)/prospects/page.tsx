@@ -16,7 +16,7 @@ const VIEWS = [
   { id: "ouverts", label: "À convertir" },
   { id: "non_telecharges", label: "Plan non téléchargé" },
   { id: "convertis", label: "Convertis" },
-  { id: "arretes", label: "Désinscrits / perdus" },
+  { id: "arretes", label: "Désinscrits / perdus / rejetés" },
   { id: "tous", label: "Tous" },
 ] as const;
 
@@ -41,7 +41,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const filters: SQL[] = [];
   if (vue === "ouverts") filters.push(eq(schema.prospects.status, "open"));
   else if (vue === "convertis") filters.push(eq(schema.prospects.status, "converted"));
-  else if (vue === "arretes") filters.push(inArray(schema.prospects.status, ["unsubscribed", "lost"]));
+  else if (vue === "arretes") filters.push(inArray(schema.prospects.status, ["unsubscribed", "lost", "bounced"]));
   const term = (q || "").trim();
   if (term) {
     filters.push(or(like(schema.prospects.email, `%${term}%`), like(schema.prospects.name, `%${term}%`), like(schema.prospects.phone, `%${term}%`))!);
@@ -60,7 +60,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const open = count((p) => p.status === "open");
   const running = count((p) => p.status === "open" && Boolean(p.nextEmailAt));
   const converted = count((p) => p.status === "converted");
-  const stopped = count((p) => p.status === "unsubscribed" || p.status === "lost");
+  const stopped = count((p) => p.status === "unsubscribed" || p.status === "lost" || p.status === "bounced");
   const recentNeverStarted = count(
     (p) => p.status === "open" && !p.sequenceStartedAt && p.lastEventAt.getTime() > Date.now() - 30 * 86400_000,
   );
@@ -150,7 +150,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
         <Stat label="À convertir" value={String(open)} hint={`${running} en cours de relance`} />
         <Stat label="Convertis" value={String(converted)} hint={all.length ? `${pct(converted / all.length)} des prospects` : undefined} />
         <Stat label="Jamais relancés" value={String(neverStarted.length)} hint={`dont ${recentNeverStarted} de moins de 30 jours`} />
-        <Stat label="Désinscrits / perdus" value={String(stopped)} />
+        <Stat label="Désinscrits / perdus / rejetés" value={String(stopped)} />
         <Stat
           label="Plans téléchargés"
           value={giftTotal ? pct(giftDownloaded / giftTotal) : "—"}
@@ -252,6 +252,8 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
                   <Badge>Désinscrit</Badge>
                 ) : p.status === "lost" ? (
                   <Badge>Perdu</Badge>
+                ) : p.status === "bounced" ? (
+                  <Badge tone="warn">Email rejeté</Badge>
                 ) : p.nextEmailAt ? (
                   <>
                     <p className="font-semibold">

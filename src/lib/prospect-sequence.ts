@@ -67,6 +67,14 @@ export function sanitizeSequenceSettings(input: Partial<ProspectSequenceSettings
   };
 }
 
+/**
+ * Statut Resend du dernier email envoyé à une adresse qui arrête la séquence : rejet (adresse invalide,
+ * boîte inexistante) ou signalement en spam. Les autres statuts (delivered, delivery_delayed, sent…) laissent continuer.
+ */
+export function deliveryStopsSequence(lastEvent: string | null | undefined) {
+  return lastEvent === "bounced" || lastEvent === "complained";
+}
+
 /** Contenu de l'email n° `step` : aide au paiement, rappel de la valeur, offre, dernier rappel. */
 export type ProspectEmailKind = "help" | "value" | "offer" | "last";
 
