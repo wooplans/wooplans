@@ -40,3 +40,12 @@ test("contenu des emails : aide, valeur, offre, dernier rappel", () => {
   assert.deepEqual([0, 1, 2, 3].map((i) => emailKindForStep(i, 4, false)), ["help", "value", "value", "last"]);
   assert.deepEqual([0, 1].map((i) => emailKindForStep(i, 2, true)), ["help", "value"]);
 });
+
+test("rejet ou signalement spam du dernier email : la séquence s'arrête", async () => {
+  const { deliveryStopsSequence } = await import("../src/lib/prospect-sequence.ts");
+  assert.equal(deliveryStopsSequence("bounced"), true);
+  assert.equal(deliveryStopsSequence("complained"), true);
+  for (const ok of ["delivered", "delivery_delayed", "sent", "opened", "clicked", null, undefined]) {
+    assert.equal(deliveryStopsSequence(ok), false);
+  }
+});

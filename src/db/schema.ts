@@ -299,7 +299,8 @@ export const webhookDeliveries = sqliteTable("webhook_deliveries", {
 
 /* ─────────────────────────── CRM prospects du catalogue ─────────────────────────── */
 
-export const PROSPECT_STATUSES = ["open", "converted", "unsubscribed", "lost"] as const;
+/** bounced = adresse qui rejette nos emails (ou signalement en spam) : plus aucun email automatique. */
+export const PROSPECT_STATUSES = ["open", "converted", "unsubscribed", "lost", "bounced"] as const;
 export type ProspectStatus = (typeof PROSPECT_STATUSES)[number];
 
 /**
