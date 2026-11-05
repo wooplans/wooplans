@@ -13,7 +13,10 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const n = await countPublishedPlans();
-  return { description: n ? SITE.description.replace("Des modèles", `${n} modèles`) : SITE.description };
+  return {
+    description: n ? SITE.description.replace("Des modèles", `${n} modèles`) : SITE.description,
+    alternates: { canonical: "/" },
+  };
 }
 
 const STEPS = [

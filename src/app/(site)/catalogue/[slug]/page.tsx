@@ -35,8 +35,10 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) return { title: "Modèle introuvable", robots: { index: false } };
-  const title = plan.seoTitle || planSeoTitle(plan);
-  const description = plan.seoDescription || planSeoDescription(plan);
+  // Espaces multiples retirés des titres et descriptions saisis à la main (« Duplex  D4-033 »).
+  const tidy = (v: string) => v.replace(/\s+/g, " ").trim();
+  const title = tidy(plan.seoTitle || planSeoTitle(plan));
+  const description = tidy(plan.seoDescription || planSeoDescription(plan));
   // Vignette JPEG légère (WhatsApp ignore le WebP et les images lourdes) ; couverture d'origine si elle n'est pas dans R2.
   const sharePath = shareImagePath(plan.coverImage);
   const image = sharePath

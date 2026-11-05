@@ -98,6 +98,46 @@ for token, value in PRICE_TOKENS.items():
 if "{{" in s:
     raise SystemExit("repère de prix non remplacé : " + s[s.index("{{"):][:40])
 
+# Données structurées (Google) : Product + Offer au prix du catalogue, FAQPage tirée de la FAQ de la page.
+# Pas d'AggregateRating : les avis de la page ne sont pas balisés.
+import html as _html
+
+def _plain(fragment: str) -> str:
+    return re.sub(r"\s+", " ", _html.unescape(re.sub(r"<[^>]+>", " ", fragment))).replace("\u00a0", " ").strip()
+
+faq_block = s[s.index('<div class="faq">'):]
+questions = [
+    {"@type": "Question", "name": _plain(q), "acceptedAnswer": {"@type": "Answer", "text": _plain(a)}}
+    for q, a in re.findall(r"<details[^>]*><summary>(.*?)</summary>(.*?)</details>", faq_block, re.S)
+]
+if len(questions) < 5:
+    raise SystemExit("FAQ introuvable pour les données structurées")
+ld = [
+    {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Catalogue Premium WOOPLANS",
+        "description": "Plans de villas et duplex pour l'Afrique francophone avec rendus 3D, plans cotés et devis détaillés par poste, accessibles sur téléphone.",
+        "image": "https://www.wooplans.com/assets/digital/hero-catalogue.jpg",
+        "brand": {"@type": "Brand", "name": "WOOPLANS"},
+        "offers": {
+            "@type": "Offer",
+            "url": "https://www.wooplans.com/catalogue-premium",
+            "price": str(PRICE),
+            "priceCurrency": "XAF",
+            "availability": "https://schema.org/InStock",
+        },
+    },
+    {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": questions},
+]
+jsonld = "".join(
+    '<script type="application/ld+json">' + json.dumps(x, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + "</script>\n"
+    for x in ld
+)
+if "<!-- JSONLD -->" not in s:
+    raise SystemExit("emplacement <!-- JSONLD --> introuvable")
+s = s.replace("<!-- JSONLD -->", jsonld.rstrip("\n"))
+
 out = ROOT / "public" / "lp" / "catalogue-premium.html"
 out.write_text(s, encoding="utf-8")
 print(f"OK → {out.relative_to(ROOT)} ({len(s)} octets)")
