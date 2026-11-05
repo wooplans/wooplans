@@ -1,9 +1,10 @@
-import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, lt, ne, sql, sum, type SQL } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, lt, ne, notInArray, or, sql, sum, type SQL } from "drizzle-orm";
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { getDb, schema } from "@/db";
 import { channelOf, type Channel } from "@/lib/attribution";
 import { TZ_OFFSET_MS, localDay, type Range } from "@/lib/date-range";
 import { getEnv } from "@/lib/env";
+import { OWNER_EMAILS } from "@/lib/owner-emails";
 
 /** Produit Chariow « Plan et devis » : ses ventes sont comptées à part du Catalogue Premium. */
 function planDevisProductId() {
@@ -12,6 +13,10 @@ function planDevisProductId() {
 
 /** Vue de la page de vente actuelle (marqueur « b » gardé de l'ancien test A/B, pour la continuité des chiffres). */
 const SALES_PAGE_VIEW = "variant_b";
+
+/** Exclut les essais du propriétaire (ventes et intentions de paiement faites avec ses propres adresses). */
+const notOwnerSale = () => or(isNull(schema.sales.email), notInArray(sql`lower(${schema.sales.email})`, [...OWNER_EMAILS]))!;
+const notOwnerIntent = () => or(isNull(schema.checkoutIntents.email), notInArray(sql`lower(${schema.checkoutIntents.email})`, [...OWNER_EMAILS]))!;
 
 /** Colonne dans la période [since, until[. */
 function within(col: SQLiteColumn, range: Range): SQL {
@@ -35,28 +40,28 @@ export async function getFunnelKpis(range: Range) {
   const [catalogue] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
+    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [planDevis] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [checkouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(isNull(schema.checkoutIntents.planSlug), within(schema.checkoutIntents.createdAt, range)));
+    .where(and(isNull(schema.checkoutIntents.planSlug), within(schema.checkoutIntents.createdAt, range), notOwnerIntent()));
   const [planDevisCheckouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(isNotNull(schema.checkoutIntents.planSlug), ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)));
+    .where(and(isNotNull(schema.checkoutIntents.planSlug), ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range), notOwnerIntent()));
   // Plans et devis offerts (formulaire email des fiches) : contacts captés, comptés à part des paiements.
   const [gifts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
-    .where(and(eq(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)));
+    .where(and(eq(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range), notOwnerIntent()));
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range)));
+    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [customPlans] = await db
     .select({ revenue: sum(schema.leadPayments.amount) })
     .from(schema.leadPayments)
@@ -120,13 +125,13 @@ export async function getChannelBreakdown(range: Range) {
       .select({ ...dims, n: count() })
       .from(schema.checkoutIntents)
       .leftJoin(v, eq(v.id, schema.checkoutIntents.visitorId))
-      .where(and(ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range)))
+      .where(and(ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range), notOwnerIntent()))
       .groupBy(...groupBy),
     db
       .select({ ...dims, n: count(), revenue: sum(schema.sales.amount) })
       .from(schema.sales)
       .leftJoin(v, eq(v.id, schema.sales.visitorId))
-      .where(and(eq(schema.sales.status, "completed"), within(schema.sales.occurredAt, range)))
+      .where(and(eq(schema.sales.status, "completed"), within(schema.sales.occurredAt, range), notOwnerSale()))
       .groupBy(...groupBy),
   ]);
 
@@ -209,7 +214,7 @@ export async function getDailySeries(range: Range) {
   const sales = await db
     .select({ day: bucket(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range)))
+    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range), notOwnerSale()))
     .groupBy(bucket(schema.sales.occurredAt));
 
   const keys = hourly
@@ -241,7 +246,7 @@ export async function getSalesPageStats(range: Range) {
   const intents = await db
     .select({ status: schema.checkoutIntents.status, n: count() })
     .from(schema.checkoutIntents)
-    .where(and(within(schema.checkoutIntents.createdAt, range), current(schema.checkoutIntents.ctaId)))
+    .where(and(within(schema.checkoutIntents.createdAt, range), notOwnerIntent(), current(schema.checkoutIntents.ctaId)))
     .groupBy(schema.checkoutIntents.status);
 
   const e = (type: string) => events.find((r) => r.type === type);
