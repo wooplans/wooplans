@@ -3,12 +3,13 @@ import { and, desc, eq, gte, isNotNull, isNull, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, adminSaleEmail, planDevisEmail, sendEmail } from "@/lib/email";
-import { getEnv, siteUrl } from "@/lib/env";
+import { getEnv, runInBackground, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
 import { captureServerEvents } from "@/lib/posthog";
 import { recordProspectEvent } from "@/lib/prospects";
+import { sendMetaPurchase } from "@/lib/meta-capi";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -233,6 +234,25 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const { member, code } = granted;
 
   await db.update(schema.sales).set({ memberId: member.id }).where(eq(schema.sales.id, saleRow.id));
+
+  // Achat confirmé → API Conversions de Meta (le Pixel de /merci ne part que si l'acheteur revient sur le site).
+  // eventID identique à celui du Pixel (PurchaseStatus) pour que Meta ne compte l'achat qu'une fois.
+  // Acheteurs d'Europe écartés : le consentement n'est pas connu côté serveur.
+  if (!countryRequiresConsent(values.country)) {
+    runInBackground(
+      sendMetaPurchase(getEnv().FB_PIXEL_ID, getEnv().META_CAPI_TOKEN, {
+        eventId: `wp_purchase_${intent && !attributionOnly ? intent.id : `sale_${sale.id}`}`,
+        value: amount,
+        currency,
+        contentName: "Catalogue Premium Wooplans",
+        occurredAt: values.occurredAt,
+        email,
+        phone: values.phone,
+        country: values.country,
+        sourceUrl: siteUrl("/catalogue-premium"),
+      }),
+    );
+  }
 
   if (intent) {
     await db
