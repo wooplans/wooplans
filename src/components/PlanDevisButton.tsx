@@ -93,7 +93,9 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
     setError(null);
     setSending(true);
     const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
-    const data = { ...form, phone: nationalNumber(form.phone || "", dial) };
+    // Prénom et nom saisis séparément, envoyés en un seul nom complet (attendu par l'API).
+    const { firstName = "", lastName = "", ...rest } = form;
+    const data = { ...rest, name: `${firstName} ${lastName}`.trim(), phone: nationalNumber(form.phone || "", dial) };
     // Essai Wajub : ?paiement=wajub sur la fiche (sinon le cookie posé par la page de vente, ou le réglage du site).
     const provider = new URLSearchParams(window.location.search).get("paiement") || undefined;
     const response = await fetch("/api/plan-devis", {
@@ -152,29 +154,32 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
           onInvalidCapture={(e) => track(FUNNEL_EVENTS.planDevisInvalid, { field: (e.target as Element).getAttribute("name") })}
           className="grid gap-4 p-5 text-left sm:p-6"
         >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="eyebrow">Modèle {plan.code}</p>
-              <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-xl font-bold leading-tight">Recevez le plan et devis</h2>
-            </div>
+          <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
+            <p className="eyebrow">Plan et devis</p>
+            <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
+            <p className="mt-1 text-4xl font-bold tracking-tight">
+              {price.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
+            </p>
+            <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="-mr-2 -mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-lg text-muted hover:bg-black/5"
+              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-lg text-muted hover:bg-black/5"
               aria-label="Fermer"
             >
               ✕
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 px-4 py-3">
-            <p className="text-sm leading-snug text-foreground/80">Plan coté et devis détaillé, envoyés par email.</p>
-            <p className="whitespace-nowrap text-lg font-bold text-primary">{price}</p>
-          </div>
-
-          <div>
-            <label className="label" htmlFor={`pd-name-${plan.slug}`}>Nom complet</label>
-            <input id={`pd-name-${plan.slug}`} name="name" required minLength={2} autoComplete="name" placeholder="Jean Dupont" className="input" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label" htmlFor={`pd-first-${plan.slug}`}>Prénom</label>
+              <input id={`pd-first-${plan.slug}`} name="firstName" required minLength={1} autoComplete="given-name" placeholder="Kouame" className="input" />
+            </div>
+            <div>
+              <label className="label" htmlFor={`pd-last-${plan.slug}`}>Nom</label>
+              <input id={`pd-last-${plan.slug}`} name="lastName" required minLength={1} autoComplete="family-name" placeholder="Diallo" className="input" />
+            </div>
           </div>
           <div>
             <label className="label" htmlFor={`pd-email-${plan.slug}`}>Email</label>
@@ -191,7 +196,7 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
             <p className="mt-1 text-xs text-muted">Le document vous y est envoyé.</p>
           </div>
           <div>
-            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>Numéro Mobile Money / WhatsApp</label>
+            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>Téléphone (WhatsApp)</label>
             <div className="flex gap-2">
               {/* Indicatif seul à l'écran, la liste complète des pays s'ouvre au toucher. */}
               <div className="input relative flex w-auto shrink-0 items-center gap-1 pr-3 font-medium focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
@@ -238,9 +243,9 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
           )}
           {error ? <p className="rounded-xl bg-secondary/10 px-4 py-3 text-sm text-secondary">{error}</p> : null}
           <button type="submit" disabled={sending} className="btn-cta mt-1 w-full py-3.5 text-base">
-            {sending ? "Ouverture du paiement…" : `Payer ${price}`}
+            {sending ? "Ouverture du paiement…" : "Procéder au paiement →"}
           </button>
-          <p className="-mt-1 text-center text-xs text-muted">🔒 Paiement sécurisé par Mobile Money ou carte bancaire</p>
+          <p className="-mt-1 text-center text-xs text-muted">🔒 Vous serez redirigé vers la page de paiement sécurisée (Mobile Money ou carte bancaire)</p>
         </form>
       </dialog>
     </>

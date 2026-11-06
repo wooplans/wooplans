@@ -35,7 +35,14 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
-          pixelPurchase(pixelId, key, { value: projet.price, currency: "XAF", content_name: `Plan et devis ${json.plan?.code ?? ""}`.trim() });
+          // content_ids = code du modèle : Meta voit quel modèle se vend, campagne par campagne.
+          const code = json.plan?.code;
+          pixelPurchase(pixelId, key, {
+            value: projet.price,
+            currency: "XAF",
+            content_name: `Plan et devis ${code ?? ""}`.trim(),
+            ...(code ? { content_ids: [code], content_type: "product" } : {}),
+          });
         }
         return;
       }

@@ -242,9 +242,12 @@ export default async function PlanPage({ params }: Props) {
           </Link>
         )}
       </div>
-      <div className="mt-16">
-        <CtaCatalogue ctaId="plan_band" title={project ? "Vous hésitez encore entre plusieurs modèles ?" : undefined} />
-      </div>
+      {/* Offre à l'unité : la fiche est la page de vente du modèle, sans bandeau du catalogue en bas. */}
+      {project && !planGiftEnabled() ? null : (
+        <div className="mt-16">
+          <CtaCatalogue ctaId="plan_band" title={project ? "Vous hésitez encore entre plusieurs modèles ?" : undefined} />
+        </div>
+      )}
     </>
   );
 }
