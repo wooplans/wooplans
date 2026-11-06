@@ -19,14 +19,12 @@ export function projectStartLink(plan: Props["plan"]) {
   return whatsappLink(`Bonjour WOOPLANS, je veux télécharger le plan et le devis du modèle ${plan.code} (${plan.name}).`);
 }
 
-const STEP_ONE = [
-  "Plan de distribution avec les dimensions",
-  "Devis fondation, élévation, toiture, etc.",
-  "Discussion avec nos architectes sur WhatsApp",
-  "Idéal pour préparer les modifications",
+/** Ce que l'acheteur reçoit dès le paiement (carte de la fiche et formulaire de paiement). */
+export const PLAN_DEVIS_ITEMS = [
+  "Plan de distribution + dimensions",
+  "Devis de la fondation aux finitions",
+  "Discuter avec un architecte sur WhatsApp",
 ];
-
-const STEP_TWO = ["Plans personnalisés selon vos besoins et votre terrain", "Dossier prêt à remettre à vos techniciens"];
 
 /** Plan et devis offert : contenu du cadeau. */
 const GIFT_ITEMS = ["Plan de distribution avec les dimensions", "Devis fondation, élévation, toiture, etc.", "Envoyé par email en quelques minutes"];
@@ -44,48 +42,25 @@ function Checklist({ items }: { items: string[] }) {
   );
 }
 
-/** Prix d'une étape, sur sa propre ligne : évite un « · prix » orphelin quand le titre passe à la ligne. */
-function Price({ value }: { value: string }) {
-  return (
-    <span className="mt-1 inline-block whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-bold text-primary">
-      {value}
-    </span>
-  );
-}
-
 /**
  * Offre d'une fiche modèle, en 2 étapes : télécharger le plan et le devis du modèle (on peut en
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
  * Les détails (contenu, déduction, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
-export function ProjectOffer({ plan, offer, planCount, online }: Props) {
+export function ProjectOffer({ plan, planCount, online }: Props) {
   const start = formatFcfa(projectStartPrice());
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
   if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
-      <h2 className="text-lg font-bold leading-snug tracking-tight sm:text-xl">
-        Ce modèle <span className="whitespace-nowrap">{plan.code}</span> vous intéresse ?
-      </h2>
+      <p className="eyebrow">Plan et devis · {plan.code}</p>
+      <p className="mt-1 text-3xl font-bold tracking-tight">
+        {start.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
+      </p>
+      <p className="mt-0.5 text-sm text-muted">Téléchargement instantané · paiement unique</p>
 
-      <ol className="mt-4 space-y-5">
-        <li className="flex gap-3">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-white">1</span>
-          <div className="min-w-0">
-            <p className="font-semibold leading-snug">Téléchargez son plan et devis</p>
-            <Price value={start} />
-            <Checklist items={STEP_ONE} />
-          </div>
-        </li>
-        <li className="flex gap-3">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-primary text-sm font-bold text-primary">2</span>
-          <div className="min-w-0">
-            <p className="font-semibold leading-snug">Obtenez les plans complets</p>
-            <Price value={formatFcfa(offer.price)} />
-            <Checklist items={STEP_TWO} />
-          </div>
-        </li>
-      </ol>
+      <h2 className="mt-4 text-base font-bold">Ce que vous obtenez immédiatement</h2>
+      <NumberedList items={PLAN_DEVIS_ITEMS} />
 
       <PlanDevisButton
         plan={plan}
@@ -97,14 +72,66 @@ export function ProjectOffer({ plan, offer, planCount, online }: Props) {
       />
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
-        Vous hésitez entre plusieurs modèles ?{" "}
-        <Link href={SITE.catalogueUrl} data-cta="plan_catalogue" data-plan={plan.slug} className="font-semibold text-primary hover:underline">
-          Le Catalogue Premium
-        </Link>{" "}
-        réunit les plans et devis de {withPlanCount(planCount, "modèles", "tous les")} :{" "}
-        <span className="whitespace-nowrap font-semibold">{formatFcfa(cataloguePrice())}</span>.
+        Ensuite, si le modèle vous plaît, nos architectes l&apos;adaptent à votre terrain sur WhatsApp :{" "}
+        <a href="#personnalisation" className="font-semibold text-primary hover:underline">plans complets</a>, {start} déduits.
       </p>
     </div>
+  );
+}
+
+/** Liste numérotée ① ② ③ de ce que contient le plan et devis. */
+export function NumberedList({ items }: { items: readonly string[] }) {
+  return (
+    <ol className="mt-2 space-y-2 text-sm leading-snug text-foreground/80">
+      {items.map((item, i) => (
+        <li key={item} className="flex gap-2.5">
+          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-foreground/60 text-[11px] font-semibold" aria-hidden>
+            {i + 1}
+          </span>
+          <span>{item}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/**
+ * Dernière section de la fiche : l'étape 2, la personnalisation du modèle sur WhatsApp pour obtenir
+ * les plans complets. Le message pré-rempli cite le modèle, pour retrouver la fiche CRM.
+ */
+export function PersonalizeSection({ plan, offer }: { plan: Props["plan"]; offer: CustomPlanOffer }) {
+  const start = formatFcfa(projectStartPrice());
+  const message = `Bonjour WOOPLANS, je veux personnaliser le modèle ${plan.code} (${plan.name}) et obtenir les plans complets.`;
+  return (
+    <section id="personnalisation" className="mt-16 scroll-mt-24 rounded-2xl bg-primary p-6 text-white sm:p-8">
+      <p className="text-sm font-semibold uppercase tracking-wide text-white/70">Étape 2 · Personnalisation</p>
+      <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Adaptez le {plan.code} à votre terrain et obtenez les plans complets</h2>
+      <p className="mt-3 max-w-2xl text-white/85">
+        Envoyez-nous les dimensions de votre terrain et vos changements (une chambre en plus, un garage…). Nos architectes adaptent le
+        modèle et vous livrent le dossier à remettre à vos techniciens.
+      </p>
+      <ul className="mt-4 grid gap-1.5 text-sm text-white/90 sm:grid-cols-2">
+        {offer.deliverables.map((d) => (
+          <li key={d} className="flex gap-2">
+            <span aria-hidden>✓</span>
+            {d}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-5 text-lg">
+        Prix fixe : <strong>{formatFcfa(offer.price)}</strong>
+        <span className="block text-sm text-white/75">Les {start} du plan et devis sont déduits : il reste {formatFcfa(projectBalance(offer))}.</span>
+      </p>
+      <a
+        href={whatsappLink(message)}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-whatsapp={`personnalisation_${plan.slug}`}
+        className="btn mt-5 w-full bg-[#25D366] py-3.5 text-base font-bold text-white hover:bg-[#1ebe5a] sm:w-auto sm:px-8"
+      >
+        Personnaliser ce modèle sur WhatsApp
+      </a>
+    </section>
   );
 }
 
@@ -165,16 +192,24 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
   }
   return [
     {
-      question: "Que contient le plan et devis que je télécharge ?",
-      answer: `Un document PDF du modèle ${plan.code}, disponible dès le paiement : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif de construction poste par poste (fondation, élévation, toiture, finitions…). Vous recevez aussi notre numéro WhatsApp pour discuter avec nos architectes des modifications que vous souhaitez. Vous pouvez télécharger le plan et devis de plusieurs modèles pour les comparer.`,
+      question: "Comment je reçois mon plan après l'achat ?",
+      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement et vous est envoyé par email. Pas besoin d'attendre. Pensez à regarder dans l'onglet Promotions ou dans les spams.`,
     },
     {
-      question: "C'est quoi les plans complets personnalisés ?",
-      answer: `Le dossier que vous remettez à vos techniciens pour construire : ${deliverables}. Nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Prix fixe : ${formatFcfa(offer.price)} pour ce modèle. Les ${start} de son plan et devis sont déduits : il reste ${formatFcfa(projectBalance(offer))} à payer.`,
+      question: "Quels sont les moyens de paiement ?",
+      answer: "Le paiement est sécurisé : Mobile Money (au Cameroun : MTN MoMo et Orange Money) ou carte bancaire. Après le formulaire, vous êtes redirigé vers la page de paiement.",
     },
     {
-      question: "Que contient le Catalogue Premium ?",
-      answer: `Les plans de distribution et les devis détaillés de ${models}, pour ${catalogue} en paiement unique, avec un accès à vie et les nouveaux modèles inclus. Idéal si plusieurs modèles vous intéressent. Son prix est lui aussi déduit de vos plans complets.`,
+      question: "C'est quoi exactement le plan et devis ?",
+      answer: `Le document pour valider votre projet avant de construire : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif poste par poste (fondation, élévation, toiture, finitions…). Il vous permet aussi d'échanger avec un architecte sur WhatsApp pour préparer les ajustements selon vos besoins et votre terrain.`,
+    },
+    {
+      question: "Puis-je construire avec le plan et devis ?",
+      answer: `Non : pour construire, il faut les plans complets (${deliverables}). Nos architectes adaptent le modèle à votre terrain sur WhatsApp. Prix fixe : ${formatFcfa(offer.price)} pour ce modèle ; les ${start} du plan et devis sont déduits, il reste ${formatFcfa(projectBalance(offer))} à payer.`,
+    },
+    {
+      question: "Plusieurs modèles m'intéressent, comment faire ?",
+      answer: `Téléchargez le plan et devis de chacun pour les comparer. Le Catalogue Premium réunit aussi ceux de ${models}, pour ${catalogue} en paiement unique.`,
     },
   ];
 }

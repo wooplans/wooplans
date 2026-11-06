@@ -9,7 +9,7 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
-import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
+import { PersonalizeSection, ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
 import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
@@ -216,6 +216,8 @@ export default async function PlanPage({ params }: Props) {
         </section>
         )}
 
+        {project && !planGiftEnabled() ? <PersonalizeSection plan={plan} offer={project} /> : null}
+
         {similar.length > 0 ? (
           <section className="mt-16">
             <h2 className="mb-6 text-2xl font-semibold tracking-tight">Modèles similaires</h2>
@@ -242,9 +244,12 @@ export default async function PlanPage({ params }: Props) {
           </Link>
         )}
       </div>
-      <div className="mt-16">
-        <CtaCatalogue ctaId="plan_band" title={project ? "Vous hésitez encore entre plusieurs modèles ?" : undefined} />
-      </div>
+      {/* Offre à l'unité : la fiche est la page de vente du modèle, sans bandeau du catalogue en bas. */}
+      {project && !planGiftEnabled() ? null : (
+        <div className="mt-16">
+          <CtaCatalogue ctaId="plan_band" title={project ? "Vous hésitez encore entre plusieurs modèles ?" : undefined} />
+        </div>
+      )}
     </>
   );
 }
