@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { memberBalance, planGiftEnabled, projectBalance, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
+import { memberBalance, planGiftEnabled, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
@@ -72,8 +72,7 @@ export function ProjectOffer({ plan, planCount, online }: Props) {
       />
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
-        Ensuite, si le modèle vous plaît, nos architectes l&apos;adaptent à votre terrain sur WhatsApp :{" "}
-        <a href="#personnalisation" className="font-semibold text-primary hover:underline">plans complets</a>, {start} déduits.
+        Ensuite, si le modèle vous plaît, nos architectes l&apos;adaptent à votre terrain sur WhatsApp.
       </p>
     </div>
   );
@@ -92,46 +91,6 @@ export function NumberedList({ items }: { items: readonly string[] }) {
         </li>
       ))}
     </ol>
-  );
-}
-
-/**
- * Dernière section de la fiche : l'étape 2, la personnalisation du modèle sur WhatsApp pour obtenir
- * les plans complets. Le message pré-rempli cite le modèle, pour retrouver la fiche CRM.
- */
-export function PersonalizeSection({ plan, offer }: { plan: Props["plan"]; offer: CustomPlanOffer }) {
-  const start = formatFcfa(projectStartPrice());
-  const message = `Bonjour WOOPLANS, je veux personnaliser le modèle ${plan.code} (${plan.name}) et obtenir les plans complets.`;
-  return (
-    <section id="personnalisation" className="mt-16 scroll-mt-24 rounded-2xl bg-primary p-6 text-white sm:p-8">
-      <p className="text-sm font-semibold uppercase tracking-wide text-white/70">Étape 2 · Personnalisation</p>
-      <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Adaptez le {plan.code} à votre terrain et obtenez les plans complets</h2>
-      <p className="mt-3 max-w-2xl text-white/85">
-        Envoyez-nous les dimensions de votre terrain et vos changements (une chambre en plus, un garage…). Nos architectes adaptent le
-        modèle et vous livrent le dossier à remettre à vos techniciens.
-      </p>
-      <ul className="mt-4 grid gap-1.5 text-sm text-white/90 sm:grid-cols-2">
-        {offer.deliverables.map((d) => (
-          <li key={d} className="flex gap-2">
-            <span aria-hidden>✓</span>
-            {d}
-          </li>
-        ))}
-      </ul>
-      <p className="mt-5 text-lg">
-        Prix fixe : <strong>{formatFcfa(offer.price)}</strong>
-        <span className="block text-sm text-white/75">Les {start} du plan et devis sont déduits : il reste {formatFcfa(projectBalance(offer))}.</span>
-      </p>
-      <a
-        href={whatsappLink(message)}
-        target="_blank"
-        rel="noopener noreferrer"
-        data-whatsapp={`personnalisation_${plan.slug}`}
-        className="btn mt-5 w-full bg-[#25D366] py-3.5 text-base font-bold text-white hover:bg-[#1ebe5a] sm:w-auto sm:px-8"
-      >
-        Personnaliser ce modèle sur WhatsApp
-      </a>
-    </section>
   );
 }
 
@@ -162,7 +121,6 @@ function GiftOffer({ plan, planCount }: Omit<Props, "online" | "offer">) {
 
 /** FAQ du modèle : remplace les blocs « Distribution cotée » et « Plans complets personnalisés ». */
 export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): FaqItem[] {
-  const start = formatFcfa(projectStartPrice());
   const catalogue = formatFcfa(cataloguePrice());
   const models = withPlanCount(planCount, "modèles", "tous les");
   const deliverables = offer.deliverables.map((d) => d.charAt(0).toLowerCase() + d.slice(1)).join(", ");
@@ -193,23 +151,19 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
   return [
     {
       question: "Comment je reçois mon plan après l'achat ?",
-      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement et vous est envoyé par email. Pas besoin d'attendre. Pensez à regarder dans l'onglet Promotions ou dans les spams.`,
+      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement et vous est envoyé par email. Pas besoin d'attendre.`,
     },
     {
       question: "Quels sont les moyens de paiement ?",
-      answer: "Le paiement est sécurisé : Mobile Money (au Cameroun : MTN MoMo et Orange Money) ou carte bancaire. Après le formulaire, vous êtes redirigé vers la page de paiement.",
+      answer: "Le paiement est sécurisé, par Mobile Money ou par carte bancaire.",
     },
     {
       question: "C'est quoi exactement le plan et devis ?",
       answer: `Le document pour valider votre projet avant de construire : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif poste par poste (fondation, élévation, toiture, finitions…). Il vous permet aussi d'échanger avec un architecte sur WhatsApp pour préparer les ajustements selon vos besoins et votre terrain.`,
     },
     {
-      question: "Puis-je construire avec le plan et devis ?",
-      answer: `Non : pour construire, il faut les plans complets (${deliverables}). Nos architectes adaptent le modèle à votre terrain sur WhatsApp. Prix fixe : ${formatFcfa(offer.price)} pour ce modèle ; les ${start} du plan et devis sont déduits, il reste ${formatFcfa(projectBalance(offer))} à payer.`,
-    },
-    {
-      question: "Plusieurs modèles m'intéressent, comment faire ?",
-      answer: `Téléchargez le plan et devis de chacun pour les comparer. Le Catalogue Premium réunit aussi ceux de ${models}, pour ${catalogue} en paiement unique.`,
+      question: "Est-ce que je peux faire modifier le plan après l'avoir téléchargé ?",
+      answer: "Oui. Après avoir obtenu le plan et devis de ce modèle, vous pourrez discuter sur WhatsApp avec nos architectes pour effectuer des modifications et obtenir tous les plans pour la construction.",
     },
   ];
 }

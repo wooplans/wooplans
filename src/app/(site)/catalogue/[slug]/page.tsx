@@ -9,7 +9,7 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
-import { PersonalizeSection, ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
+import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
 import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
@@ -215,8 +215,6 @@ export default async function PlanPage({ params }: Props) {
           </div>
         </section>
         )}
-
-        {project && !planGiftEnabled() ? <PersonalizeSection plan={plan} offer={project} /> : null}
 
         {similar.length > 0 ? (
           <section className="mt-16">
