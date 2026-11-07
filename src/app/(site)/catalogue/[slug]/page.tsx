@@ -9,6 +9,7 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
+import { PlanDevisPreview } from "@/components/PlanDevisPreview";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
 import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
@@ -23,6 +24,7 @@ import {
   levelsLabel,
   withPlanCount,
 } from "@/lib/plans";
+import { countFloorPlans, countPlanDevisDownloads } from "@/lib/plan-devis-stats";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
@@ -73,7 +75,12 @@ const PREMIUM_CONTENT = [
 export default async function PlanPage({ params }: Props) {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const [similar, planCount] = await Promise.all([getSimilarPublicPlans(plan), countPublishedPlans()]);
+  const [similar, planCount, downloads, floorPlanCount] = await Promise.all([
+    getSimilarPublicPlans(plan),
+    countPublishedPlans(),
+    countPlanDevisDownloads(),
+    countFloorPlans(plan.slug),
+  ]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
@@ -131,7 +138,18 @@ export default async function PlanPage({ params }: Props) {
             </div>
 
             {project ? (
-              <ProjectOffer plan={plan} offer={project} planCount={planCount} online={online} />
+              <ProjectOffer
+                plan={plan}
+                offer={project}
+                planCount={planCount}
+                online={online}
+                downloads={downloads}
+                preview={
+                  planGiftEnabled() ? null : (
+                    <PlanDevisPreview plan={plan} floorPlanCount={floorPlanCount} price={formatFcfa(projectStartPrice())} online={online} fallbackHref={projectStartLink(plan)} />
+                  )
+                }
+              />
             ) : (
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
@@ -228,14 +246,16 @@ export default async function PlanPage({ params }: Props) {
         {project && planGiftEnabled() ? (
           <GiftPlanButton plan={plan} label="Recevoir gratuitement le plan et devis" ctaId="plan_cadeau_sticky" className="btn-cta w-full py-3.5" />
         ) : project ? (
+          <div className="cta-pulse">
           <PlanDevisButton
             plan={plan}
-            label={`Télécharger plan et devis · ${formatFcfa(projectStartPrice())}`}
+            label={`Recevoir mon plan et devis · ${formatFcfa(projectStartPrice())}`}
             price={formatFcfa(projectStartPrice())}
             ctaId="plan_projet_sticky"
             className="btn-cta w-full py-3.5"
             fallbackHref={online ? undefined : projectStartLink(plan)}
           />
+          </div>
         ) : (
           <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
             {SITE.catalogueCta}

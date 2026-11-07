@@ -95,9 +95,8 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
     setError(null);
     setSending(true);
     const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
-    // Prénom et nom saisis séparément, envoyés en un seul nom complet (attendu par l'API).
-    const { firstName = "", lastName = "", ...rest } = form;
-    const data = { ...rest, name: `${firstName} ${lastName}`.trim(), phone: nationalNumber(form.phone || "", dial) };
+    // Un seul champ « Nom complet » (3 champs au lieu de 5) ; l'API le découpe en prénom / nom pour Chariow.
+    const data = { ...form, name: (form.name || "").trim(), phone: nationalNumber(form.phone || "", dial) };
     // Essai Wajub : ?paiement=wajub sur la fiche (sinon le cookie posé par la page de vente, ou le réglage du site).
     const provider = new URLSearchParams(window.location.search).get("paiement") || undefined;
     const response = await fetch("/api/plan-devis", {
@@ -178,15 +177,9 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label" htmlFor={`pd-first-${plan.slug}`}>Prénom</label>
-              <input id={`pd-first-${plan.slug}`} name="firstName" required minLength={1} autoComplete="given-name" placeholder="Kouame" className="input" />
-            </div>
-            <div>
-              <label className="label" htmlFor={`pd-last-${plan.slug}`}>Nom</label>
-              <input id={`pd-last-${plan.slug}`} name="lastName" required minLength={1} autoComplete="family-name" placeholder="Diallo" className="input" />
-            </div>
+          <div>
+            <label className="label" htmlFor={`pd-name-${plan.slug}`}>Nom complet</label>
+            <input id={`pd-name-${plan.slug}`} name="name" required minLength={2} autoComplete="name" placeholder="Kouame Diallo" className="input" />
           </div>
           <div>
             <label className="label" htmlFor={`pd-email-${plan.slug}`}>Email</label>
