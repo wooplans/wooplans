@@ -250,6 +250,11 @@ export const checkoutIntents = sqliteTable(
     /** Code en clair, conservé quelques heures pour l'affichage sur /merci puis effacé. */
     revealCode: text("reveal_code"),
     revealUntil: integer("reveal_until", { mode: "timestamp_ms" }),
+    /**
+     * API de conversion Meta : contexte du navigateur au début du paiement (IP, user-agent, cookies _fbp / _fbc),
+     * en JSON, pour l'achat confirmé plus tard par notification. Null si la mesure n'est pas autorisée.
+     */
+    metaContext: text("meta_context"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

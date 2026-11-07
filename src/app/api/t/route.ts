@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { parseAttribution } from "@/lib/attribution";
 import { randomId } from "@/lib/crypto";
 import { runInBackground } from "@/lib/env";
+import { fbcFromFbclid, metaAllowedForRequest } from "@/lib/meta-capi";
 import { VISITOR_COOKIE } from "@/lib/session";
 import { deviceFromUserAgent, recordServerEvent, upsertVisitor } from "@/lib/tracking";
 
@@ -63,5 +64,20 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 365,
     });
   }
+  // Clic sur une publicité Facebook (fbclid) : cookie _fbc posé tout de suite, au format du Pixel, pour que
+  // l'API de conversion relie l'achat au clic même si le Pixel (chargé tard) n'a pas eu le temps de le poser.
+  const fbclid = fbclidFrom(body.url!, request.url);
+  if (fbclid && !request.cookies.get("_fbc") && metaAllowedForRequest(request)) {
+    response.cookies.set("_fbc", fbcFromFbclid(fbclid), { secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 90 });
+  }
   return response;
+}
+
+function fbclidFrom(url: string, base: string) {
+  try {
+    const value = new URL(url, base).searchParams.get("fbclid");
+    return value && /^[\w.-]{10,500}$/.test(value) ? value : null;
+  } catch {
+    return null;
+  }
 }

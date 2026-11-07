@@ -36,13 +36,18 @@ export function pixelPurchase(pixelId: string | undefined, eventId: string, para
   }
 }
 
-export function pixelTrack(event: string, params?: Record<string, unknown>) {
+/**
+ * eventId : identifiant aussi envoyé par le serveur (API de conversion Meta) pour le même évènement ;
+ * Meta n'en compte alors qu'un seul.
+ */
+export function pixelTrack(event: string, params?: Record<string, unknown>, eventId?: string | null) {
   if (typeof window === "undefined") return;
+  const options = eventId ? { eventID: eventId } : undefined;
   if (window.fbq) {
-    window.fbq("track", event, params);
+    window.fbq("track", event, params, ...(options ? [options] : []));
     return;
   }
-  pending.push([event, params, undefined]);
+  pending.push([event, params, options]);
   if (pending.length > 20) pending.shift();
 }
 

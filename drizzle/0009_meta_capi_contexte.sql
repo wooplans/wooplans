@@ -1,0 +1,1 @@
+ALTER TABLE `checkout_intents` ADD `meta_context` text;

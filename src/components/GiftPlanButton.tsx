@@ -44,7 +44,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...fields, slug: plan.slug, confirmed }),
     }).catch(() => null);
-    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; next?: NextStep; error?: string; suggestion?: string } | null;
+    const body = (await response?.json().catch(() => null)) as { status?: string; message?: string; next?: NextStep; error?: string; suggestion?: string; metaEventId?: string | null } | null;
     setSending(false);
     if (response?.status === 409 && body?.suggestion) {
       track("gift_email_suggestion");
@@ -58,7 +58,7 @@ export function GiftPlanButton({ plan, label, ctaId, className }: Props) {
     }
     track(FUNNEL_EVENTS.giftSent, { result: body.status });
     // Contact gagné (premier cadeau de cette adresse) : évènement Lead du Pixel, objectif des publicités Meta.
-    if (body.status === "sent") pixelTrack("Lead", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.slug], content_category: "Plan et devis offert" });
+    if (body.status === "sent") pixelTrack("Lead", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.slug], content_category: "Plan et devis offert" }, body.metaEventId);
     setDone({ message: body.message, next: body.next });
   }
 
