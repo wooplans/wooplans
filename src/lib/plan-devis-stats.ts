@@ -1,4 +1,4 @@
-import { isNotNull, sum } from "drizzle-orm";
+import { and, eq, isNotNull, sum } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 const TTL_MS = 10 * 60 * 1000;
@@ -20,5 +20,18 @@ export async function countPlanDevisDownloads(): Promise<number | null> {
   } catch (error) {
     console.error("Nombre de téléchargements du plan et devis indisponible", error);
     return null;
+  }
+}
+
+/** Nombre de distributions cotées d'un modèle publié (pages floutées de l'aperçu), sans lire leur contenu. */
+export async function countFloorPlans(slug: string): Promise<number> {
+  try {
+    const plan = await getDb().query.plans.findFirst({
+      columns: { floorPlans: true },
+      where: and(eq(schema.plans.slug, slug), eq(schema.plans.status, "published")),
+    });
+    return plan?.floorPlans.length ?? 0;
+  } catch {
+    return 0;
   }
 }

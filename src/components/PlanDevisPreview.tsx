@@ -31,7 +31,20 @@ const num = (v: number) => v.toLocaleString("fr-FR", { maximumFractionDigits: 2 
  * - distributions : image floutée par le serveur (/api/apercu/fiche/<modèle>) ;
  * - pièces et devis : lignes factices floutées. Aucune donnée Premium (pièces, montants des lots) n'est envoyée.
  */
-export function PlanDevisPreview({ plan, price, online, fallbackHref }: { plan: Plan; price: string; online: boolean; fallbackHref?: string }) {
+export function PlanDevisPreview({
+  plan,
+  floorPlanCount,
+  price,
+  online,
+  fallbackHref,
+}: {
+  plan: Plan;
+  /** Nombre de distributions du modèle (une page floutée chacune ; au moins une page, même sans image). */
+  floorPlanCount: number;
+  price: string;
+  online: boolean;
+  fallbackHref?: string;
+}) {
   const category = CATEGORY_LABELS[plan.category as keyof typeof CATEGORY_LABELS] ?? plan.category;
   const land =
     plan.landArea || (plan.landWidth && plan.landDepth)
@@ -55,7 +68,7 @@ export function PlanDevisPreview({ plan, price, online, fallbackHref }: { plan: 
     ],
     ["Budget indicatif", formatBudgetRange(plan.budgetMin, plan.budgetMax)],
   ];
-  const levelCount = Math.max(1, plan.levels);
+  const levelCount = Math.max(1, floorPlanCount);
 
   return (
     <PreviewDialog planSlug={plan.slug} label="Voir un aperçu du plan et devis">
@@ -85,7 +98,7 @@ export function PlanDevisPreview({ plan, price, online, fallbackHref }: { plan: 
 
         {/* Distributions cotées : floutées par le serveur. */}
         {Array.from({ length: levelCount }, (_, i) => (
-          <Page key={i} code={plan.code} number={i + 2} title={`Distribution cotée${levelCount > 1 ? ` · ${i === 0 ? "rez-de-chaussée" : `étage ${i}`}` : ""}`}>
+          <Page key={i} code={plan.code} number={i + 2} title={`Distribution cotée${levelCount > 1 ? ` ${i + 1}` : ""}`}>
             <Locked>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

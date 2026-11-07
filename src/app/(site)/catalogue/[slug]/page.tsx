@@ -24,7 +24,7 @@ import {
   levelsLabel,
   withPlanCount,
 } from "@/lib/plans";
-import { countPlanDevisDownloads } from "@/lib/plan-devis-stats";
+import { countFloorPlans, countPlanDevisDownloads } from "@/lib/plan-devis-stats";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
@@ -75,7 +75,12 @@ const PREMIUM_CONTENT = [
 export default async function PlanPage({ params }: Props) {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const [similar, planCount, downloads] = await Promise.all([getSimilarPublicPlans(plan), countPublishedPlans(), countPlanDevisDownloads()]);
+  const [similar, planCount, downloads, floorPlanCount] = await Promise.all([
+    getSimilarPublicPlans(plan),
+    countPublishedPlans(),
+    countPlanDevisDownloads(),
+    countFloorPlans(plan.slug),
+  ]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
@@ -141,7 +146,7 @@ export default async function PlanPage({ params }: Props) {
                 downloads={downloads}
                 preview={
                   planGiftEnabled() ? null : (
-                    <PlanDevisPreview plan={plan} price={formatFcfa(projectStartPrice())} online={online} fallbackHref={projectStartLink(plan)} />
+                    <PlanDevisPreview plan={plan} floorPlanCount={floorPlanCount} price={formatFcfa(projectStartPrice())} online={online} fallbackHref={projectStartLink(plan)} />
                   )
                 }
               />
