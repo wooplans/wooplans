@@ -48,7 +48,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Stat
           label="Revenu plan et devis"
           value={formatFcfa(k.planDevisRevenue)}
-          hint={`${n(k.planDevisPurchases)} achats · ${n(k.planDevisCheckouts)} paiements démarrés · ${n(k.giftLeads)} offerts`}
+          hint={`${n(k.planDevisPurchases)} achats · ${n(k.planDevisCheckouts)} paiements démarrés · ${n(k.giftLeads)} offerts · détail : menu « Plan et devis »`}
         />
         <Stat label="Encaissements plans complets" value={formatFcfa(k.customPlanRevenue)} hint="saisis dans le CRM" />
         <Stat label="Conversion page de vente" value={pct(k.salesPageConversion)} hint="achats / visiteurs de la page" />
@@ -56,7 +56,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </div>
 
       <section className="mt-6 card p-5">
-        <h2 className="text-sm font-semibold">Tunnel</h2>
+        <h2 className="text-sm font-semibold">Tunnel du Catalogue Premium</h2>
         <ol className="mt-4 grid gap-3 md:grid-cols-4">
           {funnel.map((step, i) => {
             const prev = i > 0 ? funnel[i - 1].value : null;

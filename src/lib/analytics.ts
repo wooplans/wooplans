@@ -264,3 +264,125 @@ export async function getSalesPageStats(range: Range) {
     conversion: visitors ? purchases / visitors : 0,
   };
 }
+
+/**
+ * Tableau de bord du plan et devis (fiches modèles) : visiteurs des fiches → clic sur le bouton d'achat →
+ * paiement démarré → payé, échoué ou abandonné ; puis détail par modèle, par campagne et jour par jour.
+ * Les essais du propriétaire et les plans offerts (cadeau) sont exclus des paiements.
+ */
+export async function getPlanDevisStats(range: Range) {
+  const db = getDb();
+  const ev = schema.events;
+  const ci = schema.checkoutIntents;
+  const v = schema.visitors;
+  const planId = planDevisProductId();
+  const paidIntents = and(isNotNull(ci.planSlug), ne(ci.status, "gift"), within(ci.createdAt, range), notOwnerIntent())!;
+  const planSales = and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale())!;
+  const buyClick = sql`(${ev.ctaId} like 'plan_projet%')`;
+
+  const [views, clicks, previews, intents, sales, byModelViews, byModelIntents, byCampaignViews, byCampaignIntents, recent] = await Promise.all([
+    db.select({ visitors: countDistinct(ev.visitorId), n: count() }).from(ev).where(and(eq(ev.type, "plan_view"), within(ev.createdAt, range))),
+    db.select({ visitors: countDistinct(ev.visitorId) }).from(ev).where(and(eq(ev.type, "cta_click"), buyClick, within(ev.createdAt, range))),
+    db.select({ visitors: countDistinct(ev.visitorId) }).from(ev).where(and(eq(ev.type, "cta_click"), eq(ev.ctaId, "plan_devis_apercu"), within(ev.createdAt, range))),
+    db.select({ status: ci.status, n: count() }).from(ci).where(paidIntents).groupBy(ci.status),
+    db.select({ n: count(), revenue: sum(schema.sales.amount) }).from(schema.sales).where(planSales),
+    db
+      .select({ slug: ev.planSlug, views: count(), visitors: countDistinct(ev.visitorId) })
+      .from(ev)
+      .where(and(eq(ev.type, "plan_view"), isNotNull(ev.planSlug), within(ev.createdAt, range)))
+      .groupBy(ev.planSlug),
+    db.select({ slug: ci.planSlug, status: ci.status, n: count() }).from(ci).where(paidIntents).groupBy(ci.planSlug, ci.status),
+    db
+      .select({ campaign: sql<string>`coalesce(${v.utmCampaign}, '')`, source: v.source, visitors: countDistinct(ev.visitorId) })
+      .from(ev)
+      .leftJoin(v, eq(v.id, ev.visitorId))
+      .where(and(eq(ev.type, "plan_view"), within(ev.createdAt, range)))
+      .groupBy(sql`coalesce(${v.utmCampaign}, '')`, v.source),
+    db
+      .select({ campaign: sql<string>`coalesce(${v.utmCampaign}, '')`, source: v.source, status: ci.status, n: count() })
+      .from(ci)
+      .leftJoin(v, eq(v.id, ci.visitorId))
+      .where(paidIntents)
+      .groupBy(sql`coalesce(${v.utmCampaign}, '')`, v.source, ci.status),
+    db
+      .select({ id: ci.id, slug: ci.planSlug, status: ci.status, email: ci.email, createdAt: ci.createdAt, downloads: ci.downloads })
+      .from(ci)
+      .where(paidIntents)
+      .orderBy(desc(ci.createdAt))
+      .limit(40),
+  ]);
+
+  const status = (s?: string) => intents.filter((r) => !s || r.status === s).reduce((t, r) => t + r.n, 0);
+  const ficheVisitors = views[0]?.visitors ?? 0;
+  const purchases = sales[0]?.n ?? 0;
+
+  const models = new Map<string, { slug: string; views: number; visitors: number; checkouts: number; paid: number }>();
+  const model = (slug: string) => models.get(slug) ?? models.set(slug, { slug, views: 0, visitors: 0, checkouts: 0, paid: 0 }).get(slug)!;
+  for (const r of byModelViews) if (r.slug) Object.assign(model(r.slug), { views: r.views, visitors: r.visitors });
+  for (const r of byModelIntents) {
+    if (!r.slug) continue;
+    const m = model(r.slug);
+    m.checkouts += r.n;
+    if (r.status === "paid") m.paid += r.n;
+  }
+
+  const campaigns = new Map<string, { campaign: string; source: string | null; visitors: number; checkouts: number; paid: number }>();
+  const camp = (campaign: string, source: string | null) => {
+    const key = `${campaign}|${source ?? ""}`;
+    return campaigns.get(key) ?? campaigns.set(key, { campaign, source, visitors: 0, checkouts: 0, paid: 0 }).get(key)!;
+  };
+  for (const r of byCampaignViews) camp(r.campaign, r.source).visitors += r.visitors;
+  for (const r of byCampaignIntents) {
+    const c = camp(r.campaign, r.source);
+    c.checkouts += r.n;
+    if (r.status === "paid") c.paid += r.n;
+  }
+
+  return {
+    ficheVisitors,
+    ficheViews: views[0]?.n ?? 0,
+    buyClickVisitors: clicks[0]?.visitors ?? 0,
+    previewVisitors: previews[0]?.visitors ?? 0,
+    checkouts: status(),
+    pending: status("started"),
+    paid: status("paid"),
+    failed: status("failed"),
+    abandoned: status("abandoned"),
+    purchases,
+    revenue: Number(sales[0]?.revenue ?? 0),
+    conversion: ficheVisitors ? purchases / ficheVisitors : 0,
+    models: [...models.values()].sort((a, b) => b.paid - a.paid || b.checkouts - a.checkouts || b.visitors - a.visitors).slice(0, 30),
+    campaigns: [...campaigns.values()].filter((c) => c.visitors || c.checkouts).sort((a, b) => b.paid - a.paid || b.checkouts - a.checkouts || b.visitors - a.visitors).slice(0, 30),
+    recent,
+  };
+}
+
+/** Série du plan et devis : paiements démarrés, achats et revenu, par jour (ou par heure pour un seul jour). */
+export async function getPlanDevisSeries(range: Range) {
+  const db = getDb();
+  const hourly = range.days === 1;
+  const offset = TZ_OFFSET_MS / 1000;
+  const bucket = (col: typeof schema.checkoutIntents.createdAt | typeof schema.sales.occurredAt) =>
+    sql<string>`strftime(${hourly ? "%H" : "%Y-%m-%d"}, ${col} / 1000 + ${offset}, 'unixepoch')`;
+  const [intents, sales] = await Promise.all([
+    db
+      .select({ day: bucket(schema.checkoutIntents.createdAt), n: count() })
+      .from(schema.checkoutIntents)
+      .where(and(isNotNull(schema.checkoutIntents.planSlug), ne(schema.checkoutIntents.status, "gift"), within(schema.checkoutIntents.createdAt, range), notOwnerIntent()))
+      .groupBy(bucket(schema.checkoutIntents.createdAt)),
+    db
+      .select({ day: bucket(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
+      .from(schema.sales)
+      .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range), notOwnerSale()))
+      .groupBy(bucket(schema.sales.occurredAt)),
+  ]);
+  const keys = hourly
+    ? Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"))
+    : Array.from({ length: range.days }, (_, i) => localDay(new Date(range.since.getTime() + i * 86_400_000)));
+  return keys.map((day) => ({
+    day,
+    checkouts: intents.find((r) => r.day === day)?.n ?? 0,
+    purchases: sales.find((r) => r.day === day)?.n ?? 0,
+    revenue: Number(sales.find((r) => r.day === day)?.revenue ?? 0),
+  }));
+}
