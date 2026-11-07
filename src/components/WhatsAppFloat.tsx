@@ -1,6 +1,15 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { whatsappLink } from "@/lib/site";
 
+/**
+ * Bouton WhatsApp flottant. Absent des fiches modèles (/catalogue/<modèle>) : la fiche est la page de vente
+ * du plan et devis, le bouton détournait l'attention du paiement (décision de Tao du 7 nov.).
+ */
 export function WhatsAppFloat() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/catalogue/")) return null;
   return (
     <a
       href={whatsappLink("Bonjour WOOPLANS, j'aimerais des informations sur vos plans.")}

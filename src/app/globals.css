@@ -116,3 +116,13 @@ body:not(:has(.admin-shell)) img {
 @media (prefers-reduced-motion: reduce) {
   .catalogue-refresh-a, .catalogue-refresh-b, .catalogue-pop { animation: none; }
 }
+
+/* Bouton d'achat fixe (fiche modèle, mobile) : pulsation douce et halo orange pour attirer le regard. */
+@keyframes cta-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(240 138 46 / 0.55); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(240 138 46 / 0); }
+}
+.cta-pulse > button, .cta-pulse > a { animation: cta-pulse 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cta-pulse > button, .cta-pulse > a { animation: none; }
+}

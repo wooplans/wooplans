@@ -1,4 +1,5 @@
 import Link from "next/link";
+import projet from "@/config/projet.json";
 import { memberBalance, planGiftEnabled, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
@@ -12,7 +13,42 @@ type Props = {
   planCount: number | null;
   /** Paiement en ligne disponible (produit Chariow configuré) ; sinon le bouton ouvre WhatsApp. */
   online: boolean;
+  /** Bouton et fenêtre « Aperçu du plan et devis » (PlanDevisPreview), rendus par la fiche. */
+  preview?: React.ReactNode;
+  /** Nombre réel de téléchargements du plan et devis (tous modèles), affiché comme preuve sociale. */
+  downloads?: number | null;
 };
+
+/** En dessous, le compteur de téléchargements n'est pas affiché (un petit nombre dessert l'offre). */
+const MIN_DOWNLOADS_SHOWN = 50;
+
+/** Moyens de paiement affichés sous le prix (paiement Chariow / Wajub). */
+export const PAYMENT_METHODS = [
+  { label: "Orange Money", className: "bg-[#ff7900] text-white" },
+  { label: "MTN MoMo", className: "bg-[#ffcb05] text-[#1d2a30]" },
+  { label: "Wave", className: "bg-[#1dc8ff] text-[#0b2a4a]" },
+];
+
+/**
+ * Note moyenne affichée sur les fiches : seulement si elle est renseignée dans src/config/projet.json
+ * (« rating »: { "value": 4.9, "count": 120, "source": "avis clients Chariow" }) à partir d'avis réels et vérifiables.
+ */
+function projectRating() {
+  const rating = (projet as { rating?: { value?: number; count?: number } | null }).rating;
+  return rating?.value && rating.count ? { value: rating.value, count: rating.count } : null;
+}
+
+export function PaymentMethods({ className = "" }: { className?: string }) {
+  return (
+    <ul className={`flex flex-wrap items-center gap-1.5 ${className}`} aria-label="Moyens de paiement">
+      {PAYMENT_METHODS.map((m) => (
+        <li key={m.label} className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${m.className}`}>
+          {m.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /** Message WhatsApp de l'étape 1 quand le paiement en ligne du plan et devis n'est pas disponible. */
 export function projectStartLink(plan: Props["plan"]) {
@@ -47,7 +83,7 @@ function Checklist({ items }: { items: string[] }) {
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
  * Les détails (contenu, déduction, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
-export function ProjectOffer({ plan, planCount, online }: Props) {
+export function ProjectOffer({ plan, planCount, online, preview, downloads }: Props) {
   const start = formatFcfa(projectStartPrice());
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
   if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
@@ -58,23 +94,48 @@ export function ProjectOffer({ plan, planCount, online }: Props) {
         {start.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
       </p>
       <p className="mt-0.5 text-sm text-muted">Téléchargement instantané · paiement unique</p>
+      <PaymentMethods className="mt-2" />
 
       <h2 className="mt-4 text-base font-bold">Ce que vous obtenez immédiatement</h2>
       <NumberedList items={PLAN_DEVIS_ITEMS} />
 
       <PlanDevisButton
         plan={plan}
-        label={`Télécharger · ${start.replace(/ /g, "\u00a0")}`}
+        label="Recevoir mon plan et devis"
         price={start}
         ctaId="plan_projet"
         className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
         fallbackHref={online ? undefined : projectStartLink(plan)}
       />
+      {preview}
+      <SocialProof downloads={downloads} />
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
         Ensuite, si le modèle vous plaît, nos architectes l&apos;adaptent à votre terrain sur WhatsApp.
       </p>
     </div>
+  );
+}
+
+/** Preuve sociale sous le bouton : note (si renseignée) et nombre réel de téléchargements. */
+function SocialProof({ downloads }: { downloads?: number | null }) {
+  const rating = projectRating();
+  const shown = downloads && downloads >= MIN_DOWNLOADS_SHOWN ? downloads : null;
+  if (!rating && !shown) return null;
+  return (
+    <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-foreground/80">
+      {rating ? (
+        <span>
+          <span className="text-[#f5a623]" aria-hidden>★★★★★</span>{" "}
+          <strong>{rating.value.toLocaleString("fr-FR")}/5</strong> ({rating.count.toLocaleString("fr-FR")} avis)
+        </span>
+      ) : null}
+      {shown ? (
+        <span>
+          <strong>{shown.toLocaleString("fr-FR")}</strong> plans et devis déjà téléchargés
+        </span>
+      ) : null}
+    </p>
   );
 }
 
