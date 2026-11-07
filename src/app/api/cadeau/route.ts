@@ -7,6 +7,7 @@ import { domainAcceptsMail, suggestEmail } from "@/lib/email-check";
 import { giftPlanEmail, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { formatFcfa, getPublicPlan } from "@/lib/plans";
 import { recordProspectEvent } from "@/lib/prospects";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -119,5 +120,22 @@ export async function POST(request: NextRequest) {
     await db.delete(schema.checkoutIntents).where(eq(schema.checkoutIntents.id, intentId));
     return NextResponse.json({ error: "L'email n'a pas pu partir. Vérifiez votre adresse et réessayez." }, { status: 502 });
   }
-  return NextResponse.json({ status: "sent", message: `C'est envoyé ! Le plan et devis du modèle ${plan.code} vous attend dans votre boîte email.` });
+  // API de conversion Meta : contact gagné (Lead), même event_id que le Pixel de la fiche (déduplication).
+  let leadEventId: string | null = null;
+  if (metaAllowedForRequest(request)) {
+    leadEventId = metaEventId("lead");
+    sendMetaEventInBackground({
+      eventName: "Lead",
+      eventId: leadEventId,
+      eventSourceUrl: siteUrl(`/catalogue/${plan.slug}`),
+      user: { email, name, country: request.headers.get("cf-ipcountry"), externalId: visitorId },
+      browser: browserContext(request),
+      customData: { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.slug], content_category: "Plan et devis offert" },
+    });
+  }
+  return NextResponse.json({
+    status: "sent",
+    message: `C'est envoyé ! Le plan et devis du modèle ${plan.code} vous attend dans votre boîte email.`,
+    metaEventId: leadEventId,
+  });
 }

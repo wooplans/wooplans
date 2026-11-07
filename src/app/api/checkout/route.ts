@@ -4,9 +4,11 @@ import { createChariowCheckout } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
 import { siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { internationalPhone } from "@/lib/phone";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
+import { cataloguePrice } from "@/lib/site";
 import { recordServerEvent } from "@/lib/tracking";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
@@ -46,7 +48,15 @@ export async function POST(request: NextRequest) {
   const ctaId = (body.ctaId || "sales_page").slice(0, 80);
   const intentId = randomId();
   const db = getDb();
-  await db.insert(schema.checkoutIntents).values({ id: intentId, visitorId, email, ctaId });
+  const metaAllowed = metaAllowedForRequest(request);
+  const metaBrowser = metaAllowed ? browserContext(request) : null;
+  await db.insert(schema.checkoutIntents).values({
+    id: intentId,
+    visitorId,
+    email,
+    ctaId,
+    metaContext: metaBrowser ? JSON.stringify(metaBrowser) : null,
+  });
   if (visitorId) {
     await recordServerEvent({ visitorId, type: "checkout_start", path: "/catalogue-premium", ctaId }).catch(() => {});
   }
@@ -78,7 +88,26 @@ export async function POST(request: NextRequest) {
         });
 
   if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
-  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId });
+
+  // API de conversion Meta : même event_id que le Pixel de la page de vente (déduplication).
+  const metaEventIdValue = metaBrowser ? metaEventId("ic") : null;
+  if (metaBrowser && metaEventIdValue) {
+    sendMetaEventInBackground({
+      eventName: "InitiateCheckout",
+      eventId: metaEventIdValue,
+      eventSourceUrl: siteUrl("/catalogue-premium"),
+      user: { email, phone: internationalPhone(phone, countryCode), name, country: countryCode, externalId: visitorId },
+      browser: metaBrowser,
+      customData: {
+        content_name: "Catalogue Premium Wooplans",
+        content_ids: ["cpbook-premium-2026"],
+        content_type: "product",
+        value: cataloguePrice(),
+        currency: "XAF",
+      },
+    });
+  }
+  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId, metaEventId: metaEventIdValue });
   response.cookies.set(INTENT_COOKIE, intentId, {
     httpOnly: true,
     secure: true,

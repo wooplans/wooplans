@@ -8,7 +8,10 @@ interface CloudflareEnv {
   /** Secret de l'endpoint de notifications Wajub (whsec_…). */
   WAJUB_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
+  /** Jeton de l'API de conversion Meta (Gestionnaire d'évènements → Paramètres → API Conversions). */
   FB_ACCESS_TOKEN?: string;
+  /** Optionnel : code de test du Gestionnaire d'évènements (onglet « Tester les évènements »). À retirer ensuite. */
+  FB_TEST_EVENT_CODE?: string;
   MCP_TOKEN?: string;
   CRON_SECRET?: string;
   ANTHROPIC_API_KEY?: string;

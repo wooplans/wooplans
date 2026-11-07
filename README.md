@@ -79,6 +79,7 @@ npx wrangler secret put CHARIOW_API_KEY        # clé API Chariow (import des an
 npx wrangler secret put RESEND_API_KEY         # clé Resend (domaine wooplans.com vérifié)
 npx wrangler secret put MCP_TOKEN              # jeton du serveur MCP (32+ caractères)
 npx wrangler secret put CRON_SECRET            # jeton interne du récapitulatif quotidien
+npx wrangler secret put FB_ACCESS_TOKEN        # jeton de l'API de conversion Meta (aussi en secret GitHub FB_ACCESS_TOKEN)
 ```
 
 Variables publiques : `wrangler.jsonc` (`vars`) — URL du site, produit Chariow, prix, WhatsApp, Pixel, PostHog (`POSTHOG_KEY`, clé publique `phc_…`, et `POSTHOG_HOST`), expéditeur des emails.
@@ -205,3 +206,19 @@ npm run typecheck && npm run lint && npm test
 ```
 
 Modifier le schéma : `src/db/schema.ts` puis `npm run db:generate` (nouvelle migration dans `drizzle/`).
+
+## API de conversion Meta (Conversions API)
+
+En plus du Pixel du navigateur, le serveur envoie à Meta (`src/lib/meta-capi.ts`) :
+
+| Évènement | Quand | event_id partagé avec le Pixel |
+|---|---|---|
+| `InitiateCheckout` | paiement créé (`/api/checkout`, `/api/plan-devis`) | `ic_…` renvoyé au navigateur (`metaEventId`) |
+| `Lead` | plan et devis offert envoyé (`/api/cadeau`) | `lead_…` renvoyé au navigateur |
+| `Purchase` | achat **Wajub** confirmé (webhook ou retour sur /merci) | `wp_purchase_<intention>` (comme le Pixel de /merci) |
+
+Les achats **Chariow** ne sont pas renvoyés : l'intégration Meta de Chariow les envoie déjà (sinon doublons).
+Email, téléphone, nom, pays et identifiant visiteur sont hachés (SHA-256) ; IP, user-agent et cookies `_fbp` / `_fbc` vont en clair, comme l'exige Meta. `/api/t` pose `_fbc` dès l'arrivée d'un clic publicitaire (`fbclid`). Mêmes règles de consentement que le Pixel.
+
+- Jeton : secret GitHub `FB_ACCESS_TOKEN` (copié dans le Worker au déploiement). Sans jeton, rien n'est envoyé.
+- Test : mettre le code de l'onglet « Tester les évènements » dans la variable `FB_TEST_EVENT_CODE` du Worker, puis la retirer.

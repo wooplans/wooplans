@@ -3,9 +3,10 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { createChariowCheckout, planProductId } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { customPlanOffer } from "@/lib/custom-plans";
+import { customPlanOffer, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { internationalPhone } from "@/lib/phone";
 import { getPublicPlan } from "@/lib/plans";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -47,7 +48,15 @@ export async function POST(request: NextRequest) {
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
   const intentId = randomId();
   const ctaId = "plan_devis";
-  await db.insert(schema.checkoutIntents).values({ id: intentId, visitorId, email, ctaId, planSlug: plan.slug });
+  const metaBrowser = metaAllowedForRequest(request) ? browserContext(request) : null;
+  await db.insert(schema.checkoutIntents).values({
+    id: intentId,
+    visitorId,
+    email,
+    ctaId,
+    planSlug: plan.slug,
+    metaContext: metaBrowser ? JSON.stringify(metaBrowser) : null,
+  });
   if (visitorId) {
     await recordServerEvent({ visitorId, type: "checkout_start", path: `/catalogue/${plan.slug}`, ctaId }).catch(() => {});
   }
@@ -82,7 +91,25 @@ export async function POST(request: NextRequest) {
         });
   if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
 
-  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId });
+  // API de conversion Meta : même event_id que le Pixel de la fiche modèle (déduplication).
+  const metaEventIdValue = metaBrowser ? metaEventId("ic") : null;
+  if (metaBrowser && metaEventIdValue) {
+    sendMetaEventInBackground({
+      eventName: "InitiateCheckout",
+      eventId: metaEventIdValue,
+      eventSourceUrl: `${request.nextUrl.origin}/catalogue/${plan.slug}`,
+      user: { email, phone: internationalPhone(phone, countryCode), name, country: countryCode, externalId: visitorId },
+      browser: metaBrowser,
+      customData: {
+        content_name: `Plan et devis ${plan.code}`,
+        content_ids: [plan.code],
+        content_type: "product",
+        value: projectStartPrice(),
+        currency: "XAF",
+      },
+    });
+  }
+  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId, metaEventId: metaEventIdValue });
   response.cookies.set(INTENT_COOKIE, intentId, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 48 });
   return response;
 }

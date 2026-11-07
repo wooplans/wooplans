@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import projet from "@/config/projet.json";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
+import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 import { PHONE_COUNTRIES, phoneCountryOrDefault, type PhoneCountryCode as CountryCode } from "@/lib/phone";
 
@@ -103,7 +105,7 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data, slug: plan.slug, provider }),
     }).catch(() => null);
-    const body = (await response?.json().catch(() => null)) as { url?: string; mode?: string; error?: string } | null;
+    const body = (await response?.json().catch(() => null)) as { url?: string; mode?: string; error?: string; metaEventId?: string | null } | null;
     if (!response?.ok || !body?.url) {
       track(FUNNEL_EVENTS.planDevisError, { status: response?.status ?? "network" });
       setError(body?.error || "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.");
@@ -113,7 +115,12 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
     submitted.current = true;
     phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
-    window.location.href = body.url;
+    // Pixel Meta : paiement réellement créé ; même event_id que l'API de conversion (un seul évènement compté).
+    pixelTrack("InitiateCheckout", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.code], content_type: "product", value: projet.price, currency: "XAF" }, body.metaEventId);
+    const url = body.url;
+    setTimeout(() => {
+      window.location.href = url;
+    }, 300);
   }
 
   return (

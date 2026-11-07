@@ -765,9 +765,9 @@ function pay(e){
     .then(function(r){
       if(!r.ok||!r.j.url)throw new Error(r.j&&r.j.error||'');
       wpCapture('checkout_redirect',{cta_id:ckCta,provider:r.j.mode==='wajub'?'wajub':'chariow',promo:!!code});
-      /* Paiement réellement démarré : le serveur a créé le paiement. (Avant : événement envoyé au simple clic sur le bouton d'achat.) */
+      /* Paiement réellement démarré : le serveur a créé le paiement. eventID = celui de l'API de conversion (un seul évènement compté). */
       var go=function(){location.href=r.j.url},done=false,once=function(){if(!done){done=true;go()}};
-      try{fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:29000,currency:'XAF'});}catch(_){}
+      try{fbq('track','InitiateCheckout',{content_name:'Catalogue Premium Wooplans',content_ids:['cpbook-premium-2026'],content_type:'product',value:29000,currency:'XAF'},r.j.metaEventId?{eventID:r.j.metaEventId}:{});}catch(_){}
       setTimeout(once,300);
     })
     .catch(function(x){err.textContent=x.message||"Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.";err.hidden=false;btn.disabled=false;btn.innerHTML=label});

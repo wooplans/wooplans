@@ -10,6 +10,7 @@ import {
 } from "@/lib/chariow";
 import { projectStartPrice } from "@/lib/custom-plans";
 import { getEnv } from "@/lib/env";
+import { parseBrowserContext, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { cataloguePrice } from "@/lib/site";
 
 export { verifyWajubSignature } from "@/lib/wajub-signature";
@@ -194,7 +195,44 @@ export async function processWajubPayment(payment: WajubPayment, saleEvent: stri
       return "invalid_payload";
     }
   }
-  return processSaleEvent(payload, "wajub");
+  const outcome = await processSaleEvent(payload, "wajub");
+  // Achat confirmé (une seule fois grâce aux verrous du traitement) : API de conversion Meta.
+  if (outcome === "access_granted" || outcome === "plan_delivered") await sendWajubPurchaseToMeta(payment, payload);
+  return outcome;
+}
+
+/**
+ * Achat Wajub → évènement Purchase de l'API de conversion Meta (les achats Chariow sont déjà envoyés par
+ * l'intégration Meta de Chariow). event_id = celui du Pixel de la page /merci (déduplication).
+ * Envoyé seulement si la mesure était autorisée au début du paiement (contexte enregistré avec l'intention).
+ */
+async function sendWajubPurchaseToMeta(payment: WajubPayment, payload: ChariowSalePayload) {
+  const intentId = String(payment.metadata?.intent_id ?? "");
+  if (!intentId) return;
+  const intent = await getDb().query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intentId) });
+  const browser = parseBrowserContext(intent?.metaContext);
+  if (!intent || !browser) return;
+  const meta = payload.sale?.custom_metadata ?? {};
+  const planCode = meta.offer === "plan_devis" ? meta.plan_code : undefined;
+  sendMetaEventInBackground({
+    eventName: "Purchase",
+    eventId: `wp_purchase_${intentId}`,
+    eventSourceUrl: browser.url,
+    user: {
+      email: payment.customer?.email ?? intent.email,
+      phone: payment.customer?.phone,
+      name: payment.customer?.name,
+      country: meta.country,
+      externalId: intent.visitorId,
+    },
+    browser,
+    customData: {
+      value: payload.sale?.amount?.value ?? 0,
+      currency: payload.sale?.amount?.currency || "XAF",
+      content_name: planCode ? `Plan et devis ${planCode}` : "Catalogue Premium Wooplans",
+      ...(planCode ? { content_ids: [planCode], content_type: "product" } : {}),
+    },
+  });
 }
 
 /** Notification Wajub authentifiée : dédupliquée sur l'identifiant d'événement (evt_…). */
