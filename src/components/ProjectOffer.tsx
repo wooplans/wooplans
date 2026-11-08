@@ -115,7 +115,7 @@ export function NumberedList({ items }: { items: readonly string[] }) {
     <ol className="mt-4 space-y-3 text-base leading-snug text-foreground/90">
       {items.map((item, i) => (
         <li key={item} className="flex items-center gap-3">
-          <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-primary text-[13px] font-bold text-white" aria-hidden>
+          <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full border border-foreground/60 text-[13px] font-semibold" aria-hidden>
             {i + 1}
           </span>
           <span>{item}</span>
