@@ -292,10 +292,8 @@ export function planProductId() {
   return getEnv().CHARIOW_PLAN_PRODUCT_ID || "";
 }
 
-/** Prix déduit des plans complets, inscrit dans le CRM avec l'achat. */
-const PLAN_CREDIT_NOTE = "Plan et devis payé : son prix est déduit des plans complets de ce modèle.";
-/** Plan et devis acheté avec le code de l'offre aux clients : rien n'est déduit (décision de Tao, nov. 2026). */
-const PLAN_PROMO_NOTE = `Plan et devis acheté avec le code ${UPSELL.code} (offre aux clients) : son prix n'est pas déduit des plans complets.`;
+/** Note inscrite dans le CRM avec l'achat (plus aucune déduction sur les plans complets depuis le 8 nov. 2026). */
+const PLAN_PAID_NOTE = "Plan et devis payé. Plans complets à prix fixe, sans déduction.";
 
 /**
  * Vente du produit « Plan et devis » (un seul modèle). Le modèle vient de l'intention créée
@@ -388,7 +386,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
   if (to) {
     // Offre aux clients (24 h après ce paiement) : un souci de lecture des modèles ne bloque jamais la livraison.
     const upsell = await buildUpsellEmail({ planSlug: plan.slug, paidAt: values.occurredAt, country }).catch(() => null);
-    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl, credit: !promoPurchase, upsell });
+    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl, upsell });
     await sendEmail({ to, ...mail, template: "plan_devis" });
   }
 
@@ -403,8 +401,8 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     planLabel: plan.code,
     channel: "site",
     stage: "demande",
-    projectDetails: promoPurchase ? PLAN_PROMO_NOTE : PLAN_CREDIT_NOTE,
-    catalogueCredit: promoPurchase ? 0 : amount,
+    projectDetails: promoPurchase ? `${PLAN_PAID_NOTE} Acheté avec le code ${UPSELL.code} (offre aux clients).` : PLAN_PAID_NOTE,
+    catalogueCredit: 0,
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
     utmCampaign: visitor?.utmCampaign ?? null,

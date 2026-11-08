@@ -1,6 +1,5 @@
 import { and, asc, desc, eq, gte, inArray, like, lte, ne, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { cataloguePrice } from "@/lib/site";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
 import { getChannelBreakdown, getFunnelKpis } from "@/lib/analytics";
 import { parseRange } from "@/lib/date-range";
@@ -460,7 +459,7 @@ export const TOOLS: McpTool[] = [
         channel,
         projectDetails: asString(args.details) ?? "",
         memberId: member?.id ?? null,
-        catalogueCredit: member ? cataloguePrice() : 0,
+        catalogueCredit: 0, // plans complets à prix fixe, sans déduction (8 nov. 2026)
         nextFollowUpAt: asDate(args.next_follow_up) ?? null,
       });
       await logLead(id, "note", `Demande créée par l'agent (canal : ${channel}).`);

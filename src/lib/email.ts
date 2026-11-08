@@ -1,5 +1,7 @@
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
+import { CUSTOM_PLAN_OFFERS } from "@/lib/custom-plans";
+import { formatFcfa } from "@/lib/plans";
 import { getEnv, siteUrl } from "@/lib/env";
 
 type SendInput = {
@@ -200,31 +202,25 @@ function upsellText(u: UpsellEmail) {
 /**
  * Livraison du plan et devis d'un modèle : lien de téléchargement personnel, offre aux clients
  * (plans supplémentaires avec le code, 24 h) et WhatsApp des architectes.
- * credit = false : acheté avec le code de l'offre, son prix n'est pas déduit des plans complets.
  */
 export function planDevisEmail(params: {
   name?: string | null;
   planName: string;
   planCode: string;
   downloadUrl: string;
-  credit?: boolean;
   upsell?: UpsellEmail | null;
 }) {
-  const credit = params.credit !== false;
   const subject = params.upsell
     ? `Votre plan et devis ${params.planCode} + votre code ${params.upsell.code} (24 h)`
     : `Votre plan et devis du modèle ${params.planCode}`;
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
   const whatsapp = `https://wa.me/${getEnv().WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${params.planCode} et je souhaite parler de mon projet.`)}`;
-  const architects = credit
-    ? "Ils vous accompagnent jusqu'aux plans complets personnalisés, dont le prix de ce plan et devis est déduit."
-    : "Ils vous accompagnent jusqu'aux plans complets personnalisés.";
   const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Le plan et devis du modèle <strong>${escape(params.planName)}</strong> (réf. ${escape(params.planCode)}) est prêt : plan de distribution avec les dimensions, surfaces des pièces, terrain minimum estimé et devis détaillé.</p>
 ${button(params.downloadUrl, "Télécharger mon plan et devis")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
 ${params.upsell ? upsellBlock(params.upsell) : ""}
 <p style="margin-top:24px;font-weight:700">Des modifications à faire ?</p>
-<p>Écrivez à nos architectes sur WhatsApp : une chambre en plus, un garage, la taille de votre terrain… ${architects}</p>
+<p>Écrivez à nos architectes sur WhatsApp : une chambre en plus, un garage, la taille de votre terrain… Ils adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe. La dernière partie de votre PDF détaille tout ce qui est livré.</p>
 ${button(whatsapp, "Discuter sur WhatsApp")}`);
   const text = [
     hello,
@@ -233,7 +229,7 @@ ${button(whatsapp, "Discuter sur WhatsApp")}`);
     "Ce lien est personnel. Le document est marqué à votre nom.",
     ...(params.upsell ? [upsellText(params.upsell)] : []),
     `Des modifications à faire ? Écrivez à nos architectes sur WhatsApp : ${whatsapp}`,
-    ...(credit ? ["Le prix de ce plan et devis est déduit de vos plans complets personnalisés."] : []),
+    "Nos architectes adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe : tout est détaillé dans votre PDF.",
   ].join("\n\n");
   return { subject, html, text };
 }
@@ -443,7 +439,7 @@ export function welcomeEmail(p: {
       "Quand ai-je accès ? Juste après le paiement : votre code d'accès vous est envoyé par email.",
       "Comment payer ? Par Mobile Money ou carte bancaire.",
       "Les nouveaux modèles sont-ils inclus ? Oui, ils sont ajoutés à votre espace sans frais.",
-      "Et pour construire ? Nos architectes adaptent le modèle choisi à votre terrain (plans complets) ; le prix du catalogue est déduit.",
+      "Et pour construire ? Nos architectes adaptent le modèle choisi à votre terrain (plans complets), à prix fixe.",
     ];
     cta = "Obtenir le Catalogue Premium";
   } else {
@@ -478,8 +474,8 @@ export function afterSaleEmail(p: { step: number; name?: string | null; testimon
   const intro = [
     "Merci encore pour votre confiance. Beaucoup de familles hésitent à payer en ligne : votre avis sur le Catalogue Premium les aidera à se lancer. Un simple vocal suffit, en répondant à quelques questions.",
     "Il y a deux semaines, nous vous avons demandé votre avis sur le Catalogue Premium. Si vous avez 2 minutes, il compte vraiment pour nous et pour les familles qui hésitent encore.",
-    "Nous espérons que le Catalogue Premium vous aide à choisir votre plan. Si un modèle vous plaît, nos architectes l'adaptent à votre terrain (plans complets), prix du catalogue déduit. Et si vous avez 2 minutes, votre avis nous aide beaucoup.",
-    "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, prix du catalogue déduit. Votre avis reste aussi le bienvenu.",
+    "Nous espérons que le Catalogue Premium vous aide à choisir votre plan. Si un modèle vous plaît, nos architectes l'adaptent à votre terrain (plans complets), à prix fixe. Et si vous avez 2 minutes, votre avis nous aide beaucoup.",
+    "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, à prix fixe. Votre avis reste aussi le bienvenu.",
   ][Math.min(p.step, 3)];
   const extra =
     p.step >= 2
@@ -514,7 +510,7 @@ export function memberDigestEmail(p: { name?: string | null; email: string; plan
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table>${more}
 ${button(p.loginUrl, "Voir les nouveaux modèles")}
 <p style="color:#6B7280;font-size:13px">Connectez-vous avec ${escape(p.email)} et votre code d'accès. Code perdu ? Demandez-en un nouveau sur la page de connexion.</p>
-<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Un modèle vous plaît ?</p><p style="margin:6px 0 0;font-size:14px">Nos architectes l'adaptent à votre terrain et réalisent le dossier complet, à prix fixe : 149 000 FCFA pour une villa, 249 000 FCFA pour un duplex, prix du catalogue déduit. <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">En savoir plus</a></p></div>`;
+<div style="margin-top:24px;padding:16px;background:#F5F7F9;border-radius:12px"><p style="margin:0;font-weight:700">Un modèle vous plaît ?</p><p style="margin:6px 0 0;font-size:14px">Nos architectes l'adaptent à votre terrain et réalisent le dossier complet, à prix fixe : ${formatFcfa(CUSTOM_PLAN_OFFERS[0].price)} pour une villa, ${formatFcfa(CUSTOM_PLAN_OFFERS[1].price)} pour un duplex. <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">En savoir plus</a></p></div>`;
   const text = `${p.name ? `Bonjour ${p.name},` : "Bonjour,"}\n\nNouveaux modèles dans votre Catalogue Premium :\n${p.plans
     .map((pl) => `- ${pl.name} (${pl.details}) : ${pl.url}`)
     .join("\n")}\n\nConnexion : ${p.loginUrl}\n\nNe plus recevoir ces emails : ${p.unsubscribe}`;

@@ -82,8 +82,9 @@ PRICE_TOKENS = {
     "{{PRIX}}": fcfa(PRICE),
     "{{PRIX_NBSP}}": fcfa(PRICE, "&nbsp;"),
     "{{PRIX_XAF}}": str(PRICE),
-    "{{RESTE_VILLA_NBSP}}": fcfa(villa - PRICE, "&nbsp;"),
-    "{{RESTE_DUPLEX_NBSP}}": fcfa(duplex - PRICE, "&nbsp;"),
+    # Plans complets : prix fixe, sans déduction du catalogue (décision du 8 nov. 2026).
+    "{{PRIX_VILLA_NBSP}}": fcfa(villa, "&nbsp;"),
+    "{{PRIX_DUPLEX_NBSP}}": fcfa(duplex, "&nbsp;"),
     "{{PRIX_AVANT}}": fcfa(PRICE_BEFORE),
     "{{PRIX_AVANT_NBSP}}": fcfa(PRICE_BEFORE, "&nbsp;"),
     "{{REMISE}}": str(round((PRICE_BEFORE - PRICE) / PRICE_BEFORE * 100)),
