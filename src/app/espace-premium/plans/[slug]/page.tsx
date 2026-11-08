@@ -6,7 +6,7 @@ import { FavoriteButton } from "@/components/premium/FavoriteButton";
 import { FloorPlanViewer } from "@/components/premium/FloorPlanViewer";
 import { requireMember } from "@/lib/auth";
 import { CATEGORY_LABELS, formatFcfa, getPremiumPlan } from "@/lib/plans";
-import { customPlanOffer, memberBalance } from "@/lib/custom-plans";
+import { customPlanOffer } from "@/lib/custom-plans";
 import { getFavoriteIds, privateFileUrl } from "@/lib/premium";
 import { whatsappLink } from "@/lib/site";
 
@@ -153,8 +153,8 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
         <p className="mt-2 max-w-2xl text-white/75">
           Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets.{" "}
           {offer
-            ? <>Prix fixe {formatFcfa(offer.price)} : en tant que membre, vous payez seulement <strong className="text-white">{formatFcfa(memberBalance(offer))}</strong>.</>
-            : "En tant que membre, le prix du catalogue est déduit de la commande."}
+            ? <>Prix fixe : <strong className="text-white">{formatFcfa(offer.price)}</strong>.</>
+            : "Prix fixe, annoncé dès le départ."}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <a href={whatsappLink(orderMessage)} target="_blank" rel="noopener noreferrer" data-whatsapp={`premium_order_${plan.slug}`} className="btn bg-[#25D366] text-white hover:bg-[#1eb457]">

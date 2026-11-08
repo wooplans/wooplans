@@ -1,10 +1,9 @@
 import type { PlanCategory } from "@/lib/plan-format";
 import projet from "@/config/projet.json";
-import { cataloguePrice } from "@/lib/site";
 
 /**
- * Prix fixes des plans complets personnalisés. Un membre Premium ne paie que la différence
- * avec le prix du catalogue déjà payé. Version simplifiée : un prix par type, en attendant des prix par standing.
+ * Prix fixes des plans complets personnalisés (décision de Tao du 8 nov. 2026) : 99 000 FCFA pour une villa,
+ * 199 000 FCFA pour un duplex. Aucune déduction : ni le Catalogue Premium ni le plan et devis ne sont déduits.
  */
 /** Les 10 plans livrés, pour une villa comme pour un duplex (repris dans la FAQ de la page de vente). */
 const COMPLETE_PLAN_DELIVERABLES = [
@@ -20,14 +19,14 @@ export const CUSTOM_PLAN_OFFERS = [
   {
     category: "villa",
     title: "Villa (plain-pied)",
-    price: 149000,
+    price: 99000,
     description: "Adaptation d'un modèle du catalogue à votre terrain et à vos besoins.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },
   {
     category: "duplex",
     title: "Duplex (R+1)",
-    price: 249000,
+    price: 199000,
     description: "Adaptation d'un duplex du catalogue, niveaux et escalier compris.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },
@@ -39,14 +38,9 @@ export function customPlanOffer(category: PlanCategory): CustomPlanOffer | undef
   return CUSTOM_PLAN_OFFERS.find((o) => o.category === category);
 }
 
-/** Ce qu'il reste à payer pour un membre Premium : le prix actuel du catalogue est déduit. */
-export function memberBalance(offer: CustomPlanOffer) {
-  return Math.max(0, offer.price - cataloguePrice());
-}
-
 /**
  * Plan et devis d'un modèle à télécharger (1re étape) : distribution cotée, devis détaillé et échange
- * avec nos architectes. Prix lu dans src/config/projet.json, déduit des plans complets du modèle choisi.
+ * avec nos architectes. Prix lu dans src/config/projet.json (non déduit des plans complets).
  */
 export function projectStartPrice(): number {
   return projet.price;
@@ -58,9 +52,4 @@ export function projectStartPrice(): number {
  */
 export function planGiftEnabled(): boolean {
   return Boolean((projet as { gift?: boolean }).gift);
-}
-
-/** Ce qu'il reste à payer pour les plans complets après le plan et devis du modèle. */
-export function projectBalance(offer: CustomPlanOffer) {
-  return Math.max(0, offer.price - projectStartPrice());
 }

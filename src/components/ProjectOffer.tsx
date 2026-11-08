@@ -1,7 +1,7 @@
 import Link from "next/link";
 import projet from "@/config/projet.json";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
-import { memberBalance, planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
+import { planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
@@ -82,7 +82,7 @@ function Checklist({ items }: { items: string[] }) {
 /**
  * Offre d'une fiche modèle, en 2 étapes : télécharger le plan et le devis du modèle (on peut en
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
- * Les détails (contenu, déduction, catalogue) sont dans la FAQ du modèle : voir projectFaq.
+ * Les détails (contenu, plans complets, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
 export function ProjectOffer({ plan, planCount, online, preview, downloads }: Props) {
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
@@ -208,7 +208,7 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
       },
       {
         question: "Combien coûtent les plans complets de ce modèle ?",
-        answer: `${formatFcfa(offer.price)}, prix fixe : nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Si vous avez le Catalogue Premium, ses ${catalogue} sont déduits : il reste ${formatFcfa(memberBalance(offer))} à payer.`,
+        answer: `${formatFcfa(offer.price)}, prix fixe : nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Le même prix pour tous, sans supplément.`,
       },
     ];
   }

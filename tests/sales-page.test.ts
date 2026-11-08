@@ -63,7 +63,7 @@ test("page de vente générée : une seule page (ancienne B), alignée sur le li
   assert.match(b, /name="discountCode"/);
 });
 
-test("page de vente : la feuille de route et la FAQ reprennent les prix fixes des plans complets, catalogue déduit", () => {
+test("page de vente : la feuille de route et la FAQ reprennent les prix fixes des plans complets, sans déduction", () => {
   const b = readFileSync(PAGE, "utf8").replace(/&nbsp;/g, " ");
   const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
   const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
@@ -71,8 +71,8 @@ test("page de vente : la feuille de route et la FAQ reprennent les prix fixes de
   const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FCFA`;
   for (const price of prices) {
     assert.match(b, new RegExp(fcfa(price)));
-    assert.match(b, new RegExp(fcfa(price - CATALOGUE_PRICE)));
   }
+  assert.doesNotMatch(b, /déduit|revient à 0|revient donc à 0/);
   assert.match(b, /id="parcours"/);
   assert.match(b, /Peut-on construire avec les plans du catalogue/);
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);

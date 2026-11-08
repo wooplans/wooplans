@@ -258,7 +258,7 @@ export function landingFaq(page: LandingPage, stats: PlanStats, cataloguePrice: 
     {
       question: "Peut-on adapter le plan à mon terrain ?",
       answer:
-        "Oui. Une fois le modèle choisi, nos architectes l'adaptent à votre terrain et réalisent le dossier complet de plans pour construire, à prix fixe. Le prix du Catalogue Premium est déduit de la commande.",
+        "Oui. Une fois le modèle choisi, nos architectes l'adaptent à votre terrain et réalisent le dossier complet de plans pour construire, à prix fixe.",
     },
   );
   return faq;

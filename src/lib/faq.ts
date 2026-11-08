@@ -1,6 +1,6 @@
 import type { FaqItem } from "@/components/Faq";
 import { formatFcfa } from "@/lib/plans";
-import { CUSTOM_PLAN_OFFERS, memberBalance, planGiftEnabled } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_OFFERS, planGiftEnabled } from "@/lib/custom-plans";
 import { cataloguePrice } from "@/lib/site";
 
 const [villa, duplex] = CUSTOM_PLAN_OFFERS;
@@ -38,9 +38,9 @@ export const CATALOGUE_FAQ: FaqItem[] = [
       "Non. Les distributions et les estimations servent à comparer et à choisir le bon modèle. L'adaptation à votre terrain et le dossier technique complet (plans d'exécution) sont une prestation distincte, que nous réalisons sur demande.",
   },
   {
-    question: "Le prix du catalogue est-il déduit si je commande des plans complets ?",
+    question: "Combien coûtent les plans complets ?",
     answer:
-      `Oui. Les plans complets personnalisés ont un prix fixe : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. Le prix du catalogue est déduit : vous payez seulement la différence, soit ${formatFcfa(memberBalance(villa))} pour une villa et ${formatFcfa(memberBalance(duplex))} pour un duplex.`,
+      `Les plans complets personnalisés ont un prix fixe, le même pour tous : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. C'est une prestation distincte du catalogue (qui sert à choisir votre modèle) : son prix n'est pas déduit.`,
   },
   {
     question: "Les devis estimatifs sont-ils fiables ?",

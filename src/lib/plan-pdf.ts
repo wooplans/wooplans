@@ -53,7 +53,25 @@ export type PlanPdfInput = {
   siteUrl?: string;
   /** Page publique du modèle : lien « Source » cliquable en bas de chaque page. */
   sourceUrl?: string;
+  /** Page « plans complets » (offre selon villa ou duplex), avec liens WhatsApp et email cliquables. */
+  completePlans?: CompletePlansOffer | null;
   date?: Date;
+};
+
+/** Offre des plans complets imprimée dans chaque plan et devis (prix fixe, sans déduction). */
+export type CompletePlansOffer = {
+  /** Ex. « Villa (plain-pied) ». */
+  title: string;
+  price: number;
+  deliverables: { title: string; description: string }[];
+  steps: { title: string; text: string }[];
+  whatsappUrl: string;
+  /** Numéro affiché, ex. « +237 6 53 76 99 98 ». */
+  whatsappLabel: string;
+  email: string;
+  emailUrl: string;
+  /** Page des plans personnalisés sur le site. */
+  pageUrl: string;
 };
 
 const A4: [number, number] = [595.28, 841.89];
@@ -537,8 +555,10 @@ export function drawWatermarkGrid(page: PDFPage, lines: string[], font: PDFFont)
   }
 }
 
-/** Zone cliquable ouvrant une adresse web. */
+/** Zone cliquable ouvrant une adresse web (https, mailto…). */
 function addLink(doc: PDFDocument, page: PDFPage, url: string, rect: [number, number, number, number]) {
+  // Chaîne PDF littérale : parenthèses et barres obliques inverses encodées pour ne pas la casser.
+  url = url.replace(/\\/g, "%5C").replace(/\(/g, "%28").replace(/\)/g, "%29");
   const annot = doc.context.register(
     doc.context.obj({
       Type: "Annot",
@@ -549,6 +569,143 @@ function addLink(doc: PDFDocument, page: PDFPage, url: string, rect: [number, nu
     }),
   );
   page.node.addAnnot(annot);
+}
+
+const WHITE = rgb(1, 1, 1);
+const WHATSAPP_DARK = rgb(18 / 255, 140 / 255, 75 / 255);
+
+/**
+ * Page de vente des plans complets, insérée dans chaque plan et devis : le modèle adapté au terrain,
+ * les 10 plans livrés, les étapes, le prix fixe de la catégorie (villa ou duplex) et deux boutons
+ * cliquables (WhatsApp, email), utilisables depuis un téléphone.
+ */
+function completePlansPage(ctx: Ctx, offer: CompletePlansOffer) {
+  newPage(ctx);
+  const { page, font, bold, doc } = ctx;
+  const plan = ctx.input.plan;
+  const contentW = A4[0] - 2 * M;
+  const text = (t: string, x: number, y: number, size: number, f: PDFFont, color = DARK) =>
+    page.drawText(pdfSafe(t), { x, y, size, font: f, color });
+  const centered = (t: string, cx: number, y: number, size: number, f: PDFFont, color = DARK) => {
+    const safe = pdfSafe(t);
+    page.drawText(safe, { x: cx - f.widthOfTextAtSize(safe, size) / 2, y, size, font: f, color });
+  };
+
+  /* Bandeau d'accroche. */
+  const top = ctx.y + 16;
+  const titleLines = wrapText("Faites-en votre maison : vos plans complets, adaptés à votre terrain", bold, 21, contentW - 40);
+  const subLines = wrapText(
+    `Nos architectes adaptent le modèle ${plan.code} à votre parcelle, le modifient selon vos besoins et vous livrent tout le dossier pour construire.`,
+    font,
+    10.5,
+    contentW - 40,
+  );
+  const heroH = 40 + titleLines.length * 25 + subLines.length * 14.5 + 14;
+  page.drawRectangle({ x: M, y: top - heroH, width: contentW, height: heroH, color: TEAL });
+  page.drawRectangle({ x: M, y: top - heroH, width: 6, height: heroH, color: ORANGE });
+  let y = top - 26;
+  text("CE MODÈLE VOUS PLAÎT ?", M + 20, y, 10, bold, ORANGE);
+  y -= 27;
+  for (const line of titleLines) {
+    page.drawText(line, { x: M + 20, y, size: 21, font: bold, color: WHITE });
+    y -= 25;
+  }
+  y -= 2;
+  for (const line of subLines) {
+    page.drawText(line, { x: M + 20, y, size: 10.5, font, color: rgb(0.86, 0.94, 0.93) });
+    y -= 14.5;
+  }
+  y = top - heroH - 14;
+
+  /* Trois promesses. */
+  const benefits = [
+    ["Adapté à votre terrain", "Dimensions, forme et orientation de votre parcelle."],
+    ["Modifié selon vos besoins", "Une chambre en plus, un garage, une façade revue..."],
+    ["Prêt pour le chantier", "Votre technicien n'a qu'à suivre les plans."],
+  ] as const;
+  const gap = 10;
+  const cardW = (contentW - 2 * gap) / 3;
+  const cardH = 58;
+  benefits.forEach(([title, body], i) => {
+    const x = M + i * (cardW + gap);
+    page.drawRectangle({ x, y: y - cardH, width: cardW, height: cardH, color: CREAM });
+    page.drawRectangle({ x, y: y - 3, width: cardW, height: 3, color: ORANGE });
+    text(title, x + 10, y - 19, 10, bold, TEAL);
+    wrapText(body, font, 8.5, cardW - 20).slice(0, 2).forEach((line, j) => {
+      page.drawText(line, { x: x + 10, y: y - 34 - j * 11, size: 8.5, font, color: DARK });
+    });
+  });
+  y -= cardH + 24;
+
+  /* Les plans livrés, sur deux colonnes. */
+  ctx.y = y;
+  heading(ctx, `Les ${offer.deliverables.length} plans livrés`);
+  y = ctx.y;
+  const colW = (contentW - 14) / 2;
+  const rowH = 36;
+  const rows = Math.ceil(offer.deliverables.length / 2);
+  offer.deliverables.forEach((d, i) => {
+    const col = i < rows ? 0 : 1;
+    const row = i < rows ? i : i - rows;
+    const x = M + col * (colW + 14);
+    const ry = y - row * rowH;
+    page.drawCircle({ x: x + 8, y: ry + 3, size: 8, color: TEAL });
+    centered(String(i + 1), x + 8, ry, 8, bold, WHITE);
+    text(d.title, x + 22, ry, 9.5, bold, DARK);
+    wrapText(d.description, font, 7.5, colW - 24).slice(0, 2).forEach((line, j) => {
+      page.drawText(line, { x: x + 22, y: ry - 11 - j * 9, size: 7.5, font, color: GRAY });
+    });
+  });
+  y -= rows * rowH + 8;
+
+  /* Étapes. */
+  ctx.y = y;
+  heading(ctx, "Comment ça se passe");
+  y = ctx.y - 4;
+  const stepW = contentW / offer.steps.length;
+  page.drawLine({ start: { x: M + stepW / 2, y: y + 3 }, end: { x: M + contentW - stepW / 2, y: y + 3 }, thickness: 1.2, color: LINE });
+  offer.steps.forEach((step, i) => {
+    const cx = M + stepW * i + stepW / 2;
+    page.drawCircle({ x: cx, y: y + 3, size: 10, color: i === offer.steps.length - 1 ? ORANGE : TEAL });
+    centered(String(i + 1), cx, y, 9, bold, WHITE);
+    const titleLines = wrapText(step.title, bold, 8.5, stepW - 10).slice(0, 2);
+    titleLines.forEach((line, j) => centered(line, cx, y - 22 - j * 10.5, 8.5, bold, DARK));
+    wrapText(step.text, font, 7.5, stepW - 14)
+      .slice(0, 2)
+      .forEach((line, j) => centered(line, cx, y - 24 - titleLines.length * 10.5 - j * 9, 7.5, font, GRAY));
+  });
+  y -= 70;
+
+  /* Offre : prix fixe de la catégorie et boutons. */
+  const boxH = 118;
+  const boxTop = y;
+  page.drawRectangle({ x: M, y: boxTop - boxH, width: contentW, height: boxH, color: LIGHT, borderColor: TEAL, borderWidth: 1.5 });
+  const leftX = M + 18;
+  text(`PLANS COMPLETS · ${offer.title}`.toUpperCase(), leftX, boxTop - 24, 8.5, bold, ORANGE);
+  text(fcfa(offer.price), leftX, boxTop - 58, 30, bold, TEAL);
+  text("Prix fixe, annoncé d'avance.", leftX, boxTop - 77, 10, bold, DARK);
+  wrapText("Il couvre les plans (travail d'architecte), distinct du budget de construction de la maison.", font, 8, 220).forEach((line, j) =>
+    page.drawText(line, { x: leftX, y: boxTop - 92 - j * 10, size: 8, font, color: GRAY }),
+  );
+
+  const btnW = 214;
+  const btnH = 40;
+  const btnX = M + contentW - 18 - btnW;
+  const button = (by: number, label: string, sub: string, url: string, fill: ReturnType<typeof rgb>, labelColor: ReturnType<typeof rgb>, border?: ReturnType<typeof rgb>) => {
+    page.drawRectangle({ x: btnX, y: by - btnH, width: btnW, height: btnH, color: fill, borderColor: border, borderWidth: border ? 1.4 : 0 });
+    centered(label, btnX + btnW / 2, by - 17, 11.5, bold, labelColor);
+    centered(sub, btnX + btnW / 2, by - 31, 8.5, font, labelColor);
+    addLink(doc, page, url, [btnX, by - btnH, btnX + btnW, by]);
+  };
+  button(boxTop - 14, "Écrire sur WhatsApp", offer.whatsappLabel, offer.whatsappUrl, WHATSAPP_DARK, WHITE);
+  button(boxTop - 14 - btnH - 10, "Envoyer un email", offer.email, offer.emailUrl, WHITE, TEAL, TEAL);
+  y = boxTop - boxH - 16;
+
+  const more = pdfSafe(`Touchez un bouton depuis votre téléphone. Détails : ${offer.pageUrl.replace(/^https?:\/\//, "")}`);
+  const moreW = font.widthOfTextAtSize(more, 8.5);
+  page.drawText(more, { x: M + (contentW - moreW) / 2, y, size: 8.5, font, color: WHATSAPP_DARK });
+  addLink(doc, page, offer.pageUrl, [M + (contentW - moreW) / 2, y - 3, M + (contentW + moreW) / 2, y + 10]);
+  ctx.y = y - 14;
 }
 
 /** Texte des conditions d'utilisation imprimées dans chaque fiche. */
@@ -703,6 +860,13 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
     paragraph(ctx, plan.premiumNotes);
   }
 
+  /* 3 bis. Plans complets : page de vente à part (prix selon villa ou duplex), sans filigrane. */
+  let promoPage: PDFPage | null = null;
+  if (input.completePlans) {
+    completePlansPage(ctx, input.completePlans);
+    promoPage = ctx.page;
+  }
+
   /* 4. Rendus 3D : deux par page. */
   const renders = input.renders ?? [];
   for (let i = 0; i < renders.length; i += 2) {
@@ -725,7 +889,7 @@ export async function buildPlanPdf(input: PlanPdfInput): Promise<Uint8Array> {
   const sourceLabel = pdfSafe(`Source : ${source.replace(/^https?:\/\//, "")}`);
   pages.forEach((page, i) => {
     const { width } = page.getSize();
-    drawWatermarkGrid(page, input.watermarkLines ?? [], bold);
+    if (page !== promoPage) drawWatermarkGrid(page, input.watermarkLines ?? [], bold);
     page.drawRectangle({ x: 0, y: 0, width, height: 58, color: rgb(1, 1, 1), opacity: 0.92 });
     page.drawLine({ start: { x: M, y: 50 }, end: { x: width - M, y: 50 }, thickness: 0.5, color: LINE });
     page.drawRectangle({ x: M, y: 33, width: 3, height: 10, color: ORANGE });

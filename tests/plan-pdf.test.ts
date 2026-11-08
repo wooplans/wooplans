@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { PDFDocument } from "pdf-lib";
+import { PDFDict, PDFDocument, PDFName, type PDFPage } from "pdf-lib";
 import { buildPlanPdf, fcfa, fileName, minimumLand, pdfSafe, planSpecs, usageTerms, type PlanPdfData } from "../src/lib/plan-pdf.ts";
 import { fingerprint, imageMarkForMember, watermarkForMember } from "../src/lib/watermark.ts";
 import { encodePng, imageSize, rasterText, renderOverlay, watermarkOverlayPng } from "../src/lib/watermark-raster.ts";
@@ -95,6 +95,37 @@ test("buildPlanPdf : PDF valide avec images, distribution PDF et filigrane", asy
   assert.match(doc.getKeywords() || "", new RegExp(mark.id));
   // Lien « Source » cliquable sur chaque page.
   for (const page of doc.getPages()) assert.ok(page.node.Annots()?.size());
+});
+
+test("buildPlanPdf : page des plans complets avec boutons WhatsApp et email cliquables, sans filigrane", async () => {
+  const offer = {
+    title: "Duplex (R+1)",
+    price: 199000,
+    deliverables: Array.from({ length: 10 }, (_, i) => ({ title: `Plan ${i + 1}`, description: "Description du plan livré." })),
+    steps: [
+      { title: "Vous choisissez un modèle", text: "" },
+      { title: "Vous donnez vos exigences", text: "" },
+      { title: "Nous adaptons le modèle", text: "" },
+      { title: "Vous recevez votre dossier", text: "" },
+    ],
+    whatsappUrl: "https://wa.me/237653769998?text=Bonjour%20(test)",
+    whatsappLabel: "+237 6 53 76 99 98",
+    email: "info@wooplans.com",
+    emailUrl: "mailto:info@wooplans.com?subject=Plans%20complets",
+    pageUrl: "https://www.wooplans.com/plans-personnalises?modele=V3-037",
+  };
+  const base = { plan, footer: "Exemplaire de test", watermarkLines: ["WOOPLANS"] };
+  const without = await PDFDocument.load(await buildPlanPdf(base));
+  const doc = await PDFDocument.load(await buildPlanPdf({ ...base, completePlans: offer }));
+  assert.equal(doc.getPageCount(), without.getPageCount() + 1);
+  const uris = (page: PDFPage) =>
+    (page.node.Annots()?.asArray() ?? []).map((ref) => String(doc.context.lookup(ref, PDFDict).lookup(PDFName.of("A"), PDFDict).get(PDFName.of("URI"))));
+  const promo = doc.getPages().find((page) => uris(page).some((u) => u.includes("wa.me")));
+  assert.ok(promo, "page des plans complets introuvable");
+  const links = uris(promo).join(" ");
+  assert.match(links, /mailto:info@wooplans\.com/);
+  assert.match(links, /plans-personnalises\?modele=V3-037/);
+  assert.match(links, /%28test%29/); // parenthèses encodées dans la chaîne PDF
 });
 
 test("fileName : nom de fichier sûr", () => {
