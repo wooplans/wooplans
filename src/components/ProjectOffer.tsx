@@ -6,6 +6,7 @@ import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
+import { PriceCountdown } from "@/components/PriceCountdown";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
 
 type Props = {
@@ -97,6 +98,7 @@ export function ProjectOffer({ plan, planCount, online, preview, downloads }: Pr
           <LocalPriceText part="amount" /> <span className="text-base font-medium"><LocalPriceText part="currency" /></span>
         </span>
       </p>
+      <PriceCountdown className="mt-1" />
       <p className="mt-0.5 text-sm text-muted">Téléchargement instantané · paiement unique</p>
       <PaymentMethods className="mt-2" />
 
