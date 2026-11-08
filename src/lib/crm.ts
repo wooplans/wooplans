@@ -29,7 +29,7 @@ export const FOLLOW_UP_TEMPLATES = [
     label: "Relance : avez-vous choisi votre modèle ?",
     subject: "Avez-vous choisi votre future maison ?",
     message:
-      "Vous avez récemment découvert nos modèles de maisons. Avez-vous pu faire votre choix ?\n\nSi vous hésitez entre plusieurs modèles, envoyez-nous leurs références : nous vous aidons à choisir selon votre terrain et votre budget.\n\nEt si vous êtes prêt, nous pouvons démarrer vos plans complets personnalisés. Leur prix est fixe et annoncé dès le départ.",
+      "Vous avez récemment découvert nos modèles de maisons. Avez-vous pu faire votre choix ?\n\nSi vous hésitez entre plusieurs modèles, envoyez-nous leurs références : nous vous aidons à choisir selon votre terrain et votre budget.\n\nEt si vous êtes prêt, nous pouvons démarrer vos plans complets personnalisés. Leur prix est fixe.",
   },
   {
     id: "devis",

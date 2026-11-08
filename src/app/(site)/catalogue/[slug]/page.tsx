@@ -213,10 +213,10 @@ export default async function PlanPage({ params }: Props) {
             </p>
             {offer ? (
               <p className="mt-3 text-sm">
-                Prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>, annoncé dès le départ.
+                Prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
               </p>
             ) : (
-              <p className="mt-3 text-sm">Prix fixe, annoncé dès le départ.</p>
+              <p className="mt-3 text-sm">Prix fixe.</p>
             )}
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link href="/plans-personnalises" className="btn-ghost">En savoir plus</Link>

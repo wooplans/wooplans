@@ -23,7 +23,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
       <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight md:text-4xl">Vos plans complets personnalisés, à prix fixe</h1>
       <p className="mt-4 max-w-2xl text-foreground/75">
         Une fois votre modèle choisi, nos architectes l&apos;adaptent à votre terrain et à vos souhaits, puis réalisent le dossier complet pour
-        construire. Un prix unique, annoncé dès le départ.
+        construire.
       </p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -43,7 +43,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
             </ul>
             <div className="mt-auto pt-5">
               <p className="rounded-xl bg-highlight/15 px-4 py-3 text-sm">
-                Prix fixe, le même pour tous : <strong className="text-primary">{formatFcfa(offer.price)}</strong>, annoncé dès le départ.
+                Prix fixe, le même pour tous : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
               </p>
             </div>
           </div>

@@ -683,9 +683,8 @@ function completePlansPage(ctx: Ctx, offer: CompletePlansOffer) {
   const leftX = M + 18;
   text(`PLANS COMPLETS · ${offer.title}`.toUpperCase(), leftX, boxTop - 24, 8.5, bold, ORANGE);
   text(fcfa(offer.price), leftX, boxTop - 58, 30, bold, TEAL);
-  text("Prix fixe, annoncé d'avance.", leftX, boxTop - 77, 10, bold, DARK);
   wrapText("Il couvre les plans (travail d'architecte), distinct du budget de construction de la maison.", font, 8, 220).forEach((line, j) =>
-    page.drawText(line, { x: leftX, y: boxTop - 92 - j * 10, size: 8, font, color: GRAY }),
+    page.drawText(line, { x: leftX, y: boxTop - 80 - j * 10, size: 8, font, color: GRAY }),
   );
 
   const btnW = 214;
