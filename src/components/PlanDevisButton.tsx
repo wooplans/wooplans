@@ -9,6 +9,7 @@ import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 import { currentPromoCode, paidBuyer, rememberBuyer, storedBuyer, usePromoCode, type Buyer } from "@/components/PromoCode";
 import { upsellPrice } from "@/lib/upsell";
+import { PriceCountdown } from "@/components/PriceCountdown";
 import { PHONE_COUNTRIES, phoneCountryOrDefault, type PhoneCountryCode as CountryCode } from "@/lib/phone";
 
 /** Retire l'indicatif s'il a été saisi (+237…, 00237…) : le serveur attend le numéro national. */
@@ -253,6 +254,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
                 <p className="mt-1 text-4xl font-bold tracking-tight">
                   {formatLocalAmount(local.amount)} <span className="text-base font-medium">{local.currency}</span>
                 </p>
+                <PriceCountdown className="mt-1" />
                 <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
               </>
             )}
