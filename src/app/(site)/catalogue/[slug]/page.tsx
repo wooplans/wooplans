@@ -10,11 +10,10 @@ import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { PlanDevisPreview } from "@/components/PlanDevisPreview";
-import { formatAmount } from "@/lib/anchor-price";
-import { projectAnchorPrice } from "@/lib/project-anchor";
+import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
-import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
+import { customPlanOffer, memberBalance, planGiftEnabled } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
@@ -83,7 +82,6 @@ export default async function PlanPage({ params }: Props) {
     countPlanDevisDownloads(),
     countFloorPlans(plan.slug),
   ]);
-  const anchor = projectAnchorPrice();
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
@@ -149,7 +147,7 @@ export default async function PlanPage({ params }: Props) {
                 downloads={downloads}
                 preview={
                   planGiftEnabled() ? null : (
-                    <PlanDevisPreview plan={plan} floorPlanCount={floorPlanCount} price={formatFcfa(projectStartPrice())} online={online} fallbackHref={projectStartLink(plan)} />
+                    <PlanDevisPreview plan={plan} floorPlanCount={floorPlanCount} online={online} fallbackHref={projectStartLink(plan)} />
                   )
                 }
               />
@@ -257,12 +255,11 @@ export default async function PlanPage({ params }: Props) {
               <span className="block leading-tight">
                 Recevoir mon plan et devis
                 <span className="mt-0.5 block text-sm font-semibold">
-                  {anchor ? <s className="mr-1.5 font-medium opacity-70">{formatAmount(anchor)}</s> : null}
-                  {formatFcfa(projectStartPrice())}
+                  <LocalAnchor className="mr-1.5 font-medium opacity-70" />
+                  <LocalPriceText />
                 </span>
               </span>
             }
-            price={formatFcfa(projectStartPrice())}
             ctaId="plan_projet_sticky"
             className="btn-cta w-full py-3.5"
             fallbackHref={online ? undefined : projectStartLink(plan)}

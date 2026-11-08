@@ -1,8 +1,7 @@
 import Link from "next/link";
 import projet from "@/config/projet.json";
-import { formatAmount } from "@/lib/anchor-price";
-import { projectAnchorPrice } from "@/lib/project-anchor";
-import { memberBalance, planGiftEnabled, projectStartPrice, type CustomPlanOffer } from "@/lib/custom-plans";
+import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
+import { memberBalance, planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
@@ -86,21 +85,16 @@ function Checklist({ items }: { items: string[] }) {
  * Les détails (contenu, déduction, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
 export function ProjectOffer({ plan, planCount, online, preview, downloads }: Props) {
-  const start = formatFcfa(projectStartPrice());
-  const anchor = projectAnchorPrice();
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
   if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <p className="eyebrow">Plan et devis · {plan.code}</p>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-3xl font-bold tracking-tight">
-        {anchor ? (
-          <s className="text-lg font-semibold text-foreground/50" aria-label={`Au lieu de ${formatAmount(anchor)} FCFA`}>
-            {formatAmount(anchor)}
-          </s>
-        ) : null}
+        {/* Prix local du visiteur (Afrique de l'Ouest, Guinée, RD Congo…) : le montant du paiement Chariow. */}
+        <LocalAnchor className="text-lg font-semibold text-foreground/50" />
         <span>
-          {start.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
+          <LocalPriceText part="amount" /> <span className="text-base font-medium"><LocalPriceText part="currency" /></span>
         </span>
       </p>
       <p className="mt-0.5 text-sm text-muted">Téléchargement instantané · paiement unique</p>
@@ -112,7 +106,6 @@ export function ProjectOffer({ plan, planCount, online, preview, downloads }: Pr
       <PlanDevisButton
         plan={plan}
         label="Recevoir mon plan et devis"
-        price={start}
         ctaId="plan_projet"
         className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
         fallbackHref={online ? undefined : projectStartLink(plan)}

@@ -1,3 +1,4 @@
+import { LocalPriceText } from "@/components/LocalPrice";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { PreviewDialog } from "@/components/PreviewDialog";
 import { minimumLand, SETBACKS } from "@/lib/plan-pdf";
@@ -34,14 +35,12 @@ const num = (v: number) => v.toLocaleString("fr-FR", { maximumFractionDigits: 2 
 export function PlanDevisPreview({
   plan,
   floorPlanCount,
-  price,
   online,
   fallbackHref,
 }: {
   plan: Plan;
   /** Nombre de distributions du modèle (une page floutée chacune ; au moins une page, même sans image). */
   floorPlanCount: number;
-  price: string;
   online: boolean;
   fallbackHref?: string;
 }) {
@@ -133,8 +132,14 @@ export function PlanDevisPreview({
         <div className="sticky bottom-0 -mx-3 bg-gradient-to-t from-[#e9edf0] via-[#e9edf0] to-transparent px-3 pb-1 pt-6 sm:-mx-5 sm:px-5">
           <PlanDevisButton
             plan={plan}
-            label={`Recevoir le document complet · ${price.replace(/ /g, " ")}`}
-            price={price}
+            label={
+              <>
+                Recevoir le document complet ·{" "}
+                <span className="whitespace-nowrap">
+                  <LocalPriceText />
+                </span>
+              </>
+            }
             ctaId="plan_projet_apercu"
             className="btn-cta w-full px-4 py-3.5 text-base"
             fallbackHref={online ? undefined : fallbackHref}
