@@ -238,6 +238,26 @@ ${button(whatsapp, "Discuter sur WhatsApp")}`);
   return { subject, html, text };
 }
 
+/**
+ * Offre aux clients envoyée aux anciens acheteurs du plan et devis (envoi lancé depuis l'admin) :
+ * code, date limite (24 h après l'envoi), modèles du même type que celui acheté, capture des étapes.
+ */
+export function upsellCampaignEmail(p: { name?: string | null; planCode: string; upsell: UpsellEmail; unsubscribe: string }) {
+  const subject = `Votre code ${p.upsell.code} : vos prochains plans et devis à ${p.upsell.price} (24 h)`;
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Vous avez acheté le plan et devis du modèle <strong>${escape(p.planCode)}</strong> chez WOOPLANS. Merci pour votre confiance !</p>
+<p>Pour vous aider à comparer et choisir le modèle idéal pour votre construction, nous vous offrons une réduction de clients sur tous nos autres plans et devis, pendant 24 h.</p>
+${upsellBlock(p.upsell)}
+<p style="color:#6B7280;font-size:14px">Une question ? Répondez simplement à cet email.</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Vous avez acheté le plan et devis du modèle ${p.planCode} chez WOOPLANS. Merci pour votre confiance !`,
+    upsellText(p.upsell),
+    `Ne plus recevoir ces offres : ${p.unsubscribe}`,
+  ].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
 export function adminSaleEmail(params: { email: string; name?: string | null; amount: number; product: string }) {
   const subject = `Nouvelle vente : ${params.product} (${params.amount.toLocaleString("fr-FR")} FCFA)`;
   const html = layout(subject, `<p>${escape(params.name || "Client")} — ${escape(params.email)}</p>${button(siteUrl("/admin/ventes"), "Voir les ventes")}`);

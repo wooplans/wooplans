@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { Badge, fmtDateTime, PageTitle, Table } from "@/components/admin/ui";
 import { siteUrl } from "@/lib/env";
 import { formatFcfa } from "@/lib/plans";
-import { PROMO_GUIDE_IMAGE, PROMO_GUIDE_PATH, UPSELL, UPSELL_CATALOGUE_PATH, formatDeadline, upsellDeadline } from "@/lib/upsell";
+import { PROMO_GUIDE_PATH, UPSELL, UPSELL_CATALOGUE_PATH, formatDeadline, upsellDeadline } from "@/lib/upsell";
 import { upsellPrices } from "@/lib/upsell-server";
 
 const TONES = { completed: "good", abandoned: "warn", failed: "bad", refunded: "neutral" } as const;
@@ -113,14 +113,6 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                       ) : null}
                       <a href={`/api/admin/plan-devis/${planDevis.id}`} className="rounded-full border border-primary px-3 py-1 font-semibold text-primary">
                         Télécharger le PDF
-                      </a>
-                      <a
-                        href={PROMO_GUIDE_IMAGE}
-                        download="code-promo-wooplans.png"
-                        title={`Capture des étapes pour saisir le code ${UPSELL.code}, à envoyer au client sur WhatsApp`}
-                        className="rounded-full border border-secondary px-3 py-1 font-semibold text-secondary"
-                      >
-                        Capture code promo
                       </a>
                     </div>
                   </div>

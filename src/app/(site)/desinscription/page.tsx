@@ -11,7 +11,7 @@ type Props = { searchParams: Promise<{ e?: string; s?: string; t?: string; ok?: 
 export default async function UnsubscribePage({ searchParams }: Props) {
   const { e, s, t, ok } = await searchParams;
   if (ok) {
-    const label = s === "members" || s === "prospects" ? OPTOUT_LABELS[s] : "ces emails";
+    const label = s === "members" || s === "prospects" || s === "clients" ? OPTOUT_LABELS[s] : "ces emails";
     return (
       <div className="container-page max-w-lg py-16 text-center">
         <h1 className="text-2xl font-bold">C&apos;est fait</h1>

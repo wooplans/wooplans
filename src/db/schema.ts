@@ -349,7 +349,7 @@ export const prospects = sqliteTable(
 );
 
 /** Désinscriptions des emails automatiques (relances prospects, actualités membres). */
-export const EMAIL_OPTOUT_SCOPES = ["prospects", "members"] as const;
+export const EMAIL_OPTOUT_SCOPES = ["prospects", "members", "clients"] as const;
 export type EmailOptoutScope = (typeof EMAIL_OPTOUT_SCOPES)[number];
 
 export const emailOptouts = sqliteTable(

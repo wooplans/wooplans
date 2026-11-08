@@ -69,9 +69,6 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
   }, [intentId, pixelId]);
 
   if (data?.status === "paid" && data.plan && data.download) {
-    const whatsapp = `https://wa.me/${process.env.WHATSAPP_NUMBER || "237694327885"}?text=${encodeURIComponent(
-      `Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${data.plan.code} et je souhaite parler de mon projet.`,
-    )}`;
     return (
       <div className="card p-6 text-center md:p-10">
         <p className="text-4xl" aria-hidden>🎉</p>
@@ -82,15 +79,6 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
         </p>
         <a href={data.download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger mon plan et devis</a>
         {data.upsell ? <UpsellOffer upsell={data.upsell} /> : null}
-        <p className="mt-8 font-semibold">Des modifications à faire ?</p>
-        <p className="mt-1 text-sm text-foreground/75">
-          {data.promo
-            ? "Parlez-en à nos architectes : ils adaptent le modèle à votre terrain."
-            : "Parlez-en à nos architectes : le prix de ce plan et devis est déduit de vos plans complets."}
-        </p>
-        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn mt-4 border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10">
-          Discuter sur WhatsApp
-        </a>
       </div>
     );
   }

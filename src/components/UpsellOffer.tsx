@@ -57,7 +57,7 @@ export function UpsellOffer({ upsell }: { upsell: UpsellData }) {
     <section className="mt-10 overflow-hidden rounded-2xl border-2 border-[#F08A2E] bg-[#FFF7EF] text-left">
       <div className="bg-secondary px-5 py-3 text-center text-white">
         <p className="text-xs font-bold uppercase tracking-widest">Offre réservée aux clients · 24 h seulement</p>
-        <p className="mt-1 font-mono text-2xl font-extrabold tabular-nums" aria-live="off">
+        <p className="upsell-timer mt-1 inline-block font-mono text-3xl font-extrabold tabular-nums" aria-live="off">
           {parts[0]}:{parts[1]}:{parts[2]}
         </p>
         <p className="text-xs opacity-90">jusqu&apos;au {formatDeadline(new Date(deadline))} (heure du Cameroun)</p>
