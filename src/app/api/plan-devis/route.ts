@@ -6,6 +6,7 @@ import { randomId } from "@/lib/crypto";
 import { customPlanOffer, projectStartPrice } from "@/lib/custom-plans";
 import { getEnv } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { isOwnerEmail } from "@/lib/owner-emails";
 import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { internationalPhone } from "@/lib/phone";
 import { getPublicPlan } from "@/lib/plans";
@@ -48,6 +49,14 @@ export async function POST(request: NextRequest) {
   const db = getDb();
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
   const intentId = randomId();
+
+  // Adresses du propriétaire : téléchargement direct (contrôle des documents), sans paiement,
+  // sans évènement de tunnel ni Meta ; l'intention est exclue des statistiques (notOwnerIntent).
+  if (isOwnerEmail(email)) {
+    await db.insert(schema.checkoutIntents).values({ id: intentId, visitorId, email, ctaId: "proprietaire", planSlug: plan.slug, status: "gift" });
+    return NextResponse.json({ url: `/api/plan-devis/${intentId}`, mode: "owner", intentId, metaEventId: null });
+  }
+
   // Code de l'offre aux clients : achat repéré (mesure de l'offre, aucune déduction sur les plans complets).
   const ctaId = isUpsellCode(discountCode) ? UPSELL_CTA_ID : "plan_devis";
   const metaBrowser = metaAllowedForRequest(request) ? browserContext(request) : null;
