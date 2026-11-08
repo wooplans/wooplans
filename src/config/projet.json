@@ -1,5 +1,38 @@
 {
   "price": 14900,
   "gift": false,
-  "anchorPrice": 50000
+  "anchorPrice": 50000,
+  "localPrices": [
+    {
+      "region": "Afrique de l'Ouest (FCFA UEMOA)",
+      "countries": [
+        "BJ",
+        "BF",
+        "CI",
+        "GW",
+        "ML",
+        "NE",
+        "SN",
+        "TG"
+      ],
+      "amount": 15350,
+      "currency": "FCFA"
+    },
+    {
+      "region": "Guinée",
+      "countries": [
+        "GN"
+      ],
+      "amount": 235941,
+      "currency": "GNF"
+    },
+    {
+      "region": "RD Congo",
+      "countries": [
+        "CD"
+      ],
+      "amount": 26,
+      "currency": "$US"
+    }
+  ]
 }

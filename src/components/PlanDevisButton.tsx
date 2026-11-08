@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import projet from "@/config/projet.json";
-import { formatAmount } from "@/lib/anchor-price";
-import { projectAnchorPrice } from "@/lib/project-anchor";
+import { planDevisPrice, useVisitorCountry } from "@/components/LocalPrice";
+import { formatLocalAmount } from "@/lib/local-price";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
@@ -21,8 +21,6 @@ function nationalNumber(raw: string, dial: string) {
 type Props = {
   plan: { slug: string; code: string };
   label: React.ReactNode;
-  /** Prix affiché dans le formulaire, déjà formaté (« 10 000 FCFA »). */
-  price: string;
   ctaId: string;
   className: string;
   /** Paiement en ligne indisponible (produit Chariow non configuré) : le bouton ouvre WhatsApp. */
@@ -33,11 +31,14 @@ type Props = {
  * Achat du plan et devis d'un modèle : formulaire court (nom, email, numéro) puis paiement Chariow ou Wajub.
  * Le modèle est enregistré avec l'achat, ce qui permet de livrer le bon document.
  */
-export function PlanDevisButton({ plan, label, price, ctaId, className, fallbackHref }: Props) {
+export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }: Props) {
   const [open, setOpen] = useState(false);
-  const anchor = projectAnchorPrice();
   const [country, setCountry] = useState<CountryCode>("CM");
   const countryChosen = useRef(false);
+  // Pays du visiteur (la page est en cache, partagée entre pays) : présélectionne l'indicatif tant que le
+  // visiteur n'a pas choisi lui-même, et fixe le prix local affiché (celui du paiement Chariow).
+  const visitorCountry = useVisitorCountry();
+  const local = planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [promoOpen, setPromoOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -69,21 +70,9 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
     openedAt.current = 0;
   }
 
-  // Pays du visiteur, lu à l'ouverture (la page est en cache, partagée entre pays) : présélectionné
-  // tant que le visiteur n'a pas choisi lui-même.
   useEffect(() => {
-    if (!open || fallbackHref) return;
-    let cancelled = false;
-    fetch("/api/pays", { cache: "no-store" })
-      .then((r) => r.json() as Promise<{ country?: string | null }>)
-      .then((d) => {
-        if (!cancelled && !countryChosen.current) setCountry(phoneCountryOrDefault(d.country));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [open, fallbackHref]);
+    if (visitorCountry && !countryChosen.current) setCountry(phoneCountryOrDefault(visitorCountry));
+  }, [visitorCountry]);
 
   if (fallbackHref) {
     return (
@@ -166,13 +155,15 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
             <p className="eyebrow">Plan et devis</p>
             <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
-            {anchor ? (
+            {local.anchor ? (
               <p className="mt-1 text-base font-semibold text-foreground/50">
-                <s aria-label={`Au lieu de ${formatAmount(anchor)} FCFA`}>{formatAmount(anchor)} FCFA</s>
+                <s aria-label={`Au lieu de ${formatLocalAmount(local.anchor)} ${local.currency}`}>
+                  {formatLocalAmount(local.anchor)} {local.currency}
+                </s>
               </p>
             ) : null}
             <p className="mt-1 text-4xl font-bold tracking-tight">
-              {price.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
+              {formatLocalAmount(local.amount)} <span className="text-base font-medium">{local.currency}</span>
             </p>
             <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
             <button
