@@ -1,5 +1,4 @@
 import Link from "next/link";
-import projet from "@/config/projet.json";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
@@ -15,14 +14,7 @@ type Props = {
   planCount: number | null;
   /** Paiement en ligne disponible (produit Chariow configuré) ; sinon le bouton ouvre WhatsApp. */
   online: boolean;
-  /** Bouton et fenêtre « Aperçu du plan et devis » (PlanDevisPreview), rendus par la fiche. */
-  preview?: React.ReactNode;
-  /** Nombre réel de téléchargements du plan et devis (tous modèles), affiché comme preuve sociale. */
-  downloads?: number | null;
 };
-
-/** En dessous, le compteur de téléchargements n'est pas affiché (un petit nombre dessert l'offre). */
-const MIN_DOWNLOADS_SHOWN = 50;
 
 /** Moyens de paiement affichés sous le prix (paiement Chariow / Wajub). */
 export const PAYMENT_METHODS = [
@@ -30,15 +22,6 @@ export const PAYMENT_METHODS = [
   { label: "MTN MoMo", className: "bg-[#ffcb05] text-[#1d2a30]" },
   { label: "Wave", className: "bg-[#1dc8ff] text-[#0b2a4a]" },
 ];
-
-/**
- * Note moyenne affichée sur les fiches : seulement si elle est renseignée dans src/config/projet.json
- * (« rating »: { "value": 4.9, "count": 120, "source": "avis clients Chariow" }) à partir d'avis réels et vérifiables.
- */
-function projectRating() {
-  const rating = (projet as { rating?: { value?: number; count?: number } | null }).rating;
-  return rating?.value && rating.count ? { value: rating.value, count: rating.count } : null;
-}
 
 export function PaymentMethods({ className = "" }: { className?: string }) {
   return (
@@ -62,6 +45,7 @@ export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
   "Discuter avec un architecte sur WhatsApp",
+  "Réduction spéciale pour télécharger d'autres plans et devis",
 ];
 
 /** Plan et devis offert : contenu du cadeau. */
@@ -85,72 +69,53 @@ function Checklist({ items }: { items: string[] }) {
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
  * Les détails (contenu, plans complets, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
-export function ProjectOffer({ plan, planCount, online, preview, downloads }: Props) {
+export function ProjectOffer({ plan, planCount, online }: Props) {
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
   if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
   return (
     <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-4 sm:p-5">
       <p className="eyebrow">Plan et devis · {plan.code}</p>
-      <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-3xl font-bold tracking-tight">
-        {/* Prix local du visiteur (Afrique de l'Ouest, Guinée, RD Congo…) : le montant du paiement Chariow. */}
-        <LocalAnchor className="text-lg font-semibold text-foreground/50" />
-        <span>
-          <LocalPriceText part="amount" /> <span className="text-base font-medium"><LocalPriceText part="currency" /></span>
-        </span>
-      </p>
-      <PriceCountdown className="mt-1" />
-      <p className="mt-0.5 text-sm text-muted">Téléchargement instantané · paiement unique</p>
-      <PaymentMethods className="mt-2" />
+      <h2 className="mt-1.5 text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
+        Recevez le plan et le devis <span className="text-primary">du modèle {plan.code}</span>
+      </h2>
+      <p className="mt-1 text-sm text-muted">Téléchargement instantané · paiement unique</p>
 
-      <h2 className="mt-4 text-base font-bold">Ce que vous obtenez immédiatement</h2>
       <NumberedList items={PLAN_DEVIS_ITEMS} />
 
-      <PlanDevisButton
-        plan={plan}
-        label="Recevoir mon plan et devis"
-        ctaId="plan_projet"
-        className="btn-cta mt-5 w-full px-4 py-3.5 text-base"
-        fallbackHref={online ? undefined : projectStartLink(plan)}
-      />
-      {preview}
-      <SocialProof downloads={downloads} />
+      {/* Achat : prix et compte à rebours juste au-dessus du bouton, moyens de paiement juste en dessous. */}
+      <div className="mt-5 border-t border-highlight/50 pt-4 text-center">
+        <p className="flex flex-wrap items-baseline justify-center gap-x-2.5 text-3xl font-bold tracking-tight">
+          {/* Prix local du visiteur (Afrique de l'Ouest, Guinée, RD Congo…) : le montant du paiement Chariow. */}
+          <LocalAnchor className="text-lg font-semibold text-foreground/50" />
+          <span>
+            <LocalPriceText part="amount" /> <span className="text-base font-medium"><LocalPriceText part="currency" /></span>
+          </span>
+        </p>
+        <PriceCountdown className="mt-0.5" />
+        <PlanDevisButton
+          plan={plan}
+          label="Recevoir mon plan et devis"
+          ctaId="plan_projet"
+          className="btn-cta mt-3 w-full px-4 py-3.5 text-base"
+          fallbackHref={online ? undefined : projectStartLink(plan)}
+        />
+        <PaymentMethods className="mt-2.5 justify-center" />
+      </div>
 
       <p className="mt-4 border-t border-highlight/50 pt-3 text-center text-xs leading-relaxed text-foreground/75 sm:text-sm">
-        Ensuite, si le modèle vous plaît, nos architectes l&apos;adaptent à votre terrain sur WhatsApp.
+        Nos architectes peuvent personnaliser selon vos besoins sur WhatsApp
       </p>
     </div>
-  );
-}
-
-/** Preuve sociale sous le bouton : note (si renseignée) et nombre réel de téléchargements. */
-function SocialProof({ downloads }: { downloads?: number | null }) {
-  const rating = projectRating();
-  const shown = downloads && downloads >= MIN_DOWNLOADS_SHOWN ? downloads : null;
-  if (!rating && !shown) return null;
-  return (
-    <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-foreground/80">
-      {rating ? (
-        <span>
-          <span className="text-[#f5a623]" aria-hidden>★★★★★</span>{" "}
-          <strong>{rating.value.toLocaleString("fr-FR")}/5</strong> ({rating.count.toLocaleString("fr-FR")} avis)
-        </span>
-      ) : null}
-      {shown ? (
-        <span>
-          <strong>{shown.toLocaleString("fr-FR")}</strong> plans et devis déjà téléchargés
-        </span>
-      ) : null}
-    </p>
   );
 }
 
 /** Liste numérotée ① ② ③ de ce que contient le plan et devis. */
 export function NumberedList({ items }: { items: readonly string[] }) {
   return (
-    <ol className="mt-2 space-y-2 text-sm leading-snug text-foreground/80">
+    <ol className="mt-4 space-y-3 text-base leading-snug text-foreground/90">
       {items.map((item, i) => (
-        <li key={item} className="flex gap-2.5">
-          <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-foreground/60 text-[11px] font-semibold" aria-hidden>
+        <li key={item} className="flex items-center gap-3">
+          <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full border border-foreground/60 text-[13px] font-semibold" aria-hidden>
             {i + 1}
           </span>
           <span>{item}</span>

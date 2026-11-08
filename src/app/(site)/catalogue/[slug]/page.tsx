@@ -9,7 +9,6 @@ import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
-import { PlanDevisPreview } from "@/components/PlanDevisPreview";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
@@ -25,7 +24,6 @@ import {
   levelsLabel,
   withPlanCount,
 } from "@/lib/plans";
-import { countFloorPlans, countPlanDevisDownloads } from "@/lib/plan-devis-stats";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
@@ -76,11 +74,9 @@ const PREMIUM_CONTENT = [
 export default async function PlanPage({ params }: Props) {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const [similar, planCount, downloads, floorPlanCount] = await Promise.all([
+  const [similar, planCount] = await Promise.all([
     getSimilarPublicPlans(plan),
     countPublishedPlans(),
-    countPlanDevisDownloads(),
-    countFloorPlans(plan.slug),
   ]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
@@ -144,12 +140,6 @@ export default async function PlanPage({ params }: Props) {
                 offer={project}
                 planCount={planCount}
                 online={online}
-                downloads={downloads}
-                preview={
-                  planGiftEnabled() ? null : (
-                    <PlanDevisPreview plan={plan} floorPlanCount={floorPlanCount} online={online} fallbackHref={projectStartLink(plan)} />
-                  )
-                }
               />
             ) : (
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
