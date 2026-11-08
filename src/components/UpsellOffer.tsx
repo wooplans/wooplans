@@ -6,10 +6,12 @@ import { useLocalPrice } from "@/components/LocalPrice";
 import { rememberPromo } from "@/components/PromoCode";
 import { formatLocalPrice } from "@/lib/local-price";
 import { formatBudgetRange, levelsLabel } from "@/lib/plan-format";
-import { PROMO_GUIDE_IMAGE, PROMO_GUIDE_PATH, UPSELL_CATALOGUE_PATH, formatDeadline, upsellPath, upsellPrice } from "@/lib/upsell";
+import { formatDeadline, upsellCataloguePath, upsellPath, upsellPrice } from "@/lib/upsell";
 
 export type UpsellData = {
   code: string;
+  /** Type du modèle acheté : le catalogue proposé est celui de ce type. */
+  category?: string;
   /** ISO : 24 h après le paiement. */
   deadline: string;
   plans: {
@@ -45,7 +47,7 @@ export function UpsellOffer({ upsell }: { upsell: UpsellData }) {
   const { left, parts } = useCountdown(deadline);
   const local = useLocalPrice();
   const promo = upsellPrice(local);
-  const price = `${promo.approx ? "≈ " : ""}${formatLocalPrice(promo.amount, promo.currency)}`;
+  const price = formatLocalPrice(promo.amount, promo.currency);
   const fullPrice = formatLocalPrice(local.amount, local.currency);
   const [copied, setCopied] = useState(false);
 
@@ -86,7 +88,7 @@ export function UpsellOffer({ upsell }: { upsell: UpsellData }) {
           >
             {copied ? "Code copié ✓" : "Copier le code"}
           </button>
-          <p className="mt-1 text-xs text-muted">Déjà rempli quand vous ouvrez un modèle ci-dessous.</p>
+          <p className="mt-1 text-xs text-muted">Déjà appliqué sur tout le site : un clic et vous êtes au paiement.</p>
         </div>
 
         {upsell.plans.length > 0 ? (
@@ -120,24 +122,10 @@ export function UpsellOffer({ upsell }: { upsell: UpsellData }) {
           </>
         ) : null}
 
-        <Link href={UPSELL_CATALOGUE_PATH} className="btn-cta mt-6 w-full py-4 text-base" data-cta="upsell_catalogue">
-          Voir tous les modèles avec mon code
+        <Link href={upsellCataloguePath(upsell.category)} className="btn-cta mt-6 w-full py-4 text-base" data-cta="upsell_catalogue">
+          {upsell.category === "duplex" ? "Voir tous les duplex à prix réduit" : upsell.category === "villa" ? "Voir toutes les villas à prix réduit" : "Voir tous les modèles à prix réduit"}
         </Link>
 
-        <details className="mt-5 rounded-xl bg-surface p-4">
-          <summary className="cursor-pointer font-semibold">Comment utiliser mon code ?</summary>
-          <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-foreground/80">
-            <li>Ouvrez le modèle qui vous intéresse.</li>
-            <li>Touchez « Recevoir mon plan et devis ».</li>
-            <li>Touchez « Code promo » et tapez {upsell.code} (il est déjà rempli si vous venez de cette page).</li>
-            <li>Touchez « Procéder au paiement » : le prix réduit s&apos;affiche au paiement.</li>
-          </ol>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={PROMO_GUIDE_IMAGE} alt="Les étapes pour saisir le code promo" loading="lazy" className="mt-3 w-full rounded-xl border border-outline" />
-          <Link href={PROMO_GUIDE_PATH} className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
-            Ouvrir le guide en grand
-          </Link>
-        </details>
       </div>
     </section>
   );

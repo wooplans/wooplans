@@ -6,7 +6,7 @@
  * Module sans dépendance à la base, utilisable côté navigateur.
  */
 import projet from "@/config/projet.json";
-import type { LocalPrice } from "@/lib/local-price";
+import { discountedLocalPrice, type LocalPrice } from "@/lib/local-price";
 
 export const UPSELL = (projet as { upsell: { code: string; discount: number; hours: number } }).upsell;
 
@@ -45,14 +45,9 @@ export function formatDeadline(date: Date): string {
   return `${parts.weekday} ${parts.day} ${parts.month} à ${parts.hour}h${parts.minute}`;
 }
 
-/** Prix d'un plan et devis avec le code. Hors FCFA de base (prix local converti par Chariow) : montant approché. */
+/** Prix d'un plan et devis avec le code, dans la monnaie du visiteur (voir discountedLocalPrice). */
 export function upsellPrice(local: LocalPrice): { amount: number; currency: string; approx: boolean } {
-  if (local.currency === "FCFA" && local.amount === projet.price) {
-    return { amount: Math.max(0, projet.price - UPSELL.discount), currency: "FCFA", approx: false };
-  }
-  const raw = (local.amount * Math.max(0, projet.price - UPSELL.discount)) / projet.price;
-  const step = local.currency === "FCFA" ? 50 : raw >= 10000 ? 1000 : 1;
-  return { amount: Math.round(raw / step) * step, currency: local.currency, approx: true };
+  return { ...discountedLocalPrice(local, projet.price, UPSELL.discount), approx: false };
 }
 
 /** Lien d'une fiche modèle avec le code (achat=1 : le formulaire s'ouvre à l'arrivée). */
@@ -62,6 +57,12 @@ export function upsellPath(slug: string, openForm = true): string {
 
 /** Catalogue avec le code mémorisé (le client choisit lui-même ses modèles). */
 export const UPSELL_CATALOGUE_PATH = `/catalogue?promo=${encodeURIComponent(UPSELL.code)}`;
+
+/** Catalogue du même type que le modèle acheté (villas ou duplex), avec le code. */
+export function upsellCataloguePath(category: string | null | undefined): string {
+  const page = category === "villa" ? "/catalogue-villa" : category === "duplex" ? "/catalogue-duplex" : "/catalogue";
+  return `${page}?promo=${encodeURIComponent(UPSELL.code)}`;
+}
 /** Page « comment utiliser mon code », avec les captures d'écran. */
 export const PROMO_GUIDE_PATH = `/code-promo?promo=${encodeURIComponent(UPSELL.code)}`;
 /** Capture d'écran du processus (à envoyer aussi sur WhatsApp). */

@@ -34,3 +34,15 @@ test("Guinée (GNF) et RD Congo ($US)", () => {
 test("sans prix barré : aucun prix barré converti", () => {
   assert.equal(localPriceFor("SN", { price: 14900, anchor: null }, rules).anchor, null);
 });
+
+test("offre aux clients : remise de 10 000 FCFA dans la monnaie du visiteur", async () => {
+  const { discountedLocalPrice, formatLocalPrice: fmt } = await import("../src/lib/local-price.ts");
+  const price = (amount: number, currency: string) => {
+    const p = discountedLocalPrice({ amount, currency }, 14900, 10000);
+    return fmt(p.amount, p.currency).replace(/\s/gu, " ");
+  };
+  assert.equal(price(14900, "FCFA"), "4 900 FCFA");
+  assert.equal(price(15350, "FCFA"), "5 350 FCFA");
+  assert.equal(price(235941, "GNF"), "77 591 GNF");
+  assert.equal(price(26, "$US"), "8,55 $US");
+});

@@ -11,7 +11,9 @@ import { BUYER_STORAGE_KEY, PROMO_STORAGE_KEY, UPSELL, isUpsellCode } from "@/li
  */
 const PROMO_TTL_MS = 30 * 24 * 3600_000;
 
-export type Buyer = { name?: string; email?: string; phone?: string; countryCode?: string };
+export type Buyer = { name?: string; email?: string; phone?: string; countryCode?: string; paid?: boolean };
+
+const BUYER_PENDING_KEY = `${BUYER_STORAGE_KEY}_en_cours`;
 
 function readJson<T>(key: string): T | null {
   try {
@@ -33,6 +35,11 @@ export function rememberPromo(code: string) {
   if (isUpsellCode(code)) writeJson(PROMO_STORAGE_KEY, { code: UPSELL.code, at: Date.now() });
 }
 
+/** Code de l'offre actif (lecture immédiate, hors rendu). */
+export function currentPromoCode(): string | null {
+  return storedPromo();
+}
+
 function storedPromo(): string | null {
   const fromUrl = new URLSearchParams(window.location.search).get("promo");
   if (fromUrl && isUpsellCode(fromUrl)) {
@@ -50,11 +57,27 @@ export function usePromoCode(): string | null {
   return code;
 }
 
+/** Coordonnées saisies au moment de lancer un paiement (pas encore confirmé). */
 export function rememberBuyer(buyer: Buyer) {
-  writeJson(BUYER_STORAGE_KEY, buyer);
+  writeJson(BUYER_PENDING_KEY, buyer);
 }
 
+/** Paiement confirmé (page /merci) : ces coordonnées servent au paiement direct des achats suivants. */
+export function confirmBuyer() {
+  const pending = readJson<Buyer>(BUYER_PENDING_KEY);
+  if (pending) writeJson(BUYER_STORAGE_KEY, { ...pending, paid: true });
+}
+
+/** Coordonnées pour pré-remplir le formulaire (dernier achat confirmé, sinon dernier paiement lancé). */
 export function storedBuyer(): Buyer | null {
-  return readJson<Buyer>(BUYER_STORAGE_KEY);
+  return readJson<Buyer>(BUYER_STORAGE_KEY) ?? readJson<Buyer>(BUYER_PENDING_KEY);
+}
+
+/** Client qui a déjà payé un plan et devis sur cet appareil, coordonnées complètes : paiement direct, sans formulaire. */
+export function paidBuyer(): Required<Omit<Buyer, "paid">> | null {
+  const b = readJson<Buyer>(BUYER_STORAGE_KEY);
+  return b?.paid && b.name && b.email && b.phone && b.countryCode
+    ? { name: b.name, email: b.email, phone: b.phone, countryCode: b.countryCode }
+    : null;
 }
 

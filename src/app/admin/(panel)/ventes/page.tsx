@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 import { Badge, fmtDateTime, PageTitle, Table } from "@/components/admin/ui";
 import { siteUrl } from "@/lib/env";
 import { formatFcfa } from "@/lib/plans";
-import { PROMO_GUIDE_PATH, UPSELL, UPSELL_CATALOGUE_PATH, formatDeadline, upsellDeadline } from "@/lib/upsell";
+import { UPSELL, formatDeadline, upsellCataloguePath, upsellDeadline } from "@/lib/upsell";
 import { upsellPrices } from "@/lib/upsell-server";
 
 const TONES = { completed: "good", abandoned: "warn", failed: "bad", refunded: "neutral" } as const;
@@ -14,7 +14,7 @@ const LABELS = { completed: "Payée", abandoned: "Abandonnée", failed: "Échou�
  * avec l'offre aux clients : plans supplémentaires avec le code, jusqu'à 24 h après l'achat
  * (envoyé plus tard : 24 h à partir de l'envoi). Le client est renvoyé vers le site pour utiliser son code.
  */
-function planDevisWhatsapp(params: { phone: string; name: string | null; code: string; intentId: string; paidAt: Date; country: string | null }) {
+function planDevisWhatsapp(params: { phone: string; name: string | null; code: string; category: string | null; intentId: string; paidAt: Date; country: string | null }) {
   const first = (params.name || "").trim().split(/\s+/)[0];
   const now = Date.now();
   const saleDeadline = upsellDeadline(params.paidAt);
@@ -26,8 +26,7 @@ function planDevisWhatsapp(params: { phone: string; name: string | null; code: s
     "Je vous l'envoie aussi en PDF ici. Pour toute modification du plan, répondez simplement à ce message.",
     `🎁 *OFFRE RÉSERVÉE AUX CLIENTS, 24 H SEULEMENT*\nChaque plan et devis supplémentaire à *${price}* au lieu de ${fullPrice}. Prenez-en autant que vous voulez pour comparer les modèles qui vous intéressent.`,
     `Votre code : *${UPSELL.code}*\n⏳ Valable jusqu'au ${formatDeadline(deadline)} (heure du Cameroun).`,
-    `👉 Choisissez vos modèles ici, le code est déjà rempli : ${siteUrl(UPSELL_CATALOGUE_PATH)}`,
-    `Comment saisir le code (en images) : ${siteUrl(PROMO_GUIDE_PATH)}`,
+    `👉 ${params.category === "duplex" ? "Tous nos duplex" : params.category === "villa" ? "Toutes nos villas" : "Tous nos modèles"} avec le code déjà appliqué : ${siteUrl(upsellCataloguePath(params.category))}`,
   ].join("\n\n");
   return `https://wa.me/${params.phone}?text=${encodeURIComponent(text)}`;
 }
@@ -52,9 +51,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const intentById = new Map(intents.map((i) => [i.id, i]));
   const slugs = [...new Set(intents.map((i) => i.planSlug).filter((v): v is string => Boolean(v)))];
   const plans = slugs.length
-    ? await db.query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true } })
+    ? await db.query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true, category: true } })
     : [];
   const codeBySlug = new Map(plans.map((p) => [p.slug, p.code]));
+  const categoryBySlug = new Map(plans.map((p) => [p.slug, p.category]));
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const [month] = await db
     .select({ total: sum(schema.sales.amount) })
@@ -103,7 +103,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                     <div className="flex flex-wrap gap-1.5">
                       {phone ? (
                         <a
-                          href={planDevisWhatsapp({ phone, name: s.name, code, intentId: planDevis.id, paidAt: s.occurredAt, country: s.country })}
+                          href={planDevisWhatsapp({ phone, name: s.name, code, category: categoryBySlug.get(planDevis.planSlug!) ?? null, intentId: planDevis.id, paidAt: s.occurredAt, country: s.country })}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full bg-[#25D366] px-3 py-1 font-semibold text-white"

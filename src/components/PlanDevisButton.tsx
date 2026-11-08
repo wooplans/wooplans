@@ -7,7 +7,7 @@ import { formatLocalAmount } from "@/lib/local-price";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
-import { rememberBuyer, storedBuyer, usePromoCode, type Buyer } from "@/components/PromoCode";
+import { currentPromoCode, paidBuyer, rememberBuyer, storedBuyer, usePromoCode, type Buyer } from "@/components/PromoCode";
 import { upsellPrice } from "@/lib/upsell";
 import { PHONE_COUNTRIES, phoneCountryOrDefault, type PhoneCountryCode as CountryCode } from "@/lib/phone";
 
@@ -50,6 +50,8 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const promo = usePromoCode();
   const promoPrice = promo ? upsellPrice(local) : null;
   const [buyer, setBuyer] = useState<Buyer | null>(null);
+  // Paiement direct en cours (client déjà payé sur cet appareil).
+  const [direct, setDirect] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -91,9 +93,15 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
     }
     if (!autoOpenClaimed && new URLSearchParams(window.location.search).get("achat") === "1") {
       autoOpenClaimed = true;
-      openedAt.current = Date.now();
-      track(FUNNEL_EVENTS.planDevisFormOpen, { auto: true });
-      setOpen(true);
+      // « Obtenir ce plan » depuis /merci : client déjà payé sur cet appareil → paiement direct.
+      const buyer = paidBuyer();
+      if (buyer) {
+        void directCheckout(buyer);
+      } else {
+        openedAt.current = Date.now();
+        track(FUNNEL_EVENTS.planDevisFormOpen, { auto: true });
+        setOpen(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -112,11 +120,30 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSending(true);
     const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
     // Un seul champ « Nom complet » (3 champs au lieu de 5) ; l'API le découpe en prénom / nom pour Chariow.
-    const data = { ...form, name: (form.name || "").trim(), phone: nationalNumber(form.phone || "", dial) };
+    await startCheckout({ ...form, name: (form.name || "").trim(), phone: nationalNumber(form.phone || "", dial) });
+  }
+
+  /**
+   * Client qui a déjà payé un plan et devis sur cet appareil : le bouton ouvre directement le paiement
+   * (mêmes nom, email et numéro, code de l'offre si actif). En cas d'erreur, le formulaire s'ouvre avec le message.
+   */
+  async function directCheckout(buyer: NonNullable<ReturnType<typeof paidBuyer>>) {
+    setDirect(true);
+    track(FUNNEL_EVENTS.planDevisFormOpen, { direct: true });
+    const promoCode = currentPromoCode();
+    const ok = await startCheckout({ ...buyer, ...(promoCode ? { discountCode: promoCode } : {}) });
+    if (!ok) {
+      setDirect(false);
+      openedAt.current = Date.now();
+      setOpen(true);
+    }
+  }
+
+  async function startCheckout(data: Record<string, string>): Promise<boolean> {
+    setError(null);
+    setSending(true);
     // Essai Wajub : ?paiement=wajub sur la fiche (sinon le cookie posé par la page de vente, ou le réglage du site).
     const provider = new URLSearchParams(window.location.search).get("paiement") || undefined;
     const response = await fetch("/api/plan-devis", {
@@ -129,18 +156,19 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
       track(FUNNEL_EVENTS.planDevisError, { status: response?.status ?? "network" });
       setError(body?.error || "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.");
       setSending(false);
-      return;
+      return false;
     }
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
     submitted.current = true;
     phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
     // Pixel Meta : paiement réellement créé ; même event_id que l'API de conversion (un seul évènement compté).
     pixelTrack("InitiateCheckout", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.code], content_type: "product", value: projet.price, currency: "XAF" }, body.metaEventId);
-    rememberBuyer({ name: data.name, email: form.email, phone: data.phone, countryCode: form.countryCode });
+    rememberBuyer({ name: data.name, email: data.email, phone: data.phone, countryCode: data.countryCode });
     const url = body.url;
     setTimeout(() => {
       window.location.href = url;
     }, 300);
+    return true;
   }
 
   return (
@@ -150,7 +178,13 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
         data-cta={ctaId}
         data-plan={plan.slug}
         className={className}
+        disabled={direct}
         onClick={() => {
+          const buyer = paidBuyer();
+          if (buyer) {
+            void directCheckout(buyer);
+            return;
+          }
           openedAt.current = Date.now();
           touched.current = [];
           submitted.current = false;
@@ -158,7 +192,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           setOpen(true);
         }}
       >
-        {label}
+        {direct ? "Ouverture du paiement…" : label}
       </button>
       <dialog
         ref={dialog}

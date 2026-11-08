@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
 import projet from "@/config/projet.json";
 import { pixelPurchase } from "@/lib/pixel";
+import { confirmBuyer } from "@/components/PromoCode";
 import { UpsellOffer, type UpsellData } from "@/components/UpsellOffer";
 
 type Status = {
@@ -37,6 +38,8 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
       if (json) setData(json);
       setAttempts(n);
       if (json?.status === "paid" && json.download) {
+        // Paiement confirmé : les achats suivants sur cet appareil partent directement au paiement.
+        confirmBuyer();
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");

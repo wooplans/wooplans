@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const plan = intent.planSlug
     ? await getDb().query.plans.findFirst({
         where: eq(schema.plans.slug, intent.planSlug),
-        columns: { slug: true, code: true, name: true },
+        columns: { slug: true, code: true, name: true, category: true },
       })
     : null;
 
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const plans = await getUpsellPlans(plan.slug, 4).catch(() => []);
     upsell = {
       code: UPSELL.code,
+      category: plan.category,
       deadline: upsellDeadline(sale?.occurredAt ?? intent.updatedAt).toISOString(),
       plans: plans.map((p) => ({
         slug: p.slug,
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       status: intent.status,
       email: sameBrowser ? intent.email : null,
       code: revealable ? intent.revealCode : null,
-      plan: plan ?? null,
+      plan: plan ? { slug: plan.slug, code: plan.code, name: plan.name } : null,
       download: plan && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
     },
     { headers: { "Cache-Control": "no-store" } },

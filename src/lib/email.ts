@@ -180,9 +180,9 @@ function upsellBlock(u: UpsellEmail) {
 <div style="margin:16px 0;padding:14px;border:2px dashed #0F5B59;border-radius:12px;text-align:center;background:#fff"><p style="margin:0;color:#6B7280;font-size:13px">Votre code</p><p style="margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:4px;color:#0F5B59">${escape(u.code)}</p><p style="margin:4px 0 0;font-size:14px;font-weight:700;color:#C75B3A">⏳ Offre valable jusqu'au ${escape(u.deadline)} (heure du Cameroun)</p></div>
 <p style="margin:0 0 12px;font-weight:700">Modèles proches du vôtre :</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table>
-${button(u.catalogueUrl, "Voir tous les modèles avec mon code")}
+${button(u.catalogueUrl, "Voir tous les modèles à prix réduit")}
 <p style="margin:0;font-weight:700">Comment utiliser le code ?</p>
-<p style="margin:4px 0 10px;font-size:14px">Ouvrez un modèle depuis ce mail : le code est déjà rempli, il ne reste qu'à payer. Sinon, sur la fiche du modèle, touchez « Recevoir mon plan et devis », puis « Code promo », et tapez ${escape(u.code)}.</p>
+<p style="margin:4px 0 10px;font-size:14px">Ouvrez un modèle depuis ce mail : le code est déjà appliqué, il ne reste qu'à payer. Sinon, sur la fiche du modèle, touchez « Recevoir mon plan et devis », puis « Code promo », et tapez ${escape(u.code)}.</p>
 <a href="${u.guideUrl}"><img src="${u.guideImage}" alt="Les étapes pour saisir le code promo" width="456" style="display:block;width:100%;max-width:456px;height:auto;border-radius:12px;border:1px solid #E5E7EB"></a>
 </div>`;
 }
@@ -246,7 +246,7 @@ export function upsellCampaignEmail(p: { name?: string | null; planCode: string;
   const subject = `Votre code ${p.upsell.code} : vos prochains plans et devis à ${p.upsell.price} (24 h)`;
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const body = `<p>${hello}</p><p>Vous avez acheté le plan et devis du modèle <strong>${escape(p.planCode)}</strong> chez WOOPLANS. Merci pour votre confiance !</p>
-<p>Pour vous aider à comparer et choisir le modèle idéal pour votre construction, nous vous offrons une réduction de clients sur tous nos autres plans et devis, pendant 24 h.</p>
+<p>Bonne nouvelle : en tant que client, vous pouvez obtenir tous nos autres plans et devis à prix réduit avec votre code ${escape(p.upsell.code)}. Profitez-en vite pour télécharger les modèles qui vous intéressent : l'offre dure 24 h.</p>
 ${upsellBlock(p.upsell)}
 <p style="color:#6B7280;font-size:14px">Une question ? Répondez simplement à cet email.</p>`;
   const text = [

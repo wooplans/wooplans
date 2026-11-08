@@ -28,6 +28,7 @@ import {
   parsePremiumUpdate,
 } from "@/lib/plan-input";
 import { privateFileUrl } from "@/lib/premium";
+import { UPSELL_CAMPAIGN_BATCH, sendUpsellCampaignBatch, upsellCampaignRecipients } from "@/lib/upsell-campaign";
 import { downloadFile, type IncomingFile } from "@/lib/remote-file";
 
 type JsonSchema = Record<string, unknown>;
@@ -550,6 +551,23 @@ export const TOOLS: McpTool[] = [
       const follow = asDate(args.next_follow_up);
       if (follow) await getDb().update(schema.leads).set({ nextFollowUpAt: follow }).where(eq(schema.leads.id, lead.id));
       return { sent: result.ok, error: result.ok ? undefined : result.error };
+    },
+  },
+
+  {
+    name: "send_client_offer",
+    description:
+      "Offre aux clients du plan et devis (code PROMO10, −10 000 FCFA par plan, 24 h à partir de l'envoi) : email aux anciens acheteurs, " +
+      "avec les modèles du même type que celui acheté et la capture des étapes. Un seul envoi par client ; essais du propriétaire et désinscrits exclus. " +
+      `send=false (défaut) : compte seulement les destinataires. send=true : envoie un lot de ${UPSELL_CAMPAIGN_BATCH} (rappeler tant qu'il en reste). ` +
+      "Écrit à des clients : uniquement avec l'accord explicite du propriétaire.",
+    inputSchema: obj({ send: { type: "boolean", description: "true pour envoyer un lot (défaut : false, comptage seul)" } }),
+    handler: async (args) => {
+      if (args.send !== true) {
+        const { pending, alreadySent } = await upsellCampaignRecipients();
+        return { to_send: pending.length, already_sent: alreadySent, sample: pending.slice(0, 5).map((r) => ({ plan: r.planCode, country: r.country })) };
+      }
+      return sendUpsellCampaignBatch();
     },
   },
 

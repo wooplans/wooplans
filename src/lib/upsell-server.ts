@@ -8,9 +8,9 @@ import {
   PROMO_GUIDE_IMAGE,
   PROMO_GUIDE_PATH,
   UPSELL,
-  UPSELL_CATALOGUE_PATH,
   formatDeadline,
   upsellDeadline,
+  upsellCataloguePath,
   upsellPath,
   upsellPrice,
 } from "@/lib/upsell";
@@ -22,7 +22,7 @@ export function upsellPrices(country: string | null | undefined) {
   const local = localPriceFor(country, { price: projet.price, anchor: projectAnchorPrice() }, RULES);
   const promo = upsellPrice(local);
   return {
-    price: `${promo.approx ? "≈ " : ""}${formatLocalPrice(promo.amount, promo.currency)}`,
+    price: formatLocalPrice(promo.amount, promo.currency),
     fullPrice: formatLocalPrice(local.amount, local.currency),
   };
 }
@@ -31,13 +31,13 @@ const absolute = (path: string) => (path.startsWith("http") ? path : siteUrl(pat
 
 /** Bloc de l'offre aux clients pour l'email de livraison (null si aucun autre modèle n'est proposé). */
 export async function buildUpsellEmail(params: { planSlug: string; paidAt: Date; country?: string | null }): Promise<UpsellEmail | null> {
-  const plans = await getUpsellPlans(params.planSlug, 3).catch(() => []);
+  const plans = await getUpsellPlans(params.planSlug, 4).catch(() => []);
   if (plans.length === 0) return null;
   return {
     code: UPSELL.code,
     ...upsellPrices(params.country),
     deadline: formatDeadline(upsellDeadline(params.paidAt)),
-    catalogueUrl: siteUrl(UPSELL_CATALOGUE_PATH),
+    catalogueUrl: siteUrl(upsellCataloguePath(plans[0]?.category)),
     guideUrl: siteUrl(PROMO_GUIDE_PATH),
     guideImage: siteUrl(PROMO_GUIDE_IMAGE),
     plans: plans.map((p) => ({
