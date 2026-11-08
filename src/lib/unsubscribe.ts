@@ -11,6 +11,7 @@ import { requireSecret, siteUrl } from "@/lib/env";
 export const OPTOUT_LABELS: Record<EmailOptoutScope, string> = {
   prospects: "les rappels concernant votre achat du Catalogue Premium",
   members: "les actualités mensuelles de l'espace Premium (nouveaux modèles)",
+  clients: "les offres réservées aux clients du plan et devis",
 };
 
 async function signature(email: string, scope: EmailOptoutScope) {
@@ -23,7 +24,7 @@ export async function unsubscribeUrl(email: string, scope: EmailOptoutScope) {
 }
 
 export async function verifyUnsubscribe(email: string, scope: string, token: string): Promise<EmailOptoutScope | null> {
-  if (scope !== "prospects" && scope !== "members") return null;
+  if (scope !== "prospects" && scope !== "members" && scope !== "clients") return null;
   if (!email || !token) return null;
   return timingSafeEqual(token, await signature(email, scope)) ? scope : null;
 }

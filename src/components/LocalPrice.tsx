@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import projet from "@/config/projet.json";
+import { usePromoCode } from "@/components/promo-store";
 import { projectAnchorPrice } from "@/lib/project-anchor";
+import { upsellPrice } from "@/lib/upsell";
 import { formatLocalAmount, formatLocalPrice, localPriceFor, type LocalPrice, type LocalPriceRule } from "@/lib/local-price";
 
 const RULES = ((projet as { localPrices?: LocalPriceRule[] }).localPrices ?? []) as LocalPriceRule[];
@@ -63,20 +65,33 @@ export function useLocalPrice(): LocalPrice {
 }
 
 /**
+ * Prix affiché sur les fiches : avec le code de l'offre aux clients actif dans ce navigateur
+ * (client qui a déjà acheté, ou lien ?promo=…), prix réduit et prix normal barré.
+ */
+function useShownPrice(): LocalPrice & { approx: boolean } {
+  const local = useLocalPrice();
+  const promo = usePromoCode();
+  if (!promo) return { ...local, approx: false };
+  const p = upsellPrice(local);
+  return { amount: p.amount, currency: p.currency, anchor: local.amount, approx: p.approx };
+}
+
+/**
  * Prix local affiché sur les fiches (la page est en cache, partagée entre pays : le prix est lu dans le navigateur).
  * - « full » : « 15 350 FCFA » ; « amount » : « 15 350 » ; « currency » : « FCFA » ; « anchor » : prix barré sans devise.
  */
 export function LocalPriceText({ part = "full" }: { part?: "full" | "amount" | "currency" | "anchor" }) {
-  const p = useLocalPrice();
-  if (part === "amount") return <>{formatLocalAmount(p.amount)}</>;
+  const p = useShownPrice();
+  const approx = p.approx ? "≈ " : "";
+  if (part === "amount") return <>{approx}{formatLocalAmount(p.amount)}</>;
   if (part === "currency") return <>{p.currency}</>;
   if (part === "anchor") return p.anchor ? <>{formatLocalAmount(p.anchor)}</> : null;
-  return <>{formatLocalPrice(p.amount, p.currency)}</>;
+  return <>{approx}{formatLocalPrice(p.amount, p.currency)}</>;
 }
 
 /** Prix barré local (balise <s>), rien s'il n'y a pas de prix d'ancrage. */
 export function LocalAnchor({ className }: { className?: string }) {
-  const p = useLocalPrice();
+  const p = useShownPrice();
   if (!p.anchor) return null;
   const text = formatLocalAmount(p.anchor);
   return (

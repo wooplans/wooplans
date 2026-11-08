@@ -7,9 +7,14 @@ import { formatLocalAmount } from "@/lib/local-price";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
+import { currentPromoCode, paidBuyer, rememberBuyer, storedBuyer, usePromoCode, type Buyer } from "@/components/PromoCode";
+import { upsellPrice } from "@/lib/upsell";
 import { PHONE_COUNTRIES, phoneCountryOrDefault, type PhoneCountryCode as CountryCode } from "@/lib/phone";
 
 /** Retire l'indicatif s'il a été saisi (+237…, 00237…) : le serveur attend le numéro national. */
+/** Lien ?achat=1 (offre aux clients) : un seul formulaire s'ouvre, même si la fiche a plusieurs boutons. */
+let autoOpenClaimed = false;
+
 function nationalNumber(raw: string, dial: string) {
   const digits = raw.replace(/\D/g, "");
   const prefix = dial.replace("+", "");
@@ -41,6 +46,12 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const local = planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [promoOpen, setPromoOpen] = useState(false);
+  // Offre aux clients : code mémorisé (lien reçu par email ou WhatsApp) et coordonnées du premier achat.
+  const promo = usePromoCode();
+  const promoPrice = promo ? upsellPrice(local) : null;
+  const [buyer, setBuyer] = useState<Buyer | null>(null);
+  // Paiement direct en cours (client déjà payé sur cet appareil).
+  const [direct, setDirect] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -71,6 +82,31 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   }
 
   useEffect(() => {
+    const saved = storedBuyer();
+    if (saved) {
+      setBuyer(saved);
+      const code = PHONE_COUNTRIES.find(([c]) => c === saved.countryCode)?.[0];
+      if (code) {
+        countryChosen.current = true;
+        setCountry(code);
+      }
+    }
+    if (!autoOpenClaimed && new URLSearchParams(window.location.search).get("achat") === "1") {
+      autoOpenClaimed = true;
+      // « Obtenir ce plan » depuis /merci : client déjà payé sur cet appareil → paiement direct.
+      const buyer = paidBuyer();
+      if (buyer) {
+        void directCheckout(buyer);
+      } else {
+        openedAt.current = Date.now();
+        track(FUNNEL_EVENTS.planDevisFormOpen, { auto: true });
+        setOpen(true);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (visitorCountry && !countryChosen.current) setCountry(phoneCountryOrDefault(visitorCountry));
   }, [visitorCountry]);
 
@@ -84,11 +120,30 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSending(true);
     const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
     // Un seul champ « Nom complet » (3 champs au lieu de 5) ; l'API le découpe en prénom / nom pour Chariow.
-    const data = { ...form, name: (form.name || "").trim(), phone: nationalNumber(form.phone || "", dial) };
+    await startCheckout({ ...form, name: (form.name || "").trim(), phone: nationalNumber(form.phone || "", dial) });
+  }
+
+  /**
+   * Client qui a déjà payé un plan et devis sur cet appareil : le bouton ouvre directement le paiement
+   * (mêmes nom, email et numéro, code de l'offre si actif). En cas d'erreur, le formulaire s'ouvre avec le message.
+   */
+  async function directCheckout(buyer: NonNullable<ReturnType<typeof paidBuyer>>) {
+    setDirect(true);
+    track(FUNNEL_EVENTS.planDevisFormOpen, { direct: true });
+    const promoCode = currentPromoCode();
+    const ok = await startCheckout({ ...buyer, ...(promoCode ? { discountCode: promoCode } : {}) });
+    if (!ok) {
+      setDirect(false);
+      openedAt.current = Date.now();
+      setOpen(true);
+    }
+  }
+
+  async function startCheckout(data: Record<string, string>): Promise<boolean> {
+    setError(null);
+    setSending(true);
     // Essai Wajub : ?paiement=wajub sur la fiche (sinon le cookie posé par la page de vente, ou le réglage du site).
     const provider = new URLSearchParams(window.location.search).get("paiement") || undefined;
     const response = await fetch("/api/plan-devis", {
@@ -101,17 +156,19 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
       track(FUNNEL_EVENTS.planDevisError, { status: response?.status ?? "network" });
       setError(body?.error || "Le paiement n'a pas pu démarrer. Réessayez ou écrivez-nous sur WhatsApp.");
       setSending(false);
-      return;
+      return false;
     }
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
     submitted.current = true;
     phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
     // Pixel Meta : paiement réellement créé ; même event_id que l'API de conversion (un seul évènement compté).
     pixelTrack("InitiateCheckout", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.code], content_type: "product", value: projet.price, currency: "XAF" }, body.metaEventId);
+    rememberBuyer({ name: data.name, email: data.email, phone: data.phone, countryCode: data.countryCode });
     const url = body.url;
     setTimeout(() => {
       window.location.href = url;
     }, 300);
+    return true;
   }
 
   return (
@@ -121,7 +178,13 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
         data-cta={ctaId}
         data-plan={plan.slug}
         className={className}
+        disabled={direct}
         onClick={() => {
+          const buyer = paidBuyer();
+          if (buyer) {
+            void directCheckout(buyer);
+            return;
+          }
           openedAt.current = Date.now();
           touched.current = [];
           submitted.current = false;
@@ -129,7 +192,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           setOpen(true);
         }}
       >
-        {label}
+        {direct ? "Ouverture du paiement…" : label}
       </button>
       <dialog
         ref={dialog}
@@ -142,6 +205,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
         aria-labelledby={`pd-title-${plan.slug}`}
       >
         <form
+          key={buyer ? "prerempli" : "vide"}
           onSubmit={onSubmit}
           onFocusCapture={(e) => {
             const field = (e.target as Element).getAttribute("name");
@@ -155,17 +219,34 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
             <p className="eyebrow">Plan et devis</p>
             <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
-            {local.anchor ? (
+            {promoPrice ? (
+              <>
+                <p className="mt-1 text-base font-semibold text-foreground/50">
+                  <s aria-label={`Au lieu de ${formatLocalAmount(local.amount)} ${local.currency}`}>
+                    {formatLocalAmount(local.amount)} {local.currency}
+                  </s>
+                </p>
+                <p className="mt-1 text-4xl font-bold tracking-tight text-secondary">
+                  {promoPrice.approx ? "≈ " : ""}
+                  {formatLocalAmount(promoPrice.amount)} <span className="text-base font-medium">{promoPrice.currency}</span>
+                </p>
+                <p className="mt-1 text-sm font-semibold">Code {promo} déjà rempli · Téléchargement instantané</p>
+              </>
+            ) : local.anchor ? (
               <p className="mt-1 text-base font-semibold text-foreground/50">
                 <s aria-label={`Au lieu de ${formatLocalAmount(local.anchor)} ${local.currency}`}>
                   {formatLocalAmount(local.anchor)} {local.currency}
                 </s>
               </p>
             ) : null}
-            <p className="mt-1 text-4xl font-bold tracking-tight">
-              {formatLocalAmount(local.amount)} <span className="text-base font-medium">{local.currency}</span>
-            </p>
-            <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
+            {promoPrice ? null : (
+              <>
+                <p className="mt-1 text-4xl font-bold tracking-tight">
+                  {formatLocalAmount(local.amount)} <span className="text-base font-medium">{local.currency}</span>
+                </p>
+                <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
+              </>
+            )}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -178,7 +259,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
 
           <div>
             <label className="label" htmlFor={`pd-name-${plan.slug}`}>Nom complet</label>
-            <input id={`pd-name-${plan.slug}`} name="name" required minLength={2} autoComplete="name" placeholder="Kouame Diallo" className="input" />
+            <input id={`pd-name-${plan.slug}`} name="name" required minLength={2} autoComplete="name" defaultValue={buyer?.name} placeholder="Kouame Diallo" className="input" />
           </div>
           <div>
             <label className="label" htmlFor={`pd-email-${plan.slug}`}>Email</label>
@@ -189,6 +270,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               type="email"
               inputMode="email"
               autoComplete="email"
+              defaultValue={buyer?.email}
               placeholder="vous@exemple.com"
               className="input"
             />
@@ -225,15 +307,16 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel-national"
+                defaultValue={buyer?.phone}
                 placeholder={example}
                 className="input min-w-0"
               />
             </div>
           </div>
-          {promoOpen ? (
+          {promoOpen || promo ? (
             <div>
               <label className="label" htmlFor={`pd-promo-${plan.slug}`}>Code promo</label>
-              <input id={`pd-promo-${plan.slug}`} name="discountCode" autoFocus autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
+              <input id={`pd-promo-${plan.slug}`} name="discountCode" defaultValue={promo ?? undefined} autoFocus={!promo} autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
             </div>
           ) : (
             <button type="button" onClick={() => setPromoOpen(true)} className="-mt-2 justify-self-start text-sm font-semibold text-primary underline">

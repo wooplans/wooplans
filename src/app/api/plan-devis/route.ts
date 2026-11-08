@@ -12,6 +12,7 @@ import { getPublicPlan } from "@/lib/plans";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
+import { UPSELL_CTA_ID, isUpsellCode } from "@/lib/upsell";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
 type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string; provider?: string };
@@ -47,7 +48,8 @@ export async function POST(request: NextRequest) {
   const db = getDb();
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
   const intentId = randomId();
-  const ctaId = "plan_devis";
+  // Code de l'offre aux clients : achat repéré (mesure de l'offre, aucune déduction sur les plans complets).
+  const ctaId = isUpsellCode(discountCode) ? UPSELL_CTA_ID : "plan_devis";
   const metaBrowser = metaAllowedForRequest(request) ? browserContext(request) : null;
   await db.insert(schema.checkoutIntents).values({
     id: intentId,

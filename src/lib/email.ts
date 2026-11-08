@@ -150,14 +150,75 @@ ${button(loginUrl, "Ouvrir mon espace Premium")}
   return { subject, html, text };
 }
 
-/** Livraison du plan et devis d'un modèle : lien de téléchargement personnel et WhatsApp des architectes. */
-export function planDevisEmail(params: { name?: string | null; planName: string; planCode: string; downloadUrl: string }) {
-  const subject = `Votre plan et devis du modèle ${params.planCode}`;
+/** Offre aux clients, ajoutée à l'email de livraison du plan et devis. */
+export type UpsellEmail = {
+  code: string;
+  /** « 4 900 FCFA » */
+  price: string;
+  /** « 14 900 FCFA » */
+  fullPrice: string;
+  /** « dimanche 9 novembre à 14h32 » */
+  deadline: string;
+  catalogueUrl: string;
+  guideUrl: string;
+  guideImage: string;
+  plans: (DigestPlan & { buyUrl: string })[];
+};
+
+function upsellBlock(u: UpsellEmail) {
+  const cards = u.plans
+    .map(
+      (pl) => `<tr><td style="padding:0 0 16px">
+<a href="${pl.buyUrl}" style="text-decoration:none;color:#1E2933">${
+        pl.image ? `<img src="${pl.image}" alt="" width="456" style="display:block;width:100%;max-width:456px;height:auto;border-radius:12px">` : ""
+      }<p style="margin:8px 0 2px;font-weight:700">${escape(pl.name)}</p><p style="margin:0;color:#6B7280;font-size:13px">${escape(pl.details)}${pl.budget ? ` · ${escape(pl.budget)}` : ""}</p>
+<p style="margin:6px 0 0;font-weight:700;color:#C75B3A">${escape(u.price)} au lieu de <s>${escape(u.fullPrice)}</s> →</p></a></td></tr>`,
+    )
+    .join("");
+  return `<div style="margin:28px 0 8px;padding:20px;border:2px solid #F08A2E;border-radius:16px;background:#FFF7EF">
+<p style="margin:0;font-size:13px;font-weight:700;letter-spacing:1px;color:#C75B3A;text-transform:uppercase">Offre réservée aux clients · 24 h seulement</p>
+<p style="margin:8px 0 0;font-size:20px;font-weight:800">Chaque plan et devis supplémentaire à ${escape(u.price)} au lieu de ${escape(u.fullPrice)}</p>
+<p style="margin:8px 0 0">Vous hésitez encore entre plusieurs modèles ? Comparez-les avec leurs plans et devis détaillés pour seulement ${escape(u.price)} chacun. Prenez-en autant que vous voulez.</p>
+<div style="margin:16px 0;padding:14px;border:2px dashed #0F5B59;border-radius:12px;text-align:center;background:#fff"><p style="margin:0;color:#6B7280;font-size:13px">Votre code</p><p style="margin:4px 0 0;font-size:28px;font-weight:800;letter-spacing:4px;color:#0F5B59">${escape(u.code)}</p><p style="margin:4px 0 0;font-size:14px;font-weight:700;color:#C75B3A">⏳ Offre valable jusqu'au ${escape(u.deadline)} (heure du Cameroun)</p></div>
+<p style="margin:0 0 12px;font-weight:700">Modèles proches du vôtre :</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${cards}</table>
+${button(u.catalogueUrl, "Voir tous les modèles à prix réduit")}
+<p style="margin:0;font-weight:700">Comment utiliser le code ?</p>
+<p style="margin:4px 0 10px;font-size:14px">Ouvrez un modèle depuis ce mail : le code est déjà appliqué, il ne reste qu'à payer. Sinon, sur la fiche du modèle, touchez « Recevoir mon plan et devis », puis « Code promo », et tapez ${escape(u.code)}.</p>
+<a href="${u.guideUrl}"><img src="${u.guideImage}" alt="Les étapes pour saisir le code promo" width="456" style="display:block;width:100%;max-width:456px;height:auto;border-radius:12px;border:1px solid #E5E7EB"></a>
+</div>`;
+}
+
+function upsellText(u: UpsellEmail) {
+  return [
+    `OFFRE RÉSERVÉE AUX CLIENTS, 24 H SEULEMENT : chaque plan et devis supplémentaire à ${u.price} au lieu de ${u.fullPrice}.`,
+    `Votre code : ${u.code}, valable jusqu'au ${u.deadline} (heure du Cameroun).`,
+    `Modèles proches du vôtre :\n${u.plans.map((pl) => `- ${pl.name} (${pl.details}) : ${pl.buyUrl}`).join("\n")}`,
+    `Tous les modèles avec votre code : ${u.catalogueUrl}`,
+    `Comment utiliser le code (avec captures d'écran) : ${u.guideUrl}`,
+  ].join("\n\n");
+}
+
+/**
+ * Livraison du plan et devis d'un modèle : lien de téléchargement personnel, offre aux clients
+ * (plans supplémentaires avec le code, 24 h) et WhatsApp des architectes.
+ */
+export function planDevisEmail(params: {
+  name?: string | null;
+  planName: string;
+  planCode: string;
+  downloadUrl: string;
+  upsell?: UpsellEmail | null;
+}) {
+  const subject = params.upsell
+    ? `Votre plan et devis ${params.planCode} + votre code ${params.upsell.code} (24 h)`
+    : `Votre plan et devis du modèle ${params.planCode}`;
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
   const whatsapp = `https://wa.me/${getEnv().WHATSAPP_NUMBER}?text=${encodeURIComponent(`Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${params.planCode} et je souhaite parler de mon projet.`)}`;
   const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Le plan et devis du modèle <strong>${escape(params.planName)}</strong> (réf. ${escape(params.planCode)}) est prêt : plan de distribution avec les dimensions, surfaces des pièces, terrain minimum estimé et devis détaillé.</p>
 ${button(params.downloadUrl, "Télécharger mon plan et devis")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Le document est marqué à votre nom.</p>
+${params.upsell ? upsellBlock(params.upsell) : ""}
 <p style="margin-top:24px;font-weight:700">Des modifications à faire ?</p>
 <p>Écrivez à nos architectes sur WhatsApp : une chambre en plus, un garage, la taille de votre terrain… Ils adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe. La dernière partie de votre PDF détaille tout ce qui est livré.</p>
 ${button(whatsapp, "Discuter sur WhatsApp")}`);
@@ -166,10 +227,31 @@ ${button(whatsapp, "Discuter sur WhatsApp")}`);
     `Merci pour votre achat. Le plan et devis du modèle ${params.planName} (réf. ${params.planCode}) est prêt.`,
     `Télécharger : ${params.downloadUrl}`,
     "Ce lien est personnel. Le document est marqué à votre nom.",
+    ...(params.upsell ? [upsellText(params.upsell)] : []),
     `Des modifications à faire ? Écrivez à nos architectes sur WhatsApp : ${whatsapp}`,
     "Nos architectes adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe : tout est détaillé dans votre PDF.",
   ].join("\n\n");
   return { subject, html, text };
+}
+
+/**
+ * Offre aux clients envoyée aux anciens acheteurs du plan et devis (envoi lancé depuis l'admin) :
+ * code, date limite (24 h après l'envoi), modèles du même type que celui acheté, capture des étapes.
+ */
+export function upsellCampaignEmail(p: { name?: string | null; planCode: string; upsell: UpsellEmail; unsubscribe: string }) {
+  const subject = `Votre code ${p.upsell.code} : vos prochains plans et devis à ${p.upsell.price} (24 h)`;
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Vous avez acheté le plan et devis du modèle <strong>${escape(p.planCode)}</strong> chez WOOPLANS. Merci pour votre confiance !</p>
+<p>Bonne nouvelle : en tant que client, vous pouvez obtenir tous nos autres plans et devis à prix réduit avec votre code ${escape(p.upsell.code)}. Profitez-en vite pour télécharger les modèles qui vous intéressent : l'offre dure 24 h.</p>
+${upsellBlock(p.upsell)}
+<p style="color:#6B7280;font-size:14px">Une question ? Répondez simplement à cet email.</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Vous avez acheté le plan et devis du modèle ${p.planCode} chez WOOPLANS. Merci pour votre confiance !`,
+    upsellText(p.upsell),
+    `Ne plus recevoir ces offres : ${p.unsubscribe}`,
+  ].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
 export function adminSaleEmail(params: { email: string; name?: string | null; amount: number; product: string }) {

@@ -8,6 +8,8 @@ import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
 import { captureServerEvents } from "@/lib/posthog";
+import { UPSELL, UPSELL_CTA_ID } from "@/lib/upsell";
+import { buildUpsellEmail } from "@/lib/upsell-server";
 import { recordProspectEvent } from "@/lib/prospects";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
@@ -380,8 +382,11 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
 
   const to = email ?? intent.email;
   const downloadUrl = siteUrl(`/api/plan-devis/${intent.id}`);
+  const promoPurchase = intent.ctaId === UPSELL_CTA_ID;
   if (to) {
-    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl });
+    // Offre aux clients (24 h après ce paiement) : un souci de lecture des modèles ne bloque jamais la livraison.
+    const upsell = await buildUpsellEmail({ planSlug: plan.slug, paidAt: values.occurredAt, country }).catch(() => null);
+    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl, upsell });
     await sendEmail({ to, ...mail, template: "plan_devis" });
   }
 
@@ -396,7 +401,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     planLabel: plan.code,
     channel: "site",
     stage: "demande",
-    projectDetails: PLAN_PAID_NOTE,
+    projectDetails: promoPurchase ? `${PLAN_PAID_NOTE} Acheté avec le code ${UPSELL.code} (offre aux clients).` : PLAN_PAID_NOTE,
     catalogueCredit: 0,
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
@@ -406,7 +411,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     id: randomId(),
     leadId,
     kind: "payment",
-    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
+    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA${promoPurchase ? `, code ${UPSELL.code}` : ""}, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
     author: "site",
   });
 

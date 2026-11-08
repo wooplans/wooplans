@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
 import projet from "@/config/projet.json";
 import { pixelPurchase } from "@/lib/pixel";
+import { confirmBuyer } from "@/components/PromoCode";
+import { UpsellOffer, type UpsellData } from "@/components/UpsellOffer";
 
 type Status = {
   status: "unknown" | "started" | "paid" | "failed" | "abandoned";
@@ -13,6 +15,10 @@ type Status = {
   /** Achat du plan et devis d'un seul modèle (sinon Catalogue Premium). */
   plan?: { slug: string; code: string; name: string } | null;
   download?: string | null;
+  /** Acheté avec le code de l'offre aux clients : prix non déduit des plans complets. */
+  promo?: boolean;
+  /** Offre aux clients (24 h après le paiement). */
+  upsell?: UpsellData | null;
 };
 
 /** Interroge le serveur jusqu'à la confirmation du paiement (notification Chariow). */
@@ -32,6 +38,8 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
       if (json) setData(json);
       setAttempts(n);
       if (json?.status === "paid" && json.download) {
+        // Paiement confirmé : les achats suivants sur cet appareil partent directement au paiement.
+        confirmBuyer();
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (!sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
@@ -64,9 +72,6 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
   }, [intentId, pixelId]);
 
   if (data?.status === "paid" && data.plan && data.download) {
-    const whatsapp = `https://wa.me/${process.env.WHATSAPP_NUMBER || "237694327885"}?text=${encodeURIComponent(
-      `Bonjour WOOPLANS, j'ai téléchargé le plan et devis du modèle ${data.plan.code} et je souhaite parler de mon projet.`,
-    )}`;
     return (
       <div className="card p-6 text-center md:p-10">
         <p className="text-4xl" aria-hidden>🎉</p>
@@ -76,11 +81,7 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
           est aussi envoyé par email.
         </p>
         <a href={data.download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger mon plan et devis</a>
-        <p className="mt-8 font-semibold">Des modifications à faire ?</p>
-        <p className="mt-1 text-sm text-foreground/75">Nos architectes adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe. Tout est expliqué à la fin de votre PDF.</p>
-        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn mt-4 border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10">
-          Discuter sur WhatsApp
-        </a>
+        {data.upsell ? <UpsellOffer upsell={data.upsell} /> : null}
       </div>
     );
   }

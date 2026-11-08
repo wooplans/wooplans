@@ -33,9 +33,23 @@ export function localPriceFor(
   return { amount: rule.amount, currency: rule.currency, anchor };
 }
 
-/** « 15 350 » (espace insécable fine), sans la devise. */
+/** « 15 350 » (espace insécable fine), sans la devise ; centimes gardés pour les petits montants (« 8,55 »). */
 export function formatLocalAmount(value: number): string {
-  return new Intl.NumberFormat("fr-FR").format(Math.round(value)).replace(/ | /g, " ");
+  const n = Number.isInteger(value) || value >= 1000 ? Math.round(value) : Math.round(value * 100) / 100;
+  return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n).replace(/ | /g, " ");
+}
+
+/**
+ * Prix local avec une remise fixe en FCFA (offre aux clients, code PROMO10).
+ * - FCFA (Afrique centrale comme Afrique de l'Ouest) : la remise est déduite telle quelle (15 350 → 5 350).
+ * - Autre monnaie : la remise est convertie au même taux que le prix local (14 900 FCFA = 235 941 GNF,
+ *   donc 10 000 FCFA = 158 350 GNF → 77 591 GNF ; 26 $US → 8,55 $US).
+ */
+export function discountedLocalPrice(local: { amount: number; currency: string }, basePrice: number, discountFcfa: number) {
+  if (local.currency === "FCFA") return { amount: Math.max(0, local.amount - discountFcfa), currency: local.currency };
+  const converted = basePrice > 0 ? (discountFcfa * local.amount) / basePrice : 0;
+  const raw = Math.max(0, local.amount - converted);
+  return { amount: raw >= 100 ? Math.round(raw) : Math.round(raw * 100) / 100, currency: local.currency };
 }
 
 /** « 15 350 FCFA », « 235 941 GNF », « 26 $US ». */
