@@ -20,7 +20,7 @@ export function PriceCountdown({ className = "" }: { className?: string }) {
     <p className={`min-h-[1.5rem] text-sm font-semibold text-secondary ${className}`} role="timer" aria-live="off">
       {left === null ? null : (
         <>
-          ⏳ Prix promo valable aujourd&apos;hui : fin à 23h59 · <span className="font-mono tabular-nums">{formatCountdown(left)}</span>
+          ⏳ Fin de la promo dans <span className="inline-block animate-pulse font-mono tabular-nums">{formatCountdown(left)}</span>
         </>
       )}
     </p>
