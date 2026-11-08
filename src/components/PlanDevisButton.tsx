@@ -158,6 +158,15 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
       setSending(false);
       return false;
     }
+    // Adresse du propriétaire : le document se télécharge directement, rien n'est mesuré.
+    if (body.mode === "owner") {
+      submitted.current = true;
+      window.location.href = body.url;
+      setSending(false);
+      setDirect(false);
+      setOpen(false);
+      return true;
+    }
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
     submitted.current = true;
     phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });

@@ -7,6 +7,7 @@ import { domainAcceptsMail, suggestEmail } from "@/lib/email-check";
 import { giftPlanEmail, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
+import { isOwnerEmail } from "@/lib/owner-emails";
 import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { formatFcfa, getPublicPlan } from "@/lib/plans";
 import { recordProspectEvent } from "@/lib/prospects";
@@ -21,8 +22,6 @@ type Body = { slug?: string; name?: string; email?: string; confirmed?: boolean 
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Adresses du propriétaire : cadeaux illimités (contrôle des documents de chaque modèle), sans limite de débit. */
-const UNLIMITED_EMAILS = new Set(["wooplans237@gmail.com", "romualdtwk@gmail.com"]);
 
 /**
  * « Recevez gratuitement le plan et devis » (fiche modèle) : un cadeau par adresse email, envoyé par email
@@ -39,7 +38,8 @@ export async function POST(request: NextRequest) {
   }
   // Faute de frappe probable dans le domaine (gmial.com) : on propose la correction avant d'envoyer, car un email
   // qui rebondit abîme la réputation de l'expéditeur. Domaine inexistant : refusé, l'email ne pourrait pas arriver.
-  const owner = UNLIMITED_EMAILS.has(email);
+  // Adresses du propriétaire : cadeaux illimités (contrôle des documents de chaque modèle), sans limite de débit.
+  const owner = isOwnerEmail(email);
   if (!owner) {
     const suggestion = body.confirmed ? null : suggestEmail(email);
     if (suggestion) {
