@@ -41,7 +41,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     // data-scroll-behavior : Next coupe le défilement doux (globals.css) pendant un changement de page,
     // sinon l'arrivée sur une fiche défilait visiblement du bas vers le haut.
-    <html lang="fr" className={montserrat.variable} data-scroll-behavior="smooth">
+    // suppressHydrationWarning : le script du mode « sans distraction » ajoute data-focus avant React.
+    <html lang="fr" className={montserrat.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         {children}
         <ImageGuard />

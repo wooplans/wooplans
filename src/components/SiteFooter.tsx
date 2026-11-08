@@ -23,14 +23,14 @@ export function SiteFooter() {
             {LANDING_PAGES.map((p) => (
               <li key={p.path}><Link href={p.path} className="hover:text-white">{p.label}</Link></li>
             ))}
-            <li><Link href={SITE.catalogueUrl} data-cta="footer" className="hover:text-white">Catalogue Premium</Link></li>
+            <li data-focus-hide><Link href={SITE.catalogueUrl} data-cta="footer" className="hover:text-white">Catalogue Premium</Link></li>
           </ul>
         </div>
         <div>
           <p className="mb-3 text-sm font-semibold text-white">Services</p>
           <ul className="space-y-2 text-sm">
             <li><Link href="/plans-personnalises" className="hover:text-white">Plans complets personnalisés</Link></li>
-            <li><Link href="/connexion" className="hover:text-white">Espace Premium</Link></li>
+            <li data-focus-hide><Link href="/connexion" className="hover:text-white">Espace Premium</Link></li>
             <li><Link href="/a-propos" className="hover:text-white">À propos</Link></li>
             <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
           </ul>

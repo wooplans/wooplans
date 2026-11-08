@@ -10,6 +10,8 @@ import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { PlanDevisPreview } from "@/components/PlanDevisPreview";
+import { formatAmount } from "@/lib/anchor-price";
+import { projectAnchorPrice } from "@/lib/project-anchor";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
 import { customPlanOffer, memberBalance, planGiftEnabled, projectStartPrice } from "@/lib/custom-plans";
@@ -81,6 +83,7 @@ export default async function PlanPage({ params }: Props) {
     countPlanDevisDownloads(),
     countFloorPlans(plan.slug),
   ]);
+  const anchor = projectAnchorPrice();
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
   // Offre « plan et devis » du modèle, puis plans complets : visible seulement si OFFRE_PROJET = "1" (aperçu), et pour une villa ou un duplex.
@@ -249,7 +252,16 @@ export default async function PlanPage({ params }: Props) {
           <div className="cta-pulse">
           <PlanDevisButton
             plan={plan}
-            label={`Recevoir mon plan et devis · ${formatFcfa(projectStartPrice())}`}
+            label={
+              // Une seule ligne de texte par bloc : le bouton (flex) ne découpe pas le libellé en colonnes.
+              <span className="block leading-tight">
+                Recevoir mon plan et devis
+                <span className="mt-0.5 block text-sm font-semibold">
+                  {anchor ? <s className="mr-1.5 font-medium opacity-70">{formatAmount(anchor)}</s> : null}
+                  {formatFcfa(projectStartPrice())}
+                </span>
+              </span>
+            }
             price={formatFcfa(projectStartPrice())}
             ctaId="plan_projet_sticky"
             className="btn-cta w-full py-3.5"
