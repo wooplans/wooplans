@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
 import projet from "@/config/projet.json";
 import { pixelPurchase } from "@/lib/pixel";
+import { UpsellOffer, type UpsellData } from "@/components/UpsellOffer";
 
 type Status = {
   status: "unknown" | "started" | "paid" | "failed" | "abandoned";
@@ -13,6 +14,10 @@ type Status = {
   /** Achat du plan et devis d'un seul modèle (sinon Catalogue Premium). */
   plan?: { slug: string; code: string; name: string } | null;
   download?: string | null;
+  /** Acheté avec le code de l'offre aux clients : prix non déduit des plans complets. */
+  promo?: boolean;
+  /** Offre aux clients (24 h après le paiement). */
+  upsell?: UpsellData | null;
 };
 
 /** Interroge le serveur jusqu'à la confirmation du paiement (notification Chariow). */
@@ -76,8 +81,13 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
           est aussi envoyé par email.
         </p>
         <a href={data.download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger mon plan et devis</a>
+        {data.upsell ? <UpsellOffer upsell={data.upsell} /> : null}
         <p className="mt-8 font-semibold">Des modifications à faire ?</p>
-        <p className="mt-1 text-sm text-foreground/75">Parlez-en à nos architectes : le prix de ce plan et devis est déduit de vos plans complets.</p>
+        <p className="mt-1 text-sm text-foreground/75">
+          {data.promo
+            ? "Parlez-en à nos architectes : ils adaptent le modèle à votre terrain."
+            : "Parlez-en à nos architectes : le prix de ce plan et devis est déduit de vos plans complets."}
+        </p>
         <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn mt-4 border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10">
           Discuter sur WhatsApp
         </a>

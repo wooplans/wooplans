@@ -34,5 +34,10 @@
       "amount": 26,
       "currency": "$US"
     }
-  ]
+  ],
+  "upsell": {
+    "code": "PROMO10",
+    "discount": 10000,
+    "hours": 24
+  }
 }

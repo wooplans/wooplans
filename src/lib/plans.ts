@@ -115,6 +115,31 @@ export async function getSimilarPublicPlans(plan: PublicPlan, limit = 3) {
   }) as Promise<PublicPlan[]>;
 }
 
+/**
+ * Modèles proposés après l'achat d'un plan et devis (offre aux clients) : même type d'abord,
+ * puis les budgets les plus proches. Seuls les modèles vendus en plan et devis (villa, duplex).
+ */
+export async function getUpsellPlans(boughtSlug: string, limit = 4) {
+  const all = (await getDb().query.plans.findMany({
+    columns: publicColumns,
+    where: and(published, inArray(schema.plans.category, ["villa", "duplex"])),
+    orderBy: order,
+  })) as PublicPlan[];
+  const bought = all.find((p) => p.slug === boughtSlug);
+  const budget = (p: PublicPlan) => p.budgetMin ?? p.budgetMax ?? 0;
+  return all
+    .filter((p) => p.slug !== boughtSlug)
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => {
+      if (!bought) return a.i - b.i;
+      const cat = Number(a.p.category !== bought.category) - Number(b.p.category !== bought.category);
+      if (cat) return cat;
+      return Math.abs(budget(a.p) - budget(bought)) - Math.abs(budget(b.p) - budget(bought)) || a.i - b.i;
+    })
+    .slice(0, limit)
+    .map(({ p }) => p);
+}
+
 /* ─── Premium : réservé aux membres authentifiés (appelé après requireMember) ─── */
 
 export async function listPremiumPlans() {

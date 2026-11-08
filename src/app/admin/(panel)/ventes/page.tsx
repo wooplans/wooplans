@@ -3,17 +3,31 @@ import { getDb, schema } from "@/db";
 import { Badge, fmtDateTime, PageTitle, Table } from "@/components/admin/ui";
 import { siteUrl } from "@/lib/env";
 import { formatFcfa } from "@/lib/plans";
+import { PROMO_GUIDE_IMAGE, PROMO_GUIDE_PATH, UPSELL, UPSELL_CATALOGUE_PATH, formatDeadline, upsellDeadline } from "@/lib/upsell";
+import { upsellPrices } from "@/lib/upsell-server";
 
 const TONES = { completed: "good", abandoned: "warn", failed: "bad", refunded: "neutral" } as const;
 const LABELS = { completed: "Payée", abandoned: "Abandonnée", failed: "Échouée", refunded: "Remboursée" } as const;
 
-/** Message WhatsApp pour renvoyer à la main un plan et devis payé (email non reçu, adresse erronée…). */
-function planDevisWhatsapp(params: { phone: string; name: string | null; code: string; intentId: string }) {
+/**
+ * Message WhatsApp pour renvoyer à la main un plan et devis payé (email non reçu, adresse erronée…),
+ * avec l'offre aux clients : plans supplémentaires avec le code, jusqu'à 24 h après l'achat
+ * (envoyé plus tard : 24 h à partir de l'envoi). Le client est renvoyé vers le site pour utiliser son code.
+ */
+function planDevisWhatsapp(params: { phone: string; name: string | null; code: string; intentId: string; paidAt: Date; country: string | null }) {
   const first = (params.name || "").trim().split(/\s+/)[0];
+  const now = Date.now();
+  const saleDeadline = upsellDeadline(params.paidAt);
+  const deadline = saleDeadline.getTime() > now + 3600_000 ? saleDeadline : upsellDeadline(now);
+  const { price, fullPrice } = upsellPrices(params.country);
   const text = [
     `Bonjour${first ? ` ${first}` : ""}, merci pour votre achat chez WOOPLANS.`,
     `Voici votre plan et devis du modèle ${params.code} (document marqué à votre nom) : ${siteUrl(`/api/plan-devis/${params.intentId}`)}`,
     "Je vous l'envoie aussi en PDF ici. Pour toute modification du plan, répondez simplement à ce message.",
+    `🎁 *OFFRE RÉSERVÉE AUX CLIENTS, 24 H SEULEMENT*\nChaque plan et devis supplémentaire à *${price}* au lieu de ${fullPrice}. Prenez-en autant que vous voulez pour comparer les modèles qui vous intéressent.`,
+    `Votre code : *${UPSELL.code}*\n⏳ Valable jusqu'au ${formatDeadline(deadline)} (heure du Cameroun).`,
+    `👉 Choisissez vos modèles ici, le code est déjà rempli : ${siteUrl(UPSELL_CATALOGUE_PATH)}`,
+    `Comment saisir le code (en images) : ${siteUrl(PROMO_GUIDE_PATH)}`,
   ].join("\n\n");
   return `https://wa.me/${params.phone}?text=${encodeURIComponent(text)}`;
 }
@@ -89,7 +103,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                     <div className="flex flex-wrap gap-1.5">
                       {phone ? (
                         <a
-                          href={planDevisWhatsapp({ phone, name: s.name, code, intentId: planDevis.id })}
+                          href={planDevisWhatsapp({ phone, name: s.name, code, intentId: planDevis.id, paidAt: s.occurredAt, country: s.country })}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full bg-[#25D366] px-3 py-1 font-semibold text-white"
@@ -99,6 +113,14 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                       ) : null}
                       <a href={`/api/admin/plan-devis/${planDevis.id}`} className="rounded-full border border-primary px-3 py-1 font-semibold text-primary">
                         Télécharger le PDF
+                      </a>
+                      <a
+                        href={PROMO_GUIDE_IMAGE}
+                        download="code-promo-wooplans.png"
+                        title={`Capture des étapes pour saisir le code ${UPSELL.code}, à envoyer au client sur WhatsApp`}
+                        className="rounded-full border border-secondary px-3 py-1 font-semibold text-secondary"
+                      >
+                        Capture code promo
                       </a>
                     </div>
                   </div>

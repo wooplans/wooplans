@@ -8,6 +8,8 @@ import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
 import { FUNNEL_EVENTS, countryRequiresConsent, variantFromCta } from "@/lib/behavior";
 import { captureServerEvents } from "@/lib/posthog";
+import { UPSELL, UPSELL_CTA_ID } from "@/lib/upsell";
+import { buildUpsellEmail } from "@/lib/upsell-server";
 import { recordProspectEvent } from "@/lib/prospects";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
@@ -292,6 +294,8 @@ export function planProductId() {
 
 /** Prix déduit des plans complets, inscrit dans le CRM avec l'achat. */
 const PLAN_CREDIT_NOTE = "Plan et devis payé : son prix est déduit des plans complets de ce modèle.";
+/** Plan et devis acheté avec le code de l'offre aux clients : rien n'est déduit (décision de Tao, nov. 2026). */
+const PLAN_PROMO_NOTE = `Plan et devis acheté avec le code ${UPSELL.code} (offre aux clients) : son prix n'est pas déduit des plans complets.`;
 
 /**
  * Vente du produit « Plan et devis » (un seul modèle). Le modèle vient de l'intention créée
@@ -380,8 +384,11 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
 
   const to = email ?? intent.email;
   const downloadUrl = siteUrl(`/api/plan-devis/${intent.id}`);
+  const promoPurchase = intent.ctaId === UPSELL_CTA_ID;
   if (to) {
-    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl });
+    // Offre aux clients (24 h après ce paiement) : un souci de lecture des modèles ne bloque jamais la livraison.
+    const upsell = await buildUpsellEmail({ planSlug: plan.slug, paidAt: values.occurredAt, country }).catch(() => null);
+    const mail = planDevisEmail({ name, planName: plan.name, planCode: plan.code, downloadUrl, credit: !promoPurchase, upsell });
     await sendEmail({ to, ...mail, template: "plan_devis" });
   }
 
@@ -396,8 +403,8 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     planLabel: plan.code,
     channel: "site",
     stage: "demande",
-    projectDetails: PLAN_CREDIT_NOTE,
-    catalogueCredit: amount,
+    projectDetails: promoPurchase ? PLAN_PROMO_NOTE : PLAN_CREDIT_NOTE,
+    catalogueCredit: promoPurchase ? 0 : amount,
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
     utmCampaign: visitor?.utmCampaign ?? null,
@@ -406,7 +413,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     id: randomId(),
     leadId,
     kind: "payment",
-    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
+    body: `Plan et devis du modèle ${plan.code} payé (${amount.toLocaleString("fr-FR")} FCFA${promoPurchase ? `, code ${UPSELL.code}` : ""}, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
     author: "site",
   });
 
