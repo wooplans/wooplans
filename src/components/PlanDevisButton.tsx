@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import projet from "@/config/projet.json";
+import { formatAmount } from "@/lib/anchor-price";
+import { projectAnchorPrice } from "@/lib/project-anchor";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
@@ -18,7 +20,7 @@ function nationalNumber(raw: string, dial: string) {
 
 type Props = {
   plan: { slug: string; code: string };
-  label: string;
+  label: React.ReactNode;
   /** Prix affiché dans le formulaire, déjà formaté (« 10 000 FCFA »). */
   price: string;
   ctaId: string;
@@ -33,6 +35,7 @@ type Props = {
  */
 export function PlanDevisButton({ plan, label, price, ctaId, className, fallbackHref }: Props) {
   const [open, setOpen] = useState(false);
+  const anchor = projectAnchorPrice();
   const [country, setCountry] = useState<CountryCode>("CM");
   const countryChosen = useRef(false);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
@@ -163,6 +166,11 @@ export function PlanDevisButton({ plan, label, price, ctaId, className, fallback
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
             <p className="eyebrow">Plan et devis</p>
             <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
+            {anchor ? (
+              <p className="mt-1 text-base font-semibold text-foreground/50">
+                <s aria-label={`Au lieu de ${formatAmount(anchor)} FCFA`}>{formatAmount(anchor)} FCFA</s>
+              </p>
+            ) : null}
             <p className="mt-1 text-4xl font-bold tracking-tight">
               {price.replace(/ FCFA$/, "")} <span className="text-base font-medium">FCFA</span>
             </p>
