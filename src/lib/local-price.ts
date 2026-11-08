@@ -5,8 +5,9 @@
  * Pays absent de la liste (Afrique centrale, reste du monde) : prix de base en FCFA.
  * Module sans dépendance (testé par node --test).
  */
-export type LocalPriceRule = { region?: string; countries: string[]; amount: number; currency: string };
-export type LocalPrice = { amount: number; currency: string; anchor: number | null };
+/** promoAmount : prix avec le code de l'offre aux clients, tel que Chariow le facture (relevé par Tao). */
+export type LocalPriceRule = { region?: string; countries: string[]; amount: number; currency: string; promoAmount?: number };
+export type LocalPrice = { amount: number; currency: string; anchor: number | null; promoAmount?: number };
 
 /** Arrondi du prix barré converti : 50 FCFA, 1 000 GNF, 1 $US. */
 function anchorStep(currency: string, amount: number) {
@@ -30,7 +31,7 @@ export function localPriceFor(
     anchor = Math.round(raw / step) * step;
     if (anchor <= rule.amount) anchor = null;
   }
-  return { amount: rule.amount, currency: rule.currency, anchor };
+  return { amount: rule.amount, currency: rule.currency, anchor, ...(rule.promoAmount ? { promoAmount: rule.promoAmount } : {}) };
 }
 
 /** « 15 350 » (espace insécable fine), sans la devise ; centimes gardés pour les petits montants (« 8,55 »). */
@@ -40,13 +41,14 @@ export function formatLocalAmount(value: number): string {
 }
 
 /**
- * Prix local avec une remise fixe en FCFA (offre aux clients, code PROMO10).
- * - FCFA (Afrique centrale comme Afrique de l'Ouest) : la remise est déduite telle quelle (15 350 → 5 350).
- * - Autre monnaie : la remise est convertie au même taux que le prix local (14 900 FCFA = 235 941 GNF,
- *   donc 10 000 FCFA = 158 350 GNF → 77 591 GNF ; 26 $US → 8,55 $US).
+ * Prix local avec une remise fixe en FCFA (offre aux clients, code PROMO10), tel que Chariow le facture :
+ * - prix relevé sur Chariow (promoAmount de src/config/projet.json) quand il est connu :
+ *   Afrique de l'Ouest 5 050 FCFA, Guinée 77 591 GNF, RD Congo 8,59 $US ;
+ * - sinon, la remise convertie au même taux que le prix local (Chariow applique la remise sur le prix
+ *   en FCFA d'Afrique centrale, puis convertit) : 14 900 → 4 900 FCFA.
  */
-export function discountedLocalPrice(local: { amount: number; currency: string }, basePrice: number, discountFcfa: number) {
-  if (local.currency === "FCFA") return { amount: Math.max(0, local.amount - discountFcfa), currency: local.currency };
+export function discountedLocalPrice(local: { amount: number; currency: string; promoAmount?: number }, basePrice: number, discountFcfa: number) {
+  if (local.promoAmount) return { amount: local.promoAmount, currency: local.currency };
   const converted = basePrice > 0 ? (discountFcfa * local.amount) / basePrice : 0;
   const raw = Math.max(0, local.amount - converted);
   return { amount: raw >= 100 ? Math.round(raw) : Math.round(raw * 100) / 100, currency: local.currency };

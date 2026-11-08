@@ -16,7 +16,8 @@
         "TG"
       ],
       "amount": 15350,
-      "currency": "FCFA"
+      "currency": "FCFA",
+      "promoAmount": 5050
     },
     {
       "region": "Guinée",
@@ -24,7 +25,8 @@
         "GN"
       ],
       "amount": 235941,
-      "currency": "GNF"
+      "currency": "GNF",
+      "promoAmount": 77591
     },
     {
       "region": "RD Congo",
@@ -32,7 +34,8 @@
         "CD"
       ],
       "amount": 26,
-      "currency": "$US"
+      "currency": "$US",
+      "promoAmount": 8.59
     }
   ],
   "upsell": {

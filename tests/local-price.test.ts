@@ -35,14 +35,24 @@ test("sans prix barré : aucun prix barré converti", () => {
   assert.equal(localPriceFor("SN", { price: 14900, anchor: null }, rules).anchor, null);
 });
 
-test("offre aux clients : remise de 10 000 FCFA dans la monnaie du visiteur", async () => {
+test("offre aux clients : prix avec PROMO10 tels que Chariow les facture", async () => {
   const { discountedLocalPrice, formatLocalPrice: fmt } = await import("../src/lib/local-price.ts");
-  const price = (amount: number, currency: string) => {
-    const p = discountedLocalPrice({ amount, currency }, 14900, 10000);
+  const price = (local: { amount: number; currency: string; promoAmount?: number }) => {
+    const p = discountedLocalPrice(local, 14900, 10000);
     return fmt(p.amount, p.currency).replace(/\s/gu, " ");
   };
-  assert.equal(price(14900, "FCFA"), "4 900 FCFA");
-  assert.equal(price(15350, "FCFA"), "5 350 FCFA");
-  assert.equal(price(235941, "GNF"), "77 591 GNF");
-  assert.equal(price(26, "$US"), "8,55 $US");
+  // Afrique centrale : remise déduite du prix de base.
+  assert.equal(price({ amount: 14900, currency: "FCFA" }), "4 900 FCFA");
+  // Prix relevés sur Chariow (src/config/projet.json).
+  assert.equal(price({ amount: 15350, currency: "FCFA", promoAmount: 5050 }), "5 050 FCFA");
+  assert.equal(price({ amount: 235941, currency: "GNF", promoAmount: 77591 }), "77 591 GNF");
+  assert.equal(price({ amount: 26, currency: "$US", promoAmount: 8.59 }), "8,59 $US");
+  // Sans relevé : remise convertie au taux du prix local.
+  assert.equal(price({ amount: 15350, currency: "FCFA" }), "5 048 FCFA");
+});
+
+test("offre aux clients : les prix relevés passent par localPriceFor", () => {
+  const rules: LocalPriceRule[] = [{ countries: ["SN"], amount: 15350, currency: "FCFA", promoAmount: 5050 }];
+  assert.equal(localPriceFor("SN", { price: 14900, anchor: null }, rules).promoAmount, 5050);
+  assert.equal(localPriceFor("CM", { price: 14900, anchor: null }, rules).promoAmount, undefined);
 });
