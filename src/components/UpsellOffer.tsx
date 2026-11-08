@@ -1,5 +1,6 @@
 "use client";
 
+import { responsiveImage, SIZES } from "@/lib/media-size";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLocalPrice } from "@/components/LocalPrice";
@@ -102,7 +103,7 @@ export function UpsellOffer({ upsell }: { upsell: UpsellData }) {
                     <div className="aspect-video overflow-hidden bg-outline/40">
                       {p.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.coverImage} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        <img {...responsiveImage(p.coverImage, [480, 640], SIZES.card)} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       ) : null}
                     </div>
                     <div className="flex flex-1 flex-col p-4">

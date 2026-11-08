@@ -1,3 +1,4 @@
+import { responsiveImage } from "@/lib/media-size";
 import { LocalPriceText } from "@/components/LocalPrice";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { PreviewDialog } from "@/components/PreviewDialog";
@@ -81,7 +82,7 @@ export function PlanDevisPreview({
           {plan.summary ? <p className="mt-1 text-[11px] leading-snug text-[#5f6b72]">{plan.summary}</p> : null}
           {plan.coverImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={plan.coverImage} alt="" className="mt-3 aspect-[16/10] w-full rounded object-cover" loading="lazy" />
+            <img {...responsiveImage(plan.coverImage, [480, 640], "(min-width: 640px) 400px, 90vw")} alt="" className="mt-3 aspect-[16/10] w-full rounded object-cover" loading="lazy" />
           ) : null}
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
             {specs

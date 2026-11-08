@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, formatBudgetRange, levelsLabel } from "@/lib/plan-format";
+import { responsiveImage, SIZES } from "@/lib/media-size";
 import { planImageAlt } from "@/lib/plan-seo";
 import type { PublicPlan } from "@/lib/plans";
 
@@ -20,7 +21,7 @@ export function PlanCard({ plan, priority = false }: { plan: PlanCardData; prior
         {plan.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={plan.coverImage}
+            {...responsiveImage(plan.coverImage, [480, 640, 828], SIZES.card)}
             alt={planImageAlt(plan)}
             loading={priority ? "eager" : "lazy"}
             decoding="async"
@@ -51,14 +52,18 @@ export function PlanCard({ plan, priority = false }: { plan: PlanCardData; prior
   );
 }
 
-export function PlanGrid({ plans }: { plans: PlanCardData[] }) {
+/**
+ * `eagerFirst` : nombre de cartes chargées tout de suite (haut de page du catalogue). Sous une fiche
+ * (« Modèles similaires », bas de page), 0 : leurs images ne se disputent plus la bande passante avec la galerie.
+ */
+export function PlanGrid({ plans, eagerFirst = 3 }: { plans: PlanCardData[]; eagerFirst?: number }) {
   if (plans.length === 0) {
     return <p className="card p-8 text-center text-muted">Aucun modèle ne correspond à ces critères pour le moment.</p>;
   }
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {plans.map((plan, i) => (
-        <PlanCard key={plan.id} plan={plan} priority={i < 3} />
+        <PlanCard key={plan.id} plan={plan} priority={i < eagerFirst} />
       ))}
     </div>
   );
