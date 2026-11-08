@@ -111,6 +111,8 @@ body:not(:has(.admin-shell)) img {
 .catalogue-refresh-a { animation: catalogue-refresh-a 280ms ease-out; }
 .catalogue-refresh-b { animation: catalogue-refresh-b 280ms ease-out; }
 .catalogue-pop { animation: catalogue-pop 300ms ease-out; }
+/* Mode « sans distraction » (src/lib/focus-mode.ts) : visiteurs des pubs « plan et devis ». */
+html[data-focus] [data-focus-hide] { display: none !important; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 @media (prefers-reduced-motion: reduce) {
