@@ -13,7 +13,7 @@ import { PlanDevisPreview } from "@/components/PlanDevisPreview";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
-import { customPlanOffer, memberBalance, planGiftEnabled } from "@/lib/custom-plans";
+import { customPlanOffer, planGiftEnabled } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
   CATEGORY_LABELS,
@@ -213,11 +213,10 @@ export default async function PlanPage({ params }: Props) {
             </p>
             {offer ? (
               <p className="mt-3 text-sm">
-                Prix fixe : <strong>{formatFcfa(offer.price)}</strong>. Avec le Catalogue Premium, vous payez seulement{" "}
-                <strong className="text-primary">{formatFcfa(memberBalance(offer))}</strong>.
+                Prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
               </p>
             ) : (
-              <p className="mt-3 text-sm">Le prix du catalogue est déduit de la commande.</p>
+              <p className="mt-3 text-sm">Prix fixe.</p>
             )}
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Link href="/plans-personnalises" className="btn-ghost">En savoir plus</Link>

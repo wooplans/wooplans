@@ -77,7 +77,7 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
         </p>
         <a href={data.download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger mon plan et devis</a>
         <p className="mt-8 font-semibold">Des modifications à faire ?</p>
-        <p className="mt-1 text-sm text-foreground/75">Parlez-en à nos architectes : le prix de ce plan et devis est déduit de vos plans complets.</p>
+        <p className="mt-1 text-sm text-foreground/75">Nos architectes adaptent ce modèle à votre terrain et réalisent vos plans complets, à prix fixe. Tout est expliqué à la fin de votre PDF.</p>
         <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn mt-4 border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10">
           Discuter sur WhatsApp
         </a>

@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { cataloguePrice } from "@/lib/site";
 import { randomId } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
     channel: "site",
     stage: "demande",
     projectDetails: (body.details || "").trim().slice(0, 4000),
-    catalogueCredit: member ? cataloguePrice() : 0,
+    catalogueCredit: 0, // plans complets à prix fixe, sans déduction (8 nov. 2026)
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
     utmCampaign: visitor?.utmCampaign ?? null,

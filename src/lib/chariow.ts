@@ -290,8 +290,8 @@ export function planProductId() {
   return getEnv().CHARIOW_PLAN_PRODUCT_ID || "";
 }
 
-/** Prix déduit des plans complets, inscrit dans le CRM avec l'achat. */
-const PLAN_CREDIT_NOTE = "Plan et devis payé : son prix est déduit des plans complets de ce modèle.";
+/** Note inscrite dans le CRM avec l'achat (plus aucune déduction sur les plans complets depuis le 8 nov. 2026). */
+const PLAN_PAID_NOTE = "Plan et devis payé. Plans complets à prix fixe, sans déduction.";
 
 /**
  * Vente du produit « Plan et devis » (un seul modèle). Le modèle vient de l'intention créée
@@ -396,8 +396,8 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     planLabel: plan.code,
     channel: "site",
     stage: "demande",
-    projectDetails: PLAN_CREDIT_NOTE,
-    catalogueCredit: amount,
+    projectDetails: PLAN_PAID_NOTE,
+    catalogueCredit: 0,
     nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     utmSource: visitor?.utmSource ?? null,
     utmCampaign: visitor?.utmCampaign ?? null,

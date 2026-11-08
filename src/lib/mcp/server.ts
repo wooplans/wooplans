@@ -2,7 +2,7 @@ import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
 import { formatFcfa } from "@/lib/plans";
 import { cataloguePrice } from "@/lib/site";
-import { projectStartPrice } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_OFFERS, projectStartPrice } from "@/lib/custom-plans";
 import { TOOLS, ToolContent } from "@/lib/mcp/tools";
 
 /**
@@ -14,7 +14,7 @@ const SUPPORTED_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-0
 const INSTRUCTIONS =
   "Outils de pilotage de WOOPLANS (catalogue de plans de maisons, Afrique francophone). Montants en FCFA (XAF). " +
   `Le tunnel : vitrine → page de vente /catalogue-premium → achat du Catalogue Premium (${formatFcfa(cataloguePrice())}, Chariow) → membre Premium → demande de plans complets (CRM). ` +
-  `Sur chaque fiche modèle (villa, duplex) : plan et devis de ce seul modèle (${formatFcfa(projectStartPrice())}, Chariow, produit Licence), livré par email, qui crée une fiche CRM du modèle (montant déduit des plans complets). ` +
+  `Sur chaque fiche modèle (villa, duplex) : plan et devis de ce seul modèle (${formatFcfa(projectStartPrice())}, Chariow, produit Licence), livré par email, qui crée une fiche CRM du modèle. Plans complets à prix fixe (${formatFcfa(CUSTOM_PLAN_OFFERS[0].price)} villa, ${formatFcfa(CUSTOM_PLAN_OFFERS[1].price)} duplex), sans aucune déduction (ni catalogue, ni plan et devis). ` +
   "Le revenu du catalogue et celui du plan et devis (ventes Chariow, comptés à part : planDevis* dans get_business_summary, product dans list_sales) sont distincts des encaissements des plans complets (CRM). " +
   "Avant toute action qui écrit à un client (send_lead_email, grant_premium_access, send_new_access_code) ou qui révoque un accès, confirmez avec le propriétaire. " +
   "Ajout d'un modèle au catalogue : 1) lire le PDF fourni (descriptif, surfaces, pièces, devis) ; 2) create_plan — la fiche est toujours créée en brouillon ; " +
