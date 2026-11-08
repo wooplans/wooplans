@@ -23,6 +23,15 @@ function landingAttribution() {
   };
 }
 
+/**
+ * Après le chargement complet de la page (images de la galerie comprises), puis au repos du navigateur.
+ * PostHog (≈ 200 Ko avec l'enregistreur de sessions) ne passe qu'ensuite : en 3G, il ralentissait l'affichage des rendus.
+ */
+function afterLoadIdle(callback: () => void) {
+  if (document.readyState === "complete") whenIdle(callback);
+  else window.addEventListener("load", () => whenIdle(callback), { once: true });
+}
+
 function whenIdle(callback: () => void) {
   let done = false;
   const run = () => {
@@ -64,7 +73,7 @@ export function BehaviorAnalytics({ posthogKey, posthogHost, pixelId }: { postho
     // (Les évènements émis avant le chargement du Pixel sont gardés en attente par lib/pixel.ts.)
     if (pixelId) whenIdle(() => loadPixel(pixelId));
     if (!posthogKey) return;
-    whenIdle(() => {
+    afterLoadIdle(() => {
       const timeout = new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 3000));
       void Promise.race([visitorIdPromise, timeout]).then((distinctId) => {
         const ph = loadPostHog({ key: posthogKey, host: posthogHost, distinctId, superProperties: {} });

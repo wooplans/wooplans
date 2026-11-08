@@ -1,3 +1,4 @@
+import { responsiveImage, SIZES } from "@/lib/media-size";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
@@ -74,7 +75,7 @@ export async function LandingView({ path }: { path: string }) {
                     {plan.coverImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={plan.coverImage}
+                        {...responsiveImage(plan.coverImage, [480, 640, 828], SIZES.card)}
                         alt={planImageAlt(plan)}
                         loading={i < 3 ? "eager" : "lazy"}
                         decoding="async"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { responsiveImage, SIZES } from "@/lib/media-size";
 import { phCapture } from "@/lib/posthog-browser";
 
 /**
@@ -20,6 +21,16 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
   const zoomTrack = useRef<HTMLDivElement>(null);
   const thumbs = useRef<HTMLDivElement>(null);
   const seen = useRef(new Set<number>([0]));
+  // Vues 3 et suivantes : posées seulement après le chargement de la page (ou dès que le visiteur fait défiler la
+  // galerie). Le chargement différé du navigateur ne suffit pas : dans une galerie horizontale, il demandait
+  // les 5 premières vues tout de suite, en concurrence avec la première.
+  const [rest, setRest] = useState(false);
+  useEffect(() => {
+    if (document.readyState === "complete") return setRest(true);
+    const ready = () => setRest(true);
+    window.addEventListener("load", ready, { once: true });
+    return () => window.removeEventListener("load", ready);
+  }, []);
 
   /** Fait défiler une piste jusqu'à la vue i (avec bouclage) ; l'index suit via onScroll. */
   const scrollTo = useCallback(
@@ -34,6 +45,7 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
 
   const onScroll = (el: HTMLDivElement | null) => {
     if (!el || el.clientWidth === 0) return;
+    if (!rest) setRest(true);
     const i = Math.round(el.scrollLeft / el.clientWidth);
     if (i !== index && i >= 0 && i < count) setIndex(i);
   };
@@ -98,17 +110,22 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
               className="w-full shrink-0 snap-center snap-always"
               aria-label={`Agrandir la vue ${i + 1} sur ${count}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {i >= 2 && !rest ? (
+                <div className="aspect-video w-full" />
+              ) : (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={src}
+                {...responsiveImage(src, [480, 640, 828], SIZES.gallery)}
                 alt={`${alt} — vue ${i + 1}`}
                 className="aspect-video w-full object-cover"
                 // Les deux premières vues sont chargées tout de suite : la flèche « › » affiche la suivante sans attente.
+                // Version réduite à la largeur de l'écran (environ 640 px sur téléphone) au lieu de l'image entière.
                 loading={i < 2 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "low"}
                 decoding="async"
                 draggable={false}
               />
+              )}
             </button>
           ))}
         </div>
@@ -138,8 +155,9 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
               aria-label={`Voir l'image ${i + 1}`}
               aria-current={i === index ? "true" : undefined}
             >
+              {/* Vignette : version de 160 px (quelques Ko) ; avant, chaque vignette chargeait l'image entière (100 Ko). */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" loading="lazy" decoding="async" fetchPriority="low" className="aspect-video w-full object-cover" draggable={false} />
+              <img {...responsiveImage(src, [160], SIZES.thumb)} alt="" loading="lazy" decoding="async" fetchPriority="low" className="aspect-video w-full object-cover" draggable={false} />
             </button>
           ))}
         </div>
