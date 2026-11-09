@@ -71,6 +71,13 @@
       "when": 1794018727130,
       "tag": "0009_meta_capi_contexte",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1794249991062,
+      "tag": "0010_offre_catalogue_offert",
+      "breakpoints": true
     }
   ]
 }

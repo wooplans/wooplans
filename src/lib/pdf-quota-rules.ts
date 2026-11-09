@@ -23,7 +23,11 @@ export const DEFAULT_PDF_QUOTA: PdfQuotaLimits = { perDay: 3, perMonth: 10, maxP
 export const DAY_MS = 86_400_000;
 export const MONTH_MS = 30 * DAY_MS;
 
-export type PdfDownloadRow = { planSlug: string; createdAt: Date };
+/**
+ * purchased : modèle payé (offre « plan et devis + Catalogue Premium offert »), inscrit au paiement. Il apparaît
+ * dans les fiches du membre et se télécharge sans limite de quota (seul le garde-fou anti-script s'applique).
+ */
+export type PdfDownloadRow = { planSlug: string; createdAt: Date; purchased?: boolean };
 
 export type PdfQuotaStatus = {
   allowed: boolean;
@@ -79,26 +83,33 @@ function firstDownloads(rows: PdfDownloadRow[], since: number) {
  */
 export function evaluatePdfQuota(rows: PdfDownloadRow[], slug: string | null, limits: PdfQuotaLimits, now = new Date()): PdfQuotaStatus {
   const t = now.getTime();
-  const ever = firstDownloads(rows, -Infinity);
+  // Modèles payés : hors quotas (ni le jour, ni le mois, ni le plafond définitif).
+  const purchased = new Set(rows.filter((r) => r.purchased).map((r) => r.planSlug));
+  const downloads = rows.filter((r) => !r.purchased);
+  const counted = downloads.filter((r) => !purchased.has(r.planSlug));
+  const ever = firstDownloads(counted, -Infinity);
   // Fenêtre mensuelle : modèles obtenus pour la première fois il y a moins de 30 jours.
   const month = new Map([...ever].filter(([, v]) => v >= t - MONTH_MS));
   const dayStarts = [...month.values()].filter((v) => v >= t - DAY_MS).sort((a, b) => a - b);
   const monthStarts = [...month.values()].sort((a, b) => a - b);
-  const recent = rows.filter((r) => r.createdAt.getTime() >= t - DAY_MS).map((r) => r.createdAt.getTime()).sort((a, b) => a - b);
+  const recent = downloads.filter((r) => r.createdAt.getTime() >= t - DAY_MS).map((r) => r.createdAt.getTime()).sort((a, b) => a - b);
   const base = {
     remainingDay: Math.max(0, limits.perDay - dayStarts.length),
     remainingMonth: Math.max(0, limits.perMonth - monthStarts.length),
     remainingLifetime: Math.max(0, limits.lifetime - ever.size),
-    ownedSlugs: [...ever.keys()].sort((a, b) => lastDownload(rows, b) - lastDownload(rows, a)),
+    ownedSlugs: [...new Set([...ever.keys(), ...purchased])].sort((a, b) => lastDownload(rows, b) - lastDownload(rows, a)),
   };
-  const alreadyOwned = slug !== null && ever.has(slug);
-
-  // Plafond atteint : plus aucun téléchargement, même d'une fiche déjà obtenue.
-  if (ever.size >= limits.lifetime) return { ...base, allowed: false, alreadyOwned, reason: "lifetime" };
+  const isPurchased = slug !== null && purchased.has(slug);
+  const alreadyOwned = slug !== null && (ever.has(slug) || isPurchased);
 
   if (recent.length >= limits.maxPerDay) {
     return { ...base, allowed: false, alreadyOwned, reason: "burst", retryAt: new Date(recent[recent.length - limits.maxPerDay] + DAY_MS) };
   }
+  // Modèle payé : toujours téléchargeable (hors garde-fou anti-script).
+  if (isPurchased) return { ...base, allowed: true, alreadyOwned };
+
+  // Plafond atteint : plus aucun téléchargement, même d'une fiche déjà obtenue.
+  if (ever.size >= limits.lifetime) return { ...base, allowed: false, alreadyOwned, reason: "lifetime" };
   if (alreadyOwned) return { ...base, allowed: true, alreadyOwned };
   if (monthStarts.length >= limits.perMonth) {
     return { ...base, allowed: false, alreadyOwned, reason: "month", retryAt: new Date(monthStarts[monthStarts.length - limits.perMonth] + MONTH_MS) };

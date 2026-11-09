@@ -1,0 +1,14 @@
+{
+  "default": "39k",
+  "offres": [
+    { "id": "39k", "price": 39000, "anchor": null, "chariowProductId": "prd_rhaso5i5", "countries": ["GN", "CI", "SN"] },
+    {
+      "id": "29k",
+      "price": 29000,
+      "anchor": null,
+      "chariowProductId": "prd_uso1ketx",
+      "countries": ["BJ", "BF", "CV", "GM", "GH", "GW", "LR", "ML", "MR", "NE", "NG", "SL", "TG", "CM", "GA", "CG", "CD", "CF", "TD", "GQ", "ST", "BI", "RW", "AO"]
+    },
+    { "id": "19k", "price": 19000, "anchor": null, "chariowProductId": "prd_ytnf02e2", "countries": [] }
+  ]
+}

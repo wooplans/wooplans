@@ -80,3 +80,27 @@ test("fiches obtenues il y a plus de 30 jours : re-téléchargement gratuit et l
   assert.deepEqual(q.ownedSlugs, ["recent", "ancien"]);
   assert.equal(q.remainingMonth, 9);
 });
+
+test("modèle payé (offre avec catalogue offert) : dans les fiches, hors quota", () => {
+  const bought: PdfDownloadRow = { planSlug: "achete", createdAt: ago(60_000), purchased: true };
+  // Trois fiches déjà prises aujourd'hui : le quota du jour est plein, le modèle payé reste téléchargeable.
+  const daily = [...rows(["a", "b", "c"], () => ago(3600_000)), bought];
+  const q = evaluatePdfQuota(daily, "achete", limits, now);
+  assert.equal(q.allowed, true);
+  assert.equal(q.alreadyOwned, true);
+  assert.equal(q.ownedSlugs[0], "achete");
+  assert.equal(q.remainingDay, 0);
+  assert.equal(evaluatePdfQuota(daily, "d", limits, now).allowed, false);
+
+  // Ses téléchargements ne consomment ni le jour, ni le mois, ni le plafond définitif.
+  const downloaded = [bought, ...rows(["achete", "achete"], () => ago(30_000))];
+  const r = evaluatePdfQuota(downloaded, "x", limits, now);
+  assert.equal(r.remainingDay, 3);
+  assert.equal(r.remainingMonth, 10);
+  assert.equal(r.remainingLifetime, 20);
+
+  // Plafond définitif atteint : le modèle payé reste accessible.
+  const many = [bought, ...rows(Array.from({ length: 20 }, (_, i) => `m${i}`), (i) => ago((i + 2) * 40 * DAY_MS))];
+  assert.equal(evaluatePdfQuota(many, "achete", limits, now).allowed, true);
+  assert.equal(evaluatePdfQuota(many, "m0", limits, now).allowed, false);
+});

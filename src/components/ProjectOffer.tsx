@@ -4,6 +4,8 @@ import { planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
+import { IfOffre } from "@/components/IfOffre";
+import { offresEnabled } from "@/lib/offres";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { PriceCountdown } from "@/components/PriceCountdown";
 import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
@@ -48,14 +50,30 @@ export function projectStartLink(plan: Props["plan"]) {
 }
 
 /**
- * Ce que l'acheteur reçoit dès le paiement (carte de la fiche) : 3 points seulement. La réduction sur d'autres plans
- * (PROMO10) reste proposée après l'achat ; sur la fiche, elle détournait vers d'autres modèles au moment de décider.
+ * Ce que l'acheteur reçoit dès le paiement (carte de la fiche) : 3 points seulement, le 3e étant le bonus
+ * Catalogue Premium (BonusItem). La réduction sur d'autres plans (PROMO10) reste proposée après l'achat.
  */
 export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
-  "Discuter avec un architecte sur WhatsApp",
 ];
+
+/** Nombre d'autres modèles du catalogue (« 97 autres plans et devis »), ou null si le total est inconnu. */
+export function otherPlansCount(planCount: number | null) {
+  return planCount && planCount > 1 ? planCount - 1 : null;
+}
+
+/** 3e point de la carte : le Catalogue Premium offert (détaillé plus bas, section #bonus), si l'offre du visiteur est active. */
+function BonusItem() {
+  return (
+    <IfOffre>
+      <li className="flex items-center gap-3 rounded-xl border border-dashed border-primary/50 bg-background/70 px-2.5 py-2">
+        <span className="grid h-[26px] w-[26px] shrink-0 place-items-center text-lg" aria-hidden>🎁</span>
+        <a href="#bonus" className="font-bold text-primary">Bonus : Catalogue Premium offert</a>
+      </li>
+    </IfOffre>
+  );
+}
 
 /** Plan et devis offert : contenu du cadeau. */
 const GIFT_ITEMS = ["Plan de distribution avec les dimensions", "Devis fondation, élévation, toiture, etc.", "Envoyé par email en quelques minutes"];
@@ -94,7 +112,9 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
         </p>
       ) : null}
 
-      <NumberedList items={PLAN_DEVIS_ITEMS} />
+      <NumberedList items={PLAN_DEVIS_ITEMS}>
+        <BonusItem />
+      </NumberedList>
 
       {/* Achat : prix et compte à rebours juste au-dessus du bouton, moyens de paiement et réassurance juste en dessous. */}
       <div className="mt-5 border-t border-highlight/50 pt-4 text-center">
@@ -134,7 +154,7 @@ export function Reassurance({ className = "" }: { className?: string }) {
 }
 
 /** Liste numérotée ① ② ③ de ce que contient le plan et devis. */
-export function NumberedList({ items }: { items: readonly string[] }) {
+export function NumberedList({ items, children }: { items: readonly string[]; children?: React.ReactNode }) {
   return (
     <ol className="mt-4 space-y-3 text-base leading-snug text-foreground/90">
       {items.map((item, i) => (
@@ -145,6 +165,7 @@ export function NumberedList({ items }: { items: readonly string[] }) {
           <span>{item}</span>
         </li>
       ))}
+      {children}
     </ol>
   );
 }
@@ -208,6 +229,10 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
       question: "Comment je reçois mon plan après l'achat ?",
       answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement et vous est envoyé par email. Pas besoin d'attendre.`,
     },
+    ...(offresEnabled() ? [{
+      question: "C'est quoi le Catalogue Premium offert ?",
+      answer: `C'est l'espace membre qui réunit les plans et devis de ${models} : distributions cotées, surfaces des pièces et devis détaillés. Il est offert avec le plan et devis du modèle ${plan.code} : vous y retrouvez votre plan, prêt à télécharger, et vous pouvez le comparer avec tous les autres avant de choisir. Accès à vie, nouveaux modèles inclus.`,
+    }] : []),
     {
       question: "Quels sont les moyens de paiement ?",
       answer: "Le paiement est sécurisé, par Mobile Money ou par carte bancaire.",

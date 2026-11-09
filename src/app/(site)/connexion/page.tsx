@@ -12,16 +12,22 @@ export const metadata: Metadata = {
   alternates: { canonical: "/connexion" },
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  if (await getCurrentMember()) redirect("/espace-premium");
-  const { email } = await searchParams;
+/** Page où mène la connexion (?suite=/espace-premium/telechargements) : seulement une page de l'espace Premium. */
+function safeNext(value: string | undefined) {
+  return value && /^\/espace-premium(\/[a-z0-9-]*)*$/.test(value) ? value : "/espace-premium";
+}
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ email?: string; suite?: string }> }) {
+  const { email, suite } = await searchParams;
+  const next = safeNext(suite);
+  if (await getCurrentMember()) redirect(next);
   return (
     <div className="container-page max-w-md py-14">
       <p className="eyebrow">Espace Premium</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Connexion</h1>
       <p className="mt-3 text-foreground/70">Connectez-vous avec l&apos;email de votre achat et le code d&apos;accès reçu par email.</p>
       <div className="mt-8">
-        <LoginForm defaultEmail={email} />
+        <LoginForm defaultEmail={email} next={next} />
       </div>
       <p className="mt-6 text-center text-sm text-muted">
         Pas encore membre ?{" "}

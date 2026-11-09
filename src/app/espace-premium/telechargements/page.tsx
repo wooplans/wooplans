@@ -80,17 +80,29 @@ export default async function DownloadsPage({ searchParams }: { searchParams: Pr
         </p>
       ) : null}
       <div className="mt-6 grid gap-3">
-        {downloaded.map((plan) => (
-          <a key={plan.id} href={`/api/premium/fiche-pdf/${plan.slug}`} data-pdf={plan.code} className="card flex items-center justify-between gap-4 p-4 hover:border-primary">
+        {downloaded.map((plan) => {
+          // Modèle payé (offre avec catalogue offert) : jamais téléchargé encore → « Télécharger », hors quota.
+          const purchased = quota.purchasedSlugs.has(plan.slug);
+          return (
+          <a
+            key={plan.id}
+            href={`/api/premium/fiche-pdf/${plan.slug}`}
+            data-pdf={plan.code}
+            className={`card flex items-center justify-between gap-4 p-4 hover:border-primary ${purchased ? "border-2 border-primary/50 bg-primary/5" : ""}`}
+          >
             <span>
+              {purchased ? <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-primary">Votre plan et devis</span> : null}
               <span className="block font-semibold">{plan.name}</span>
               <span className="text-sm text-muted">
                 {CATEGORY_LABELS[plan.category]} · {plan.bedrooms} ch. · {plan.surfaceTotal ? `${plan.surfaceTotal} m²` : "surface à venir"}
               </span>
             </span>
-            <span className="btn-ghost whitespace-nowrap px-4 py-2 text-sm">{lifetimeBlocked ? "Bloqué" : "Re-télécharger"}</span>
+            <span className={`${purchased ? "btn-cta" : "btn-ghost"} whitespace-nowrap px-4 py-2 text-sm`}>
+              {purchased ? "Télécharger" : lifetimeBlocked ? "Bloqué" : "Re-télécharger"}
+            </span>
           </a>
-        ))}
+          );
+        })}
       </div>
       {files.length > 0 ? (
         <section className="mt-10">

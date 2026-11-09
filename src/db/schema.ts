@@ -242,6 +242,11 @@ export const checkoutIntents = sqliteTable(
     ctaId: text("cta_id"),
     /** Achat du plan et devis d'un seul modèle (slug du modèle) ; null pour le Catalogue Premium. */
     planSlug: text("plan_slug"),
+    /**
+     * Offre « plan et devis + Catalogue Premium offert » (src/config/offres.json : 39k, 29k, 19k) ; null pour le
+     * plan et devis seul ou le Catalogue Premium seul. Le modèle (planSlug) est alors ajouté aux fiches du membre.
+     */
+    offer: text("offer"),
     /** Téléchargements du plan et devis (lien personnel = identifiant de l'intention), plafonnés. */
     downloads: integer("downloads").notNull().default(0),
     /** gift = plan et devis offert (formulaire « Recevez gratuitement ») : téléchargeable comme un achat payé. */

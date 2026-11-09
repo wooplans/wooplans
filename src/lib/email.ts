@@ -93,9 +93,14 @@ function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#F08A2E;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
 }
 
-type AccessEmailKind = "purchase" | "new_code" | "legacy" | "legacy_reminder";
+type AccessEmailKind = "purchase" | "new_code" | "legacy" | "legacy_reminder" | "offre";
 
 const ACCESS_EMAIL: Record<AccessEmailKind, { subject: string; intro: string }> = {
+  // Offre « plan et devis + Catalogue Premium offert » : texte complété avec le modèle acheté (accessCodeEmail).
+  offre: {
+    subject: "Votre plan et devis + votre Catalogue Premium offert",
+    intro: "Merci pour votre achat ! Tout se passe dans votre espace Premium en ligne.",
+  },
   purchase: {
     subject: "Votre accès au Catalogue Premium WOOPLANS",
     intro: "Merci pour votre achat ! Votre Catalogue Premium est prêt : tout se passe dans votre espace Premium en ligne.",
@@ -125,13 +130,26 @@ const PREMIUM_FEATURES = [
  * Email des accès Premium. Le bouton ouvre la page de connexion déjà remplie :
  * email dans l'adresse, code dans le fragment (#code=…), qui n'est jamais envoyé au serveur.
  */
-export function accessCodeEmail(params: { name?: string | null; email: string; code: string; kind?: AccessEmailKind }) {
-  const { subject, intro } = ACCESS_EMAIL[params.kind ?? "purchase"];
+export function accessCodeEmail(params: {
+  name?: string | null;
+  email: string;
+  code: string;
+  kind?: AccessEmailKind;
+  /** Offre : modèle acheté, qui attend le membre dans « Fiches PDF ». */
+  plan?: { code: string; name: string };
+}) {
+  const base = ACCESS_EMAIL[params.kind ?? "purchase"];
+  const subject = params.plan ? `Votre plan et devis ${params.plan.code} + votre Catalogue Premium offert` : base.subject;
+  const intro = params.plan
+    ? `Merci pour votre achat ! Le plan et devis du modèle ${params.plan.code} vous attend dans votre espace Premium, rubrique « Fiches PDF », prêt à télécharger. Le Catalogue Premium vous est offert : comparez-le avec tous nos autres modèles.`
+    : base.intro;
   const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
-  const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}#code=${encodeURIComponent(params.code)}`);
+  // Offre : la connexion mène directement aux fiches PDF, où le modèle acheté attend le membre.
+  const suite = params.plan ? "&suite=%2Fespace-premium%2Ftelechargements" : "";
+  const loginUrl = siteUrl(`/connexion?email=${encodeURIComponent(params.email)}${suite}#code=${encodeURIComponent(params.code)}`);
   const features = PREMIUM_FEATURES.map((f) => `<li style="margin:0 0 6px">${escape(f)}</li>`).join("");
   const html = layout(subject, `<p>${hello}</p><p>${escape(intro)}</p>
-${button(loginUrl, "Ouvrir mon espace Premium")}
+${button(loginUrl, params.plan ? "Télécharger mon plan et devis" : "Ouvrir mon espace Premium")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Le bouton ouvre la page de connexion avec vos identifiants déjà remplis : il suffit d'appuyer sur « Se connecter ».</p>
 <p style="margin:20px 0 6px;color:#6B7280">Votre identifiant</p><p style="margin:0;font-weight:700">${escape(params.email)}</p>
 <p style="margin:16px 0 6px;color:#6B7280">Votre code d'accès</p>

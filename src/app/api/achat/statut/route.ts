@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db";
 import { getUpsellPlans } from "@/lib/plans";
 import { INTENT_COOKIE } from "@/lib/session";
 import { UPSELL, UPSELL_CTA_ID, upsellDeadline } from "@/lib/upsell";
+import { offreById } from "@/lib/offres";
 import { paymentStatusEvent, processWajubPayment, retrieveWajubPayment, wajubConfigured } from "@/lib/wajub";
 
 /**
@@ -39,9 +40,12 @@ export async function GET(request: NextRequest) {
       })
     : null;
 
+  // Offre « plan et devis + Catalogue Premium offert » : accès Premium (code), le modèle est dans les fiches PDF.
+  const offre = intent.offer ? offreById(intent.offer) : null;
+
   // Offre aux clients : 24 h après le paiement, modèles proches de celui acheté.
   let upsell = null;
-  if (plan && intent.status === "paid") {
+  if (plan && !offre && intent.status === "paid") {
     const sale = intent.saleId ? await getDb().query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, intent.saleId), columns: { occurredAt: true } }) : null;
     const plans = await getUpsellPlans(plan.slug, 4).catch(() => []);
     upsell = {
@@ -70,7 +74,8 @@ export async function GET(request: NextRequest) {
       email: sameBrowser ? intent.email : null,
       code: revealable ? intent.revealCode : null,
       plan: plan ? { slug: plan.slug, code: plan.code, name: plan.name } : null,
-      download: plan && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
+      offre: offre ? { id: offre.id, price: offre.price } : null,
+      download: plan && !offre && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
     },
     { headers: { "Cache-Control": "no-store" } },
   );
