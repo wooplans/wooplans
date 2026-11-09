@@ -97,3 +97,21 @@ export type WelcomeEmailKind = "guide" | "compare" | "faq" | "last";
 export function welcomeKindForStep(step: number): WelcomeEmailKind {
   return (["guide", "compare", "faq", "last"] as const)[Math.min(Math.max(step, 0), 3)];
 }
+
+/**
+ * Séquence « offre » : paiement abandonné ou échoué d'une offre « plan et devis + Catalogue Premium offert »
+ * (fiche modèle, 39k / 29k / 19k). 4 emails : aide au paiement, ce que contient l'offre, réponses aux questions,
+ * puis dernier message avec la réduction (src/config/offres.json, « relance »). Délais depuis l'abandon (heures).
+ */
+export const OFFRE_DELAYS_HOURS = [1, 24, 72, 120];
+
+export type OffreEmailKind = "help" | "value" | "faq" | "last";
+
+export function offreKindForStep(step: number): OffreEmailKind {
+  return (["help", "value", "faq", "last"] as const)[Math.min(Math.max(step, 0), 3)];
+}
+
+/** Prix avec la réduction du dernier email (jamais en dessous de 0). */
+export function discountedOffrePrice(price: number, discount: number) {
+  return Math.max(0, price - Math.max(0, discount));
+}

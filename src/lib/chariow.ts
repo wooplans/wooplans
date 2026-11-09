@@ -224,8 +224,9 @@ async function processCatalogueSale(
         source: "webhook",
         utmSource: values.utmSource,
         utmCampaign: values.utmCampaign,
-        // Relances du Catalogue Premium seul : pas pour une offre avec catalogue offert (autre prix, autre message).
-        startSequence: !offre,
+        // Offre avec catalogue offert : séquence dédiée (modèle choisi, prix de l'offre, réduction au dernier email).
+        startSequence: true,
+        kind: offre ? "offre" : "relance",
       }).catch((error) => console.error("CRM prospects : enregistrement impossible", error));
     }
     return "recorded";

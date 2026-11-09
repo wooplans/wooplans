@@ -7,7 +7,7 @@ import { whatsappUrl } from "@/lib/phone";
 import { formatFcfa } from "@/lib/plans";
 import { automatedEmailAllowance } from "@/lib/email-budget";
 import { getProspectSettings } from "@/lib/prospects";
-import { WELCOME_DELAYS_HOURS } from "@/lib/prospect-sequence";
+import { OFFRE_DELAYS_HOURS, WELCOME_DELAYS_HOURS } from "@/lib/prospect-sequence";
 import { importProspects, markLost, saveSettings, startOne, startRecent, stopOne } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -35,8 +35,8 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const db = getDb();
   const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
   // Deux séquences : relance (paiement abandonné ou échoué, délais réglables) et bienvenue (plan et devis offert).
-  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length };
-  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue" } as const;
+  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length, offre: OFFRE_DELAYS_HOURS.length };
+  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre" } as const;
 
   const filters: SQL[] = [];
   if (vue === "ouverts") filters.push(eq(schema.prospects.status, "open"));

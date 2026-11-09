@@ -360,6 +360,88 @@ export function prospectEmail(p: ProspectEmailParams) {
   return { subject, html: layout(subject, body, p.unsubscribe), text: `${text}\n\nNe plus recevoir ces emails : ${p.unsubscribe}` };
 }
 
+/* ─────────────── Relance des offres « plan et devis + Catalogue Premium offert » ─────────────── */
+
+export type OffreRelanceParams = {
+  kind: "help" | "value" | "faq" | "last";
+  name?: string | null;
+  /** Paiement échoué (sinon abandonné). */
+  failed: boolean;
+  plan: { code: string; name: string } | null;
+  /** Prix de l'offre tentée, en FCFA. */
+  price: number | null;
+  /** Fiche du modèle, formulaire d'achat ouvert (et code de réduction rempli pour le dernier email). */
+  checkoutUrl: string;
+  whatsappUrl: string;
+  planCount: number;
+  /** Dernier email : réduction (code Chariow, montant, nouveau prix). */
+  discount: { code: string; amount: number; newPrice: number } | null;
+  unsubscribe: string;
+};
+
+/**
+ * 4 emails après un paiement abandonné ou échoué d'une offre sur une fiche modèle : aide au paiement, contenu de
+ * l'offre, réponses aux questions, puis dernier message avec la réduction. Jamais d'échéance inventée.
+ */
+export function offreRelanceEmail(p: OffreRelanceParams) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const model = p.plan ? `du modèle ${p.plan.code}` : "de votre modèle";
+  const modelHtml = p.plan ? `du modèle <strong>${escape(p.plan.name)}</strong>` : "de votre modèle";
+  const others = p.planCount > 1 ? `${p.planCount - 1} autres plans et devis` : "tous nos autres plans et devis";
+  const price = p.price ? formatFcfa(p.price) : null;
+  const priceLine = price ? `<p>Prix actuel : <strong>${escape(price)}</strong>, paiement unique par Mobile Money ou carte.</p>` : "";
+  const priceText = price ? `Prix actuel : ${price}, paiement unique par Mobile Money ou carte.` : "";
+  const contents = [
+    "Le plan de distribution avec toutes les dimensions",
+    "Le devis détaillé, de la fondation aux finitions",
+    `En bonus : le Catalogue Premium offert, ${others} pour comparer`,
+  ];
+  const help = `<p style="color:#6B7280;font-size:14px">Une question ou un souci de paiement ? <a href="${p.whatsappUrl}" style="color:#0F5B59;font-weight:600">Écrivez-nous sur WhatsApp</a>, nous répondons rapidement.</p>`;
+  const helpText = `Une question ? WhatsApp : ${p.whatsappUrl}`;
+
+  let subject: string;
+  let body: string;
+  let text: string;
+  if (p.kind === "help") {
+    subject = p.failed ? "Votre paiement n'a pas abouti : on vous aide" : `Votre plan et devis ${model} vous attend`;
+    const intro = p.failed
+      ? `Votre paiement du plan et devis ${model} n'a pas abouti. Cela arrive souvent avec le Mobile Money : solde insuffisant, validation non confirmée sur le téléphone ou réseau lent.`
+      : `Vous avez commencé à commander le plan et devis ${model}, mais le paiement n'a pas été finalisé.`;
+    const tips = p.failed
+      ? `<p>Pour réessayer :</p><ul style="padding-left:20px"><li>vérifiez votre solde et gardez votre téléphone à portée pour valider ;</li><li>ou choisissez un autre moyen de paiement (autre opérateur, carte bancaire).</li></ul>`
+      : "<p>Vos informations sont gardées : reprenez en un clic.</p>";
+    body = `<p>${hello}</p><p>${escape(intro)}</p>${tips}${button(p.checkoutUrl, "Reprendre mon achat")}${bulletList(contents)}${priceLine}${help}`;
+    text = `${helloText}\n\n${intro}\n\nReprendre mon achat : ${p.checkoutUrl}\n\n${contents.map((c) => `- ${c}`).join("\n")}\n${priceText}\n${helpText}`;
+  } else if (p.kind === "value") {
+    subject = `Ce que vous recevez avec le plan et devis ${model}`;
+    body = `<p>${hello}</p><p>Avant de construire, deux questions comptent : la maison vous convient-elle, et combien va-t-elle coûter ? Le plan et devis ${modelHtml} y répond :</p>${bulletList(contents)}<p>Dès le paiement, vous entrez dans votre espace Premium : votre plan y est prêt à télécharger, et vous pouvez le comparer avec tous les autres modèles avant de vous décider.</p>${button(p.checkoutUrl, "Obtenir mon plan et devis")}${priceLine}${help}`;
+    text = `${helloText}\n\nLe plan et devis ${model} :\n${contents.map((c) => `- ${c}`).join("\n")}\n\nDès le paiement, votre plan vous attend dans votre espace Premium.\n\n${p.checkoutUrl}\n${priceText}`;
+  } else if (p.kind === "faq") {
+    subject = "Vos questions sur le plan et devis";
+    const faq: [string, string][] = [
+      ["Comment je reçois mon plan ?", "Tout de suite après le paiement : vous êtes connecté à votre espace Premium, votre plan et devis y est prêt à télécharger. Vous recevez aussi vos accès par email."],
+      ["Le devis est-il adapté à mon pays ?", "C'est un devis estimatif poste par poste (fondation, élévation, toiture, finitions…) qui vous donne l'ordre de grandeur de votre budget avant d'aller voir un entrepreneur."],
+      ["Puis-je faire modifier le plan ?", "Oui. Nos architectes adaptent le modèle à votre terrain et à vos besoins, et réalisent les plans complets pour la construction. Écrivez-nous sur WhatsApp pour en parler."],
+      ["À quoi sert le Catalogue Premium offert ?", `À comparer : il réunit ${others}. Si un autre modèle vous convient mieux, vous le voyez avant de lancer votre projet.`],
+    ];
+    body = `<p>${hello}</p><p>Voici les réponses aux questions qu'on nous pose le plus souvent avant de commander :</p>${faq
+      .map(([q, a]) => `<p style="margin:16px 0 4px;font-weight:700">${escape(q)}</p><p style="margin:0">${escape(a)}</p>`)
+      .join("")}${button(p.checkoutUrl, "Obtenir mon plan et devis")}${priceLine}${help}`;
+    text = `${helloText}\n\n${faq.map(([q, a]) => `${q}\n${a}`).join("\n\n")}\n\n${p.checkoutUrl}\n${priceText}\n${helpText}`;
+  } else {
+    const d = p.discount;
+    subject = d ? `${formatFcfa(d.amount)} de réduction sur votre plan et devis` : `Dernier message au sujet de votre plan et devis`;
+    const offer = d
+      ? `<div style="margin:20px 0;padding:16px;border:2px dashed #F08A2E;border-radius:12px;text-align:center"><p style="margin:0;color:#6B7280">${escape(formatFcfa(d.amount))} de réduction${price ? ` : <s>${escape(price)}</s>` : ""}</p><p style="margin:6px 0 0;font-size:30px;font-weight:800;color:#0F5B59">${escape(formatFcfa(d.newPrice))}</p><p style="margin:8px 0 0;font-size:13px;color:#6B7280">Code <strong style="letter-spacing:2px">${escape(d.code)}</strong>, déjà rempli quand vous ouvrez le lien ci-dessous.</p></div>`
+      : "";
+    const offerText = d ? `${formatFcfa(d.amount)} de réduction : ${formatFcfa(d.newPrice)} au lieu de ${price ?? ""} avec le code ${d.code} (déjà rempli dans le lien).` : "";
+    body = `<p>${hello}</p><p>C'est notre dernier message à ce sujet. Si vous préparez la construction de votre maison, le plan et devis ${modelHtml} vous aidera à valider le modèle et à estimer votre budget${d ? ". Pour vous aider à faire le pas :" : "."}</p>${offer}${button(p.checkoutUrl, d ? "Profiter de la réduction" : "Obtenir mon plan et devis")}${bulletList(contents)}${help}`;
+    text = `${helloText}\n\nC'est notre dernier message à ce sujet. ${offerText}\n\n${p.checkoutUrl}\n${helpText}`;
+  }
+  return { subject, html: layout(subject, body, p.unsubscribe), text: `${text}\n\nNe plus recevoir ces emails : ${p.unsubscribe}` };
+}
+
 /* ─────────────── Plan et devis offert, puis séquence de bienvenue ─────────────── */
 
 /** Cadeau : le plan et devis du modèle choisi, avec le lien de téléchargement personnel. */

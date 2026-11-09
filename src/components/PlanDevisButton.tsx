@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import projet from "@/config/projet.json";
-import { offrePrice, planDevisPrice, useOffre, useVisitorCountry } from "@/components/LocalPrice";
+import { offrePrice, planDevisPrice, useOffre, useRemise, useVisitorCountry } from "@/components/LocalPrice";
 import { formatLocalAmount } from "@/lib/local-price";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
@@ -46,7 +46,10 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const visitorCountry = useVisitorCountry();
   // Offre « plan et devis + Catalogue Premium offert » (selon la pub ou le pays) : son prix remplace celui du plan seul.
   const offre = useOffre();
-  const local = offre ? offrePrice(offre) : planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
+  // Lien du dernier email de relance (?remise=…) : prix réduit affiché, code rempli dans le formulaire.
+  const remiseCode = useRemise();
+  const remise = offre ? remiseCode : null;
+  const local = offre ? offrePrice(offre, remise) : planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [promoOpen, setPromoOpen] = useState(false);
   // Offre aux clients : code mémorisé (lien reçu par email ou WhatsApp) et coordonnées du premier achat.
@@ -326,10 +329,10 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               />
             </div>
           </div>
-          {promoOpen || promo ? (
+          {promoOpen || promo || remise ? (
             <div>
               <label className="label" htmlFor={`pd-promo-${plan.slug}`}>Code promo</label>
-              <input id={`pd-promo-${plan.slug}`} name="discountCode" defaultValue={promo ?? undefined} autoFocus={!promo} autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
+              <input id={`pd-promo-${plan.slug}`} name="discountCode" defaultValue={remise?.code ?? promo ?? undefined} autoFocus={!promo && !remise} autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
             </div>
           ) : (
             <button type="button" onClick={() => setPromoOpen(true)} className="-mt-2 justify-self-start text-sm font-semibold text-primary underline">

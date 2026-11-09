@@ -6,7 +6,7 @@ import { usePromoCode } from "@/components/promo-store";
 import { projectAnchorPrice } from "@/lib/project-anchor";
 import { upsellPrice } from "@/lib/upsell";
 import { formatLocalAmount, formatLocalPrice, localPriceFor, type LocalPrice, type LocalPriceRule } from "@/lib/local-price";
-import { OFFRE_PARAM, OFFRE_STORAGE_KEY, offreById, resolveOffre, type Offre } from "@/lib/offres";
+import { OFFRE_PARAM, OFFRE_STORAGE_KEY, isRelanceCode, offreById, relanceDiscount, resolveOffre, type Offre } from "@/lib/offres";
 
 /**
  * Prix local affiché sur le site : désactivé le 9 nov. (« showLocalPrices »: false dans projet.json).
@@ -94,16 +94,43 @@ export function useOffre(): Offre | null {
   return resolveOffre(requested, country);
 }
 
+const REMISE_STORAGE_KEY = "wp_remise";
+
+/** Code de réduction du dernier email de relance (?remise=…), gardé 30 jours dans ce navigateur. */
+function requestedRemise(): string | null {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get("remise");
+    if (fromUrl && isRelanceCode(fromUrl)) {
+      window.localStorage.setItem(REMISE_STORAGE_KEY, JSON.stringify({ code: fromUrl.toUpperCase(), at: Date.now() }));
+      return fromUrl.toUpperCase();
+    }
+    const saved = JSON.parse(window.localStorage.getItem(REMISE_STORAGE_KEY) || "null") as { code?: string; at?: number } | null;
+    if (saved?.code && isRelanceCode(saved.code) && saved.at && Date.now() - saved.at < OFFRE_TTL_MS) return saved.code;
+  } catch {}
+  return null;
+}
+
+/** Réduction active sur les offres (lien du dernier email de relance), null sinon. */
+export function useRemise(): { code: string; discount: number } | null {
+  const [code, setCode] = useState<string | null>(null);
+  useEffect(() => setCode(requestedRemise()), []);
+  const r = relanceDiscount();
+  return code && r ? r : null;
+}
+
 /** Prix d'une offre, au format des prix locaux (FCFA : Chariow convertit au paiement). */
-export function offrePrice(offre: Offre): LocalPrice {
+export function offrePrice(offre: Offre, remise?: { discount: number } | null): LocalPrice {
+  // Réduction du dernier email de relance : nouveau prix, ancien prix barré.
+  if (remise) return { amount: Math.max(0, offre.price - remise.discount), currency: "FCFA", anchor: offre.price };
   return { amount: offre.price, currency: "FCFA", anchor: offre.anchor && offre.anchor > offre.price ? offre.anchor : null };
 }
 
 /** Prix du visiteur, tel qu'il le retrouvera au paiement Chariow (offre avec catalogue offert, sinon plan et devis seul). */
 export function useLocalPrice(): LocalPrice {
   const offre = useOffre();
+  const remise = useRemise();
   const local = planDevisPrice(useVisitorCountry());
-  return offre ? offrePrice(offre) : local;
+  return offre ? offrePrice(offre, remise) : local;
 }
 
 /**
