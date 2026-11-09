@@ -7,7 +7,14 @@ import { projectAnchorPrice } from "@/lib/project-anchor";
 import { upsellPrice } from "@/lib/upsell";
 import { formatLocalAmount, formatLocalPrice, localPriceFor, type LocalPrice, type LocalPriceRule } from "@/lib/local-price";
 
-const RULES = ((projet as { localPrices?: LocalPriceRule[] }).localPrices ?? []) as LocalPriceRule[];
+/**
+ * Prix local affiché sur le site : désactivé le 9 nov. (« showLocalPrices »: false dans projet.json).
+ * Les pubs annoncent 14 900 FCFA ; afficher 15 350 FCFA ou 235 941 GNF sur la fiche faisait chuter le passage
+ * au paiement (3,5 % des visiteurs des pubs le 7 nov., 0,9 % les 8-9 nov.). Le site affiche donc 14 900 FCFA
+ * partout et Chariow convertit au paiement, comme le 7 nov. (6 ventes).
+ */
+const SHOW_LOCAL_PRICES = (projet as { showLocalPrices?: boolean }).showLocalPrices === true;
+const RULES = (SHOW_LOCAL_PRICES ? ((projet as { localPrices?: LocalPriceRule[] }).localPrices ?? []) : []) as LocalPriceRule[];
 const STORAGE_KEY = "wp_pays";
 
 /** Pays du visiteur : lu une seule fois par page (/api/pays), gardé en mémoire locale pour éviter le saut de prix. */

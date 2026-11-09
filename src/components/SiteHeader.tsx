@@ -15,7 +15,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 bg-primary text-white shadow-sm">
       <nav className="container-page flex h-16 items-center justify-between gap-4">
         <Logo height={42} />
-        <ul data-focus-hide className="hidden items-center gap-7 text-sm font-medium text-white/85 lg:flex">
+        <ul className="hidden items-center gap-7 text-sm font-medium text-white/85 lg:flex">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
               <Link href={link.href} className="hover:text-white">
