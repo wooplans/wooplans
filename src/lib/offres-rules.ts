@@ -13,7 +13,8 @@
  * Module sans dépendance (testé par node --test) ; la configuration est lue par src/lib/offres.ts.
  */
 export type Offre = { id: string; price: number; anchor: number | null; chariowProductId: string; countries: string[] };
-export type OffresConfig = { default: string; offres: Offre[] };
+/** relance : code Chariow (réduction fixe en FCFA) proposé dans le dernier email de relance des paiements abandonnés. */
+export type OffresConfig = { default: string; offres: Offre[]; relance?: { code: string; discount: number } };
 
 /** Paramètre d'URL des pubs (?offre=29k) et clé de mémorisation dans le navigateur. */
 export const OFFRE_PARAM = "offre";
@@ -51,4 +52,15 @@ export function offreProductIds(cfg: OffresConfig): Map<string, Offre> {
 /** Au moins une offre active : la fiche présente le bonus Catalogue Premium. */
 export function offresEnabled(cfg: OffresConfig): boolean {
   return cfg.offres.some(isActive);
+}
+
+/** Code de réduction du dernier email de relance, s'il est configuré. */
+export function relanceDiscount(cfg: OffresConfig): { code: string; discount: number } | null {
+  const r = cfg.relance;
+  return r && r.code.trim() && r.discount > 0 ? { code: r.code.trim().toUpperCase(), discount: r.discount } : null;
+}
+
+export function isRelanceCode(code: string | null | undefined, cfg: OffresConfig) {
+  const r = relanceDiscount(cfg);
+  return Boolean(r && (code || "").trim().toUpperCase() === r.code);
 }

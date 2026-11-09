@@ -1,8 +1,9 @@
 import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { giftReminderEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { giftReminderEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
@@ -11,6 +12,9 @@ import { formatFcfa } from "@/lib/plans";
 import {
   DEFAULT_PROSPECT_SEQUENCE,
   deliveryStopsSequence,
+  discountedOffrePrice,
+  OFFRE_DELAYS_HOURS,
+  offreKindForStep,
   emailKindForStep,
   sanitizeSequenceSettings,
   shouldStartSequence,
@@ -49,12 +53,17 @@ type ProspectEventInput = {
   utmCampaign?: string | null;
   /** Démarre la séquence d'emails (notifications en direct) ; l'historique importé reste en attente. */
   startSequence: boolean;
-  /** Séquence à démarrer : relance (paiement abandonné, par défaut) ou bienvenue (plan et devis offert). */
-  kind?: "relance" | "bienvenue";
+  /**
+   * Séquence à démarrer : relance (paiement abandonné du catalogue, par défaut), bienvenue (plan et devis offert)
+   * ou offre (paiement abandonné d'une offre « plan et devis + Catalogue Premium offert » sur une fiche modèle).
+   */
+  kind?: SequenceKind;
 };
 
-const delaysFor = (kind: "relance" | "bienvenue", settings: ProspectSequenceSettings) =>
-  kind === "bienvenue" ? WELCOME_DELAYS_HOURS : settings.delaysHours;
+type SequenceKind = "relance" | "bienvenue" | "offre";
+
+const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
+  kind === "bienvenue" ? WELCOME_DELAYS_HOURS : kind === "offre" ? OFFRE_DELAYS_HOURS : settings.delaysHours;
 
 /**
  * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
@@ -140,8 +149,9 @@ export async function recordProspectEvent(input: ProspectEventInput) {
   // Désinscription et adresse qui rejette nos emails : définitives.
   const sticky = existing.status === "unsubscribed" || existing.status === "bounced";
   const status = sticky ? existing.status : reopen && newer ? "open" : existing.status;
-  // Un abandon de paiement pendant la séquence de bienvenue la remplace par la relance (aide au paiement).
-  const switchToRelance = kind === "relance" && existing.sequenceKind === "bienvenue" && input.event !== "started";
+  // Un abandon de paiement remplace une séquence d'un autre type (bienvenue, ou relance du catalogue quand
+  // la personne abandonne ensuite une offre sur une fiche modèle) : on lui parle de ce qu'elle vient de tenter d'acheter.
+  const switchToRelance = kind !== "bienvenue" && existing.sequenceKind !== kind && input.event !== "started";
   const start =
     input.startSequence &&
     settings.enabled &&
@@ -248,6 +258,54 @@ async function lastDeliveryEvent(email: string): Promise<string | null> {
   }
 }
 
+/** Après un envoi : étape suivante (au moins 12 h plus tard) ou nouvelle tentative dans 1 h. */
+async function afterSend(
+  p: { id: string; sequenceStartedAt: Date | null },
+  step: number,
+  delays: number[],
+  ok: boolean,
+  now: Date,
+  result: { sent: number; failed: number; finished: number },
+) {
+  const db = getDb();
+  if (ok) {
+    const next = stepDueAt(p.sequenceStartedAt!, step + 1, delays);
+    await db
+      .update(schema.prospects)
+      // Un envoi en retard ne déclenche pas le suivant aussitôt : au moins 12 h d'écart.
+      .set({
+        sequenceStep: step + 1,
+        lastEmailAt: now,
+        nextEmailAt: next ? new Date(Math.max(next.getTime(), now.getTime() + 12 * 3_600_000)) : null,
+        updatedAt: now,
+      })
+      .where(eq(schema.prospects.id, p.id));
+    result.sent++;
+    if (!next) result.finished++;
+  } else {
+    // Nouvelle tentative dans 1 h, sans avancer dans la séquence.
+    await db
+      .update(schema.prospects)
+      .set({ nextEmailAt: new Date(now.getTime() + 3_600_000), updatedAt: now })
+      .where(eq(schema.prospects.id, p.id));
+    result.failed++;
+  }
+}
+
+/** Dernière offre tentée par ce prospect sur une fiche modèle (modèle et prix), pour personnaliser la relance. */
+async function offreInfo(email: string) {
+  const db = getDb();
+  const intent = await db.query.checkoutIntents.findFirst({
+    where: and(eq(schema.checkoutIntents.email, email), isNotNull(schema.checkoutIntents.offer), isNotNull(schema.checkoutIntents.planSlug)),
+    orderBy: desc(schema.checkoutIntents.createdAt),
+    columns: { offer: true, planSlug: true },
+  });
+  const offre = offreById(intent?.offer);
+  if (!intent?.planSlug || !offre) return null;
+  const plan = await db.query.plans.findFirst({ where: eq(schema.plans.slug, intent.planSlug), columns: { slug: true, code: true, name: true } });
+  return plan ? { offreId: offre.id, price: offre.price, planSlug: plan.slug, planCode: plan.code, planName: plan.name } : null;
+}
+
 /**
  * Passage du cron (toutes les 15 min) : envoie les emails dus de la séquence.
  * Chaque prospect est « réclamé » avant l'envoi (pas de doublon si deux passages se chevauchent).
@@ -321,6 +379,44 @@ export async function runProspectSequence(now = new Date()) {
       .returning({ id: schema.prospects.id });
     if (claimed.length === 0) continue;
 
+    // Séquence « offre » : email du modèle et du prix de l'offre que la personne a tenté d'acheter.
+    if (p.sequenceKind === "offre") {
+      const info = await offreInfo(p.email);
+      const r = relanceDiscount();
+      const last = offreKindForStep(step) === "last";
+      const discount = last && r && info ? r : null;
+      const unsubscribe = await unsubscribeUrl(p.email, "prospects");
+      const params = new URLSearchParams({
+        ...(info ? { offre: info.offreId } : {}),
+        achat: "1",
+        utm_source: "email",
+        utm_medium: "relance",
+        utm_campaign: `offre_${step + 1}`,
+        ...(discount ? { remise: discount.code } : {}),
+      });
+      const mail = offreRelanceEmail({
+        kind: offreKindForStep(step),
+        name: p.name,
+        failed: p.lastEvent === "failed",
+        plan: info ? { code: info.planCode, name: info.planName } : null,
+        price: info?.price ?? null,
+        checkoutUrl: siteUrl(`${info ? `/catalogue/${info.planSlug}` : "/catalogue"}?${params.toString()}`),
+        whatsappUrl: whatsappLink(
+          p.lastEvent === "failed"
+            ? `Bonjour WOOPLANS, mon paiement du plan et devis${info ? ` du modèle ${info.planCode}` : ""} n'a pas abouti, pouvez-vous m'aider ?`
+            : `Bonjour WOOPLANS, j'ai une question sur le plan et devis${info ? ` du modèle ${info.planCode}` : ""}.`,
+          getEnv().WHATSAPP_NUMBER || undefined,
+        ),
+        planCount,
+        discount: discount && info ? { code: discount.code, amount: discount.discount, newPrice: discountedOffrePrice(info.price, discount.discount) } : null,
+        unsubscribe,
+      });
+      const sentOffre = await sendEmail({ to: p.email, ...mail, template: `offre_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
+      await afterSend(p, step, delays, sentOffre.ok, now, result);
+      await pause(400);
+      continue;
+    }
+
     const welcome = p.sequenceKind === "bienvenue";
     const gift = welcome ? await giftInfo(p.email) : null;
     // Premier email de bienvenue : quelqu'un qui n'a jamais ouvert son plan et devis reçoit un rappel avec le lien,
@@ -367,28 +463,7 @@ export async function runProspectSequence(now = new Date()) {
       headers: await unsubscribeHeaders(p.email, "prospects"),
     });
 
-    if (sent.ok) {
-      const next = stepDueAt(p.sequenceStartedAt, step + 1, delays);
-      await db
-        .update(schema.prospects)
-        // Un envoi en retard ne déclenche pas le suivant aussitôt : au moins 12 h d'écart.
-        .set({
-          sequenceStep: step + 1,
-          lastEmailAt: now,
-          nextEmailAt: next ? new Date(Math.max(next.getTime(), now.getTime() + 12 * 3_600_000)) : null,
-          updatedAt: now,
-        })
-        .where(eq(schema.prospects.id, p.id));
-      result.sent++;
-      if (!next) result.finished++;
-    } else {
-      // Nouvelle tentative dans 1 h, sans avancer dans la séquence.
-      await db
-        .update(schema.prospects)
-        .set({ nextEmailAt: new Date(now.getTime() + 3_600_000), updatedAt: now })
-        .where(eq(schema.prospects.id, p.id));
-      result.failed++;
-    }
+    await afterSend(p, step, delays, sent.ok, now, result);
     await pause(400); // Reste sous la limite de débit de Resend.
   }
   return result;
@@ -425,6 +500,7 @@ export async function enrollStaleIntents(now = new Date()) {
         utmSource: visitor?.utmSource ?? null,
         utmCampaign: visitor?.utmCampaign ?? null,
         startSequence: true,
+        ...(intent.offer ? { kind: "offre" as const } : {}),
       });
       if (outcome === "created") enrolled++;
     }

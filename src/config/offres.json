@@ -1,5 +1,6 @@
 {
   "default": "39k",
+  "relance": { "code": "RELANCE10", "discount": 10000 },
   "offres": [
     { "id": "39k", "price": 39000, "anchor": null, "chariowProductId": "prd_rhaso5i5", "countries": ["GN", "CI", "SN"] },
     {

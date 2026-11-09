@@ -12,3 +12,5 @@ export const offreById = (id: string | null | undefined) => rules.offreById(id, 
 export const resolveOffre = (requested: string | null | undefined, country: string | null | undefined) => rules.resolveOffre(requested, country, OFFRES);
 export const offreProductIds = () => rules.offreProductIds(OFFRES);
 export const offresEnabled = () => rules.offresEnabled(OFFRES);
+export const relanceDiscount = () => rules.relanceDiscount(OFFRES);
+export const isRelanceCode = (code: string | null | undefined) => rules.isRelanceCode(code, OFFRES);

@@ -335,7 +335,7 @@ export const prospects = sqliteTable(
     utmSource: text("utm_source"),
     utmCampaign: text("utm_campaign"),
     /** relance = paiement abandonné ou échoué ; bienvenue = plan et devis offert, jusqu'à la proposition du catalogue. */
-    sequenceKind: text("sequence_kind", { enum: ["relance", "bienvenue"] }).notNull().default("relance"),
+    sequenceKind: text("sequence_kind", { enum: ["relance", "bienvenue", "offre"] }).notNull().default("relance"),
     /** Séquence de relance : nombre d'emails déjà envoyés, début et prochain envoi (null = arrêtée). */
     sequenceStep: integer("sequence_step").notNull().default(0),
     sequenceStartedAt: integer("sequence_started_at", { mode: "timestamp_ms" }),
