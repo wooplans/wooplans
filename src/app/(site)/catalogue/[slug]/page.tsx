@@ -6,12 +6,14 @@ import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { Faq, FaqJsonLd } from "@/components/Faq";
+import { Testimonials } from "@/components/Testimonials";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
+import { countPlanDevisDownloads } from "@/lib/plan-devis-stats";
 import { customPlanOffer, planGiftEnabled } from "@/lib/custom-plans";
 import { getEnv, siteUrl } from "@/lib/env";
 import {
@@ -74,9 +76,10 @@ const PREMIUM_CONTENT = [
 export default async function PlanPage({ params }: Props) {
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const [similar, planCount] = await Promise.all([
+  const [similar, planCount, downloads] = await Promise.all([
     getSimilarPublicPlans(plan),
     countPublishedPlans(),
+    countPlanDevisDownloads(),
   ]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
@@ -114,34 +117,36 @@ export default async function PlanPage({ params }: Props) {
 
           <div>
             <p className="eyebrow">{CATEGORY_LABELS[plan.category]} · Réf. {plan.code}</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+            <h1 className="mt-1.5 text-2xl font-bold tracking-tight md:text-4xl">
               {plan.name}
-              <span className="mt-1 block text-base font-medium text-foreground/60 md:text-lg">
+              <span className="mt-1 block text-base font-medium text-foreground/70 md:text-lg">
                 Plan de {CATEGORY_LABELS[plan.category].toLowerCase()} moderne {plan.bedrooms} chambres · {plan.surfaceTotal} m² · {levelsLabel(plan.levels)}
               </span>
             </h1>
-            {plan.summary ? <p className="mt-3 text-lg text-foreground/75">{plan.summary}</p> : null}
 
-            {budget ? (
-              <div className="mt-6 rounded-2xl bg-primary/5 p-5">
-                <p className="text-sm text-muted">Budget de construction indicatif</p>
-                <p className="mt-1 text-2xl font-bold text-primary">{budget}</p>
-                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans {project ? "le plan et devis du modèle" : "le Catalogue Premium"}.</p>
-              </div>
-            ) : null}
-
-            <div className="mt-6">
-              <PlanSpecs plan={plan} />
-            </div>
-
+            {/*
+              Ordre de la fiche (visiteurs mobiles venus d'une pub) : la maison, puis tout de suite l'offre.
+              Avant : budget, résumé et 7 caractéristiques passaient avant l'offre (carte à ~2,4 écrans, bouton à ~3,3) ;
+              5,5 % des visiteurs ouvraient le formulaire (PostHog, 7-9 nov.). Le détail technique vient après.
+            */}
             {project ? (
               <ProjectOffer
                 plan={plan}
                 offer={project}
                 planCount={planCount}
                 online={online}
+                budget={budget}
+                downloads={downloads}
               />
             ) : (
+            <>
+            {budget ? (
+              <div className="mt-6 rounded-2xl bg-primary/5 p-5">
+                <p className="text-sm text-muted">Budget de construction indicatif</p>
+                <p className="mt-1 text-2xl font-bold text-primary">{budget}</p>
+                <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans le Catalogue Premium.</p>
+              </div>
+            ) : null}
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
               <ul className="mt-3 space-y-1.5 text-sm text-foreground/80">
@@ -159,12 +164,40 @@ export default async function PlanPage({ params }: Props) {
                 {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · accès à vie
               </p>
             </div>
+            </>
             )}
           </div>
         </div>
 
+        {project ? (
+          <section className="mt-12">
+            <h2 className="mb-1 text-xl font-semibold">Ils ont choisi leur maison avec WOOPLANS</h2>
+            <p className="mb-4 text-sm text-muted">Nos clients en vidéo</p>
+            <Testimonials variant="row" source="plan" />
+          </section>
+        ) : null}
+
+        <section className="mt-12 max-w-3xl">
+          <h2 className="mb-4 text-xl font-semibold">Caractéristiques</h2>
+          <PlanSpecs plan={plan} />
+          {budget ? (
+            <p className="mt-3 text-sm text-foreground/75">
+              Budget de construction indicatif : <strong className="text-foreground">{budget}</strong> (hors terrain et honoraires).
+            </p>
+          ) : null}
+        </section>
+
+        {faq ? (
+          <section className="mt-12 max-w-3xl">
+            <h2 className="mb-4 text-xl font-semibold">Questions fréquentes</h2>
+            <Faq items={faq} />
+            <FaqJsonLd items={faq} />
+          </section>
+        ) : null}
+
         <section className="mt-12 max-w-3xl">
           <h2 className="text-xl font-semibold">À propos de ce modèle</h2>
+          {plan.summary ? <p className="mt-3 leading-relaxed text-foreground/80">{plan.summary}</p> : null}
           <PlanDescription description={description} />
           {themes.length > 0 ? (
             <p className="mt-4 text-sm text-foreground/75">
@@ -179,13 +212,7 @@ export default async function PlanPage({ params }: Props) {
           ) : null}
         </section>
 
-        {faq ? (
-          <section className="mt-12 max-w-3xl">
-            <h2 className="mb-4 text-xl font-semibold">Questions fréquentes</h2>
-            <Faq items={faq} />
-            <FaqJsonLd items={faq} />
-          </section>
-        ) : (
+        {faq ? null : (
         <section className="mt-12 grid gap-6 md:grid-cols-2">
           <div className="card relative overflow-hidden p-6">
             <h2 className="text-lg font-semibold">Distribution cotée</h2>
