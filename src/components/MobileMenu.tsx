@@ -14,7 +14,6 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
     <>
       <button
         type="button"
-        data-focus-hide
         className="rounded-lg p-2 text-white lg:hidden"
         aria-label="Ouvrir le menu"
         aria-expanded={open}
@@ -44,10 +43,10 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
                 {link.label}
               </Link>
             ))}
-            <Link href="/connexion" className="rounded-xl px-3 py-3 text-base font-medium hover:bg-background">
+            <Link href="/connexion" data-focus-hide className="rounded-xl px-3 py-3 text-base font-medium hover:bg-background">
               Espace Premium
             </Link>
-            <Link href={SITE.catalogueUrl} data-cta="mobile_menu" className="btn-cta mt-4 w-full">
+            <Link href={SITE.catalogueUrl} data-cta="mobile_menu" data-focus-hide className="btn-cta mt-4 w-full">
               {SITE.catalogueCta}
             </Link>
           </div>

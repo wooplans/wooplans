@@ -2,6 +2,7 @@
   "price": 14900,
   "gift": false,
   "anchorPrice": 50000,
+  "showLocalPrices": false,
   "localPrices": [
     {
       "region": "Afrique de l'Ouest (FCFA UEMOA)",

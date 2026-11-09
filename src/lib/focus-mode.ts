@@ -1,9 +1,11 @@
 /**
  * Mode « sans distraction » pour les visiteurs des publicités « plan et devis » (utm_campaign commençant
- * par plan_devis, ex. plan_devis_14900). La fiche du modèle est alors une page de vente : le menu,
- * « Espace Premium » et les liens vers le Catalogue Premium sont masqués (éléments marqués data-focus-hide),
- * pour toute la session de l'onglet. Analyse de la campagne du 7 nov. : 57 clics sur le menu et 34 sur
- * Espace Premium / Catalogue Premium faisaient quitter la fiche avant l'achat.
+ * par plan_devis, ex. plan_devis_14900). « Espace Premium » et les liens vers le Catalogue Premium sont masqués
+ * (éléments marqués data-focus-hide) pour toute la session de l'onglet.
+ * Le menu des modèles (Villas, Duplex…) reste visible (9 nov.) : le 7 nov., 2 ventes sur 5 venaient de visiteurs
+ * passés de la fiche de la pub à un autre modèle par le catalogue ; le masquer (8 nov.) coupait ce chemin.
+ * Le Catalogue Premium reste masqué : aucun achat du catalogue venant de ces pubs, et il détourne d'une offre
+ * à 14 900 FCFA vers une autre à prix différent.
  */
 export const FOCUS_STORAGE_KEY = "wp_focus";
 
