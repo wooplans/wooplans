@@ -94,7 +94,7 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
   }, [intentId, pixelId]);
 
   if (data?.status === "paid" && data.offre) {
-    return <OffreConfirmed data={data} copied={copied} onCopy={() => setCopied(true)} />;
+    return <OffreConfirmed data={data} />;
   }
 
   if (data?.status === "paid" && data.plan && data.download) {
@@ -180,7 +180,7 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
  * Offre payée : un bouton connecte l'acheteur (navigateur de l'achat) et ouvre ses fiches PDF, où le modèle l'attend.
  * Autre navigateur ou délai dépassé : page de connexion avec le code reçu par email.
  */
-function OffreConfirmed({ data, copied, onCopy }: { data: Status; copied: boolean; onCopy: () => void }) {
+function OffreConfirmed({ data }: { data: Status }) {
   const [opening, setOpening] = useState(false);
   async function open() {
     setOpening(true);
@@ -194,30 +194,11 @@ function OffreConfirmed({ data, copied, onCopy }: { data: Status; copied: boolea
       <h1 className="mt-3 text-2xl font-bold md:text-3xl">Paiement confirmé, votre plan et devis est prêt</h1>
       <p className="mt-3 text-foreground/75">
         {data.plan ? `${data.plan.name} (réf. ${data.plan.code}) vous attend` : "Votre plan et devis vous attend"} dans votre espace Premium, rubrique
-        « Fiches PDF ». <strong>Bonus :</strong> le Catalogue Premium vous est offert, pour le comparer avec tous nos autres modèles.
+        « Fiches PDF ». <strong>Bonus :</strong> le Catalogue Premium vous est offert.
       </p>
       <button type="button" onClick={open} disabled={opening} className="btn-cta mt-8 px-8 py-4 text-base">
         {opening ? "Ouverture…" : "Accéder à mon plan et devis"}
       </button>
-      {data.code ? (
-        <div className="mx-auto mt-8 max-w-xs rounded-2xl border-2 border-dashed border-primary bg-primary/5 p-4">
-          <p className="text-sm text-foreground/75">Votre code d&apos;accès personnel</p>
-          <p className="mt-1 font-mono text-2xl font-extrabold tracking-[0.2em] text-primary">{data.code}</p>
-          <button
-            type="button"
-            className="mt-2 text-sm font-semibold text-primary hover:underline"
-            onClick={() => {
-              void navigator.clipboard?.writeText(data.code!);
-              onCopy();
-            }}
-          >
-            {copied ? "Code copié ✓" : "Copier le code"}
-          </button>
-        </div>
-      ) : null}
-      <p className="mt-4 text-sm text-muted">
-        Votre code vous est aussi envoyé par email{data.email ? ` à ${data.email}` : ""} : il vous servira à vous reconnecter depuis n&apos;importe quel téléphone.
-      </p>
     </div>
   );
 }
