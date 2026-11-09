@@ -128,21 +128,9 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
   );
 }
 
-/** Réassurance sous le bouton : téléchargement immédiat, sécurité du paiement, carte acceptée (réponses de la FAQ, sans l'ouvrir). */
+/** Sous le bouton : le document s'ouvre au téléchargement dès le paiement validé, même si l'email saisi n'est pas valide. */
 export function Reassurance({ className = "" }: { className?: string }) {
-  return (
-    <ul className={`grid gap-1 text-left text-[13px] leading-snug text-foreground/75 ${className}`}>
-      <li className="flex gap-2">
-        <span aria-hidden>⚡</span>
-        {/* Le document s'ouvre au téléchargement dès le paiement validé, même si l'email saisi n'est pas valide. */}
-        <span>Téléchargement immédiat après paiement</span>
-      </li>
-      <li className="flex gap-2">
-        <span aria-hidden>🔒</span>
-        <span>Paiement sécurisé par Mobile Money ou carte bancaire, en une seule fois</span>
-      </li>
-    </ul>
-  );
+  return <p className={`text-sm text-foreground/75 ${className}`}>⚡ Téléchargement immédiat après paiement</p>;
 }
 
 /** Liste numérotée ① ② ③ de ce que contient le plan et devis. */
