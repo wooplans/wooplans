@@ -10,9 +10,9 @@ Fichier `src/config/offres.json` :
 
 | Offre | Prix | Produit Chariow | Pays (sans lien de pub) |
 |---|---|---|---|
-| `39k` | 39 000 FCFA | à renseigner | CI |
-| `29k` | 29 000 FCFA | à renseigner | GN |
-| `19k` | 19 000 FCFA | à renseigner | CM |
+| `39k` | 39 000 FCFA | prd_rhaso5i5 (CP 39K) | CI |
+| `29k` | 29 000 FCFA | prd_uso1ketx (CP 29K) | GN |
+| `19k` | 19 000 FCFA | prd_ytnf02e2 (CP 19K) | CM |
 
 - `default` : offre des pays absents des listes (39k).
 - `anchor` : prix barré facultatif (null = pas de prix barré).
