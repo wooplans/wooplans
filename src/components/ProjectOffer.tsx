@@ -104,13 +104,16 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
           </span>
         </p>
         <PriceCountdown className="mt-0.5" />
-        <PlanDevisButton
-          plan={plan}
-          label="Recevoir mon plan et devis"
-          ctaId="plan_projet"
-          className="btn-cta mt-3 w-full px-4 py-3.5 text-base"
-          fallbackHref={online ? undefined : projectStartLink(plan)}
-        />
+        {/* Repère de la barre fixe du bas : elle n'apparaît qu'une fois ce bouton dépassé (StickyOfferBar). */}
+        <div id="offre-bouton" className="mt-3">
+          <PlanDevisButton
+            plan={plan}
+            label="Recevoir mon plan et devis"
+            ctaId="plan_projet"
+            className="btn-cta w-full px-4 py-3.5 text-base"
+            fallbackHref={online ? undefined : projectStartLink(plan)}
+          />
+        </div>
         <PaymentMethods className="mt-2.5 justify-center" />
         <Reassurance className="mt-3" />
         {shownDownloads ? (

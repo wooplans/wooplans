@@ -7,6 +7,7 @@ import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
 import { Faq, FaqJsonLd } from "@/components/Faq";
 import { Testimonials } from "@/components/Testimonials";
+import { StickyOfferBar } from "@/components/StickyOfferBar";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
@@ -259,34 +260,34 @@ export default async function PlanPage({ params }: Props) {
         ) : null}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 p-3 backdrop-blur sm:hidden">
+      <StickyOfferBar>
         {project && planGiftEnabled() ? (
           <GiftPlanButton plan={plan} label="Recevoir gratuitement le plan et devis" ctaId="plan_cadeau_sticky" className="btn-cta w-full py-3.5" />
         ) : project ? (
-          <div className="cta-pulse">
-          <PlanDevisButton
-            plan={plan}
-            label={
-              // Une seule ligne de texte par bloc : le bouton (flex) ne découpe pas le libellé en colonnes.
-              <span className="block leading-tight">
-                Recevoir mon plan et devis
-                <span className="mt-0.5 block text-sm font-semibold">
-                  <LocalAnchor className="mr-1.5 font-medium opacity-70" />
-                  <LocalPriceText />
-                </span>
+          <>
+            {/* Prix au-dessus du bouton : un bouton d'une seule ligne, plus net sur mobile. */}
+            <p className="mb-1.5 flex items-baseline justify-center gap-2 whitespace-nowrap text-center leading-tight">
+              <LocalAnchor className="text-sm font-medium text-foreground/50" />
+              <span className="text-lg font-bold">
+                <LocalPriceText part="amount" /> <span className="text-sm font-medium"><LocalPriceText part="currency" /></span>
               </span>
-            }
-            ctaId="plan_projet_sticky"
-            className="btn-cta w-full py-3.5"
-            fallbackHref={online ? undefined : projectStartLink(plan)}
-          />
-          </div>
+            </p>
+            <div className="cta-pulse">
+              <PlanDevisButton
+                plan={plan}
+                label="Recevoir mon plan et devis"
+                ctaId="plan_projet_sticky"
+                className="btn-cta w-full py-3 text-base"
+                fallbackHref={online ? undefined : projectStartLink(plan)}
+              />
+            </div>
+          </>
         ) : (
           <Link href={SITE.catalogueUrl} data-cta="plan_sticky" data-plan={plan.slug} className="btn-cta w-full py-3.5">
             {SITE.catalogueCta}
           </Link>
         )}
-      </div>
+      </StickyOfferBar>
       {/* Offre à l'unité : la fiche est la page de vente du modèle, sans bandeau du catalogue en bas. */}
       {project && !planGiftEnabled() ? null : (
         <div className="mt-16">
