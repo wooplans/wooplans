@@ -90,7 +90,7 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
       {/* Le budget sert l'offre : le gros chiffre de la construction justifie le petit prix du devis détaillé. */}
       {budget ? (
         <p className="mt-2 text-sm leading-snug text-foreground/80">
-          Budget de construction estimé : <strong className="whitespace-nowrap text-foreground">{budget}</strong>. Le devis le détaille poste par poste, avant de lancer le chantier.
+          Budget de construction estimé : <strong className="whitespace-nowrap text-foreground">{budget}</strong>
         </p>
       ) : null}
 
@@ -128,13 +128,14 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
   );
 }
 
-/** Réassurance sous le bouton : livraison, sécurité du paiement, carte acceptée (réponses de la FAQ, sans l'ouvrir). */
+/** Réassurance sous le bouton : téléchargement immédiat, sécurité du paiement, carte acceptée (réponses de la FAQ, sans l'ouvrir). */
 export function Reassurance({ className = "" }: { className?: string }) {
   return (
     <ul className={`grid gap-1 text-left text-[13px] leading-snug text-foreground/75 ${className}`}>
       <li className="flex gap-2">
-        <span aria-hidden>📩</span>
-        <span>PDF envoyé par email dès le paiement validé, en quelques minutes</span>
+        <span aria-hidden>⚡</span>
+        {/* Le document s'ouvre au téléchargement dès le paiement validé, même si l'email saisi n'est pas valide. */}
+        <span>Téléchargement immédiat après paiement</span>
       </li>
       <li className="flex gap-2">
         <span aria-hidden>🔒</span>
