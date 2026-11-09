@@ -47,12 +47,14 @@ export function projectStartLink(plan: Props["plan"]) {
   return whatsappLink(`Bonjour WOOPLANS, je veux télécharger le plan et le devis du modèle ${plan.code} (${plan.name}).`);
 }
 
-/** Ce que l'acheteur reçoit dès le paiement (carte de la fiche et formulaire de paiement). */
+/**
+ * Ce que l'acheteur reçoit dès le paiement (carte de la fiche) : 3 points seulement. La réduction sur d'autres plans
+ * (PROMO10) reste proposée après l'achat ; sur la fiche, elle détournait vers d'autres modèles au moment de décider.
+ */
 export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
   "Discuter avec un architecte sur WhatsApp",
-  "Réduction spéciale pour télécharger d'autres plans et devis",
 ];
 
 /** Plan et devis offert : contenu du cadeau. */
