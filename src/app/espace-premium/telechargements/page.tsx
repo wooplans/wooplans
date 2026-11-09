@@ -34,44 +34,15 @@ export default async function DownloadsPage({ searchParams }: { searchParams: Pr
   return (
     <div className="container-page max-w-2xl py-8">
       <h1 className="text-2xl font-bold tracking-tight">Fiches PDF</h1>
-      <p className="mt-1 text-foreground/70">
-        Retrouvez ici les fiches que vous avez déjà téléchargées. Pour obtenir la fiche d&apos;un nouveau modèle, ouvrez-le depuis le
-        catalogue et cliquez sur « Fiche PDF ». Chaque fiche est créée à partir de la fiche en ligne, donc toujours à jour, et marquée à votre nom.
-      </p>
 
       {blocked && QUOTA_MESSAGES[blocked] ? (
         <div className="mt-6 rounded-2xl border border-secondary/40 bg-secondary/10 p-4 text-sm">
           <p className="font-semibold">{QUOTA_MESSAGES[blocked]}</p>
-          <p className="mt-1 text-foreground/75">
-            {Number.isFinite(retry) && retry > Date.now() ? `Vous pourrez en télécharger une nouvelle à partir du ${fmtWhen(retry)}. ` : ""}
-            {blocked === "lifetime" ? "" : "Les fiches déjà téléchargées restent disponibles. "}
-            Tous les modèles restent consultables en ligne dans votre espace.
-          </p>
+          {Number.isFinite(retry) && retry > Date.now() ? (
+            <p className="mt-1 text-foreground/75">Prochaine fiche possible le {fmtWhen(retry)}.</p>
+          ) : null}
         </div>
       ) : null}
-
-      <div className="mt-6 rounded-2xl bg-background p-4 text-sm text-foreground/80">
-        {lifetimeBlocked ? (
-          <p>
-            <strong>Téléchargements bloqués :</strong> le nombre maximal de fiches ({quota.limits.lifetime}) est atteint.
-          </p>
-        ) : (
-          <p>
-            <strong>
-              {Math.min(quota.remainingMonth, quota.remainingLifetime)} nouvelle{quota.remainingMonth > 1 ? "s" : ""} fiche
-              {quota.remainingMonth > 1 ? "s" : ""}
-            </strong>{" "}
-            disponible{quota.remainingMonth > 1 ? "s" : ""} sur 30 jours (au plus {quota.limits.perDay} par jour, {quota.limits.perMonth} par mois et{" "}
-            {quota.limits.lifetime} au total : au-delà, les téléchargements sont bloqués définitivement). Re-télécharger une fiche déjà obtenue ne
-            compte pas.
-          </p>
-        )}
-        <p className="mt-2 text-xs text-muted">
-          Usage personnel uniquement : vous pouvez imprimer votre fiche ou l&apos;envoyer en privé à un proche ou à votre entrepreneur.
-          Publication sur les réseaux sociaux, revente et usage commercial ou publicitaire sont interdits. Chaque fiche porte votre nom et
-          un identifiant unique, visibles sur les pages et dans les images.
-        </p>
-      </div>
 
       {downloaded.length === 0 ? (
         <p className="card mt-6 p-6 text-sm text-foreground/75">
@@ -104,6 +75,14 @@ export default async function DownloadsPage({ searchParams }: { searchParams: Pr
           );
         })}
       </div>
+      {/* Quota et règle d'usage en une ligne : le détail des limites est dans les messages de blocage. */}
+      <p className="mt-6 text-center text-xs text-muted">
+        {lifetimeBlocked
+          ? "Nombre maximal de fiches atteint"
+          : `${Math.min(quota.remainingMonth, quota.remainingLifetime)} nouvelle${quota.remainingMonth > 1 ? "s" : ""} fiche${quota.remainingMonth > 1 ? "s" : ""} disponible${quota.remainingMonth > 1 ? "s" : ""} ce mois-ci`}{" "}
+        · Usage personnel, fiches marquées à votre nom
+      </p>
+
       {files.length > 0 ? (
         <section className="mt-10">
           <h2 className="text-lg font-semibold">Catalogue complet (ancienne édition)</h2>

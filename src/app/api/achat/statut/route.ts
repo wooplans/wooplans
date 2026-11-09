@@ -72,7 +72,8 @@ export async function GET(request: NextRequest) {
       promo: intent.ctaId === UPSELL_CTA_ID,
       status: intent.status,
       email: sameBrowser ? intent.email : null,
-      code: revealable ? intent.revealCode : null,
+      // Offre : le bouton de /merci connecte directement (api/achat/acces), le code n'est pas affiché.
+      code: revealable && !offre ? intent.revealCode : null,
       plan: plan ? { slug: plan.slug, code: plan.code, name: plan.name } : null,
       offre: offre ? { id: offre.id, price: offre.price } : null,
       download: plan && !offre && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
