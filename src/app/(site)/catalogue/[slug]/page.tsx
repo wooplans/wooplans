@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CatalogueBonus } from "@/components/CatalogueBonus";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
@@ -173,9 +174,19 @@ export default async function PlanPage({ params }: Props) {
         {project ? (
           <section className="mt-12">
             <h2 className="mb-1 text-xl font-semibold">Ils ont choisi leur maison avec WOOPLANS</h2>
-            <p className="mb-4 text-sm text-muted">Nos clients en vidéo</p>
+            <p className="mb-4 text-sm text-muted">Nos clients parlent du Catalogue Premium, offert avec votre plan et devis</p>
             <Testimonials variant="row" source="plan" />
           </section>
+        ) : null}
+
+        {/* Juste après les témoignages (qui parlent du catalogue) : le bonus offert avec le plan et devis. */}
+        {project && !planGiftEnabled() ? (
+          <CatalogueBonus
+            plan={plan}
+            planCount={planCount}
+            covers={similar.map((p) => p.coverImage).filter((c): c is string => Boolean(c))}
+            online={online}
+          />
         ) : null}
 
         <section className="mt-12 max-w-3xl">
