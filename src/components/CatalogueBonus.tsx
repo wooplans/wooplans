@@ -1,8 +1,7 @@
 import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { otherPlansCount, projectStartLink } from "@/components/ProjectOffer";
 import { responsiveImage } from "@/lib/media-size";
-import { formatFcfa } from "@/lib/plans";
-import { cataloguePrice } from "@/lib/site";
+import { IfOffre } from "@/components/IfOffre";
 
 type Props = {
   plan: { slug: string; code: string; name: string };
@@ -21,6 +20,7 @@ export function CatalogueBonus({ plan, planCount, covers, online }: Props) {
   const shown = covers.slice(0, 3);
   const rest = others ? others - shown.length : 0;
   return (
+    <IfOffre>
     <section id="bonus" className="mt-12 scroll-mt-20 max-w-3xl">
       <div className="overflow-hidden rounded-2xl border-2 border-primary/30 bg-primary/5">
         <div className="p-4 sm:p-6">
@@ -48,35 +48,19 @@ export function CatalogueBonus({ plan, planCount, covers, online }: Props) {
               ))}
             </div>
           ) : null}
-
-          <ul className="mt-4 space-y-2 text-[15px] text-foreground/85">
-            {[
-              "Distributions cotées et surfaces de chaque pièce",
-              "Devis détaillés, de la fondation aux finitions",
-              "Accès à vie, nouveaux modèles inclus",
-            ].map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="font-bold text-primary" aria-hidden>✓</span>
-                {item}
-              </li>
-            ))}
-          </ul>
         </div>
 
         <div className="border-t border-primary/20 bg-background/60 p-4 text-center sm:px-6">
-          <p className="text-sm">
-            Valeur : <s className="text-foreground/60">{formatFcfa(cataloguePrice())}</s>{" "}
-            <strong className="text-base text-primary">→ offert avec votre plan et devis</strong>
-          </p>
           <PlanDevisButton
             plan={plan}
             label="Mon plan + le catalogue offert"
             ctaId="plan_bonus"
-            className="btn-cta mt-3 w-full px-4 py-3.5 text-base"
+            className="btn-cta w-full px-4 py-3.5 text-base"
             fallbackHref={online ? undefined : projectStartLink(plan)}
           />
         </div>
       </div>
     </section>
+    </IfOffre>
   );
 }

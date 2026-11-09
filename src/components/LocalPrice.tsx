@@ -6,6 +6,7 @@ import { usePromoCode } from "@/components/promo-store";
 import { projectAnchorPrice } from "@/lib/project-anchor";
 import { upsellPrice } from "@/lib/upsell";
 import { formatLocalAmount, formatLocalPrice, localPriceFor, type LocalPrice, type LocalPriceRule } from "@/lib/local-price";
+import { OFFRE_PARAM, OFFRE_STORAGE_KEY, offreById, resolveOffre, type Offre } from "@/lib/offres";
 
 /**
  * Prix local affiché sur le site : désactivé le 9 nov. (« showLocalPrices »: false dans projet.json).
@@ -66,9 +67,43 @@ export function planDevisPrice(country: string | null | undefined): LocalPrice {
   return localPriceFor(country, { price: projet.price, anchor: projectAnchorPrice() }, RULES);
 }
 
-/** Prix du plan et devis du visiteur, tel qu'il le retrouvera au paiement Chariow. */
+const OFFRE_TTL_MS = 30 * 86_400_000;
+
+/** Offre du lien de la pub (?offre=29k) : lue dans l'URL, sinon celle gardée 30 jours dans ce navigateur. */
+function requestedOffre(): string | null {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get(OFFRE_PARAM);
+    if (fromUrl && offreById(fromUrl)) {
+      window.localStorage.setItem(OFFRE_STORAGE_KEY, JSON.stringify({ id: fromUrl.toLowerCase(), at: Date.now() }));
+      return fromUrl;
+    }
+    const saved = JSON.parse(window.localStorage.getItem(OFFRE_STORAGE_KEY) || "null") as { id?: string; at?: number } | null;
+    if (saved?.id && saved.at && Date.now() - saved.at < OFFRE_TTL_MS) return saved.id;
+  } catch {}
+  return null;
+}
+
+/**
+ * Offre « plan et devis + Catalogue Premium offert » du visiteur (src/lib/offres.ts), null si aucune n'est active.
+ * Premier affichage (et rendu serveur) : l'offre par défaut, puis celle du lien de la pub ou du pays.
+ */
+export function useOffre(): Offre | null {
+  const country = useVisitorCountry();
+  const [requested, setRequested] = useState<string | null>(null);
+  useEffect(() => setRequested(requestedOffre()), []);
+  return resolveOffre(requested, country);
+}
+
+/** Prix d'une offre, au format des prix locaux (FCFA : Chariow convertit au paiement). */
+export function offrePrice(offre: Offre): LocalPrice {
+  return { amount: offre.price, currency: "FCFA", anchor: offre.anchor && offre.anchor > offre.price ? offre.anchor : null };
+}
+
+/** Prix du visiteur, tel qu'il le retrouvera au paiement Chariow (offre avec catalogue offert, sinon plan et devis seul). */
 export function useLocalPrice(): LocalPrice {
-  return planDevisPrice(useVisitorCountry());
+  const offre = useOffre();
+  const local = planDevisPrice(useVisitorCountry());
+  return offre ? offrePrice(offre) : local;
 }
 
 /**
@@ -77,8 +112,10 @@ export function useLocalPrice(): LocalPrice {
  */
 function useShownPrice(): LocalPrice & { approx: boolean } {
   const local = useLocalPrice();
+  const offre = useOffre();
   const promo = usePromoCode();
-  if (!promo) return { ...local, approx: false };
+  // Code de l'offre aux clients (PROMO10) : produit plan et devis seul, sans effet sur les offres avec catalogue.
+  if (!promo || offre) return { ...local, approx: false };
   const p = upsellPrice(local);
   return { amount: p.amount, currency: p.currency, anchor: local.amount, approx: p.approx };
 }

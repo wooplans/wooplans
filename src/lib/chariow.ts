@@ -11,6 +11,8 @@ import { captureServerEvents } from "@/lib/posthog";
 import { UPSELL, UPSELL_CTA_ID } from "@/lib/upsell";
 import { buildUpsellEmail } from "@/lib/upsell-server";
 import { recordProspectEvent } from "@/lib/prospects";
+import { offreProductIds, type Offre } from "@/lib/offres";
+import { recordPurchasedPlan } from "@/lib/pdf-quota";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -125,7 +127,6 @@ const PROVIDER_LABEL: Record<SaleProvider, string> = { chariow: "Chariow", wajub
  * Appelé avec une notification Chariow, ou une notification Wajub mise au même format (src/lib/wajub.ts).
  */
 export async function processSaleEvent(payload: ChariowSalePayload, provider: SaleProvider = "chariow"): Promise<PulseOutcome> {
-  const db = getDb();
   const status = SALE_EVENTS[payload.event || ""];
   if (!status) return "ignored_event";
 
@@ -133,7 +134,25 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
   if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
-  if (!catalogueProductIds().has(productId)) return "ignored_product";
+  const offre = offreProductIds().get(productId);
+  if (!offre && !catalogueProductIds().has(productId)) return "ignored_product";
+  return processCatalogueSale(payload, status, provider, offre ?? null);
+}
+
+/**
+ * Vente du Catalogue Premium, seul ou dans une offre « plan et devis + Catalogue Premium offert » (offre) :
+ * accès à l'Espace Premium sur paiement confirmé et, pour une offre, modèle choisi ajouté aux fiches du membre.
+ */
+async function processCatalogueSale(
+  payload: ChariowSalePayload,
+  status: "completed" | "abandoned" | "failed",
+  provider: SaleProvider,
+  offre: Offre | null,
+): Promise<PulseOutcome> {
+  const db = getDb();
+  // Vérifiés par processSaleEvent : identifiant de la vente et du produit présents.
+  const sale = payload.sale as NonNullable<ChariowSalePayload["sale"]> & { id: string };
+  const productId = payload.product!.id!;
 
   const customer = payload.customer ?? {};
   const email = customer.email ? normalizeEmail(customer.email) : null;
@@ -142,10 +161,12 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const currency = sale.amount?.currency || sale.original_amount?.currency || "XAF";
   const metadata = sale.custom_metadata ?? {};
 
-  const matched = await findIntent(metadata.intent_id, email);
+  // Offre : intention de la fiche modèle (identifiant transmis à Chariow, sinon même email dans les 48 h).
+  const matched = offre ? await findPlanIntent(metadata.intent_id, email) : await findIntent(metadata.intent_id, email);
   // Widget Snap : aucune donnée ne relie la vente au navigateur. On rattache, pour les
   // statistiques uniquement, le dernier clic « acheter » non attribué (jamais pour afficher un code).
-  const attributionOnly = matched ? null : await findRecentAnonymousIntent();
+  const attributionOnly = matched || offre ? null : await findRecentAnonymousIntent();
+  const plan = offre && matched?.planSlug ? await db.query.plans.findFirst({ where: eq(schema.plans.slug, matched.planSlug) }) : null;
   const intent = matched ?? attributionOnly;
   const visitor = intent?.visitorId
     ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) })
@@ -156,7 +177,9 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const nextStatus = existing?.status === "completed" ? "completed" : status;
   const values = {
     productId,
-    productName: payload.product?.name || "Catalogue Premium",
+    productName: offre
+      ? `Plan et devis${plan ? ` ${plan.code}` : ""} + Catalogue Premium offert (${offre.id})`
+      : payload.product?.name || "Catalogue Premium",
     status: nextStatus,
     amount,
     currency,
@@ -201,7 +224,8 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
         source: "webhook",
         utmSource: values.utmSource,
         utmCampaign: values.utmCampaign,
-        startSequence: true,
+        // Relances du Catalogue Premium seul : pas pour une offre avec catalogue offert (autre prix, autre message).
+        startSequence: !offre,
       }).catch((error) => console.error("CRM prospects : enregistrement impossible", error));
     }
     return "recorded";
@@ -235,6 +259,8 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const { member, code } = granted;
 
   await db.update(schema.sales).set({ memberId: member.id }).where(eq(schema.sales.id, saleRow.id));
+  // Offre : le modèle acheté attend le membre dans « Fiches PDF », hors quota de téléchargements.
+  if (plan) await recordPurchasedPlan({ memberId: member.id, planSlug: plan.slug, planCode: plan.code, saleId: sale.id! });
 
   if (intent) {
     await db
@@ -274,13 +300,50 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
     }
   }
 
-  const mail = accessCodeEmail({ name, email, code });
+  const mail = accessCodeEmail(plan ? { name, email, code, kind: "offre", plan: { code: plan.code, name: plan.name } } : { name, email, code });
   await sendEmail({ to: email, ...mail, template: "access_code", memberId: member.id });
+
+  // Offre : fiche CRM du modèle, comme un achat de plan et devis (suivi vers les plans complets).
+  let leadId: string | undefined;
+  if (plan) {
+    leadId = randomId();
+    await db.insert(schema.leads).values({
+      id: leadId,
+      name: name || email,
+      phone: values.phone,
+      email,
+      country: values.country,
+      planId: plan.id,
+      planLabel: plan.code,
+      channel: "site",
+      stage: "demande",
+      projectDetails: `${PLAN_PAID_NOTE} Offre ${offre!.id} : Catalogue Premium offert.`,
+      catalogueCredit: 0,
+      nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      utmSource: values.utmSource,
+      utmCampaign: values.utmCampaign,
+    });
+    await db.insert(schema.leadActivities).values({
+      id: randomId(),
+      leadId,
+      kind: "payment",
+      body: `Plan et devis du modèle ${plan.code} + Catalogue Premium offert payé (${amount.toLocaleString("fr-FR")} ${currency}, offre ${offre!.id}, ${PROVIDER_LABEL[provider].toLowerCase()} ${sale.id}). Accès Premium ouvert, modèle ajouté à ses fiches PDF.`,
+      author: "site",
+    });
+  } else if (offre) {
+    // Modèle inconnu (email différent de celui saisi sur la fiche) : l'accès est ouvert, le modèle reste à identifier.
+    const notifyMissing = getEnv().ADMIN_NOTIFY_EMAIL;
+    if (notifyMissing) {
+      const subject = `Offre ${offre.id} payée, modèle à identifier : ${name || email}`;
+      const body = `Email : ${email}\nVente ${PROVIDER_LABEL[provider]} : ${sale.id}\nL'accès Premium est ouvert. Demandez au client quel modèle il a choisi.`;
+      await sendEmail({ to: notifyMissing, subject, template: "admin_sale", text: `${subject}\n${body}`, html: `<p><strong>${subject}</strong></p><p>${body.replace(/\n/g, "<br>")}</p>` });
+    }
+  }
 
   const notify = getEnv().ADMIN_NOTIFY_EMAIL;
   if (notify) {
     const adminMail = adminSaleEmail({ email, name, amount, product: values.productName });
-    await sendEmail({ to: notify, ...adminMail, template: "admin_sale" });
+    await sendEmail({ to: notify, ...adminMail, template: "admin_sale", ...(leadId ? { leadId } : {}) });
   }
 
   return "access_granted";

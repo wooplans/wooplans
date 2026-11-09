@@ -15,14 +15,17 @@ import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
 import { UPSELL_CTA_ID, isUpsellCode } from "@/lib/upsell";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
+import { resolveOffre } from "@/lib/offres";
 
-type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string; provider?: string };
+type Body = { slug?: string; name?: string; email?: string; phone?: string; countryCode?: string; discountCode?: string; provider?: string; offre?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Achat du plan et devis d'un modèle : enregistre l'intention (modèle choisi, visiteur, email)
  * puis renvoie l'URL de paiement (Chariow ou Wajub). Le modèle est relu à la confirmation du paiement.
+ * Offre active (src/config/offres.json, selon la pub ou le pays) : paiement du produit Chariow de l'offre
+ * (plan et devis + Catalogue Premium offert), qui ouvre l'Espace Premium avec ce modèle dans « Fiches PDF ».
  */
 export async function POST(request: NextRequest) {
   const env = getEnv();
@@ -45,6 +48,8 @@ export async function POST(request: NextRequest) {
   if (!(await rateLimit(`plan-devis:${clientIp(request.headers)}`, 15, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
   }
+  // Même règle que l'affichage de la fiche : offre du lien de la pub (envoyée par le bouton), sinon du pays.
+  const offre = resolveOffre(body.offre, request.headers.get("cf-ipcountry"));
 
   const db = getDb();
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
     email,
     ctaId,
     planSlug: plan.slug,
+    offer: offre?.id ?? null,
     metaContext: metaBrowser ? JSON.stringify(metaBrowser) : null,
   });
   if (visitorId) {
@@ -73,14 +79,15 @@ export async function POST(request: NextRequest) {
   }
 
   const visitor = visitorId ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, visitorId) }) : null;
-  const metadata: Record<string, string> = { cta_id: ctaId, plan_slug: plan.slug, plan_code: plan.code };
+  const metadata: Record<string, string> = { cta_id: ctaId, plan_slug: plan.slug, plan_code: plan.code, ...(offre ? { offre: offre.id } : {}) };
   if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
   if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
 
   const [firstName, ...rest] = name.split(" ");
   // Retour sur le site d'où vient l'acheteur (le site public, ou l'aperçu pendant les essais).
   // Les codes promo sont ceux de Chariow : un achat avec code passe toujours par Chariow.
-  const provider = discountCode ? "chariow" : paymentProvider(body.provider || request.cookies.get(PAY_COOKIE)?.value);
+  // Offres avec catalogue : produits Chariow uniquement (Wajub ne connaît que le prix du plan et devis seul).
+  const provider = discountCode || offre ? "chariow" : paymentProvider(body.provider || request.cookies.get(PAY_COOKIE)?.value);
   const checkout =
     provider === "wajub"
       ? await createWajubCheckout({
@@ -92,7 +99,7 @@ export async function POST(request: NextRequest) {
           metadata: { ...metadata, country: countryCode },
         }).then((r) => ("error" in r ? r : { url: r.url, mode: "wajub" as const }))
       : await createChariowCheckout({
-          productId,
+          productId: offre?.chariowProductId ?? productId,
           customer: { email, firstName, lastName: rest.join(" "), phoneNumber: phone, countryCode },
           intentId,
           redirectUrl: `${request.nextUrl.origin}/merci?i=${intentId}`,
@@ -115,7 +122,7 @@ export async function POST(request: NextRequest) {
         content_name: `Plan et devis ${plan.code}`,
         content_ids: [plan.code],
         content_type: "product",
-        value: projectStartPrice(),
+        value: offre?.price ?? projectStartPrice(),
         currency: "XAF",
       },
     });

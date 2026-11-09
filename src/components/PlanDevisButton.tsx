@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import projet from "@/config/projet.json";
-import { planDevisPrice, useVisitorCountry } from "@/components/LocalPrice";
+import { offrePrice, planDevisPrice, useOffre, useVisitorCountry } from "@/components/LocalPrice";
 import { formatLocalAmount } from "@/lib/local-price";
 import { FUNNEL_EVENTS } from "@/lib/behavior";
 import { pixelTrack } from "@/lib/pixel";
@@ -44,12 +44,14 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   // Pays du visiteur (la page est en cache, partagée entre pays) : présélectionne l'indicatif tant que le
   // visiteur n'a pas choisi lui-même, et fixe le prix local affiché (celui du paiement Chariow).
   const visitorCountry = useVisitorCountry();
-  const local = planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
+  // Offre « plan et devis + Catalogue Premium offert » (selon la pub ou le pays) : son prix remplace celui du plan seul.
+  const offre = useOffre();
+  const local = offre ? offrePrice(offre) : planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [promoOpen, setPromoOpen] = useState(false);
   // Offre aux clients : code mémorisé (lien reçu par email ou WhatsApp) et coordonnées du premier achat.
   const promo = usePromoCode();
-  const promoPrice = promo ? upsellPrice(local) : null;
+  const promoPrice = promo && !offre ? upsellPrice(local) : null;
   const [buyer, setBuyer] = useState<Buyer | null>(null);
   // Paiement direct en cours (client déjà payé sur cet appareil).
   const [direct, setDirect] = useState(false);
@@ -61,7 +63,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const touched = useRef<string[]>([]);
   const submitted = useRef(false);
   const track = (event: string, properties: Record<string, unknown> = {}) =>
-    phCapture(event, { cta_id: ctaId, plan: plan.slug, offer: "plan_devis", ...properties });
+    phCapture(event, { cta_id: ctaId, plan: plan.slug, offer: offre ? `catalogue_offert_${offre.id}` : "plan_devis", ...properties });
 
   useEffect(() => {
     if (open) dialog.current?.showModal();
@@ -150,7 +152,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
     const response = await fetch("/api/plan-devis", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, slug: plan.slug, provider }),
+      body: JSON.stringify({ ...data, slug: plan.slug, provider, offre: offre?.id }),
     }).catch(() => null);
     const body = (await response?.json().catch(() => null)) as { url?: string; mode?: string; error?: string; metaEventId?: string | null } | null;
     if (!response?.ok || !body?.url) {
@@ -170,9 +172,9 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
     }
     // Aucune saisie transmise : seulement l'étape franchie et le modèle.
     submitted.current = true;
-    phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
+    phCapture(FUNNEL_EVENTS.checkoutOpen, { cta_id: ctaId, mode: "redirect", plan: plan.slug, offer: offre ? `catalogue_offert_${offre.id}` : "plan_devis", provider: body.mode === "wajub" ? "wajub" : "chariow" });
     // Pixel Meta : paiement réellement créé ; même event_id que l'API de conversion (un seul évènement compté).
-    pixelTrack("InitiateCheckout", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.code], content_type: "product", value: projet.price, currency: "XAF" }, body.metaEventId);
+    pixelTrack("InitiateCheckout", { content_name: `Plan et devis ${plan.code}`, content_ids: [plan.code], content_type: "product", value: offre?.price ?? projet.price, currency: "XAF" }, body.metaEventId);
     rememberBuyer({ name: data.name, email: data.email, phone: data.phone, countryCode: data.countryCode });
     const url = body.url;
     setTimeout(() => {
@@ -227,7 +229,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           className="grid gap-4 p-5 text-left sm:p-6"
         >
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
-            <p className="eyebrow">Plan et devis</p>
+            <p className="eyebrow">{offre ? "Plan et devis + Catalogue Premium offert" : "Plan et devis"}</p>
             <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
             {promoPrice ? (
               <>
@@ -285,7 +287,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               placeholder="vous@exemple.com"
               className="input"
             />
-            <p className="mt-1 text-xs text-muted">Le document vous y est envoyé.</p>
+            <p className="mt-1 text-xs text-muted">{offre ? "Votre code d'accès à l'Espace Premium vous y est envoyé." : "Le document vous y est envoyé."}</p>
           </div>
           <div>
             <label className="label" htmlFor={`pd-phone-${plan.slug}`}>Téléphone (WhatsApp)</label>

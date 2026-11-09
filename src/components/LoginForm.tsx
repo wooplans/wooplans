@@ -13,7 +13,7 @@ function takeCodeFromHash() {
   return code?.trim().toUpperCase().slice(0, 12) || "";
 }
 
-export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
+export function LoginForm({ defaultEmail = "", next = "/espace-premium" }: { defaultEmail?: string; next?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "forgot">("login");
   const [pending, setPending] = useState(false);
@@ -38,7 +38,7 @@ export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
     setPending(false);
     if (mode === "login") {
       if (res?.ok) {
-        router.push("/espace-premium");
+        router.push(next);
         router.refresh();
         return;
       }

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
@@ -9,13 +9,34 @@ import { rateLimit } from "@/lib/rate-limit";
 /** Quota de fiches PDF d'un membre (voir pdf-quota-rules). `slug` = fiche demandée, ou null pour l'affichage. */
 export async function getPdfQuota(memberId: string, slug: string | null = null) {
   const rows = await getDb()
-    .select({ planSlug: schema.pdfDownloads.planSlug, createdAt: schema.pdfDownloads.createdAt })
+    .select({ planSlug: schema.pdfDownloads.planSlug, createdAt: schema.pdfDownloads.createdAt, markId: schema.pdfDownloads.markId })
     .from(schema.pdfDownloads)
     .where(eq(schema.pdfDownloads.memberId, memberId))
     .orderBy(desc(schema.pdfDownloads.createdAt))
     .limit(2000);
   const limits = quotaLimits(getEnv() as unknown as Record<string, string | undefined>);
-  return { ...evaluatePdfQuota(rows, slug, limits), limits };
+  const status = evaluatePdfQuota(
+    rows.map((r) => ({ planSlug: r.planSlug, createdAt: r.createdAt, purchased: r.markId.startsWith(PURCHASE_MARK) })),
+    slug,
+    limits,
+  );
+  const purchasedSlugs = new Set(rows.filter((r) => r.markId.startsWith(PURCHASE_MARK)).map((r) => r.planSlug));
+  return { ...status, limits, purchasedSlugs };
+}
+
+/** Ligne « modèle payé » (offre avec catalogue offert) : marque achat:<vente>, ce n'est pas un téléchargement. */
+const PURCHASE_MARK = "achat:";
+
+/** Offre « plan et devis + Catalogue Premium offert » payée : le modèle rejoint les fiches PDF du membre. Idempotent. */
+export async function recordPurchasedPlan(input: { memberId: string; planSlug: string; planCode: string; saleId: string }) {
+  const markId = `${PURCHASE_MARK}${input.saleId}`;
+  const existing = await getDb().query.pdfDownloads.findFirst({
+    where: and(eq(schema.pdfDownloads.memberId, input.memberId), eq(schema.pdfDownloads.markId, markId)),
+  });
+  if (existing) return;
+  await getDb()
+    .insert(schema.pdfDownloads)
+    .values({ id: randomId(), memberId: input.memberId, planSlug: input.planSlug, planCode: input.planCode, markId });
 }
 
 export async function recordPdfDownload(input: { memberId: string; planSlug: string; planCode: string; markId: string; ip?: string | null; country?: string | null }) {

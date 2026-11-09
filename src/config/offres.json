@@ -1,0 +1,8 @@
+{
+  "default": "39k",
+  "offres": [
+    { "id": "39k", "price": 39000, "anchor": null, "chariowProductId": "", "countries": ["CI"] },
+    { "id": "29k", "price": 29000, "anchor": null, "chariowProductId": "", "countries": ["GN"] },
+    { "id": "19k", "price": 19000, "anchor": null, "chariowProductId": "", "countries": ["CM"] }
+  ]
+}
