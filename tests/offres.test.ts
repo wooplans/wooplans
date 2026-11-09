@@ -38,3 +38,12 @@ test("produits Chariow reconnus : offres actives seulement", () => {
   assert.equal(ids.get("prd_29")?.price, 29000);
   assert.equal(offresEnabled(cfg), true);
 });
+
+test("configuration réelle : pays de chaque offre, 19k seulement par lien", async () => {
+  const { default: real } = await import("../src/config/offres.json", { with: { type: "json" } });
+  const cfg = real as OffresConfig;
+  for (const c of ["GN", "CI", "SN", "FR", "US"]) assert.equal(resolveOffre(null, c, cfg)?.id, "39k", c);
+  for (const c of ["CM", "GA", "CD", "TG", "BJ", "ML"]) assert.equal(resolveOffre(null, c, cfg)?.id, "29k", c);
+  assert.equal(resolveOffre("19k", "CI", cfg)?.id, "19k");
+  assert.ok(cfg.offres.every((o) => !o.countries.some((c) => cfg.offres.some((x) => x !== o && x.countries.includes(c)))), "pays en double");
+});

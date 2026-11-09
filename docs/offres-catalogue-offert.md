@@ -10,11 +10,11 @@ Fichier `src/config/offres.json` :
 
 | Offre | Prix | Produit Chariow | Pays (sans lien de pub) |
 |---|---|---|---|
-| `39k` | 39 000 FCFA | prd_rhaso5i5 (CP 39K) | CI |
-| `29k` | 29 000 FCFA | prd_uso1ketx (CP 29K) | GN |
-| `19k` | 19 000 FCFA | prd_ytnf02e2 (CP 19K) | CM |
+| `39k` | 39 000 FCFA | prd_rhaso5i5 (CP 39K) | Guinée, Côte d'Ivoire, Sénégal, et le reste du monde (offre par défaut) |
+| `29k` | 29 000 FCFA | prd_uso1ketx (CP 29K) | Reste de l'Afrique de l'Ouest (BJ, BF, CV, GM, GH, GW, LR, ML, MR, NE, NG, SL, TG) et Afrique centrale (CM, GA, CG, CD, CF, TD, GQ, ST, BI, RW, AO) |
+| `19k` | 19 000 FCFA | prd_ytnf02e2 (CP 19K) | Aucun : offre spéciale, seulement par lien `?offre=19k` |
 
-- `default` : offre des pays absents des listes (39k).
+- `default` : offre des pays absents des listes (39k, « reste du monde »).
 - `anchor` : prix barré facultatif (null = pas de prix barré).
 - Une offre **sans produit Chariow est inactive** : ses visiteurs gardent l'ancien plan et devis seul (14 900),
   sans bonus annoncé. Rien ne change sur le site tant qu'aucun produit n'est renseigné.
