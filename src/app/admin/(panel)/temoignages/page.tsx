@@ -50,8 +50,8 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
   return (
     <>
       <PageTitle
-        title="Avis clients"
-        subtitle="Demandez un avis par WhatsApp : le client ouvre une page courte, écoute votre message et vous laisse un vocal en suivant 3 questions."
+        title="Témoignages clients"
+        subtitle="Demandez un témoignage par WhatsApp (bouton par client) : il ouvre une page courte, écoute votre message et vous envoie une courte vidéo ou un vocal en suivant 4 questions. Les emails après achat le demandent aussi (J+1 et J+17)."
         actions={<Link href="/temoignage" target="_blank" className="btn-ghost py-2">Voir la page ↗</Link>}
       />
 
@@ -81,7 +81,7 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
         <h2 className="font-semibold">Demander sur WhatsApp</h2>
         <p className="mb-3 mt-1 text-sm text-muted">
           Le bouton ouvre WhatsApp avec un message prérempli au prénom du client. Les clients les plus actifs (fiches PDF, connexions récentes) sont en tête.
-          Relance proposée après {TESTIMONIAL_RELAUNCH_DAYS} jours (2 relances au plus). Les avis arrivent en vocal dans votre WhatsApp.
+          Relance proposée après {TESTIMONIAL_RELAUNCH_DAYS} jours (2 relances au plus). Les témoignages (vidéo ou vocal) arrivent dans votre WhatsApp : marquez-les « reçu » ici pour arrêter les relances.
         </p>
         <div className="mb-3 flex flex-wrap gap-1 rounded-full border border-outline bg-surface p-1 text-sm sm:w-fit">
           {VIEWS.map((v) => (

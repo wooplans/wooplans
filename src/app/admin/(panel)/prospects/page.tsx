@@ -8,6 +8,8 @@ import { formatFcfa } from "@/lib/plans";
 import { automatedEmailAllowance } from "@/lib/email-budget";
 import { getProspectSettings } from "@/lib/prospects";
 import { OFFRE_DELAYS_HOURS, WELCOME_DELAYS_HOURS } from "@/lib/prospect-sequence";
+import { offreById } from "@/lib/offres";
+import { siteUrl } from "@/lib/env";
 import { importProspects, markLost, saveSettings, startOne, startRecent, stopOne } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -107,6 +109,22 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
     if (pay.status === "paid") paymentByEmail.set(pay.email, "paid");
     else if (!paymentByEmail.has(pay.email)) paymentByEmail.set(pay.email, "started");
   }
+  // Offres tentées sur les fiches (plan et devis + catalogue offert) : modèle et prix, pour le message WhatsApp.
+  const fetchedEmails = fetched.map((p) => p.email);
+  const offerIntents = fetchedEmails.length
+    ? await db
+        .select({ email: schema.checkoutIntents.email, offer: schema.checkoutIntents.offer, slug: schema.checkoutIntents.planSlug, code: schema.plans.code, name: schema.plans.name })
+        .from(schema.checkoutIntents)
+        .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+        .where(and(inArray(schema.checkoutIntents.email, fetchedEmails), sql`${schema.checkoutIntents.offer} is not null`))
+        .orderBy(desc(schema.checkoutIntents.createdAt))
+    : [];
+  const offerByEmail = new Map<string, { slug: string; code: string; name: string; offreId: string; price: number }>();
+  for (const o of offerIntents) {
+    const offre = offreById(o.offer);
+    if (!o.email || !o.slug || !offre || offerByEmail.has(o.email)) continue;
+    offerByEmail.set(o.email, { slug: o.slug, code: o.code ?? o.slug, name: o.name ?? o.slug, offreId: offre.id, price: offre.price });
+  }
   const rows =
     vue === "non_telecharges" ? fetched.filter((p) => (giftsByEmail.get(p.email) ?? []).every((g) => g.downloads === 0)) : fetched;
   // Efficacité du cadeau : parmi les adresses qui l'ont demandé, combien ont téléchargé le document ?
@@ -194,9 +212,15 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
           const firstName = (p.name || "").split(" ")[0];
           const models = giftsByEmail.get(p.email) ?? [];
           const total = totals[p.sequenceKind];
+          const tried = offerByEmail.get(p.email);
+          const resume = tried ? siteUrl(`/catalogue/${tried.slug}?offre=${tried.offreId}&achat=1&utm_source=whatsapp&utm_medium=relance&utm_campaign=offre_whatsapp`) : "";
           const wa = whatsappUrl(
             p.phone,
-            p.lastEvent === "failed"
+            tried
+              ? p.lastEvent === "failed"
+                ? `Bonjour ${firstName}, ici WOOPLANS. Votre paiement du plan et devis de la ${tried.name} n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider à le finaliser. Pour réessayer : ${resume}\n\nAvec votre plan et devis, le Catalogue Premium vous est offert : tous nos autres modèles pour comparer avant de choisir.`
+                : `Bonjour ${firstName}, ici WOOPLANS. Vous avez commencé à commander le plan et devis de la ${tried.name} (${formatFcfa(tried.price)}, avec le Catalogue Premium offert). Avez-vous une question avant de finaliser ? Je suis là pour vous aider.\n\nPour reprendre : ${resume}`
+              : p.lastEvent === "failed"
               ? `Bonjour ${firstName}, ici WOOPLANS. Votre paiement du Catalogue Premium n'a pas abouti : puis-je vous aider à le finaliser ?`
               : p.lastEvent === "gift"
                 ? `Bonjour ${firstName}, ici WOOPLANS. Avez-vous bien reçu le plan et devis${models[0] ? ` du modèle ${models[0].code}` : ""} ? Avez-vous des questions sur ce modèle ?`
@@ -225,6 +249,12 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
                 </p>
               </td>
               <td className="px-4 py-2.5 text-xs">
+                {tried ? (
+                  <p className="mb-1">
+                    <Link href={`/catalogue/${tried.slug}`} target="_blank" className="font-semibold text-primary hover:underline">{tried.code}</Link>{" "}
+                    <Badge tone="info">Offre {tried.offreId}</Badge>
+                  </p>
+                ) : null}
                 {models.length ? (
                   <ul className="space-y-1">
                     {models.map((m) => (
@@ -236,7 +266,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
                       </li>
                     ))}
                   </ul>
-                ) : (
+                ) : tried ? null : (
                   <span className="text-muted">—</span>
                 )}
                 {paymentByEmail.get(p.email) === "paid" ? (

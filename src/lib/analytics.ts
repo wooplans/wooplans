@@ -1,14 +1,31 @@
-import { and, count, countDistinct, desc, eq, gte, isNotNull, isNull, lt, ne, notInArray, or, sql, sum, type SQL } from "drizzle-orm";
+import { and, count, countDistinct, desc, eq, gte, inArray, isNotNull, isNull, lt, ne, notInArray, or, sql, sum, type SQL } from "drizzle-orm";
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { getDb, schema } from "@/db";
 import { channelOf, type Channel } from "@/lib/attribution";
 import { TZ_OFFSET_MS, localDay, type Range } from "@/lib/date-range";
 import { getEnv } from "@/lib/env";
 import { OWNER_EMAILS } from "@/lib/owner-emails";
+import { OFFRES, offreProductIds } from "@/lib/offres";
 
 /** Produit Chariow « Plan et devis » : ses ventes sont comptées à part du Catalogue Premium. */
 function planDevisProductId() {
   return getEnv().CHARIOW_PLAN_PRODUCT_ID || "__aucun__";
+}
+
+/**
+ * Ventes depuis les fiches modèles : offres « plan et devis + Catalogue Premium offert » (39k, 29k, 19k) et ancien
+ * plan et devis seul (14 900). Le reste des ventes (page de vente /catalogue-premium) est le Catalogue Premium seul.
+ */
+function ficheProductIds() {
+  return [planDevisProductId(), ...offreProductIds().keys()];
+}
+
+/** Libellé d'une vente selon son produit : offre (39k…), plan et devis seul, ou catalogue seul. */
+export function saleOffer(productId: string): { key: string; label: string; fiche: boolean } {
+  const offre = offreProductIds().get(productId);
+  if (offre) return { key: offre.id, label: `Plan et devis + catalogue offert · ${offre.price.toLocaleString("fr-FR")} FCFA`, fiche: true };
+  if (productId === planDevisProductId()) return { key: "plan_seul", label: "Plan et devis seul (ancienne offre)", fiche: true };
+  return { key: "catalogue", label: "Catalogue Premium seul (page de vente)", fiche: false };
 }
 
 /** Vue de la page de vente actuelle (marqueur « b » gardé de l'ancien test A/B, pour la continuité des chiffres). */
@@ -36,15 +53,16 @@ export async function getFunnelKpis(range: Range) {
     .groupBy(ev.type);
   const byType = Object.fromEntries(eventCounts.map((e) => [e.type, e]));
 
-  const planId = planDevisProductId();
+  const fiche = ficheProductIds();
   const [catalogue] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
+    .where(and(eq(schema.sales.status, "completed"), notInArray(schema.sales.productId, fiche), within(schema.sales.occurredAt, range), notOwnerSale()));
+  // Ventes des fiches modèles : offres avec catalogue offert et ancien plan et devis seul.
   const [planDevis] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
+    .where(and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, fiche), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [checkouts] = await db
     .select({ n: count() })
     .from(schema.checkoutIntents)
@@ -61,7 +79,7 @@ export async function getFunnelKpis(range: Range) {
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "abandoned"), ne(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale()));
+    .where(and(eq(schema.sales.status, "abandoned"), notInArray(schema.sales.productId, fiche), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [customPlans] = await db
     .select({ revenue: sum(schema.leadPayments.amount) })
     .from(schema.leadPayments)
@@ -214,7 +232,7 @@ export async function getDailySeries(range: Range) {
   const sales = await db
     .select({ day: bucket(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), ne(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range), notOwnerSale()))
+    .where(and(eq(schema.sales.status, "completed"), within(schema.sales.occurredAt, range), notOwnerSale()))
     .groupBy(bucket(schema.sales.occurredAt));
 
   const keys = hourly
@@ -275,9 +293,8 @@ export async function getPlanDevisStats(range: Range) {
   const ev = schema.events;
   const ci = schema.checkoutIntents;
   const v = schema.visitors;
-  const planId = planDevisProductId();
   const paidIntents = and(isNotNull(ci.planSlug), ne(ci.status, "gift"), within(ci.createdAt, range), notOwnerIntent())!;
-  const planSales = and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planId), within(schema.sales.occurredAt, range), notOwnerSale())!;
+  const planSales = and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, ficheProductIds()), within(schema.sales.occurredAt, range), notOwnerSale())!;
   const buyClick = sql`(${ev.ctaId} like 'plan_projet%')`;
 
   const [views, clicks, previews, intents, sales, byModelViews, byModelIntents, byCampaignViews, byCampaignIntents, recent] = await Promise.all([
@@ -373,7 +390,7 @@ export async function getPlanDevisSeries(range: Range) {
     db
       .select({ day: bucket(schema.sales.occurredAt), n: count(), revenue: sum(schema.sales.amount) })
       .from(schema.sales)
-      .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, planDevisProductId()), within(schema.sales.occurredAt, range), notOwnerSale()))
+      .where(and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, ficheProductIds()), within(schema.sales.occurredAt, range), notOwnerSale()))
       .groupBy(bucket(schema.sales.occurredAt)),
   ]);
   const keys = hourly
@@ -385,4 +402,80 @@ export async function getPlanDevisSeries(range: Range) {
     purchases: sales.find((r) => r.day === day)?.n ?? 0,
     revenue: Number(sales.find((r) => r.day === day)?.revenue ?? 0),
   }));
+}
+
+/**
+ * Vue d'ensemble des ventes : par offre (39k, 29k, 19k, plan et devis seul, catalogue seul), par fiche modèle qui a
+ * déclenché l'achat (modèle choisi avant le paiement) et dernières ventes. Essais du propriétaire exclus.
+ */
+export async function getSalesOverview(range: Range) {
+  const db = getDb();
+  const s = schema.sales;
+  const ci = schema.checkoutIntents;
+  const done = and(eq(s.status, "completed"), within(s.occurredAt, range), notOwnerSale())!;
+  const [byProduct, byModel, pending, recent] = await Promise.all([
+    db.select({ productId: s.productId, n: count(), revenue: sum(s.amount) }).from(s).where(done).groupBy(s.productId),
+    db
+      .select({ slug: ci.planSlug, productId: s.productId, n: count(), revenue: sum(s.amount) })
+      .from(s)
+      .innerJoin(ci, eq(ci.id, s.intentId))
+      .where(and(done, isNotNull(ci.planSlug)))
+      .groupBy(ci.planSlug, s.productId),
+    db
+      .select({ status: s.status, n: count() })
+      .from(s)
+      .where(and(inArray(s.status, ["abandoned", "failed"]), within(s.occurredAt, range), notOwnerSale()))
+      .groupBy(s.status),
+    db
+      .select({
+        id: s.id,
+        productId: s.productId,
+        amount: s.amount,
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        country: s.country,
+        occurredAt: s.occurredAt,
+        source: s.source,
+        utmCampaign: s.utmCampaign,
+        slug: ci.planSlug,
+      })
+      .from(s)
+      .leftJoin(ci, eq(ci.id, s.intentId))
+      .where(done)
+      .orderBy(desc(s.occurredAt))
+      .limit(25),
+  ]);
+
+  // Offres dans l'ordre de la configuration, puis plan et devis seul, puis catalogue seul.
+  const order = [...OFFRES.offres.map((o) => o.id), "plan_seul", "catalogue"];
+  const offers = new Map<string, { key: string; label: string; fiche: boolean; n: number; revenue: number }>();
+  for (const r of byProduct) {
+    const o = saleOffer(r.productId);
+    const row = offers.get(o.key) ?? { ...o, n: 0, revenue: 0 };
+    row.n += r.n;
+    row.revenue += Number(r.revenue ?? 0);
+    offers.set(o.key, row);
+  }
+  const models = new Map<string, { slug: string; n: number; revenue: number; offers: Record<string, number> }>();
+  for (const r of byModel) {
+    if (!r.slug) continue;
+    const m = models.get(r.slug) ?? { slug: r.slug, n: 0, revenue: 0, offers: {} };
+    m.n += r.n;
+    m.revenue += Number(r.revenue ?? 0);
+    const key = saleOffer(r.productId).key;
+    m.offers[key] = (m.offers[key] ?? 0) + r.n;
+    models.set(r.slug, m);
+  }
+  const total = [...offers.values()].reduce((t, o) => ({ n: t.n + o.n, revenue: t.revenue + o.revenue }), { n: 0, revenue: 0 });
+  const fiche = [...offers.values()].filter((o) => o.fiche).reduce((t, o) => ({ n: t.n + o.n, revenue: t.revenue + o.revenue }), { n: 0, revenue: 0 });
+  return {
+    total,
+    fiche,
+    offers: [...offers.values()].sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key)),
+    models: [...models.values()].sort((a, b) => b.revenue - a.revenue || b.n - a.n).slice(0, 15),
+    abandoned: pending.find((p) => p.status === "abandoned")?.n ?? 0,
+    failed: pending.find((p) => p.status === "failed")?.n ?? 0,
+    recent: recent.map((r) => ({ ...r, offer: saleOffer(r.productId) })),
+  };
 }

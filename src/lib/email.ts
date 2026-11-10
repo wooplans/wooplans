@@ -561,28 +561,52 @@ export function welcomeEmail(p: {
 /* ─────────────── Après l'achat : demande d'avis puis rappels espacés ─────────────── */
 
 /** Email n° `step` après l'achat : avis en priorité (page /temoignage, vocal WhatsApp), puis rappel des plans complets. */
-export function afterSaleEmail(p: { step: number; name?: string | null; testimonialUrl: string; loginUrl: string; customPlansUrl: string; unsubscribe: string }) {
+/**
+ * Emails après l'achat (J+1, J+17, J+47, J+107) : témoignage en courte vidéo ou en vocal WhatsApp en priorité,
+ * puis le catalogue pour comparer et les plans complets. planCode : modèle acheté sur sa fiche (offre avec catalogue offert).
+ */
+export function afterSaleEmail(p: {
+  step: number;
+  name?: string | null;
+  planCode?: string | null;
+  testimonialUrl: string;
+  loginUrl: string;
+  customPlansUrl: string;
+  unsubscribe: string;
+}) {
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const plan = p.planCode ? `le plan et devis du modèle ${p.planCode}` : "votre accès WOOPLANS";
   const subjects = [
-    "2 minutes pour nous donner votre avis ?",
-    "Votre avis peut aider une famille à se lancer",
+    p.planCode ? `Votre plan ${p.planCode} : 2 minutes pour un témoignage ?` : "2 minutes pour un témoignage ?",
+    "Votre témoignage peut aider une famille à se lancer",
     "Avez-vous trouvé votre modèle ?",
     "Où en est votre projet de construction ?",
   ];
   const subject = subjects[Math.min(p.step, subjects.length - 1)];
   const intro = [
-    "Merci encore pour votre confiance. Beaucoup de familles hésitent à payer en ligne : votre avis sur le Catalogue Premium les aidera à se lancer. Un simple vocal suffit, en répondant à quelques questions.",
-    "Il y a deux semaines, nous vous avons demandé votre avis sur le Catalogue Premium. Si vous avez 2 minutes, il compte vraiment pour nous et pour les familles qui hésitent encore.",
-    "Nous espérons que le Catalogue Premium vous aide à choisir votre plan. Si un modèle vous plaît, nos architectes l'adaptent à votre terrain (plans complets), à prix fixe. Et si vous avez 2 minutes, votre avis nous aide beaucoup.",
-    "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, à prix fixe. Votre avis reste aussi le bienvenu.",
+    `Merci encore pour votre confiance. Vous avez reçu ${plan}, avec le Catalogue Premium pour comparer tous nos modèles. Beaucoup de familles hésitent à payer en ligne : votre témoignage les aidera à se lancer. Une courte vidéo filmée avec votre téléphone, ou un simple vocal WhatsApp, suffit.`,
+    "Il y a deux semaines, nous vous avons demandé votre témoignage. Si vous avez 2 minutes, une courte vidéo ou un vocal WhatsApp compte vraiment pour nous et pour les familles qui hésitent encore.",
+    `Avez-vous comparé ${p.planCode ? `le modèle ${p.planCode}` : "vos modèles préférés"} avec les autres du Catalogue Premium ? Quand vous aurez choisi, nos architectes adaptent le modèle à votre terrain et réalisent les plans complets, à prix fixe. Et si vous avez 2 minutes, votre témoignage nous aide beaucoup.`,
+    "Votre espace Premium est toujours là, avec les nouveaux modèles ajoutés. Quand vous serez prêt à construire, nos architectes réalisent les plans complets du modèle choisi, à prix fixe. Votre témoignage reste aussi le bienvenu.",
   ][Math.min(p.step, 3)];
-  const extra =
-    p.step >= 2
-      ? `<p style="font-size:14px"><a href="${p.loginUrl}" style="color:#0F5B59;font-weight:600">Ouvrir mon espace Premium</a> · <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">Les plans complets</a></p>`
+  const how =
+    p.step <= 1
+      ? `<p style="color:#6B7280;font-size:14px">Dites simplement votre prénom et votre ville, le plan que vous avez choisi, ce que vous en pensez, et si vous le recommanderiez. 30 secondes à 2 minutes, c'est parfait.</p>`
       : "";
-  const body = `<p>${hello}</p><p>${escape(intro)}</p>${button(p.testimonialUrl, "Donner mon avis")}${extra}`;
-  const text = [helloText, intro, `Donner mon avis : ${p.testimonialUrl}`, p.step >= 2 ? `Mon espace : ${p.loginUrl}\nLes plans complets : ${p.customPlansUrl}` : "", `Ne plus recevoir ces emails : ${p.unsubscribe}`]
+  const extra =
+    p.step >= 1
+      ? `<p style="font-size:14px"><a href="${p.loginUrl}" style="color:#0F5B59;font-weight:600">Ouvrir mon espace Premium</a>${p.step >= 2 ? ` · <a href="${p.customPlansUrl}" style="color:#0F5B59;font-weight:600">Les plans complets</a>` : ""}</p>`
+      : "";
+  const body = `<p>${hello}</p><p>${escape(intro)}</p>${button(p.testimonialUrl, "Envoyer mon témoignage")}${how}${extra}`;
+  const text = [
+    helloText,
+    intro,
+    `Envoyer mon témoignage (vidéo ou vocal WhatsApp) : ${p.testimonialUrl}`,
+    p.step >= 1 ? `Mon espace : ${p.loginUrl}` : "",
+    p.step >= 2 ? `Les plans complets : ${p.customPlansUrl}` : "",
+    `Ne plus recevoir ces emails : ${p.unsubscribe}`,
+  ]
     .filter(Boolean)
     .join("\n\n");
   return { subject, html: layout(subject, body, p.unsubscribe), text };

@@ -382,7 +382,8 @@ export async function runProspectSequence(now = new Date()) {
     // Séquence « offre » : email du modèle et du prix de l'offre que la personne a tenté d'acheter.
     if (p.sequenceKind === "offre") {
       const info = await offreInfo(p.email);
-      const r = relanceDiscount();
+      // Réduction du dernier email : offres 39k et 29k seulement (src/config/offres.json « relance.offres »).
+      const r = info ? relanceDiscount(info.offreId) : null;
       const last = offreKindForStep(step) === "last";
       const discount = last && r && info ? r : null;
       const unsubscribe = await unsubscribeUrl(p.email, "prospects");

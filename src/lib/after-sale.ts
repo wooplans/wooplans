@@ -5,10 +5,11 @@ import { automatedEmailAllowance } from "@/lib/email-budget";
 import { siteUrl } from "@/lib/env";
 import { afterSaleNextAt } from "@/lib/after-sale-schedule";
 import { optedOutEmails, unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
+import { purchasedPlanCode } from "@/lib/pdf-quota";
 
 /**
- * Passage du cron (toutes les 15 min) : emails après l'achat du Catalogue Premium (avis en priorité,
- * puis rappels espacés). S'arrête dès que l'avis est marqué reçu dans l'admin, à la désinscription ou à la révocation.
+ * Passage du cron (toutes les 15 min) : emails après l'achat (plan et devis d'une fiche avec catalogue offert, ou
+ * catalogue seul) : témoignage en vidéo ou en vocal en priorité, puis rappels espacés et plans complets. S'arrête dès que l'avis est marqué reçu dans l'admin, à la désinscription ou à la révocation.
  */
 export async function runAfterSale(now = new Date()) {
   const result = { sent: 0, failed: 0, stopped: 0 };
@@ -41,6 +42,7 @@ export async function runAfterSale(now = new Date()) {
     const mail = afterSaleEmail({
       step,
       name: m.name || null,
+      planCode: await purchasedPlanCode(m.id),
       testimonialUrl: siteUrl(`/temoignage?utm_source=email&utm_medium=apres_achat&utm_campaign=${campaign}`),
       loginUrl: siteUrl(`/connexion?email=${encodeURIComponent(m.email)}&utm_source=email&utm_medium=apres_achat&utm_campaign=${campaign}`),
       customPlansUrl: siteUrl(`/plans-personnalises?utm_source=email&utm_medium=apres_achat&utm_campaign=${campaign}`),

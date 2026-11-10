@@ -16,7 +16,7 @@
 <meta name="theme-color" content="#0F5B59">
 <link rel="icon" href="/favicon.png">
 <!-- JSONLD -->
-<link rel="preload" as="image" href="/assets/digital/vsl-poster-v2.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/digital/catalogue-premium-mockup-540.webp" fetchpriority="high">
 <style>
 :root{--teal:#0F5B59;--teal-dk:#0A3F3E;--teal-xdk:#072E2D;--orange:#F08A2E;--orange-dk:#D4731A;--red:#C75B3A;--gold:#E7C36C;--dark:#1E2933;--gray:#6B7280;--line:#E5E9EE;--bg:#F5F7F9;--white:#fff;--r:16px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -59,7 +59,7 @@ section{padding:56px 0}
 .rating{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13.5px;color:rgba(255,255,255,.85);margin-bottom:20px}
 .rating b{color:#fff}
 /* VSL 4:5 : hauteur limitée sur mobile pour garder le bouton d'achat visible sans défiler. */
-.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:4/5;width:min(100%,calc(44svh*.8),440px);margin-inline:auto;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:clamp(10px,2svh,20px);cursor:pointer}
+.vsl{position:relative;border-radius:var(--r);overflow:hidden;aspect-ratio:4/5;width:min(100%,calc(44svh*.8),440px);margin-inline:auto;background:#06302F;box-shadow:0 18px 50px rgba(0,0,0,.35);margin-bottom:clamp(10px,2svh,20px)}
 .vsl img,.vsl video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 /* Plein écran : vidéo entière, sans recadrage (l'écran du téléphone est plus allongé que le 4:5). */
 .vsl video:fullscreen{object-fit:contain;background:#000}
@@ -311,10 +311,8 @@ footer a{color:rgba(255,255,255,.7)}
         <p class="sub"><b><span data-wp-count>Nos</span> plans</b> de villas et duplex avec rendus 3D, plans cotés et devis détaillés. Sur votre téléphone.</p>
       </div>
       <div>
-        <div class="vsl" id="vsl" onclick="playVsl()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playVsl()}" role="button" tabindex="0" aria-label="Regarder la vidéo de présentation avec le son">
-          <img src="/assets/digital/vsl-poster-v2.webp" alt="Vidéo de présentation du Catalogue Premium WOOPLANS : plans de villas et duplex avec leurs devis" width="540" height="675" fetchpriority="high">
-          <video muted playsinline loop preload="none" aria-hidden="true" data-preview="/videos/vsl-catalogue-premium-apercu-v2.mp4?v={{PRIX_XAF}}"></video>
-          <div class="play"><i></i>Voir la présentation</div>
+        <div class="vsl" id="vsl">
+          <img src="/assets/digital/catalogue-premium-mockup-540.webp" srcset="/assets/digital/catalogue-premium-mockup-540.webp 540w, /assets/digital/catalogue-premium-mockup.webp 1024w" sizes="(min-width: 900px) 440px, 90vw" alt="Catalogue Premium WOOPLANS : plus de 100 plans de villas et duplex avec devis, sur téléphone et en fiches PDF" width="540" height="675" fetchpriority="high">
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><s>{{PRIX_AVANT}} FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span><span class="badge">–{{REMISE}} %</span></div>
@@ -365,12 +363,12 @@ footer a{color:rgba(255,255,255,.7)}
         <p>Comparez plans, devis et budgets dans le Catalogue Premium (<b>{{PRIX_NBSP}}&nbsp;FCFA</b>).</p>
       </div></li>
       <li><span class="dot">2</span><div>
-        <h3>Obtenez vos plans complets</h3>
-        <p>Adaptés à votre terrain, à prix fixe&nbsp;: <b>{{PRIX_VILLA_NBSP}}&nbsp;FCFA</b> (villa) ou <b>{{PRIX_DUPLEX_NBSP}}&nbsp;FCFA</b> (duplex). <a href="#contenu-plans">Ce qui est livré</a></p>
+        <h3>Téléchargez sa fiche PDF</h3>
+        <p>Plan coté, pièces et surfaces, devis poste par poste : à montrer à votre famille et à votre entrepreneur.</p>
       </div></li>
       <li><span class="dot">3</span><div>
-        <h3>Lancez votre chantier</h3>
-        <p>Plans complets et devis en main, avec votre entrepreneur.</p>
+        <h3>Lancez votre projet</h3>
+        <p>Budget en main, vous comparez les offres des entrepreneurs et vous avancez sans mauvaise surprise.</p>
       </div></li>
     </ol>
   </div>
@@ -448,7 +446,6 @@ footer a{color:rgba(255,255,255,.7)}
         <li>Rendus 3D, plans cotés, pièces et surfaces</li>
         <li>Devis estimatif détaillé poste par poste</li>
         <li>Fiches PDF de chaque modèle en téléchargement</li>
-        <li><span><b>Déduit de vos plans complets</b> si vous les commandez ensuite</span></li>
         <li class="bonus"><span><b>Bonus :</b> les nouveaux modèles ajoutés automatiquement, sans rien payer de plus</span></li>
       </ul>
       <p class="promo-note">Ce prix promotionnel peut revenir à {{PRIX_AVANT_NBSP}}&nbsp;FCFA à tout moment. Votre accès, lui, reste acquis à vie.</p>
@@ -465,7 +462,7 @@ footer a{color:rgba(255,255,255,.7)}
     <div class="faq">
       <details><summary>Comment vais-je recevoir le catalogue ?</summary><p>Immédiatement après le paiement : votre code d'accès personnel s'affiche à l'écran et vous est envoyé par e-mail. Avec votre e-mail et ce code, vous ouvrez votre espace Premium sur téléphone ou ordinateur, à vie.</p></details>
       <details><summary>Puis-je télécharger les plans ?</summary><p>Oui. Chaque modèle se télécharge en fiche PDF : rendus 3D, plans cotés, pièces et surfaces, devis par poste. Elle vous sert à comparer et choisir en famille. Pour construire, vous commanderez ensuite les plans complets de votre maison (voir la question suivante).</p></details>
-      <details id="construire"><summary>Peut-on construire avec les plans du catalogue ?</summary><p>Les plans du catalogue servent à choisir votre modèle et à connaître son budget : nous ne recommandons pas de construire avec. Nous vous recommandons de commander les plans complets : nos architectes modifient le modèle selon vos besoins et l'adaptent à votre terrain. Ils ont un prix fixe : {{PRIX_VILLA_NBSP}}&nbsp;FCFA pour une villa, {{PRIX_DUPLEX_NBSP}}&nbsp;FCFA pour un duplex. <a href="#parcours">Voir le parcours en 3 étapes</a></p></details>
+      <details id="construire"><summary>Peut-on construire avec les plans du catalogue ?</summary><p>Les plans du catalogue servent à choisir votre modèle et à connaître son budget : nous ne recommandons pas de construire avec. Nous vous recommandons de commander les plans complets : nos architectes modifient le modèle selon vos besoins et l'adaptent à votre terrain. Ils ont un prix fixe : {{PRIX_VILLA_NBSP}}&nbsp;FCFA pour une villa, {{PRIX_DUPLEX_NBSP}}&nbsp;FCFA pour un duplex.</p></details>
       <details id="contenu-plans"><summary>Que contiennent les plans complets ?</summary><p>10 plans, livrés pour une villa comme pour un duplex :</p><ol>
         <li><b>Plans de fondation</b> : principe d'implantation des fondations</li>
         <li><b>Plans de distribution</b> : espaces, pièces, circulations, ouvertures, dimensions</li>
@@ -583,25 +580,6 @@ document.addEventListener('click',function(e){
   for(var j=0;j<vids.length;j++)io.observe(vids[j]);
 })();
 
-/* VSL : aperçu muet de 6 s en boucle (≈ 0,5 Mo, sauf économie de données ou animations réduites),
-   puis vidéo complète avec le son au toucher. Les autres vidéos ne démarrent qu'au clic. */
-(function(){
-  var box=document.getElementById('vsl'),v=box&&box.querySelector('video[data-preview]');
-  if(!v)return;
-  var c=navigator.connection;
-  if((c&&c.saveData)||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
-  v.addEventListener('playing',function(){box.classList.add('previewing');},{once:true});
-  v.src=v.getAttribute('data-preview');
-  v.play().catch(function(){});
-})();
-function playVsl(){
-  var box=document.getElementById('vsl');
-  if(box.querySelector('video[controls]'))return;
-  box.classList.remove('previewing');
-  box.innerHTML='<video src="/videos/vsl-catalogue-premium-v2.mp4?v={{PRIX_XAF}}" poster="/assets/digital/vsl-poster-v2.webp" controls playsinline autoplay></video>';
-  wpTrack('cta_click','vsl_play@b');wpCapture('video_play',{video:'vsl'});
-  trackVideo(box.querySelector('video'),'vsl');
-}
 /* Visionnage : attente avant la première image (vidéo lourde, réseau mobile), paliers 25/50/75/100 %,
    erreurs, et départ de la page avant le démarrage. */
 function trackVideo(v,name){

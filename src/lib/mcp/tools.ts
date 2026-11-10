@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, like, lte, ne, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
-import { getChannelBreakdown, getFunnelKpis } from "@/lib/analytics";
+import { getChannelBreakdown, getFunnelKpis, getSalesOverview } from "@/lib/analytics";
 import { parseRange } from "@/lib/date-range";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
@@ -226,7 +226,7 @@ export const TOOLS: McpTool[] = [
   {
     name: "get_business_summary",
     description:
-      "Résumé du tunnel de vente sur une période ou un jour précis (heure du Cameroun) : visiteurs, visiteurs de la page de vente, paiements démarrés, achats et revenu du Catalogue Premium, achats et revenu du plan et devis d'un modèle (planDevis*, comptés à part), encaissements des plans complets, membres, demandes, et performance par canal (Facebook, YouTube, Google, Direct…, paid = publicité) puis par campagne UTM (tous produits).",
+      "Résumé du tunnel de vente sur une période ou un jour précis (heure du Cameroun) : visiteurs, visiteurs de la page de vente, paiements démarrés, achats et revenu du Catalogue Premium, achats et revenu des fiches modèles (planDevis* : offres « plan et devis + catalogue offert » et plan et devis seul), ventes par offre (sales_by_offer) et par fiche qui a déclenché l'achat (sales_by_model), encaissements des plans complets, membres, demandes, et performance par canal (Facebook, YouTube, Google, Direct…, paid = publicité) puis par campagne UTM (tous produits).",
     inputSchema: obj({
       days: { type: "number", enum: [7, 30, 90, 365], description: "Période en jours (défaut 30)" },
       day: str("Jour précis AAAA-MM-JJ (prioritaire sur days)"),
@@ -234,11 +234,13 @@ export const TOOLS: McpTool[] = [
     annotations: { readOnlyHint: true },
     handler: async (args) => {
       const range = parseRange({ jour: asString(args.day), jours: asNumber(args.days) });
-      const [kpis, breakdown] = await Promise.all([getFunnelKpis(range), getChannelBreakdown(range)]);
+      const [kpis, breakdown, overview] = await Promise.all([getFunnelKpis(range), getChannelBreakdown(range), getSalesOverview(range)]);
       return {
         ...(range.day ? { day: range.day } : { period_days: range.days }),
         currency: "XAF",
         ...kpis,
+        sales_by_offer: overview.offers.map((o) => ({ offer: o.key, label: o.label, purchases: o.n, revenue: o.revenue })),
+        sales_by_model: overview.models.map((m) => ({ plan: m.slug, purchases: m.n, revenue: m.revenue, by_offer: m.offers })),
         channels: breakdown.channels,
         campaigns: breakdown.campaigns.slice(0, 15),
         untracked_sales: breakdown.untracked,

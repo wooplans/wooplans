@@ -9,15 +9,15 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Votre avis",
-  description: "2 minutes pour laisser votre avis sur le Catalogue Premium, en vocal sur WhatsApp.",
+  description: "2 minutes pour nous envoyer votre témoignage WOOPLANS : une courte vidéo ou un vocal sur WhatsApp.",
   robots: { index: false, follow: false },
   openGraph: {
     title: "Votre avis compte pour WOOPLANS 🙏",
-    description: "2 minutes, un simple vocal sur WhatsApp.",
+    description: "2 minutes : une courte vidéo ou un vocal sur WhatsApp.",
   },
 };
 
-/** Page envoyée par WhatsApp : message audio de WOOPLANS, 3 questions, et un bouton pour laisser un vocal. */
+/** Page envoyée par WhatsApp et par email : message audio de WOOPLANS, 4 questions, et un bouton pour envoyer une vidéo ou un vocal. */
 export default async function TestimonialPage() {
   const introAudio = await getSetting<string>("testimonial_intro_audio", "");
   const whatsapp = whatsappLink(TESTIMONIAL_WHATSAPP_TEXT);
@@ -30,8 +30,8 @@ export default async function TestimonialPage() {
       </header>
       <main className="mx-auto w-full max-w-md flex-1 space-y-6 px-4 pb-16 pt-6">
         <section>
-          <h1 className="text-[26px] font-extrabold leading-tight">2 minutes pour nous donner votre avis ? 🙏</h1>
-          <p className="mt-2 text-foreground/80">Un simple vocal WhatsApp suffit. Beaucoup de familles hésitent encore à payer en ligne : votre expérience les aidera à se lancer en confiance.</p>
+          <h1 className="text-[26px] font-extrabold leading-tight">2 minutes pour votre témoignage ? 🙏</h1>
+          <p className="mt-2 text-foreground/80">Une courte vidéo filmée avec votre téléphone, ou un simple vocal WhatsApp : comme vous préférez. Beaucoup de familles hésitent encore à payer en ligne : votre expérience les aidera à se lancer en confiance.</p>
         </section>
 
         {introAudio ? (
@@ -42,7 +42,7 @@ export default async function TestimonialPage() {
         ) : null}
 
         <section className="card p-5">
-          <h2 className="text-base font-bold">Dans votre vocal, dites-nous simplement :</h2>
+          <h2 className="text-base font-bold">Dans votre vidéo ou votre vocal, dites simplement :</h2>
           <ol className="mt-3 space-y-2">
             {TESTIMONIAL_QUESTIONS.map((q, i) => (
               <li key={q} className="flex gap-3">
@@ -51,7 +51,7 @@ export default async function TestimonialPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-sm text-muted">Parlez naturellement, comme à un ami. 1 à 2 minutes, c&apos;est parfait.</p>
+          <p className="mt-3 text-sm text-muted">Parlez naturellement, comme à un ami. 30 secondes à 2 minutes, c&apos;est parfait. En vidéo : téléphone à la verticale, face à la lumière, dans un endroit calme.</p>
         </section>
 
         <section className="space-y-2">
@@ -62,9 +62,9 @@ export default async function TestimonialPage() {
             data-cta="temoignage_whatsapp"
             className="btn w-full bg-[#25D366] py-4 text-base text-white shadow-lg shadow-black/10"
           >
-            🎙️ Laisser mon avis sur WhatsApp
+            🎥 Envoyer mon témoignage sur WhatsApp
           </a>
-          <p className="text-center text-sm text-muted">WhatsApp s&apos;ouvre : envoyez le message, puis maintenez le micro 🎙️ pour enregistrer.</p>
+          <p className="text-center text-sm text-muted">WhatsApp s&apos;ouvre : envoyez le message, puis filmez votre vidéo (📷) ou maintenez le micro 🎙️ pour un vocal.</p>
         </section>
 
         <section>

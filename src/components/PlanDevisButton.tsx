@@ -9,6 +9,7 @@ import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 import { currentPromoCode, paidBuyer, rememberBuyer, storedBuyer, usePromoCode, type Buyer } from "@/components/PromoCode";
 import { upsellPrice } from "@/lib/upsell";
+import { relanceDiscount } from "@/lib/offres";
 import { PriceCountdown } from "@/components/PriceCountdown";
 import { PHONE_COUNTRIES, phoneCountryOrDefault, type PhoneCountryCode as CountryCode } from "@/lib/phone";
 
@@ -48,7 +49,8 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const offre = useOffre();
   // Lien du dernier email de relance (?remise=…) : prix réduit affiché, code rempli dans le formulaire.
   const remiseCode = useRemise();
-  const remise = offre ? remiseCode : null;
+  // Pas de réduction sur l'offre spéciale 19k : le code n'est ni affiché ni rempli.
+  const remise = offre && relanceDiscount(offre.id) ? remiseCode : null;
   const local = offre ? offrePrice(offre, remise) : planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
   const [promoOpen, setPromoOpen] = useState(false);

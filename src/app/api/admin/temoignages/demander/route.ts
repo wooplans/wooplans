@@ -4,6 +4,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { siteUrl } from "@/lib/env";
 import { whatsappUrl } from "@/lib/phone";
 import { testimonialRequestMessage } from "@/lib/testimonial-request";
+import { purchasedPlanCode } from "@/lib/pdf-quota";
 
 /**
  * Bouton « Demander sur WhatsApp » de l'admin : note la demande sur le membre, puis ouvre WhatsApp
@@ -14,7 +15,12 @@ export async function GET(request: Request) {
   const memberId = new URL(request.url).searchParams.get("member") || "";
   const member = await getDb().query.members.findFirst({ where: eq(schema.members.id, memberId) });
   if (!member) return new Response("Membre introuvable", { status: 404 });
-  const message = testimonialRequestMessage({ name: member.name, link: siteUrl("/temoignage"), relaunch: member.testimonialAskCount > 0 });
+  const message = testimonialRequestMessage({
+    name: member.name,
+    link: siteUrl("/temoignage?utm_source=whatsapp&utm_medium=temoignage"),
+    relaunch: member.testimonialAskCount > 0,
+    planCode: await purchasedPlanCode(member.id),
+  });
   const url = whatsappUrl(member.phone, message);
   if (!url) return new Response("Numéro WhatsApp inexploitable pour ce membre", { status: 400 });
   await getDb()

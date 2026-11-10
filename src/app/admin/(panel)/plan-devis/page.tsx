@@ -18,7 +18,7 @@ const STATUS = {
   gift: { label: "Offert", tone: "info" },
 } as const;
 
-/** Tableau de bord du plan et devis d'un modèle (14 900 FCFA), à part du Catalogue Premium. */
+/** Détail des ventes des fiches modèles : offres « plan et devis + catalogue offert » et plan et devis seul. */
 export default async function PlanDevisDashboard({
   searchParams,
 }: {
@@ -48,7 +48,7 @@ export default async function PlanDevisDashboard({
   return (
     <>
       <PageTitle
-        title="Plan et devis"
+        title="Fiches : détail des ventes"
         subtitle={`${periodLabel} · heure du Cameroun · essais du propriétaire et plans offerts exclus des paiements`}
         actions={
           <>

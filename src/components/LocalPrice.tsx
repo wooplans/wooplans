@@ -120,8 +120,8 @@ export function useRemise(): { code: string; discount: number } | null {
 
 /** Prix d'une offre, au format des prix locaux (FCFA : Chariow convertit au paiement). */
 export function offrePrice(offre: Offre, remise?: { discount: number } | null): LocalPrice {
-  // Réduction du dernier email de relance : nouveau prix, ancien prix barré.
-  if (remise) return { amount: Math.max(0, offre.price - remise.discount), currency: "FCFA", anchor: offre.price };
+  // Réduction du dernier email de relance (offres éligibles seulement : 39k et 29k) : nouveau prix, ancien prix barré.
+  if (remise && relanceDiscount(offre.id)) return { amount: Math.max(0, offre.price - remise.discount), currency: "FCFA", anchor: offre.price };
   return { amount: offre.price, currency: "FCFA", anchor: offre.anchor && offre.anchor > offre.price ? offre.anchor : null };
 }
 
