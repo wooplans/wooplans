@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, like } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { sendEmail } from "@/lib/email";
@@ -71,4 +71,14 @@ export async function alertQuotaReached(member: { id: string; email: string; nam
     template: "admin_pdf_quota",
     memberId: member.id,
   });
+}
+
+/** Dernier modèle payé par ce membre sur une fiche (offre avec catalogue offert), ou null. */
+export async function purchasedPlanCode(memberId: string): Promise<string | null> {
+  const row = await getDb().query.pdfDownloads.findFirst({
+    where: and(eq(schema.pdfDownloads.memberId, memberId), like(schema.pdfDownloads.markId, `${PURCHASE_MARK}%`)),
+    orderBy: desc(schema.pdfDownloads.createdAt),
+    columns: { planCode: true },
+  });
+  return row?.planCode ?? null;
 }

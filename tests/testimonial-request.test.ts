@@ -13,6 +13,8 @@ test("message WhatsApp : prénom, 2 minutes, lien, variante de relance", () => {
   const first = testimonialRequestMessage({ name: "Mme Awa Diallo", link: "https://x.test/temoignage" });
   assert.match(first, /^Bonjour Awa/);
   assert.match(first, /2 petites minutes/);
+  assert.match(first, /vidéo/);
+  assert.match(testimonialRequestMessage({ name: "Awa", link: "L", planCode: "V4-005" }), /modèle V4-005/);
   assert.ok(first.includes("https://x.test/temoignage"));
   const relaunch = testimonialRequestMessage({ name: "", link: "L", relaunch: true });
   assert.match(relaunch, /^Bonjour 👋, petit rappel/);

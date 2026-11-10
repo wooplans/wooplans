@@ -13,7 +13,7 @@ const NAV = [
   { href: "/admin/ventes", label: "Ventes" },
   { href: "/admin/prospects", label: "Prospects" },
   { href: "/admin/membres", label: "Membres" },
-  { href: "/admin/temoignages", label: "Avis clients" },
+  { href: "/admin/temoignages", label: "Témoignages" },
   { href: "/admin/plans", label: "Modèles" },
   { href: "/admin/emails", label: "Emails" },
   { href: "/admin/liens", label: "Liens UTM" },
