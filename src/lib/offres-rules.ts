@@ -13,8 +13,11 @@
  * Module sans dépendance (testé par node --test) ; la configuration est lue par src/lib/offres.ts.
  */
 export type Offre = { id: string; price: number; anchor: number | null; chariowProductId: string; countries: string[] };
-/** relance : code Chariow (réduction fixe en FCFA) proposé dans le dernier email de relance des paiements abandonnés. */
-export type OffresConfig = { default: string; offres: Offre[]; relance?: { code: string; discount: number } };
+/**
+ * relance : code Chariow (réduction fixe en FCFA) proposé dans le dernier email de relance des paiements abandonnés,
+ * pour les offres listées dans « offres » seulement (39k et 29k : pas de réduction sur l'offre spéciale 19k).
+ */
+export type OffresConfig = { default: string; offres: Offre[]; relance?: { code: string; discount: number; offres?: string[] } };
 
 /** Paramètre d'URL des pubs (?offre=29k) et clé de mémorisation dans le navigateur. */
 export const OFFRE_PARAM = "offre";
@@ -55,9 +58,12 @@ export function offresEnabled(cfg: OffresConfig): boolean {
 }
 
 /** Code de réduction du dernier email de relance, s'il est configuré. */
-export function relanceDiscount(cfg: OffresConfig): { code: string; discount: number } | null {
+export function relanceDiscount(cfg: OffresConfig, offreId?: string | null): { code: string; discount: number } | null {
   const r = cfg.relance;
-  return r && r.code.trim() && r.discount > 0 ? { code: r.code.trim().toUpperCase(), discount: r.discount } : null;
+  if (!r || !r.code.trim() || r.discount <= 0) return null;
+  // Réduction réservée aux offres listées (sans liste : toutes les offres).
+  if (offreId !== undefined && r.offres && !r.offres.includes((offreId || "").toLowerCase())) return null;
+  return { code: r.code.trim().toUpperCase(), discount: r.discount };
 }
 
 export function isRelanceCode(code: string | null | undefined, cfg: OffresConfig) {
