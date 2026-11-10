@@ -63,7 +63,7 @@ test("page de vente générée : une seule page (ancienne B), alignée sur le li
   assert.match(b, /name="discountCode"/);
 });
 
-test("page de vente : la feuille de route et la FAQ reprennent les prix fixes des plans complets, sans déduction", () => {
+test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans déduction", () => {
   const b = readFileSync(PAGE, "utf8").replace(/&nbsp;/g, " ");
   const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
   const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
@@ -72,8 +72,11 @@ test("page de vente : la feuille de route et la FAQ reprennent les prix fixes de
   for (const price of prices) {
     assert.match(b, new RegExp(fcfa(price)));
   }
-  assert.doesNotMatch(b, /déduit|revient à 0|revient donc à 0/);
+  assert.doesNotMatch(b, /déduit|revient à 0|revient donc à 0/i);
   assert.match(b, /id="parcours"/);
+  // Plans complets : seulement dans la FAQ (décision du 10 nov. 2026), ni dans le parcours ni dans l'offre.
+  const faq = b.indexOf('<div class="faq">');
+  assert.doesNotMatch(b.slice(b.indexOf("<body"), faq), /plans? complets?/i);
   assert.match(b, /Peut-on construire avec les plans du catalogue/);
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
@@ -94,17 +97,13 @@ test("page de vente : témoignages juste après le héro, puis le parcours", () 
   assert.doesNotMatch(b.slice(hero, temo).replace(/<section $/, ""), /<section/);
 });
 
-test("page de vente : VSL 4:5 avec aperçu muet, compteur sous la vidéo et suivi des visionnages", () => {
+test("page de vente : visuel 4:5 du catalogue à la place de la vidéo, compteur juste dessous", () => {
   const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
-  // ?v=<prix> : nouvelle adresse (cache navigateur et CDN) quand le prix, donc la vidéo, change.
-  assert.match(b, new RegExp(`data-preview="/videos/vsl-catalogue-premium-apercu-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, new RegExp(`src="/videos/vsl-catalogue-premium-v2\\.mp4\\?v=${CATALOGUE_PRICE}"`));
-  assert.match(b, /\/assets\/digital\/vsl-poster-v2\.webp/);
-  assert.doesNotMatch(b, /vsl-cpbook-digital|hero-video-poster/);
-  // La voix off renvoie au compteur « juste sous la vidéo ».
+  assert.match(b, /\/assets\/digital\/catalogue-premium-mockup-540\.webp/);
+  // Plus de vidéo de présentation : elle annonçait l'ancien prix et la déduction sur les plans complets.
+  assert.doesNotMatch(b, /vsl-catalogue-premium|vsl-poster|playVsl/);
   assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);
-  assert.match(b, /trackVideo\(box\.querySelector\('video'\),'vsl'\)/);
 });
 
 test("pages de vente : prix du catalogue repris de src/config/catalogue.json, sans repère restant", () => {
