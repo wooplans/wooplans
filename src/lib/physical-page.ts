@@ -158,7 +158,7 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\s/g, " ")} FC
 /** Message WhatsApp prérempli : tout ce qu'il faut pour confirmer la commande sans reposer de question. */
 export function orderMessage(order: PhysicalOrder, ref: string, price: number, models: number) {
   const qty = order.quantity > 1 ? `${order.quantity} exemplaires` : "1 exemplaire";
-  const delivery = isDeliveryCity(order.city) ? "livraison gratuite" : "expédition";
+  const delivery = isDeliveryCity(order.city) ? "livraison gratuite, paiement à la livraison" : "expédition gratuite";
   return [
     `Bonjour WOOPLANS 👋`,
     `Je souhaite commander le *Catalogue Premium imprimé* (${models} plans de maisons avec devis) à ${fcfa(price)}.`,

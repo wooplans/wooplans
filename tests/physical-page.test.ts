@@ -57,12 +57,12 @@ test("message WhatsApp : produit, prix, référence, livraison, projet", () => {
   assert.match(msg, /Catalogue Premium imprimé\* \(100 plans/);
   assert.match(msg, /49 000 FCFA/);
   assert.match(msg, /Commande CP-AB12C/);
-  assert.match(msg, /Yaoundé, Bastos \(livraison gratuite\)/);
+  assert.match(msg, /Yaoundé, Bastos \(livraison gratuite, paiement à la livraison\)/);
   assert.match(msg, /une villa \(plain-pied\), construction d'ici 1 an/);
   assert.doesNotMatch(msg, /expire/);
   const other = parseOrder({ name: "Awa", phone: "699000000", city: "autre", otherCity: "Garoua", district: "Centre", project: "duplex", timing: "info" });
   assert.ok("order" in other);
-  assert.match(orderMessage(other.order, "CP-X", 49000, 100), /Garoua, Centre \(expédition\)/);
+  assert.match(orderMessage(other.order, "CP-X", 49000, 100), /Garoua, Centre \(expédition gratuite\)/);
   assert.match(shortOrderMessage(other.order, "CP-X", 49000), /commande CP-X/);
   assert.match(whatsappUrl(msg, "237694327885"), /^https:\/\/wa\.me\/237694327885\?text=Bonjour/);
 });

@@ -127,7 +127,7 @@ ld = [
         "@context": "https://schema.org",
         "@type": "Product",
         "name": "Catalogue Premium WOOPLANS imprimé",
-        "description": f"Livre imprimé de {MODELS} plans de villas et duplex avec rendus 3D, plans cotés et devis détaillés par poste. Livraison gratuite à Yaoundé et Douala.",
+        "description": f"Livre imprimé de {MODELS} plans de villas et duplex avec rendus 3D, plans cotés et devis détaillés par poste. Livraison gratuite dans tout le Cameroun, paiement à la livraison à Yaoundé et Douala.",
         "image": "https://www.wooplans.com" + poster,
         "brand": {"@type": "Brand", "name": "WOOPLANS"},
         "offers": {"@type": "Offer", "url": "https://www.wooplans.com/catalogue-physique", "price": str(PRICE), "priceCurrency": "XAF",

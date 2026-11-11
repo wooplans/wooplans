@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   const message = orderMessage(order, ref, physical.price, physical.models);
   const details = [
     `Commande ${ref} : Catalogue Premium imprimé × ${order.quantity} (${(physical.price * order.quantity).toLocaleString("fr-FR")} FCFA affichés)`,
-    `Livraison : ${order.city}, ${order.district}${isDeliveryCity(order.city) ? " (livraison gratuite)" : " (expédition)"}`,
+    `Livraison : ${order.city}, ${order.district}${isDeliveryCity(order.city) ? " (livraison gratuite, paiement à la livraison)" : " (expédition gratuite)"}`,
     `Projet : ${PROJECTS[order.project]}, construction ${TIMINGS[order.timing]}`,
   ].join("\n");
 
