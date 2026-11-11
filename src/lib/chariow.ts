@@ -579,6 +579,9 @@ export async function createChariowCheckout(params: {
     const response = await fetch("https://api.chariow.com/v1/checkout", {
       method: "POST",
       headers: { Authorization: `Bearer ${env.CHARIOW_API_KEY}`, "Content-Type": "application/json" },
+      // Sans délai, une réponse lente de Chariow laissait le bouton figé sur « Ouverture du paiement… » :
+      // au-delà de 8 s on bascule sur la boutique Chariow (même produit, même prix).
+      signal: AbortSignal.timeout(8000),
       body: JSON.stringify({
         product_id: productId,
         email: params.customer.email,

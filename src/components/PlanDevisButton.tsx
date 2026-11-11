@@ -158,6 +158,8 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data, slug: plan.slug, provider, offre: offre?.id }),
+      // Réseau lent (Facebook Lite, 3G) : après 25 s on affiche le message d'erreur avec « Réessayer » au lieu de rester figé.
+      signal: AbortSignal.timeout(25000),
     }).catch(() => null);
     const body = (await response?.json().catch(() => null)) as { url?: string; mode?: string; error?: string; metaEventId?: string | null } | null;
     if (!response?.ok || !body?.url) {
