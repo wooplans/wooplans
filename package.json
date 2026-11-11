@@ -23,7 +23,8 @@
     "pdf-lib": "1.17.1",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "uqr": "0.1.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
