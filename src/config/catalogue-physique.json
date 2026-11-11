@@ -1,0 +1,12 @@
+{
+  "price": 49000,
+  "models": 100,
+  "whatsapp": "237694327885",
+  "video": "",
+  "videoPoster": "",
+  "photos": [
+    { "src": "", "caption": "Le livre : couverture et tranche" },
+    { "src": "", "caption": "Un modèle en double page : rendus 3D et plan coté" },
+    { "src": "", "caption": "La page du devis, poste par poste" }
+  ]
+}

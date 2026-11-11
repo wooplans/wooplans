@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/", priority: 1 },
   { path: "/catalogue-premium", priority: 0.9 },
+  { path: "/catalogue-physique", priority: 0.7 },
   { path: "/catalogue", priority: 0.9 },
   { path: "/catalogue-villa", priority: 0.8 },
   { path: "/catalogue-duplex", priority: 0.8 },

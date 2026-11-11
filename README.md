@@ -42,6 +42,7 @@ Vidéos et publications ──▶ Vitrine (/ , /catalogue, /catalogue/<modèle>)
 | `/` | Accueil, modèles mis en avant, étapes, témoignages, FAQ |
 | `/catalogue`, `/catalogue-villa`, `/catalogue-duplex`, `/catalogue/<slug>` | Catalogue public filtrable et fiches (rendus, chambres, niveaux, surfaces, dimensions, budget indicatif) |
 | `/catalogue-premium` | Page de vente (HTML statique `public/lp/catalogue-premium.html`, généré par `scripts/build-sales-page.py` depuis `scripts/sales-page.source.html`) |
+| `/catalogue-physique` | Page de vente du Catalogue Premium **imprimé** (Cameroun, 49 000 FCFA, livraison gratuite, paiement à la livraison à Yaoundé et Douala, commande sur WhatsApp) : HTML statique `public/lp/catalogue-physique.html` généré par `scripts/build-physical-page.py` (réglages : `src/config/catalogue-physique.json` : prix, nombre de plans, vidéo, photos). Formulaire → `/api/commande-catalogue` (fiche CRM « Catalogue imprimé ») → WhatsApp prérempli ; QR code sur ordinateur |
 | `/merci` | Confirmation de paiement et affichage du code d'accès |
 | `/connexion` | Connexion membre (email + code), « code perdu » |
 | `/espace-premium/…` | Index et filtres, fiche complète, favoris, comparateur (3 modèles), fiches PDF |
