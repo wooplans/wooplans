@@ -341,6 +341,8 @@ export const prospects = sqliteTable(
     sequenceStartedAt: integer("sequence_started_at", { mode: "timestamp_ms" }),
     nextEmailAt: integer("next_email_at", { mode: "timestamp_ms" }),
     lastEmailAt: integer("last_email_at", { mode: "timestamp_ms" }),
+    /** Dernier message WhatsApp de relance marqué « envoyé » à la main depuis l'admin. */
+    whatsappSentAt: integer("whatsapp_sent_at", { mode: "timestamp_ms" }),
     convertedAt: integer("converted_at", { mode: "timestamp_ms" }),
     notes: text("notes").notNull().default(""),
     createdAt: createdAt(),
