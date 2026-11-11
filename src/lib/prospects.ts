@@ -202,6 +202,12 @@ export async function startProspectSequence(id: string) {
   return settings.enabled;
 }
 
+/** Marque le message WhatsApp de relance comme envoyé : le prospect sort de la liste « WhatsApp à envoyer ». */
+export async function markProspectWhatsappSent(id: string) {
+  const now = new Date();
+  await getDb().update(schema.prospects).set({ whatsappSentAt: now, updatedAt: now }).where(eq(schema.prospects.id, id));
+}
+
 export async function stopProspectSequence(id: string, status: "open" | "lost" = "open") {
   await getDb()
     .update(schema.prospects)

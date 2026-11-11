@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { requireAdmin } from "@/lib/auth";
 import {
   importChariowProspects,
+  markProspectWhatsappSent,
   saveProspectSettings,
   startProspectSequence,
   startSequenceForRecent,
@@ -48,6 +49,12 @@ export async function stopOne(id: string) {
 export async function markLost(id: string) {
   await requireAdmin();
   await stopProspectSequence(id, "lost");
+  revalidatePath("/admin/prospects");
+}
+
+export async function markWhatsappSent(id: string) {
+  await requireAdmin();
+  await markProspectWhatsappSent(id);
   revalidatePath("/admin/prospects");
 }
 

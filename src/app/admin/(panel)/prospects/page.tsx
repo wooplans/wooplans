@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { and, desc, eq, inArray, isNull, like, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { Badge, fmtDate, fmtDateTime, PageTitle, pct, Stat, Table } from "@/components/admin/ui";
 import { whatsappUrl } from "@/lib/phone";
@@ -10,11 +10,14 @@ import { getProspectSettings } from "@/lib/prospects";
 import { OFFRE_DELAYS_HOURS, WELCOME_DELAYS_HOURS } from "@/lib/prospect-sequence";
 import { offreById } from "@/lib/offres";
 import { siteUrl } from "@/lib/env";
-import { importProspects, markLost, saveSettings, startOne, startRecent, stopOne } from "./actions";
+import { inChunks } from "@/lib/sql-chunks";
+import { ageLabel, HOT_WINDOW_HOURS, needsWhatsapp, whatsappRelanceMessage } from "@/lib/prospect-whatsapp";
+import { importProspects, markLost, markWhatsappSent, saveSettings, startOne, startRecent, stopOne } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 const VIEWS = [
+  { id: "a_envoyer", label: "WhatsApp à envoyer" },
   { id: "ouverts", label: "À convertir" },
   { id: "non_telecharges", label: "Plan non téléchargé" },
   { id: "convertis", label: "Convertis" },
@@ -32,7 +35,7 @@ const EVENTS = {
 const SOURCES = { webhook: "Chariow (direct)", chariow_import: "Historique Chariow", site: "Site", gift: "Cadeau (fiche modèle)" } as const;
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
-  const { vue = "ouverts", q } = await searchParams;
+  const { vue = "a_envoyer", q } = await searchParams;
   const notice = (await cookies()).get("wp_notice")?.value;
   const db = getDb();
   const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
@@ -41,7 +44,16 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre" } as const;
 
   const filters: SQL[] = [];
-  if (vue === "ouverts") filters.push(eq(schema.prospects.status, "open"));
+  if (vue === "a_envoyer") {
+    // Paiements échoués ou abandonnés récents, avec un numéro, sans message WhatsApp envoyé depuis (les plus récents en premier).
+    filters.push(
+      eq(schema.prospects.status, "open"),
+      inArray(schema.prospects.lastEvent, ["failed", "abandoned"]),
+      isNotNull(schema.prospects.phone),
+      gte(schema.prospects.lastEventAt, new Date(Date.now() - HOT_WINDOW_HOURS * 3600_000)),
+      or(isNull(schema.prospects.whatsappSentAt), lt(schema.prospects.whatsappSentAt, schema.prospects.lastEventAt))!,
+    );
+  } else if (vue === "ouverts") filters.push(eq(schema.prospects.status, "open"));
   else if (vue === "convertis") filters.push(eq(schema.prospects.status, "converted"));
   else if (vue === "arretes") filters.push(inArray(schema.prospects.status, ["unsubscribed", "lost", "bounced"]));
   const term = (q || "").trim();
@@ -56,10 +68,11 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
       orderBy: desc(schema.prospects.lastEventAt),
       limit: 300,
     }),
-    db.query.prospects.findMany({ columns: { status: true, nextEmailAt: true, sequenceStartedAt: true, lastEventAt: true } }),
+    db.query.prospects.findMany({ columns: { status: true, nextEmailAt: true, sequenceStartedAt: true, lastEventAt: true, phone: true, lastEvent: true, whatsappSentAt: true } }),
   ]);
   const count = (fn: (p: (typeof all)[number]) => boolean) => all.filter(fn).length;
   const open = count((p) => p.status === "open");
+  const toSend = count((p) => needsWhatsapp(p));
   const running = count((p) => p.status === "open" && Boolean(p.nextEmailAt));
   const converted = count((p) => p.status === "converted");
   const stopped = count((p) => p.status === "unsubscribed" || p.status === "lost" || p.status === "bounced");
@@ -70,28 +83,33 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const giftEmails = fetched.filter((p) => p.source === "gift" || p.lastEvent === "gift").map((p) => p.email);
   const [gifts, payments] = giftEmails.length
     ? await Promise.all([
-        db
-          .select({
-            email: schema.checkoutIntents.email,
-            slug: schema.checkoutIntents.planSlug,
-            downloads: schema.checkoutIntents.downloads,
-            code: schema.plans.code,
-            name: schema.plans.name,
-          })
-          .from(schema.checkoutIntents)
-          .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
-          .where(and(eq(schema.checkoutIntents.status, "gift"), inArray(schema.checkoutIntents.email, giftEmails)))
-          .orderBy(desc(schema.checkoutIntents.createdAt)),
-        db
-          .select({ email: schema.checkoutIntents.email, status: schema.checkoutIntents.status })
-          .from(schema.checkoutIntents)
-          .where(
-            and(
-              isNull(schema.checkoutIntents.planSlug),
-              inArray(schema.checkoutIntents.status, ["started", "abandoned", "failed", "paid"]),
-              inArray(schema.checkoutIntents.email, giftEmails),
+        // Les listes d'adresses passent par lots : D1 refuse plus de 100 paramètres par requête.
+        inChunks(giftEmails, (emails) =>
+          db
+            .select({
+              email: schema.checkoutIntents.email,
+              slug: schema.checkoutIntents.planSlug,
+              downloads: schema.checkoutIntents.downloads,
+              code: schema.plans.code,
+              name: schema.plans.name,
+            })
+            .from(schema.checkoutIntents)
+            .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+            .where(and(eq(schema.checkoutIntents.status, "gift"), inArray(schema.checkoutIntents.email, emails)))
+            .orderBy(desc(schema.checkoutIntents.createdAt)),
+        ),
+        inChunks(giftEmails, (emails) =>
+          db
+            .select({ email: schema.checkoutIntents.email, status: schema.checkoutIntents.status })
+            .from(schema.checkoutIntents)
+            .where(
+              and(
+                isNull(schema.checkoutIntents.planSlug),
+                inArray(schema.checkoutIntents.status, ["started", "abandoned", "failed", "paid"]),
+                inArray(schema.checkoutIntents.email, emails),
+              ),
             ),
-          ),
+        ),
       ])
     : [[], []];
   const giftsByEmail = new Map<string, { slug: string; code: string; name: string; downloads: number }[]>();
@@ -111,14 +129,14 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   }
   // Offres tentées sur les fiches (plan et devis + catalogue offert) : modèle et prix, pour le message WhatsApp.
   const fetchedEmails = fetched.map((p) => p.email);
-  const offerIntents = fetchedEmails.length
-    ? await db
-        .select({ email: schema.checkoutIntents.email, offer: schema.checkoutIntents.offer, slug: schema.checkoutIntents.planSlug, code: schema.plans.code, name: schema.plans.name })
-        .from(schema.checkoutIntents)
-        .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
-        .where(and(inArray(schema.checkoutIntents.email, fetchedEmails), sql`${schema.checkoutIntents.offer} is not null`))
-        .orderBy(desc(schema.checkoutIntents.createdAt))
-    : [];
+  const offerIntents = await inChunks(fetchedEmails, (emails) =>
+    db
+      .select({ email: schema.checkoutIntents.email, offer: schema.checkoutIntents.offer, slug: schema.checkoutIntents.planSlug, code: schema.plans.code, name: schema.plans.name })
+      .from(schema.checkoutIntents)
+      .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+      .where(and(inArray(schema.checkoutIntents.email, emails), sql`${schema.checkoutIntents.offer} is not null`))
+      .orderBy(desc(schema.checkoutIntents.createdAt)),
+  );
   const offerByEmail = new Map<string, { slug: string; code: string; name: string; offreId: string; price: number }>();
   for (const o of offerIntents) {
     const offre = offreById(o.offer);
@@ -166,6 +184,7 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="À convertir" value={String(open)} hint={`${running} en cours de relance`} />
+        <Stat label="WhatsApp à envoyer" value={String(toSend)} hint={`paiements échoués ou abandonnés depuis moins de ${HOT_WINDOW_HOURS} h`} />
         <Stat label="Convertis" value={String(converted)} hint={all.length ? `${pct(converted / all.length)} des prospects` : undefined} />
         <Stat label="Jamais relancés" value={String(neverStarted.length)} hint={`dont ${recentNeverStarted} de moins de 30 jours`} />
         <Stat label="Désinscrits / perdus / rejetés" value={String(stopped)} />
@@ -216,16 +235,15 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
           const resume = tried ? siteUrl(`/catalogue/${tried.slug}?offre=${tried.offreId}&achat=1&utm_source=whatsapp&utm_medium=relance&utm_campaign=offre_whatsapp`) : "";
           const wa = whatsappUrl(
             p.phone,
-            tried
-              ? p.lastEvent === "failed"
-                ? `Bonjour ${firstName}, ici WOOPLANS. Votre paiement du plan et devis de la ${tried.name} n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider à le finaliser. Pour réessayer : ${resume}\n\nAvec votre plan et devis, le Catalogue Premium vous est offert : tous nos autres modèles pour comparer avant de choisir.`
-                : `Bonjour ${firstName}, ici WOOPLANS. Vous avez commencé à commander le plan et devis de la ${tried.name} (${formatFcfa(tried.price)}, avec le Catalogue Premium offert). Avez-vous une question avant de finaliser ? Je suis là pour vous aider.\n\nPour reprendre : ${resume}`
-              : p.lastEvent === "failed"
-              ? `Bonjour ${firstName}, ici WOOPLANS. Votre paiement du Catalogue Premium n'a pas abouti : puis-je vous aider à le finaliser ?`
-              : p.lastEvent === "gift"
-                ? `Bonjour ${firstName}, ici WOOPLANS. Avez-vous bien reçu le plan et devis${models[0] ? ` du modèle ${models[0].code}` : ""} ? Avez-vous des questions sur ce modèle ?`
-                : `Bonjour ${firstName}, ici WOOPLANS. Vous avez commencé à commander le Catalogue Premium : avez-vous rencontré un souci ? Je peux vous aider.`,
+            whatsappRelanceMessage({
+              firstName,
+              lastEvent: p.lastEvent,
+              modelCode: models[0]?.code,
+              tried: tried ? { name: tried.name, priceLabel: formatFcfa(tried.price), resume } : null,
+            }),
           );
+          const sentAfterEvent = Boolean(p.whatsappSentAt && p.whatsappSentAt.getTime() >= p.lastEventAt.getTime());
+          const toSendNow = needsWhatsapp(p);
           return (
             <tr key={p.id}>
               <td className="px-4 py-2.5">
@@ -244,9 +262,10 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
               <td className="px-4 py-2.5">
                 <Badge tone={ev.tone}>{ev.label}</Badge>
                 <p className="mt-1 text-xs text-muted">
-                  {fmtDate(p.lastEventAt)}
+                  {fmtDate(p.lastEventAt)} · {ageLabel(p.lastEventAt)}
                   {p.amount ? ` · ${formatFcfa(p.amount)}` : ""}
                 </p>
+                {sentAfterEvent ? <p className="mt-1"><Badge tone="good">WhatsApp envoyé</Badge></p> : null}
               </td>
               <td className="px-4 py-2.5 text-xs">
                 {tried ? (
@@ -307,6 +326,9 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
               <td className="px-4 py-2.5">
                 {p.status === "open" || p.status === "lost" ? (
                   <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                    {toSendNow ? (
+                      <form action={markWhatsappSent.bind(null, p.id)}><button className="text-emerald-700">WhatsApp envoyé</button></form>
+                    ) : null}
                     {p.nextEmailAt ? (
                       <form action={stopOne.bind(null, p.id)}><button className="text-secondary">Arrêter</button></form>
                     ) : (

@@ -1,0 +1,1 @@
+ALTER TABLE `prospects` ADD `whatsapp_sent_at` integer;
