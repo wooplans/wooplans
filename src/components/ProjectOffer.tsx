@@ -56,7 +56,7 @@ export function projectStartLink(plan: Props["plan"]) {
 export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
-  "Accompagnement WhatsApp : on adapte le plan à votre terrain et à vos besoins",
+  "Accompagnement WhatsApp pour adapter le plan à votre terrain",
 ];
 
 /** Nombre d'autres modèles du catalogue (« 97 autres plans et devis »), ou null si le total est inconnu. */
@@ -153,7 +153,7 @@ export function Reassurance({ className = "" }: { className?: string }) {
     <p className={`text-sm leading-snug text-foreground/75 ${className}`}>
       ⚡ Téléchargement immédiat après paiement
       <br />
-      Reçu aussi par email et sur votre WhatsApp
+      📲 Reçu aussi par email et sur votre WhatsApp
     </p>
   );
 }
