@@ -235,7 +235,7 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
           className="grid gap-4 p-5 text-left sm:p-6"
         >
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
-            <p className="eyebrow">{offre ? "Plan et devis + Catalogue Premium offert" : "Plan et devis"}</p>
+            <p className="eyebrow px-8">{offre ? "Plan et devis + Catalogue Premium" : "Plan et devis"}</p>
             <h2 id={`pd-title-${plan.slug}`} className="mt-1 text-lg font-bold">{plan.code}</h2>
             {promoPrice ? (
               <>
@@ -293,13 +293,10 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               placeholder="vous@exemple.com"
               className="input"
             />
-            <p className="mt-1 text-xs text-muted">
-              {offre ? "Votre code d'accès à l'Espace Premium vous y est envoyé." : "Le document vous y est envoyé."}{" "}
-              <strong className="font-semibold text-foreground/80">Même si votre email n&apos;est pas actif, vous recevez aussi tout sur WhatsApp.</strong>
-            </p>
+            <p className="mt-1 text-xs text-muted">Même si votre email n&apos;est pas actif, vous recevez aussi sur WhatsApp.</p>
           </div>
           <div>
-            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>WhatsApp (pour recevoir votre plan)</label>
+            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>WhatsApp</label>
             <div className="flex gap-2">
               {/* Indicatif seul à l'écran, la liste complète des pays s'ouvre au toucher. */}
               <div className="input relative flex w-auto shrink-0 items-center gap-1 pr-3 font-medium focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
