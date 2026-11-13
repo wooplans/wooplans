@@ -16,8 +16,6 @@ type Props = {
   planCount: number | null;
   /** Paiement en ligne disponible (produit Chariow configuré) ; sinon le bouton ouvre WhatsApp. */
   online: boolean;
-  /** Budget de construction indicatif du modèle (« 29 – 35 millions FCFA ») : argument de l'offre, pas un bloc à part. */
-  budget?: string | null;
   /** Nombre réel de plans et devis téléchargés (tous modèles), affiché à partir de MIN_DOWNLOADS_SHOWN. */
   downloads?: number | null;
 };
@@ -30,6 +28,7 @@ export const PAYMENT_METHODS = [
   { label: "Orange Money", className: "bg-[#ff7900] text-white" },
   { label: "MTN MoMo", className: "bg-[#ffcb05] text-[#1d2a30]" },
   { label: "Wave", className: "bg-[#1dc8ff] text-[#0b2a4a]" },
+  { label: "Moov Money", className: "bg-[#0a4ea2] text-white" },
 ];
 
 export function PaymentMethods({ className = "" }: { className?: string }) {
@@ -50,12 +49,14 @@ export function projectStartLink(plan: Props["plan"]) {
 }
 
 /**
- * Ce que l'acheteur reçoit dès le paiement (carte de la fiche) : 3 points seulement, le 3e étant le bonus
- * Catalogue Premium (BonusItem). La réduction sur d'autres plans (PROMO10) reste proposée après l'achat.
+ * Ce que l'acheteur reçoit (carte de la fiche) : 3 points, puis le bonus Catalogue Premium (BonusItem).
+ * Le 3e point répond à « et si le plan ne me convient pas ? » : l'acheteur est accompagné sur WhatsApp
+ * (les modifications et les plans complets sont payants : voir la FAQ, sans promettre de gratuité ici).
  */
 export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
+  "Accompagnement WhatsApp : on adapte le plan à votre terrain et à vos besoins",
 ];
 
 /** Nombre d'autres modèles du catalogue (« 97 autres plans et devis »), ou null si le total est inconnu. */
@@ -96,7 +97,7 @@ function Checklist({ items }: { items: string[] }) {
  * télécharger plusieurs avant de se décider), puis obtenir les plans complets personnalisés.
  * Les détails (contenu, plans complets, catalogue) sont dans la FAQ du modèle : voir projectFaq.
  */
-export function ProjectOffer({ plan, planCount, online, budget, downloads }: Props) {
+export function ProjectOffer({ plan, planCount, online, downloads }: Props) {
   // Plan et devis offert (src/config/projet.json) : carte du cadeau, avec un lien vers le Catalogue Premium.
   if (planGiftEnabled()) return <GiftOffer plan={plan} planCount={planCount} />;
   const shownDownloads = downloads && downloads >= MIN_DOWNLOADS_SHOWN ? downloads : null;
@@ -105,12 +106,7 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
       <h2 className="text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
         Recevez le plan et le devis <span className="text-primary">du modèle {plan.code}</span>
       </h2>
-      {/* Le budget sert l'offre : le gros chiffre de la construction justifie le petit prix du devis détaillé. */}
-      {budget ? (
-        <p className="mt-2 text-sm leading-snug text-foreground/80">
-          Budget de construction estimé : <strong className="whitespace-nowrap text-foreground">{budget}</strong>
-        </p>
-      ) : null}
+      {/* Carte sobre : le budget de construction est dans « Caractéristiques », plus bas. */}
 
       <NumberedList items={PLAN_DEVIS_ITEMS}>
         <BonusItem />
@@ -148,9 +144,18 @@ export function ProjectOffer({ plan, planCount, online, budget, downloads }: Pro
   );
 }
 
-/** Sous le bouton : le document s'ouvre au téléchargement dès le paiement validé, même si l'email saisi n'est pas valide. */
+/**
+ * Sous le bouton : le document s'ouvre au téléchargement dès le paiement validé, même si l'email saisi n'est pas valide,
+ * et il est aussi envoyé sur WhatsApp (envoi depuis l'admin, page Ventes) : beaucoup d'acheteurs n'utilisent pas leur email.
+ */
 export function Reassurance({ className = "" }: { className?: string }) {
-  return <p className={`text-sm text-foreground/75 ${className}`}>⚡ Téléchargement immédiat après paiement</p>;
+  return (
+    <p className={`text-sm leading-snug text-foreground/75 ${className}`}>
+      ⚡ Téléchargement immédiat après paiement
+      <br />
+      Reçu aussi par email et sur votre WhatsApp
+    </p>
+  );
 }
 
 /** Liste numérotée ① ② ③ de ce que contient le plan et devis. */
@@ -227,7 +232,7 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
   return [
     {
       question: "Comment je reçois mon plan après l'achat ?",
-      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement et vous est envoyé par email. Pas besoin d'attendre.`,
+      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement : vous l'avez tout de suite. Il vous est aussi envoyé par email et sur votre WhatsApp. Même si vous n'utilisez pas votre adresse email, vous recevez tout sur WhatsApp : l'email n'est qu'une option.`,
     },
     ...(offresEnabled() ? [{
       question: "C'est quoi le Catalogue Premium offert ?",
@@ -242,8 +247,8 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
       answer: `Le document pour valider votre projet avant de construire : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif poste par poste (fondation, élévation, toiture, finitions…). Il vous permet aussi d'échanger avec un architecte sur WhatsApp pour préparer les ajustements selon vos besoins et votre terrain.`,
     },
     {
-      question: "Est-ce que je peux faire modifier le plan après l'avoir téléchargé ?",
-      answer: "Oui. Après avoir obtenu le plan et devis de ce modèle, vous pourrez discuter sur WhatsApp avec nos architectes pour effectuer des modifications et obtenir tous les plans pour la construction.",
+      question: "Comment se passe l'accompagnement sur WhatsApp après mon achat ?",
+      answer: `Après votre achat, nous vous contactons sur WhatsApp (vous pouvez aussi nous écrire). Vous échangez avec nos architectes sur votre terrain et vos besoins : une chambre en plus ou en moins, un garage, une autre disposition… Le plan peut être modifié et adapté à votre projet. Ces modifications, comme les plans complets pour construire (${formatFcfa(offer.price)}, prix fixe), nécessitent des frais supplémentaires : ils vous sont annoncés avant tout travail.`,
     },
   ];
 }

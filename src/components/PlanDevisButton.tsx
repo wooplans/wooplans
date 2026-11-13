@@ -53,7 +53,6 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
   const remise = offre && relanceDiscount(offre.id) ? remiseCode : null;
   const local = offre ? offrePrice(offre, remise) : planDevisPrice(countryChosen.current ? country : visitorCountry ?? country);
   const [, , dial, example] = PHONE_COUNTRIES.find(([c]) => c === country) ?? PHONE_COUNTRIES[0];
-  const [promoOpen, setPromoOpen] = useState(false);
   // Offre aux clients : code mémorisé (lien reçu par email ou WhatsApp) et coordonnées du premier achat.
   const promo = usePromoCode();
   const promoPrice = promo && !offre ? upsellPrice(local) : null;
@@ -294,10 +293,13 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               placeholder="vous@exemple.com"
               className="input"
             />
-            <p className="mt-1 text-xs text-muted">{offre ? "Votre code d'accès à l'Espace Premium vous y est envoyé." : "Le document vous y est envoyé."}</p>
+            <p className="mt-1 text-xs text-muted">
+              {offre ? "Votre code d'accès à l'Espace Premium vous y est envoyé." : "Le document vous y est envoyé."}{" "}
+              <strong className="font-semibold text-foreground/80">Même si votre email n&apos;est pas actif, vous recevez aussi tout sur WhatsApp.</strong>
+            </p>
           </div>
           <div>
-            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>Téléphone (WhatsApp)</label>
+            <label className="label" htmlFor={`pd-phone-${plan.slug}`}>WhatsApp (pour recevoir votre plan)</label>
             <div className="flex gap-2">
               {/* Indicatif seul à l'écran, la liste complète des pays s'ouvre au toucher. */}
               <div className="input relative flex w-auto shrink-0 items-center gap-1 pr-3 font-medium focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
@@ -333,16 +335,14 @@ export function PlanDevisButton({ plan, label, ctaId, className, fallbackHref }:
               />
             </div>
           </div>
-          {promoOpen || promo || remise ? (
+          {/* Champ du code seulement pour qui arrive avec un code (relance ?remise=…, offre client) : un lien « Code promo »
+              laissait croire à un meilleur prix ailleurs. */}
+          {promo || remise ? (
             <div>
               <label className="label" htmlFor={`pd-promo-${plan.slug}`}>Code promo</label>
-              <input id={`pd-promo-${plan.slug}`} name="discountCode" defaultValue={remise?.code ?? promo ?? undefined} autoFocus={!promo && !remise} autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
+              <input id={`pd-promo-${plan.slug}`} name="discountCode" defaultValue={remise?.code ?? promo ?? undefined} autoComplete="off" autoCapitalize="characters" spellCheck={false} className="input" />
             </div>
-          ) : (
-            <button type="button" onClick={() => setPromoOpen(true)} className="-mt-2 justify-self-start text-sm font-semibold text-primary underline">
-              Code promo
-            </button>
-          )}
+          ) : null}
           {error ? <p className="rounded-xl bg-secondary/10 px-4 py-3 text-sm text-secondary">{error}</p> : null}
           <button type="submit" disabled={sending} className="btn-cta mt-1 w-full py-3.5 text-base">
             {sending ? "Ouverture du paiement…" : "Procéder au paiement →"}

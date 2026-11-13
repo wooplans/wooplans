@@ -137,7 +137,6 @@ export default async function PlanPage({ params }: Props) {
                 offer={project}
                 planCount={planCount}
                 online={online}
-                budget={budget}
                 downloads={downloads}
               />
             ) : (
