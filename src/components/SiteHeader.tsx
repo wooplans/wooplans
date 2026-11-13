@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { MobileMenu } from "@/components/MobileMenu";
+import { focusHideProps } from "@/lib/focus-mode";
 import { SITE } from "@/lib/site";
 
 export const NAV_LINKS = [
@@ -17,7 +18,7 @@ export function SiteHeader() {
         <Logo height={42} />
         <ul className="hidden items-center gap-7 text-sm font-medium text-white/85 lg:flex">
           {NAV_LINKS.map((link) => (
-            <li key={link.href}>
+            <li key={link.href} {...focusHideProps(link.href)}>
               <Link href={link.href} className="hover:text-white">
                 {link.label}
               </Link>

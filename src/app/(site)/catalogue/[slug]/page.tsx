@@ -137,7 +137,6 @@ export default async function PlanPage({ params }: Props) {
                 offer={project}
                 planCount={planCount}
                 online={online}
-                budget={budget}
                 downloads={downloads}
               />
             ) : (
@@ -212,7 +211,7 @@ export default async function PlanPage({ params }: Props) {
           {plan.summary ? <p className="mt-3 leading-relaxed text-foreground/80">{plan.summary}</p> : null}
           <PlanDescription description={description} />
           {themes.length > 0 ? (
-            <p className="mt-4 text-sm text-foreground/75">
+            <p data-focus-hide className="mt-4 text-sm text-foreground/75">
               Voir aussi :{" "}
               {themes.map((t, i) => (
                 <span key={t.path}>

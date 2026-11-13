@@ -21,7 +21,7 @@ export function SiteFooter() {
             <li><Link href="/catalogue-villa" className="hover:text-white">Villas</Link></li>
             <li><Link href="/catalogue-duplex" className="hover:text-white">Duplex</Link></li>
             {LANDING_PAGES.map((p) => (
-              <li key={p.path}><Link href={p.path} className="hover:text-white">{p.label}</Link></li>
+              <li key={p.path} data-focus-hide><Link href={p.path} className="hover:text-white">{p.label}</Link></li>
             ))}
             <li data-focus-hide><Link href={SITE.catalogueUrl} data-cta="footer" className="hover:text-white">Catalogue Premium</Link></li>
           </ul>
@@ -29,7 +29,7 @@ export function SiteFooter() {
         <div>
           <p className="mb-3 text-sm font-semibold text-white">Services</p>
           <ul className="space-y-2 text-sm">
-            <li><Link href="/plans-personnalises" className="hover:text-white">Plans complets personnalisés</Link></li>
+            <li data-focus-hide><Link href="/plans-personnalises" className="hover:text-white">Plans complets personnalisés</Link></li>
             <li data-focus-hide><Link href="/connexion" className="hover:text-white">Espace Premium</Link></li>
             <li><Link href="/a-propos" className="hover:text-white">À propos</Link></li>
             <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
@@ -45,8 +45,9 @@ export function SiteFooter() {
             </li>
             <li><a href={`mailto:${SITE.email}`} className="hover:text-white">{SITE.email}</a></li>
           </ul>
-          <p className="mb-3 mt-6 text-sm font-semibold text-white">Suivez-nous</p>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          {/* Mode « sans distraction » : pas de sortie vers les réseaux sociaux (voir src/lib/focus-mode.ts). */}
+          <p data-focus-hide className="mb-3 mt-6 text-sm font-semibold text-white">Suivez-nous</p>
+          <ul data-focus-hide className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
             {SITE.social.map((s) => (
               <li key={s.label}>
                 <a href={s.href} target="_blank" rel="noopener noreferrer" data-social={s.label.toLowerCase()} className="hover:text-white">

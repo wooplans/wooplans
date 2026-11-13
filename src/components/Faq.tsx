@@ -1,3 +1,4 @@
+/** answer : une idée par ligne (séparées par \n), affichées comme des paragraphes courts. */
 export type FaqItem = { question: string; answer: string };
 
 export function Faq({ items }: { items: FaqItem[] }) {
@@ -11,7 +12,11 @@ export function Faq({ items }: { items: FaqItem[] }) {
               +
             </span>
           </summary>
-          <p className="mt-3 leading-relaxed text-foreground/75">{item.answer}</p>
+          <div className="mt-3 space-y-2 leading-relaxed text-foreground/75">
+            {item.answer.split("\n").map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
         </details>
       ))}
     </div>
@@ -22,7 +27,7 @@ export function FaqJsonLd({ items }: { items: FaqItem[] }) {
   const data = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: items.map((i) => ({ "@type": "Question", name: i.question, acceptedAnswer: { "@type": "Answer", text: i.answer } })),
+    mainEntity: items.map((i) => ({ "@type": "Question", name: i.question, acceptedAnswer: { "@type": "Answer", text: i.answer.replace(/\n/g, " ") } })),
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
 }

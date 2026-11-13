@@ -2,6 +2,7 @@ import { PlanDevisButton } from "@/components/PlanDevisButton";
 import { otherPlansCount, projectStartLink } from "@/components/ProjectOffer";
 import { responsiveImage } from "@/lib/media-size";
 import { IfOffre } from "@/components/IfOffre";
+import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 
 type Props = {
   plan: { slug: string; code: string; name: string };
@@ -14,6 +15,9 @@ type Props = {
 /**
  * Section « Bonus » de la fiche : explique le Catalogue Premium (celui dont parlent les témoignages vidéo)
  * et qu'il est offert avec le plan et devis du modèle. Placée juste après les témoignages.
+ * Prix affiché au-dessus du bouton et même libellé que les autres boutons : avec « Mon plan + le catalogue offert »
+ * sans prix, 28 visiteurs ont ouvert le formulaire (10-13 nov.), aucun n'est allé au paiement (fermeture en ~6 s :
+ * ils croyaient à un cadeau gratuit).
  */
 export function CatalogueBonus({ plan, planCount, covers, online }: Props) {
   const others = otherPlansCount(planCount);
@@ -24,14 +28,14 @@ export function CatalogueBonus({ plan, planCount, covers, online }: Props) {
     <section id="bonus" className="mt-12 scroll-mt-20 max-w-3xl">
       <div className="overflow-hidden rounded-2xl border-2 border-primary/30 bg-primary/5">
         <div className="p-4 sm:p-6">
-          <p className="text-sm font-bold uppercase tracking-wide text-primary">🎁 Bonus offert avec votre plan</p>
+          <p className="text-sm font-bold uppercase tracking-wide text-primary">🎁 Bonus inclus avec votre plan et devis</p>
           <h2 className="mt-1 text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
             Le Catalogue Premium : {others ? `${others} autres plans et devis` : "tous nos plans et devis"} pour comparer
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-foreground/80">
             C&apos;est le catalogue dont parlent nos clients dans les vidéos : il réunit les plans et devis de tous nos modèles de villas et
             duplex. Avec le plan et devis du modèle <strong className="whitespace-nowrap">{plan.code}</strong>, vous y avez accès{" "}
-            <strong>gratuitement</strong> : votre plan vous y attend, prêt à télécharger, et vous pouvez le comparer avec tous les autres avant
+            <strong>sans supplément</strong> : votre plan vous y attend, prêt à télécharger, et vous pouvez le comparer avec tous les autres avant
             de choisir votre maison.
           </p>
 
@@ -51,9 +55,16 @@ export function CatalogueBonus({ plan, planCount, covers, online }: Props) {
         </div>
 
         <div className="border-t border-primary/20 bg-background/60 p-4 text-center sm:px-6">
+          <p className="text-sm text-foreground/75">Plan et devis du modèle {plan.code} + Catalogue Premium inclus</p>
+          <p className="mb-2.5 mt-0.5 flex items-baseline justify-center gap-2 whitespace-nowrap leading-tight">
+            <LocalAnchor className="text-base font-medium text-foreground/50" />
+            <span className="text-2xl font-bold">
+              <LocalPriceText part="amount" /> <span className="text-sm font-medium"><LocalPriceText part="currency" /></span>
+            </span>
+          </p>
           <PlanDevisButton
             plan={plan}
-            label="Mon plan + le catalogue offert"
+            label="Recevoir mon plan et devis"
             ctaId="plan_bonus"
             className="btn-cta w-full px-4 py-3.5 text-base"
             fallbackHref={online ? undefined : projectStartLink(plan)}

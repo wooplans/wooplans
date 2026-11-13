@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { phCapture } from "@/lib/posthog-browser";
 import { TESTIMONIALS } from "@/lib/testimonials";
 
@@ -12,6 +12,23 @@ export function Testimonials({ variant = "grid", source = "home" }: { variant?: 
   const [active, setActive] = useState<string | null>(null);
   const [ready, setReady] = useState(variant === "grid");
   const current = TESTIMONIALS.find((t) => t.id === active);
+  // Mesure : la rangée est-elle vue ? (un seul événement par affichage de page) pour distinguer « personne ne
+  // descend jusque-là » de « on les voit mais on ne clique pas ».
+  const container = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = container.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        phCapture("testimonials_seen", { source });
+        observer.disconnect();
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [source]);
   useEffect(() => {
     if (ready) return;
     if (document.readyState === "complete") return setReady(true);
@@ -22,7 +39,7 @@ export function Testimonials({ variant = "grid", source = "home" }: { variant?: 
   const row = variant === "row";
   return (
     <>
-      <div className={row ? "no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-4 md:px-0" : "grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5"}>
+      <div ref={container} className={row ? "no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-4 md:px-0" : "grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5"}>
         {TESTIMONIALS.map((t) => (
           <button
             key={t.id}
