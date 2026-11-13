@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SITE } from "@/lib/site";
+import { focusHideProps } from "@/lib/focus-mode";
 
 export function MobileMenu({ links }: { links: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
               <Link
                 key={link.href}
                 href={link.href}
+                {...focusHideProps(link.href)}
                 aria-current={pathname === link.href ? "page" : undefined}
                 className={`rounded-xl px-3 py-3 text-base font-medium hover:bg-background ${pathname === link.href ? "bg-primary/10 font-semibold text-primary" : ""}`}
               >

@@ -56,7 +56,7 @@ export function projectStartLink(plan: Props["plan"]) {
 export const PLAN_DEVIS_ITEMS = [
   "Plan de distribution + dimensions",
   "Devis de la fondation aux finitions",
-  "Accompagnement WhatsApp pour adapter le plan à votre terrain",
+  "Accompagnement sur WhatsApp pour adapter le plan à votre terrain",
 ];
 
 /** Nombre d'autres modèles du catalogue (« 97 autres plans et devis »), ou null si le total est inconnu. */
@@ -232,23 +232,47 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
   return [
     {
       question: "Comment je reçois mon plan après l'achat ?",
-      answer: `Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement : vous l'avez tout de suite. Il vous est aussi envoyé par email et sur votre WhatsApp. Même si vous n'utilisez pas votre adresse email, vous recevez tout sur WhatsApp : l'email n'est qu'une option.`,
+      answer: [
+        `⚡ Dès que le paiement est validé, le plan et devis du modèle ${plan.code} s'ouvre au téléchargement.`,
+        "📧 Il vous est aussi envoyé par email.",
+        "📲 Et sur votre WhatsApp : même si vous n'utilisez pas votre email, vous recevez tout.",
+      ].join("\n"),
     },
     ...(offresEnabled() ? [{
       question: "C'est quoi le Catalogue Premium offert ?",
-      answer: `C'est l'espace membre qui réunit les plans et devis de ${models} : distributions cotées, surfaces des pièces et devis détaillés. Il est offert avec le plan et devis du modèle ${plan.code} : vous y retrouvez votre plan, prêt à télécharger, et vous pouvez le comparer avec tous les autres avant de choisir. Accès à vie, nouveaux modèles inclus.`,
+      answer: [
+        `📚 L'espace membre qui réunit les plans et devis de ${models} : distributions cotées, surfaces des pièces et devis détaillés.`,
+        `🎁 Il est offert avec le plan et devis du modèle ${plan.code}.`,
+        "🔍 Votre plan vous y attend, prêt à télécharger : comparez-le avec tous les autres avant de choisir.",
+        "♾️ Accès à vie, nouveaux modèles inclus.",
+      ].join("\n"),
     }] : []),
     {
       question: "Quels sont les moyens de paiement ?",
-      answer: "Le paiement est sécurisé, par Mobile Money ou par carte bancaire.",
+      answer: [
+        `📱 Mobile Money : ${PAYMENT_METHODS.map((m) => m.label).join(", ")}.`,
+        "💳 Carte bancaire.",
+        "🔒 Le paiement est sécurisé.",
+      ].join("\n"),
     },
     {
       question: "C'est quoi exactement le plan et devis ?",
-      answer: `Le document pour valider votre projet avant de construire : le plan de distribution de chaque niveau avec les dimensions, le tableau des pièces et de leurs surfaces, et le devis estimatif poste par poste (fondation, élévation, toiture, finitions…). Il vous permet aussi d'échanger avec un architecte sur WhatsApp pour préparer les ajustements selon vos besoins et votre terrain.`,
+      answer: [
+        "Le document pour valider votre projet avant de construire :",
+        "📐 le plan de distribution de chaque niveau, avec les dimensions ;",
+        "📋 le tableau des pièces et de leurs surfaces ;",
+        "💰 le devis estimatif poste par poste (fondation, élévation, toiture, finitions…).",
+      ].join("\n"),
     },
     {
+      // Sans le prix des plans complets (décision du 13 nov.) : le client sait seulement qu'il y a des frais en plus.
       question: "Comment se passe l'accompagnement sur WhatsApp après mon achat ?",
-      answer: `Après votre achat, nous vous contactons sur WhatsApp (vous pouvez aussi nous écrire). Vous échangez avec nos architectes sur votre terrain et vos besoins : une chambre en plus ou en moins, un garage, une autre disposition… Le plan peut être modifié et adapté à votre projet. Ces modifications, comme les plans complets pour construire (${formatFcfa(offer.price)}, prix fixe), nécessitent des frais supplémentaires : ils vous sont annoncés avant tout travail.`,
+      answer: [
+        "💬 Après votre achat, nous échangeons avec vous sur WhatsApp.",
+        "🏡 Vous nous parlez de votre terrain et de vos besoins : une chambre en plus ou en moins, un garage, une autre disposition…",
+        "✏️ Nos architectes modifient le plan et l'adaptent à votre projet.",
+        "ℹ️ Ces modifications nécessitent des frais supplémentaires, annoncés avant tout travail.",
+      ].join("\n"),
     },
   ];
 }
