@@ -785,3 +785,16 @@ export function guideHotLeadAdminEmail(p: { name: string | null; email: string; 
   const body = `<p>${lines.map(escape).join("<br>")}</p>${p.whatsappUrl ? button(p.whatsappUrl, "Lui écrire sur WhatsApp") : ""}<p>Fiche créée dans le CRM (étape « demande »).</p>`;
   return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? "", "Fiche créée dans le CRM (étape « demande »)."].join("\n") };
 }
+
+/**
+ * Alerte au propriétaire à chaque vente du guide : lien WhatsApp avec le message de livraison déjà rédigé
+ * (Tao envoie aussi le guide à la main sur WhatsApp, puis présente le Catalogue Premium).
+ */
+export function guideSaleAdminEmail(p: { name: string | null; email: string; phone: string | null; country: string | null; downloadUrl: string; whatsappUrl: string | null }) {
+  const subject = `Guide vendu : ${p.name || p.email}${p.country ? ` (${p.country})` : ""}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email}`, `WhatsApp : ${p.phone || "—"}`, `Lien du guide : ${p.downloadUrl}`];
+  const body = `<p>${lines.map(escape).join("<br>")}</p>${
+    p.whatsappUrl ? button(p.whatsappUrl, "Envoyer le guide sur WhatsApp") : "<p>Pas de numéro WhatsApp : livraison par email seulement.</p>"
+  }<p style="color:#6B7280;font-size:13px">Le message est déjà rédigé avec son lien personnel. Le guide lui a aussi été envoyé par email.</p>`;
+  return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
+}

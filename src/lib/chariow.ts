@@ -2,7 +2,8 @@ import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, guideDeliveryEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, adminSaleEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { whatsappLink } from "@/lib/site";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
@@ -583,6 +584,16 @@ async function processGuideSale(
     }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
   }
   if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${GUIDE_PATH}/merci`, ctaId: GUIDE_CTA_ID });
+
+  // Livraison aussi à la main sur WhatsApp par Tao (puis présentation du Catalogue Premium) : message prêt à envoyer.
+  const notify = getEnv().ADMIN_NOTIFY_EMAIL;
+  if (notify && to) {
+    const downloadUrl = siteUrl(`/api/guide/${intentId}`);
+    const first = (name || "").split(" ")[0];
+    const message = `Bonjour${first ? ` ${first}` : ""} 👋 C'est Tao de WooPlans. Merci pour votre achat ! Voici votre Guide WooPlans des maisons : ${downloadUrl}\n\nParcourez-le et notez vos 3 modèles préférés. Vous avez déjà un terrain ?`;
+    const mail = guideSaleAdminEmail({ name, email: to, phone, country, downloadUrl, whatsappUrl: phone ? whatsappLink(message, phone) : null });
+    await sendEmail({ to: notify, ...mail, template: "admin_guide_vente" });
+  }
   return "guide_delivered";
 }
 
