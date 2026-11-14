@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CatalogueBonus } from "@/components/CatalogueBonus";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
-import { GuideBand } from "@/components/guide/GuideBand";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
@@ -149,14 +148,8 @@ export default async function PlanPage({ params }: Props) {
                 <p className="mt-1 text-xs text-muted">Hors terrain et honoraires. Le devis détaillé par lot est dans le Catalogue Premium.</p>
               </div>
             ) : null}
-            {/*
-              Présentation alignée sur le tunnel (nov. 2026) : 1) choisir avec le Catalogue Premium, 2) construire avec les
-              plans complets à prix fixe (affiché : il situe le catalogue), et pour les indécis le Guide des maisons à 1 900 FCFA.
-              Plus d'offre « plan et devis » sur la fiche : le visiteur croyait acheter de quoi construire.
-            */}
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 1 · Choisir</p>
-              <p className="mt-1 font-semibold">Comparez ce modèle avec tous les autres dans le Catalogue Premium</p>
+              <p className="font-semibold">Ce modèle est inclus dans le Catalogue Premium</p>
               <ul className="mt-3 space-y-1.5 text-sm text-foreground/80">
                 {PREMIUM_CONTENT.map((item) => (
                   <li key={item} className="flex gap-2">
@@ -169,33 +162,9 @@ export default async function PlanPage({ params }: Props) {
                 {SITE.catalogueCta}
               </Link>
               <p className="mt-2 text-center text-xs text-muted">
-                {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · version numérique · accès à vie
+                {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · accès à vie
               </p>
             </div>
-            {offer ? (
-              <div className="mt-4 rounded-2xl border border-outline bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 2 · Construire</p>
-                <p className="mt-1 font-semibold">Les plans complets de ce modèle, adaptés à votre terrain</p>
-                <p className="mt-1 text-sm text-foreground/75">
-                  Plans architecturaux complets pour construire, à prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                  <Link href="/livrables-plans-complets" data-cta="plan_livrables" className="font-semibold text-primary hover:underline">
-                    Ce qui est livré →
-                  </Link>
-                  <a
-                    href={whatsappLink(`Bonjour WOOPLANS, je voudrais les plans complets du modèle ${plan.code}. Mon terrain fait … m².`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-whatsapp={`plan_complet_${plan.slug}`}
-                    className="font-semibold text-[#128C4B] hover:underline"
-                  >
-                    En parler sur WhatsApp →
-                  </a>
-                </div>
-              </div>
-            ) : null}
-            <GuideBand ctaId="plan_guide" compact />
             </>
             )}
           </div>
