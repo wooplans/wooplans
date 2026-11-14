@@ -63,7 +63,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
             <p className="text-sm font-semibold text-primary">Étape 1</p>
             <p className="mt-1 font-semibold">Vous choisissez votre modèle</p>
             <p className="mt-1 text-sm text-foreground/70">
-              Dans le catalogue ou avec le plan et devis d&apos;un modèle : distribution cotée, surfaces des pièces et devis détaillé, pour
+              Dans le Catalogue Premium : distribution cotée, surfaces des pièces et devis détaillé de chaque modèle, pour
               choisir sereinement.
             </p>
           </div>

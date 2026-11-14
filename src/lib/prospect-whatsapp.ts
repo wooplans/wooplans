@@ -6,7 +6,7 @@
 /** Au-delà, la personne n'est plus « chaude » : le message sort de la liste « WhatsApp à envoyer ». */
 export const HOT_WINDOW_HOURS = 48;
 
-export type ProspectLastEvent = "abandoned" | "failed" | "started" | "gift";
+export type ProspectLastEvent = "abandoned" | "failed" | "started" | "gift" | "guide";
 
 /** Offre tentée sur une fiche modèle (plan et devis + Catalogue Premium offert). */
 export type TriedOffer = { name: string; priceLabel: string; resume: string };
@@ -37,6 +37,9 @@ export function whatsappRelanceMessage(input: { firstName: string; lastEvent: Pr
       : `${hello} Vous avez commencé à commander le plan et devis de la ${tried.name} (${tried.priceLabel}, avec le Catalogue Premium offert). Avez-vous une question avant de finaliser ? Je suis là pour vous aider.\n\nPour reprendre : ${tried.resume}`;
   }
   if (input.lastEvent === "failed") return `${hello} Votre paiement du Catalogue Premium n'a pas abouti : puis-je vous aider à le finaliser ?`;
+  if (input.lastEvent === "guide") {
+    return `${hello} Merci pour votre achat du Guide des maisons ! Avez-vous trouvé des modèles qui vous plaisent ? Avez-vous déjà un terrain ?`;
+  }
   if (input.lastEvent === "gift") {
     return `${hello} Avez-vous bien reçu le plan et devis${input.modelCode ? ` du modèle ${input.modelCode}` : ""} ? Avez-vous des questions sur ce modèle ?`;
   }

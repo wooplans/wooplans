@@ -260,6 +260,10 @@ export const checkoutIntents = sqliteTable(
      * en JSON, pour l'achat confirmé plus tard par notification. Null si la mesure n'est pas autorisée.
      */
     metaContext: text("meta_context"),
+    /** Guide des maisons : « Comment nous avez-vous connu ? » (src/lib/guide-rules.ts, HEARD_FROM_OPTIONS). */
+    heardFrom: text("heard_from"),
+    /** Guide des maisons : réponses aux 3 questions de la page de remerciement (JSON : terrain, start, budget). */
+    qualification: text("qualification"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -327,15 +331,16 @@ export const prospects = sqliteTable(
     country: text("country"),
     status: text("status", { enum: PROSPECT_STATUSES }).notNull().default("open"),
     /** Dernier évènement connu : paiement abandonné, échoué, ou email laissé sur le site. */
-    lastEvent: text("last_event", { enum: ["abandoned", "failed", "started", "gift"] }).notNull(),
+    lastEvent: text("last_event", { enum: ["abandoned", "failed", "started", "gift", "guide"] }).notNull(),
     lastEventAt: integer("last_event_at", { mode: "timestamp_ms" }).notNull(),
     lastSaleId: text("last_sale_id"),
     amount: integer("amount"),
-    source: text("source", { enum: ["webhook", "chariow_import", "site", "gift"] }).notNull(),
+    source: text("source", { enum: ["webhook", "chariow_import", "site", "gift", "guide"] }).notNull(),
     utmSource: text("utm_source"),
     utmCampaign: text("utm_campaign"),
+    /** guide = acheteur du Guide des maisons (1 900 FCFA), jusqu'à la proposition du catalogue. */
     /** relance = paiement abandonné ou échoué ; bienvenue = plan et devis offert, jusqu'à la proposition du catalogue. */
-    sequenceKind: text("sequence_kind", { enum: ["relance", "bienvenue", "offre"] }).notNull().default("relance"),
+    sequenceKind: text("sequence_kind", { enum: ["relance", "bienvenue", "offre", "guide"] }).notNull().default("relance"),
     /** Séquence de relance : nombre d'emails déjà envoyés, début et prochain envoi (null = arrêtée). */
     sequenceStep: integer("sequence_step").notNull().default(0),
     sequenceStartedAt: integer("sequence_started_at", { mode: "timestamp_ms" }),

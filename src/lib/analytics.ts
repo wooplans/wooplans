@@ -6,6 +6,12 @@ import { TZ_OFFSET_MS, localDay, type Range } from "@/lib/date-range";
 import { getEnv } from "@/lib/env";
 import { OWNER_EMAILS } from "@/lib/owner-emails";
 import { OFFRES, offreProductIds } from "@/lib/offres";
+import { guideProductId } from "@/lib/guide";
+
+/** Produit Chariow du Guide des maisons (1 900 FCFA) : compté à part, jamais comme une vente du catalogue. */
+function guideId() {
+  return guideProductId() || "__aucun_guide__";
+}
 
 /** Produit Chariow « Plan et devis » : ses ventes sont comptées à part du Catalogue Premium. */
 function planDevisProductId() {
@@ -25,6 +31,7 @@ export function saleOffer(productId: string): { key: string; label: string; fich
   const offre = offreProductIds().get(productId);
   if (offre) return { key: offre.id, label: `Plan et devis + catalogue offert · ${offre.price.toLocaleString("fr-FR")} FCFA`, fiche: true };
   if (productId === planDevisProductId()) return { key: "plan_seul", label: "Plan et devis seul (ancienne offre)", fiche: true };
+  if (productId === guideId()) return { key: "guide", label: "Guide des maisons · 1 900 FCFA", fiche: false };
   return { key: "catalogue", label: "Catalogue Premium seul (page de vente)", fiche: false };
 }
 
@@ -54,10 +61,16 @@ export async function getFunnelKpis(range: Range) {
   const byType = Object.fromEntries(eventCounts.map((e) => [e.type, e]));
 
   const fiche = ficheProductIds();
+  const notCatalogue = [...fiche, guideId()];
   const [catalogue] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), notInArray(schema.sales.productId, fiche), within(schema.sales.occurredAt, range), notOwnerSale()));
+    .where(and(eq(schema.sales.status, "completed"), notInArray(schema.sales.productId, notCatalogue), within(schema.sales.occurredAt, range), notOwnerSale()));
+  // Guide des maisons (lead magnet payant).
+  const [guide] = await db
+    .select({ n: count(), revenue: sum(schema.sales.amount) })
+    .from(schema.sales)
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, guideId()), within(schema.sales.occurredAt, range), notOwnerSale()));
   // Ventes des fiches modèles : offres avec catalogue offert et ancien plan et devis seul.
   const [planDevis] = await db
     .select({ n: count(), revenue: sum(schema.sales.amount) })
@@ -79,7 +92,7 @@ export async function getFunnelKpis(range: Range) {
   const [abandoned] = await db
     .select({ n: count() })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "abandoned"), notInArray(schema.sales.productId, fiche), within(schema.sales.occurredAt, range), notOwnerSale()));
+    .where(and(eq(schema.sales.status, "abandoned"), notInArray(schema.sales.productId, notCatalogue), within(schema.sales.occurredAt, range), notOwnerSale()));
   const [customPlans] = await db
     .select({ revenue: sum(schema.leadPayments.amount) })
     .from(schema.leadPayments)
@@ -110,6 +123,8 @@ export async function getFunnelKpis(range: Range) {
     giftLeads: gifts?.n ?? 0,
     planDevisPurchases: planDevis?.n ?? 0,
     planDevisRevenue: Number(planDevis?.revenue ?? 0),
+    guidePurchases: guide?.n ?? 0,
+    guideRevenue: Number(guide?.revenue ?? 0),
     customPlanRevenue: Number(customPlans?.revenue ?? 0),
     whatsappClicks: byType.whatsapp_click?.n ?? 0,
     newLeads: newLeads?.n ?? 0,
@@ -448,7 +463,7 @@ export async function getSalesOverview(range: Range) {
   ]);
 
   // Offres dans l'ordre de la configuration, puis plan et devis seul, puis catalogue seul.
-  const order = [...OFFRES.offres.map((o) => o.id), "plan_seul", "catalogue"];
+  const order = [...OFFRES.offres.map((o) => o.id), "plan_seul", "guide", "catalogue"];
   const offers = new Map<string, { key: string; label: string; fiche: boolean; n: number; revenue: number }>();
   for (const r of byProduct) {
     const o = saleOffer(r.productId);

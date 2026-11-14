@@ -51,3 +51,7 @@ next-env.d.ts
 .dev.vars*
 !.dev.vars.example
 scripts/framer/out/
+
+# Guide des maisons : cache des rendus et PDF générés
+scripts/guide/cache/
+scripts/guide/out/

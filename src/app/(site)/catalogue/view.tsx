@@ -1,3 +1,4 @@
+import { GuideBand } from "@/components/guide/GuideBand";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
@@ -81,6 +82,7 @@ export async function CatalogueView({ filters }: { filters: PlanFilters }) {
           <CatalogueBrowser items={items} initialFilters={filters} />
         </div>
       </section>
+      <GuideBand ctaId="catalogue_guide" />
       <section className="container-page pb-14">
         <h2 className="text-xl font-semibold md:text-2xl">Trouver le bon plan</h2>
         <ul className="mt-4 flex flex-wrap gap-2">
