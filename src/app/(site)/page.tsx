@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
+import { GuideBand } from "@/components/guide/GuideBand";
 import { Faq, FaqJsonLd } from "@/components/Faq";
 import { PlanGrid } from "@/components/PlanCard";
 import { Testimonials } from "@/components/Testimonials";
@@ -23,7 +24,7 @@ const STEPS = [
   {
     title: "Explorez les modèles",
     text: `Parcourez gratuitement les villas et duplex : rendus 3D, nombre de chambres, niveaux, surfaces et budget indicatif.${
-      planGiftEnabled() ? " Le plan et devis d'un modèle vous est offert par email depuis sa fiche." : ""
+      planGiftEnabled() ? " Le plan et devis d'un modèle vous est offert par email depuis sa fiche." : " Ou gardez-les tous avec vous : le Guide des maisons les classe par budget."
     }`,
   },
   {
@@ -109,6 +110,8 @@ export default async function HomePage() {
           </ol>
         </div>
       </section>
+
+      <GuideBand ctaId="home_guide" />
 
       <section className="container-page py-16">
         <div className="mb-8 text-center">
