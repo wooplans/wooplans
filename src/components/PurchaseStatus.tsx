@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import catalogue from "@/config/catalogue.json";
 import projet from "@/config/projet.json";
+import { GUIDE_CATALOGUE_PATH, GUIDE_CTA_ID, GUIDE_PRICE, GUIDE_TITLE } from "@/lib/guide-data";
 import { pixelPurchase } from "@/lib/pixel";
 import { confirmBuyer } from "@/components/PromoCode";
 import { UpsellOffer, type UpsellData } from "@/components/UpsellOffer";
@@ -21,6 +22,8 @@ type Status = {
   upsell?: UpsellData | null;
   /** Offre « plan et devis + Catalogue Premium offert » : accès Premium, le modèle est dans les fiches PDF. */
   offre?: { id: string; price: number } | null;
+  /** Achat du guide d'entrée : lien de téléchargement dès le paiement confirmé. */
+  guide?: { download: string | null } | null;
 };
 
 /** Lien de connexion qui mène aux fiches PDF (email pré-rempli). */
@@ -44,6 +47,15 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
       if (cancelled) return;
       if (json) setData(json);
       setAttempts(n);
+      if (json?.status === "paid" && json.guide?.download) {
+        // Guide d'entrée : l'achat compte une seule fois pour Meta (eventID = achat), valeur 1 900 XAF.
+        const key = `wp_purchase_${intentId ?? "x"}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          pixelPurchase(pixelId, key, { value: GUIDE_PRICE, currency: "XAF", content_name: GUIDE_TITLE, content_ids: [GUIDE_CTA_ID], content_type: "product" });
+        }
+        return;
+      }
       if (json?.status === "paid" && json.offre) {
         confirmBuyer();
         const key = `wp_purchase_${intentId ?? "x"}`;
@@ -92,6 +104,10 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
       clearTimeout(timer);
     };
   }, [intentId, pixelId]);
+
+  if (data?.status === "paid" && data.guide?.download) {
+    return <GuideConfirmed download={data.guide.download} email={data.email} />;
+  }
 
   if (data?.status === "paid" && data.offre) {
     return <OffreConfirmed data={data} />;
@@ -150,7 +166,7 @@ export function PurchaseStatus({ intentId, pixelId }: { intentId?: string; pixel
       <div className="card p-8 text-center">
         <h1 className="text-2xl font-bold">Le paiement n&apos;a pas abouti</h1>
         <p className="mt-3 text-foreground/75">Aucun montant n&apos;a été débité. Vous pouvez réessayer quand vous voulez.</p>
-        <Link href={data.plan ? `/catalogue/${data.plan.slug}` : "/catalogue-premium"} className="btn-cta mt-6">Réessayer</Link>
+        <Link href={data.guide ? "/guide-budget" : data.plan ? `/catalogue/${data.plan.slug}` : "/catalogue-premium"} className="btn-cta mt-6">Réessayer</Link>
       </div>
     );
   }
@@ -199,6 +215,31 @@ function OffreConfirmed({ data }: { data: Status }) {
       <button type="button" onClick={open} disabled={opening} className="btn-cta mt-8 px-8 py-4 text-base">
         {opening ? "Ouverture…" : "Accéder à mon plan et devis"}
       </button>
+    </div>
+  );
+}
+
+/** Guide d'entrée payé : téléchargement, puis l'offre du Catalogue Premium (plan de distribution et devis de la fondation aux finitions). */
+function GuideConfirmed({ download, email }: { download: string; email: string | null }) {
+  return (
+    <div className="space-y-6">
+      <div className="card p-6 text-center md:p-10">
+        <p className="text-4xl" aria-hidden>🎉</p>
+        <h1 className="mt-3 text-2xl font-bold md:text-3xl">Merci. Votre guide est prêt.</h1>
+        <p className="mt-3 text-foreground/75">
+          Téléchargez-le avec le bouton ci-dessous. {email ? `Le lien est aussi envoyé à ${email}.` : "Le lien est aussi envoyé par email."}
+        </p>
+        <a href={download} className="btn-cta mt-8 px-8 py-4 text-base">Télécharger le guide</a>
+      </div>
+      <div className="card p-6 md:p-10">
+        <p className="text-sm font-semibold uppercase tracking-wide text-primary">Vous avez fait le premier pas</p>
+        <h2 className="mt-2 text-2xl font-bold">Nous avons réuni 100 modèles de plans dans un catalogue.</h2>
+        <p className="mt-3 text-foreground/75">
+          Pour chacun, vous pouvez consulter le plan de distribution et le devis, de la fondation jusqu&apos;aux finitions.
+        </p>
+        <p className="mt-4 text-lg font-bold">Prix actuel : {catalogue.price.toLocaleString("fr-FR")} FCFA</p>
+        <Link href={GUIDE_CATALOGUE_PATH} className="btn-cta mt-6 px-8 py-4 text-base">Découvrir le Catalogue Premium</Link>
+      </div>
     </div>
   );
 }

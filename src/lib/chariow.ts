@@ -2,7 +2,8 @@ import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, adminSaleEmail, guideEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { GUIDE_CATALOGUE_PATH, GUIDE_CTA_ID, GUIDE_LEAD_NOTE, GUIDE_PRICE, GUIDE_PRODUCT_NAME, guideDownloadPath, guideProductId } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
@@ -70,7 +71,8 @@ export type PulseOutcome =
   | "access_granted"
   | "already_granted"
   | "plan_delivered"
-  | "plan_unmatched";
+  | "plan_unmatched"
+  | "guide_delivered";
 
 /**
  * Traite une notification déjà authentifiée. Idempotent :
@@ -134,6 +136,7 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
   if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
+  if (guideProductId() && productId === guideProductId()) return processGuideSale(payload, status, provider);
   const offre = offreProductIds().get(productId);
   if (!offre && !catalogueProductIds().has(productId)) return "ignored_product";
   return processCatalogueSale(payload, status, provider, offre ?? null);
@@ -485,6 +488,139 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
     await sendEmail({ to: notify, ...adminMail, template: "admin_sale", leadId });
   }
   return "plan_delivered";
+}
+
+/**
+ * Vente du guide d'entrée « Quelle maison construire avec votre budget ? ». L'achat est lié à l'intention créée par
+ * /api/guide (métadonnée intent_id, ou à défaut le même email dans les 48 h). Un achat sans intention (lien direct vers
+ * la boutique Chariow) reçoit lui aussi son lien : l'intention est créée ici, déjà payée.
+ * Sur paiement confirmé : lien de téléchargement par email, fiche dans le CRM (relance à J+1), alerte au propriétaire.
+ */
+async function processGuideSale(
+  payload: ChariowSalePayload,
+  status: "completed" | "abandoned" | "failed",
+  provider: SaleProvider,
+): Promise<PulseOutcome> {
+  const db = getDb();
+  const saleLabel = `Vente ${PROVIDER_LABEL[provider]}`;
+  const sale = payload.sale!;
+  const customer = payload.customer ?? {};
+  const email = customer.email ? normalizeEmail(customer.email) : null;
+  const name = customer.name || [customer.first_name, customer.last_name].filter(Boolean).join(" ") || null;
+  const phone = normalizePhone(customer.phone);
+  const country = customerCountry(customer);
+  const amount = Math.round(Number(sale.amount?.value ?? sale.original_amount?.value ?? GUIDE_PRICE)) || 0;
+  const metadata = sale.custom_metadata ?? {};
+
+  const intent = await findGuideIntent(metadata.intent_id, email);
+  const visitor = intent?.visitorId ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) }) : null;
+  const existing = await db.query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, sale.id!) });
+  const nextStatus = existing?.status === "completed" ? "completed" : status;
+  const values = {
+    productId: payload.product!.id!,
+    productName: GUIDE_PRODUCT_NAME,
+    status: nextStatus,
+    amount,
+    currency: sale.amount?.currency || sale.original_amount?.currency || "XAF",
+    email,
+    name,
+    phone,
+    country,
+    intentId: intent?.id ?? existing?.intentId ?? null,
+    visitorId: visitor?.id ?? existing?.visitorId ?? null,
+    utmSource: visitor?.utmSource ?? existing?.utmSource ?? null,
+    utmCampaign: visitor?.utmCampaign ?? existing?.utmCampaign ?? null,
+    source: visitor?.source ?? existing?.source ?? null,
+    occurredAt: new Date(sale.completed_at || sale.created_at || Date.now()),
+    updatedAt: new Date(),
+  } as const;
+  if (existing) await db.update(schema.sales).set(values).where(eq(schema.sales.id, existing.id));
+  else await db.insert(schema.sales).values({ id: randomId(), chariowSaleId: sale.id!, ...values });
+
+  if (status !== "completed" || (sale.status && sale.status !== "completed")) {
+    if (intent && intent.status === "started" && status !== "completed") {
+      await db
+        .update(schema.checkoutIntents)
+        .set({ status, saleId: sale.id, updatedAt: new Date() })
+        .where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    return "recorded";
+  }
+
+  // Verrou : une seule notification livre le guide (Pulses multiples ou rejouées).
+  let intentId: string;
+  if (intent) {
+    const claimed = await db
+      .update(schema.checkoutIntents)
+      .set({ status: "paid", saleId: sale.id, email: email ?? intent.email, updatedAt: new Date() })
+      .where(and(eq(schema.checkoutIntents.id, intent.id), ne(schema.checkoutIntents.status, "paid")))
+      .returning({ id: schema.checkoutIntents.id });
+    if (claimed.length === 0) return "already_granted";
+    intentId = intent.id;
+  } else {
+    intentId = randomId();
+    await db.insert(schema.checkoutIntents).values({ id: intentId, email, ctaId: GUIDE_CTA_ID, status: "paid", saleId: sale.id });
+  }
+
+  const to = email ?? intent?.email ?? null;
+  if (to) {
+    const mail = guideEmail({ name, downloadUrl: siteUrl(guideDownloadPath(intentId)), catalogueUrl: siteUrl(GUIDE_CATALOGUE_PATH) });
+    await sendEmail({ to, ...mail, template: "guide" });
+  }
+
+  // Acheteur du guide = prospect qualifié du Catalogue Premium : fiche CRM, relance WhatsApp à J+1.
+  const leadId = randomId();
+  await db.insert(schema.leads).values({
+    id: leadId,
+    name: name || to || "Client",
+    phone,
+    email: to,
+    country,
+    planLabel: "Guide budget",
+    channel: "site",
+    stage: "demande",
+    projectDetails: GUIDE_LEAD_NOTE,
+    catalogueCredit: 0,
+    nextFollowUpAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    utmSource: visitor?.utmSource ?? null,
+    utmCampaign: visitor?.utmCampaign ?? null,
+  });
+  await db.insert(schema.leadActivities).values({
+    id: randomId(),
+    leadId,
+    kind: "payment",
+    body: `Guide « Quelle maison construire avec votre budget ? » payé (${amount.toLocaleString("fr-FR")} FCFA, ${saleLabel.toLowerCase()} ${sale.id}). Lien de téléchargement envoyé par email.`,
+    author: "site",
+  });
+
+  if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: GUIDE_CTA_ID });
+  const notify = getEnv().ADMIN_NOTIFY_EMAIL;
+  if (notify) {
+    const adminMail = adminSaleEmail({ email: to || "—", name, amount, product: "Guide budget" });
+    await sendEmail({ to: notify, ...adminMail, template: "admin_sale", leadId });
+  }
+  return "guide_delivered";
+}
+
+/** Intention d'achat du guide : par identifiant, sinon la plus récente du même email dans les 48 h (non payée). */
+async function findGuideIntent(intentId: string | undefined, email: string | null) {
+  const db = getDb();
+  if (intentId) {
+    const byId = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intentId) });
+    if (byId?.ctaId === GUIDE_CTA_ID) return byId;
+  }
+  if (!email) return null;
+  return (
+    (await db.query.checkoutIntents.findFirst({
+      where: and(
+        eq(schema.checkoutIntents.email, email),
+        eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID),
+        ne(schema.checkoutIntents.status, "paid"),
+        gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
+      ),
+      orderBy: desc(schema.checkoutIntents.createdAt),
+    })) ?? null
+  );
 }
 
 async function findPlanIntent(intentId: string | undefined, email: string | null) {

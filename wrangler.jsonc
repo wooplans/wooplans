@@ -21,6 +21,9 @@
     // Produit Chariow « Plan et devis » (type Licence : achats répétés possibles et paiement par l'API,
     // qui transmet le modèle choisi). Vide = achat en ligne indisponible, le bouton ouvre WhatsApp.
     "CHARIOW_PLAN_PRODUCT_ID": "prd_fzuj8cse",
+    // Produit Chariow du guide « Quelle maison construire avec votre budget ? » (1 900 FCFA). Il doit être d'un type
+    // accepté par l'API de paiement (téléchargeable ou licence, PAS « service »). Vide = achat du guide indisponible.
+    "CHARIOW_GUIDE_PRODUCT_ID": "",
     // Prestataire de paiement : "chariow" ou "wajub" (Wajub seulement si WAJUB_SECRET_KEY est défini).
     // En essai, ?paiement=wajub sur /catalogue-premium ou une fiche modèle active Wajub pour ce navigateur.
     "PAYMENT_PROVIDER": "chariow",

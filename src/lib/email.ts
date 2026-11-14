@@ -272,6 +272,31 @@ ${upsellBlock(p.upsell)}
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
+/** Livraison du guide d'entrée (1 900 FCFA) : lien personnel de téléchargement, puis le catalogue et WhatsApp. */
+export function guideEmail(params: { name?: string | null; downloadUrl: string; catalogueUrl: string }) {
+  const subject = "Votre guide : Quelle maison construire avec votre budget ?";
+  const hello = params.name ? `Bonjour ${escape(params.name)},` : "Bonjour,";
+  const whatsapp = `https://wa.me/${getEnv().WHATSAPP_NUMBER}?text=${encodeURIComponent("Bonjour WOOPLANS, j'ai le guide « Quelle maison construire avec votre budget ? » et j'ai une question sur un modèle.")}`;
+  const html = layout(subject, `<p>${hello}</p><p>Merci pour votre achat. Votre guide est prêt : 20 modèles de villas et de duplex classés par coût de construction.</p>
+${button(params.downloadUrl, "Télécharger mon guide")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel : gardez cet email pour retrouver votre guide.</p>
+<p style="margin-top:24px;font-weight:700">Pour aller plus loin</p>
+<p>Nous avons réuni 100 modèles de plans dans un catalogue. Pour chacun, vous pouvez consulter le plan de distribution et le devis, de la fondation jusqu'aux finitions.</p>
+${button(params.catalogueUrl, "Découvrir le Catalogue Premium")}
+<p>Une question sur un modèle du guide ? Écrivez-nous sur WhatsApp.</p>
+${button(whatsapp, "Discuter sur WhatsApp")}`);
+  const text = [
+    hello,
+    "Merci pour votre achat. Votre guide est prêt : 20 modèles de villas et de duplex classés par coût de construction.",
+    `Télécharger : ${params.downloadUrl}`,
+    "Ce lien est personnel : gardez cet email pour retrouver votre guide.",
+    "Nous avons réuni 100 modèles de plans dans un catalogue. Pour chacun, vous pouvez consulter le plan de distribution et le devis, de la fondation jusqu'aux finitions.",
+    `Catalogue Premium : ${params.catalogueUrl}`,
+    `Une question sur un modèle ? WhatsApp : ${whatsapp}`,
+  ].join("\n\n");
+  return { subject, html, text };
+}
+
 export function adminSaleEmail(params: { email: string; name?: string | null; amount: number; product: string }) {
   const subject = `Nouvelle vente : ${params.product} (${params.amount.toLocaleString("fr-FR")} FCFA)`;
   const html = layout(subject, `<p>${escape(params.name || "Client")} — ${escape(params.email)}</p>${button(siteUrl("/admin/ventes"), "Voir les ventes")}`);

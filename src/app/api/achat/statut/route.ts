@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { guideDownloadPath, isGuideIntent } from "@/lib/guide-data";
 import { getUpsellPlans } from "@/lib/plans";
 import { INTENT_COOKIE } from "@/lib/session";
 import { UPSELL, UPSELL_CTA_ID, upsellDeadline } from "@/lib/upsell";
@@ -77,6 +78,8 @@ export async function GET(request: NextRequest) {
       plan: plan ? { slug: plan.slug, code: plan.code, name: plan.name } : null,
       offre: offre ? { id: offre.id, price: offre.price } : null,
       download: plan && !offre && intent.status === "paid" ? `/api/plan-devis/${intent.id}` : null,
+      // Guide d'entrée (1 900 FCFA) : le lien personnel apparaît dès que le paiement est confirmé.
+      guide: isGuideIntent(intent) ? { download: intent.status === "paid" ? guideDownloadPath(intent.id) : null } : null,
     },
     { headers: { "Cache-Control": "no-store" } },
   );
