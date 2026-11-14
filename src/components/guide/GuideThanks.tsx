@@ -108,7 +108,7 @@ export function GuideThanks(props: {
           <>
             <p className="eyebrow">Paiement confirmé</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre Guide WooPlans des maisons est prêt</h1>
-            <p className="mt-3 text-foreground/75">Il vous est aussi envoyé par email. Gardez cet email : il vous permet de le retélécharger.</p>
+            <p className="mt-3 text-foreground/75">Il vous est aussi envoyé par email et sur WhatsApp. Gardez ce message : il vous permet de le retélécharger.</p>
             {data?.download && (
               <a href={data.download} data-cta="guide_telecharger" className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
                 Télécharger mon guide (PDF)
