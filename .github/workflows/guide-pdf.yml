@@ -4,6 +4,10 @@ name: Guide des maisons (PDF)
 # puis le dépose dans R2 (clé src/config/guide.json « pdfKey »), où /api/guide/<achat> le sert aux acheteurs.
 # À relancer après chaque ajout de modèles. Procédure : docs/guide-des-maisons.md.
 on:
+  # Automatique : à chaque mise à jour du générateur ou des réglages du guide sur master (PDF déposé dans R2).
+  push:
+    branches: [master]
+    paths: ["scripts/guide/**", "src/config/guide.json", ".github/workflows/guide-pdf.yml"]
   workflow_dispatch:
     inputs:
       publish:
@@ -33,11 +37,11 @@ jobs:
           name: guide-wooplans-des-maisons
           path: guide-wooplans-des-maisons.pdf
       - uses: actions/setup-node@v4
-        if: inputs.publish
+        if: github.event_name == 'push' || inputs.publish
         with:
           node-version: 22
       - name: Dépôt dans R2
-        if: inputs.publish
+        if: github.event_name == 'push' || inputs.publish
         run: |
           KEY=$(node -p "require('./src/config/guide.json').pdfKey")
           npx --yes wrangler@4 r2 object put "plans-catalogue-images/$KEY" --file guide-wooplans-des-maisons.pdf --content-type application/pdf --remote
