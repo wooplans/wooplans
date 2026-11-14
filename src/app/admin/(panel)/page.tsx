@@ -152,7 +152,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </td>
               <td className="px-4 py-2.5">{r.country || "—"}</td>
               <td className="px-4 py-2.5">
-                <Badge tone={r.offer.fiche ? "good" : "info"}>{r.offer.fiche ? (r.offer.key === "plan_seul" ? "Plan seul" : `Offre ${r.offer.key}`) : "Catalogue seul"}</Badge>
+                <Badge tone={r.offer.fiche ? "good" : "info"}>{r.offer.fiche ? (r.offer.key === "plan_seul" ? "Plan seul" : `Offre ${r.offer.key}`) : r.offer.key === "guide" ? "Guide 1 900" : "Catalogue seul"}</Badge>
               </td>
               <td className="px-4 py-2.5 font-medium">{code(r.slug)}</td>
               <td className="px-4 py-2.5">{formatFcfa(r.amount)}</td>

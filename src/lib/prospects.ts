@@ -1,9 +1,10 @@
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { giftReminderEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { giftReminderEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, guideKindForStep, guideProductId } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
@@ -44,11 +45,11 @@ type ProspectEventInput = {
   name?: string | null;
   phone?: string | null;
   country?: string | null;
-  event: "abandoned" | "failed" | "started" | "gift";
+  event: "abandoned" | "failed" | "started" | "gift" | "guide";
   occurredAt: Date;
   saleId?: string | null;
   amount?: number | null;
-  source: "webhook" | "chariow_import" | "site" | "gift";
+  source: "webhook" | "chariow_import" | "site" | "gift" | "guide";
   utmSource?: string | null;
   utmCampaign?: string | null;
   /** Démarre la séquence d'emails (notifications en direct) ; l'historique importé reste en attente. */
@@ -60,10 +61,19 @@ type ProspectEventInput = {
   kind?: SequenceKind;
 };
 
-type SequenceKind = "relance" | "bienvenue" | "offre";
+type SequenceKind = "relance" | "bienvenue" | "offre" | "guide";
 
 const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
-  kind === "bienvenue" ? WELCOME_DELAYS_HOURS : kind === "offre" ? OFFRE_DELAYS_HOURS : settings.delaysHours;
+  kind === "bienvenue"
+    ? WELCOME_DELAYS_HOURS
+    : kind === "offre"
+      ? OFFRE_DELAYS_HOURS
+      : kind === "guide"
+        ? GUIDE_DELAYS_HOURS
+        : settings.delaysHours;
+
+/** Ventes qui ne font pas d'une personne une cliente du catalogue : le guide (1 900 FCFA) prépare cet achat. */
+const notGuideSale = () => (guideProductId() ? ne(schema.sales.productId, guideProductId()) : undefined);
 
 /**
  * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
@@ -77,7 +87,11 @@ async function isCustomer(email: string, phone: string | null | undefined) {
   });
   if (member) return true;
   const sale = await db.query.sales.findFirst({
-    where: and(eq(schema.sales.status, "completed"), phone ? or(eq(schema.sales.email, email), eq(schema.sales.phone, phone)) : eq(schema.sales.email, email)),
+    where: and(
+      eq(schema.sales.status, "completed"),
+      notGuideSale(),
+      phone ? or(eq(schema.sales.email, email), eq(schema.sales.phone, phone)) : eq(schema.sales.email, email),
+    ),
     columns: { id: true },
   });
   return Boolean(sale);
@@ -93,7 +107,7 @@ export async function reconcileProspects() {
   if (open.length === 0) return 0;
   const [members, sales] = await Promise.all([
     db.query.members.findMany({ where: eq(schema.members.status, "active"), columns: { email: true, phone: true } }),
-    db.query.sales.findMany({ where: eq(schema.sales.status, "completed"), columns: { email: true, phone: true } }),
+    db.query.sales.findMany({ where: and(eq(schema.sales.status, "completed"), notGuideSale()), columns: { email: true, phone: true } }),
   ]);
   const emails = new Set([...members, ...sales].map((c) => c.email).filter(Boolean));
   const phones = new Set([...members, ...sales].map((c) => c.phone).filter(Boolean));
@@ -227,6 +241,17 @@ async function giftInfo(email: string) {
   if (!gift?.planSlug) return { code: null, intentId: null, downloaded: false };
   const plan = await db.query.plans.findFirst({ where: eq(schema.plans.slug, gift.planSlug), columns: { code: true } });
   return { code: plan?.code ?? null, intentId: gift.id, downloaded: gifts.some((g) => g.downloads > 0) };
+}
+
+/** Dernier achat payé du guide (lien de téléchargement et nombre de téléchargements). */
+async function guideIntent(email: string) {
+  return (
+    (await getDb().query.checkoutIntents.findFirst({
+      where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID), eq(schema.checkoutIntents.status, "paid")),
+      orderBy: desc(schema.checkoutIntents.createdAt),
+      columns: { id: true, downloads: true },
+    })) ?? null
+  );
 }
 
 async function publishedPlanCount() {
@@ -424,6 +449,32 @@ export async function runProspectSequence(now = new Date()) {
       continue;
     }
 
+    // Séquence « guide » : acheteur du Guide des maisons, jusqu'au Catalogue Premium au prix plein.
+    if (p.sequenceKind === "guide") {
+      const guide = await guideIntent(p.email);
+      const unsubscribe = await unsubscribeUrl(p.email, "prospects");
+      const utm = (medium: string) => `utm_source=email&utm_medium=${medium}&utm_campaign=guide_${step + 1}`;
+      const mail = guideSequenceEmail({
+        kind: guideKindForStep(step),
+        name: p.name,
+        downloaded: (guide?.downloads ?? 0) > 0,
+        downloadUrl: guide ? siteUrl(`/api/guide/${guide.id}`) : null,
+        catalogueUrl: siteUrl(`/catalogue-premium?${utm("guide")}`),
+        customPlansUrl: siteUrl(`/plans-personnalises?${utm("guide")}`),
+        whatsappUrl: whatsappLink(
+          "Bonjour Tao, j'ai le Guide WooPlans des maisons. J'ai un terrain et je veux démarrer mon projet.",
+          getEnv().WHATSAPP_NUMBER || undefined,
+        ),
+        price,
+        announcedModels: GUIDE.announcedModels,
+        unsubscribe,
+      });
+      const sentGuide = await sendEmail({ to: p.email, ...mail, template: `guide_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
+      await afterSend(p, step, delays, sentGuide.ok, now, result);
+      await pause(400);
+      continue;
+    }
+
     const welcome = p.sequenceKind === "bienvenue";
     const gift = welcome ? await giftInfo(p.email) : null;
     // Premier email de bienvenue : quelqu'un qui n'a jamais ouvert son plan et devis reçoit un rappel avec le lien,
@@ -449,7 +500,7 @@ export async function runProspectSequence(now = new Date()) {
       : prospectEmail({
           kind,
           name: p.name,
-          lastEvent: p.lastEvent === "gift" ? "started" : p.lastEvent,
+          lastEvent: p.lastEvent === "gift" || p.lastEvent === "guide" ? "started" : p.lastEvent,
           checkoutUrl: siteUrl(`/catalogue-premium?utm_source=email&utm_medium=relance&utm_campaign=prospect_${step + 1}`),
           whatsappUrl: whatsappLink(
             p.lastEvent === "failed"

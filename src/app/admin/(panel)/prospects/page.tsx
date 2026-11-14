@@ -1,3 +1,4 @@
+import { GUIDE_DELAYS_HOURS } from "@/lib/guide-rules";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { and, desc, eq, gte, inArray, isNotNull, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
@@ -30,9 +31,10 @@ const EVENTS = {
   failed: { label: "Échoué", tone: "bad" },
   started: { label: "Email laissé", tone: "neutral" },
   gift: { label: "Plan et devis offert", tone: "neutral" },
+  guide: { label: "Guide acheté", tone: "neutral" },
 } as const;
 
-const SOURCES = { webhook: "Chariow (direct)", chariow_import: "Historique Chariow", site: "Site", gift: "Cadeau (fiche modèle)" } as const;
+const SOURCES = { webhook: "Chariow (direct)", chariow_import: "Historique Chariow", site: "Site", gift: "Cadeau (fiche modèle)", guide: "Guide des maisons" } as const;
 
 export default async function ProspectsPage({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
   const { vue = "a_envoyer", q } = await searchParams;
@@ -40,8 +42,8 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const db = getDb();
   const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
   // Deux séquences : relance (paiement abandonné ou échoué, délais réglables) et bienvenue (plan et devis offert).
-  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length, offre: OFFRE_DELAYS_HOURS.length };
-  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre" } as const;
+  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length, offre: OFFRE_DELAYS_HOURS.length, guide: GUIDE_DELAYS_HOURS.length };
+  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre", guide: "Guide" } as const;
 
   const filters: SQL[] = [];
   if (vue === "a_envoyer") {

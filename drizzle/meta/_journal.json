@@ -85,6 +85,13 @@
       "when": 1794434120708,
       "tag": "0011_relance_whatsapp",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794685829604,
+      "tag": "0012_guide_des_maisons",
+      "breakpoints": true
     }
   ]
 }

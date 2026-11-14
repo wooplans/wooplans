@@ -640,3 +640,148 @@ ${button(p.loginUrl, "Voir les nouveaux modèles")}
     .join("\n")}\n\nConnexion : ${p.loginUrl}\n\nNe plus recevoir ces emails : ${p.unsubscribe}`;
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
+
+/* ─────────────── Guide WooPlans des maisons (1 900 FCFA) ─────────────── */
+
+/** Livraison du guide, juste après le paiement : lien de téléchargement personnel. */
+export function guideDeliveryEmail(p: {
+  name?: string | null;
+  downloadUrl: string;
+  thanksUrl: string;
+  announcedModels: number;
+}) {
+  const subject = "Votre Guide WooPlans des maisons est prêt";
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Guide WooPlans des maisons</strong> : ${p.announcedModels} villas et duplex, avec la surface, le terrain conseillé et le budget de construction de chacun.</p>
+${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Gardez cet email : il vous permet de retélécharger le guide.</p>
+<p><strong>Pour bien commencer :</strong></p>${bulletList([
+    "Allez à la tranche de budget qui correspond à votre projet.",
+    "Vérifiez la surface de terrain conseillée pour chaque modèle.",
+    "Notez vos 3 favoris sur la page prévue à la fin du guide.",
+  ])}
+<p>Vous avez déjà un terrain ? Répondez aux 3 questions sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a> : si votre projet démarre bientôt, je vous écris personnellement sur WhatsApp.</p>
+<p>Tao, fondateur de WooPlans</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Merci pour votre achat ! Voici votre Guide WooPlans des maisons : ${p.announcedModels} villas et duplex, avec la surface, le terrain conseillé et le budget de construction de chacun.`,
+    `Télécharger : ${p.downloadUrl}`,
+    "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger le guide.",
+    "Pour bien commencer : allez à votre tranche de budget, vérifiez le terrain conseillé, notez vos 3 favoris.",
+    `Vous avez déjà un terrain ? Répondez aux 3 questions de votre page de confirmation : ${p.thanksUrl}`,
+    "Tao, fondateur de WooPlans",
+  ].join("\n\n");
+  return { subject, html: layout(subject, body), text };
+}
+
+/**
+ * Les 7 emails après le guide (src/lib/guide-rules.ts, GUIDE_DELAYS_HOURS) : utilité d'abord, puis le Catalogue Premium
+ * au prix plein. Aucune réduction, aucune fausse urgence.
+ */
+export function guideSequenceEmail(p: {
+  kind: "open" | "budget" | "villa_duplex" | "inside" | "faq" | "plans" | "last";
+  name?: string | null;
+  downloaded: boolean;
+  downloadUrl: string | null;
+  catalogueUrl: string;
+  customPlansUrl: string;
+  whatsappUrl: string;
+  price: string;
+  announcedModels: number;
+  unsubscribe: string;
+}) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const priceLine = `Catalogue Premium : ${p.price}, paiement unique, accès à vie.`;
+  let subject: string;
+  let paragraphs: string[];
+  let items: string[] = [];
+  let cta: { href: string; label: string } = { href: p.catalogueUrl, label: "Découvrir le Catalogue Premium" };
+  let showPrice = true;
+
+  switch (p.kind) {
+    case "open":
+      subject = p.downloaded ? "Avez-vous trouvé vos 3 favoris ?" : "Votre guide vous attend";
+      paragraphs = p.downloaded
+        ? [
+            "Vous avez ouvert votre Guide WooPlans des maisons. Avez-vous noté vos 3 favoris ?",
+            "Une astuce : commencez par votre terrain. Un modèle magnifique qui ne tient pas sur votre parcelle vous fera perdre du temps. Le tableau « Quel modèle pour mon terrain ? », à la fin du guide, vous donne la liste des modèles possibles en un coup d'œil.",
+          ]
+        : ["Votre Guide WooPlans des maisons n'a pas encore été téléchargé. Le voici :"];
+      cta = p.downloadUrl ? { href: p.downloadUrl, label: p.downloaded ? "Rouvrir mon guide" : "Télécharger mon guide" } : cta;
+      showPrice = false;
+      break;
+    case "budget":
+      subject = "Ce que comprend (et ne comprend pas) le budget d'une maison";
+      paragraphs = [
+        "Dans le guide, chaque modèle a une fourchette de budget de construction. Elle couvre les grands postes, de la fondation jusqu'au carrelage.",
+        "Prévoyez en plus : le terrain, le permis de construire, la clôture, les raccordements (eau, électricité) et l'équipement de la maison.",
+        "Pour savoir combien coûte chaque étape, et construire par phases si besoin, il faut le devis poste par poste. Pour chaque modèle, le Catalogue Premium le détaille :",
+      ];
+      items = ["Fondation", "Élévations", "Charpente et toiture", "Crépissage", "Portes et fenêtres", "Plomberie et électricité", "Plafond et peinture", "Carrelage"];
+      break;
+    case "villa_duplex":
+      subject = "Villa ou duplex : comment choisir selon votre terrain";
+      paragraphs = [
+        "La villa de plain-pied est simple à vivre et à construire, mais elle demande plus de terrain.",
+        "Le duplex donne plus de surface sur une parcelle plus petite, avec un budget plus élevé (dalle, escalier, structure).",
+        "Le bon réflexe : mettez votre villa préférée et votre duplex préféré côte à côte. Dans le Catalogue Premium, le comparateur affiche 3 modèles ensemble : distributions, surfaces des pièces et devis.",
+      ];
+      break;
+    case "inside":
+      subject = "Ce que vous trouverez dans le Catalogue Premium";
+      paragraphs = ["Le guide vous montre l'extérieur et le budget. Le Catalogue Premium vous montre l'intérieur et le détail, pour chaque modèle :"];
+      items = [
+        "Le plan de distribution coté de chaque niveau",
+        "Le tableau des pièces et de leurs surfaces",
+        "Le devis estimatif poste par poste",
+        "La fiche PDF du modèle à télécharger, à montrer à votre famille ou à votre maçon",
+        "Le comparateur et vos favoris",
+        `Les ${p.announcedModels} modèles, et les nouveaux ajoutés sans frais`,
+      ];
+      cta = { href: p.catalogueUrl, label: "Voir le Catalogue Premium" };
+      break;
+    case "faq":
+      subject = "Vos questions sur le Catalogue Premium";
+      paragraphs = ["Les questions qu'on nous pose le plus souvent :"];
+      items = [
+        "Quand ai-je accès ? Juste après le paiement : votre code d'accès arrive par email.",
+        "Comment payer ? Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire.",
+        "Est-ce que je reçois un livre ? Vous recevez la version numérique : un espace en ligne et la fiche PDF de chaque modèle à télécharger.",
+        "Les nouveaux modèles sont-ils inclus ? Oui, ils s'ajoutent à votre espace sans frais.",
+      ];
+      cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
+      break;
+    case "plans":
+      subject = "Du modèle choisi à la construction";
+      paragraphs = [
+        "Quand votre modèle est choisi, il reste une étape avant le chantier : les plans complets, adaptés à votre terrain.",
+        `Nos architectes les réalisent à prix fixe : ${formatFcfa(CUSTOM_PLAN_OFFERS[0].price)} pour une villa, ${formatFcfa(CUSTOM_PLAN_OFFERS[1].price)} pour un duplex.`,
+        "Vous avez un terrain et vous voulez démarrer dans les prochains mois ? Écrivez-moi sur WhatsApp avec la taille de votre terrain et le modèle qui vous plaît.",
+      ];
+      cta = { href: p.whatsappUrl, label: "Écrire à Tao sur WhatsApp" };
+      showPrice = false;
+      break;
+    default:
+      subject = "Mon dernier message sur le Catalogue Premium";
+      paragraphs = [
+        "C'est mon dernier message à ce sujet. Si vous préparez votre maison, le Catalogue Premium vous aidera à choisir le bon plan et à connaître le coût de chaque étape, avant de dépenser plus.",
+      ];
+      cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
+  }
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}${
+    showPrice ? `<p>${escape(priceLine)}</p>` : ""
+  }<p>Tao, fondateur de WooPlans</p>`;
+  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, showPrice ? priceLine : "", "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`]
+    .filter(Boolean)
+    .join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
+/** Alerte au propriétaire : acheteur du guide avec terrain et démarrage dans les 6 mois. */
+export function guideHotLeadAdminEmail(p: { name: string | null; email: string; phone: string | null; summary: string; whatsappUrl: string | null }) {
+  const subject = `Guide : lead chaud à contacter sur WhatsApp, ${p.name || p.email}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email}`, `WhatsApp : ${p.phone || "—"}`, p.summary];
+  const body = `<p>${lines.map(escape).join("<br>")}</p>${p.whatsappUrl ? button(p.whatsappUrl, "Lui écrire sur WhatsApp") : ""}<p>Fiche créée dans le CRM (étape « demande »).</p>`;
+  return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? "", "Fiche créée dans le CRM (étape « demande »)."].join("\n") };
+}

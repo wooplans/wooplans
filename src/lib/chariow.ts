@@ -1,8 +1,8 @@
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
-import { and, desc, eq, gte, isNotNull, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, adminSaleEmail, guideDeliveryEmail, planDevisEmail, sendEmail } from "@/lib/email";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
 import { recordServerEvent } from "@/lib/tracking";
@@ -13,6 +13,7 @@ import { buildUpsellEmail } from "@/lib/upsell-server";
 import { recordProspectEvent } from "@/lib/prospects";
 import { offreProductIds, type Offre } from "@/lib/offres";
 import { recordPurchasedPlan } from "@/lib/pdf-quota";
+import { GUIDE, GUIDE_CTA_ID, GUIDE_PATH, guideProductId } from "@/lib/guide";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -70,7 +71,8 @@ export type PulseOutcome =
   | "access_granted"
   | "already_granted"
   | "plan_delivered"
-  | "plan_unmatched";
+  | "plan_unmatched"
+  | "guide_delivered";
 
 /**
  * Traite une notification déjà authentifiée. Idempotent :
@@ -134,6 +136,7 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
   if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
+  if (guideProductId() && productId === guideProductId()) return processGuideSale(payload, status);
   const offre = offreProductIds().get(productId);
   if (!offre && !catalogueProductIds().has(productId)) return "ignored_product";
   return processCatalogueSale(payload, status, provider, offre ?? null);
@@ -487,6 +490,122 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
   return "plan_delivered";
 }
 
+/* ─────────────── Guide WooPlans des maisons (1 900 FCFA) ─────────────── */
+
+/**
+ * Vente du guide : lien de téléchargement par email, prospect inscrit dans la séquence « guide »
+ * (7 emails jusqu'au Catalogue Premium). Aucun accès Premium. Paiement abandonné : simple enregistrement.
+ */
+async function processGuideSale(
+  payload: ChariowSalePayload,
+  status: "completed" | "abandoned" | "failed",
+): Promise<PulseOutcome> {
+  const db = getDb();
+  const sale = payload.sale!;
+  const customer = payload.customer ?? {};
+  const email = customer.email ? normalizeEmail(customer.email) : null;
+  const name = customer.name || [customer.first_name, customer.last_name].filter(Boolean).join(" ") || null;
+  const phone = normalizePhone(customer.phone);
+  const country = customerCountry(customer);
+  const amount = Math.round(Number(sale.amount?.value ?? sale.original_amount?.value ?? 0)) || 0;
+  const metadata = sale.custom_metadata ?? {};
+
+  const intent = await findGuideIntent(metadata.intent_id, email);
+  const visitor = intent?.visitorId ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) }) : null;
+  const existing = await db.query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, sale.id!) });
+  const nextStatus = existing?.status === "completed" ? "completed" : status;
+  const values = {
+    productId: payload.product!.id!,
+    productName: "Guide WooPlans des maisons",
+    status: nextStatus,
+    amount,
+    currency: sale.amount?.currency || sale.original_amount?.currency || "XAF",
+    email,
+    name,
+    phone,
+    country,
+    intentId: intent?.id ?? existing?.intentId ?? null,
+    visitorId: visitor?.id ?? existing?.visitorId ?? null,
+    utmSource: visitor?.utmSource ?? existing?.utmSource ?? null,
+    utmCampaign: visitor?.utmCampaign ?? existing?.utmCampaign ?? null,
+    source: visitor?.source ?? existing?.source ?? null,
+    occurredAt: new Date(sale.completed_at || sale.created_at || Date.now()),
+    updatedAt: new Date(),
+  } as const;
+  if (existing) await db.update(schema.sales).set(values).where(eq(schema.sales.id, existing.id));
+  else await db.insert(schema.sales).values({ id: randomId(), chariowSaleId: sale.id!, ...values });
+
+  if (status !== "completed" || (sale.status && sale.status !== "completed")) {
+    if (intent && intent.status === "started" && status !== "completed") {
+      await db.update(schema.checkoutIntents).set({ status, saleId: sale.id, updatedAt: new Date() }).where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    return "recorded";
+  }
+
+  // Le lien de téléchargement est l'identifiant de l'intention ; sans intention (paiement direct sur la boutique),
+  // on en crée une pour la vente.
+  let intentId = intent?.id ?? null;
+  if (!intentId) {
+    intentId = randomId();
+    await db.insert(schema.checkoutIntents).values({ id: intentId, email, ctaId: GUIDE_CTA_ID, status: "started" });
+  }
+  // Verrou : une seule notification livre le guide.
+  const claimed = await db
+    .update(schema.checkoutIntents)
+    .set({ status: "paid", saleId: sale.id, email: email ?? intent?.email ?? null, updatedAt: new Date() })
+    .where(and(eq(schema.checkoutIntents.id, intentId), ne(schema.checkoutIntents.status, "paid")))
+    .returning({ id: schema.checkoutIntents.id });
+  if (claimed.length === 0) return "already_granted";
+
+  const to = email ?? intent?.email ?? null;
+  if (to) {
+    const mail = guideDeliveryEmail({
+      name,
+      downloadUrl: siteUrl(`/api/guide/${intentId}`),
+      thanksUrl: siteUrl(`${GUIDE_PATH}/merci?i=${intentId}`),
+      announcedModels: GUIDE.announcedModels,
+    });
+    await sendEmail({ to, ...mail, template: "guide_livraison" });
+    await recordProspectEvent({
+      email: to,
+      name,
+      phone,
+      country,
+      event: "guide",
+      occurredAt: values.occurredAt,
+      saleId: sale.id,
+      amount,
+      source: "guide",
+      utmSource: values.utmSource,
+      utmCampaign: values.utmCampaign,
+      startSequence: true,
+      kind: "guide",
+    }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
+  }
+  if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${GUIDE_PATH}/merci`, ctaId: GUIDE_CTA_ID });
+  return "guide_delivered";
+}
+
+async function findGuideIntent(intentId: string | undefined, email: string | null) {
+  const db = getDb();
+  if (intentId) {
+    const byId = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intentId) });
+    if (byId?.ctaId === GUIDE_CTA_ID) return byId;
+  }
+  if (!email) return null;
+  return (
+    (await db.query.checkoutIntents.findFirst({
+      where: and(
+        eq(schema.checkoutIntents.email, email),
+        eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID),
+        ne(schema.checkoutIntents.status, "paid"),
+        gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
+      ),
+      orderBy: desc(schema.checkoutIntents.createdAt),
+    })) ?? null
+  );
+}
+
 async function findPlanIntent(intentId: string | undefined, email: string | null) {
   const db = getDb();
   if (intentId) {
@@ -533,6 +652,8 @@ async function findIntent(intentId: string | undefined, email: string | null) {
       where: and(
         eq(schema.checkoutIntents.email, email),
         isNull(schema.checkoutIntents.planSlug),
+        // Un achat du guide (1 900 FCFA) n'est jamais l'intention d'un achat du catalogue.
+        or(isNull(schema.checkoutIntents.ctaId), ne(schema.checkoutIntents.ctaId, GUIDE_CTA_ID)),
         gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
       ),
       orderBy: desc(schema.checkoutIntents.createdAt),
