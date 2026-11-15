@@ -212,8 +212,8 @@ export default async function GuidePage() {
         </div>
       </section>
 
-      {/* Barre d'achat mobile : apparaît une fois le bouton du haut dépassé. */}
-      <StickyOfferBar>
+      {/* Barre d'achat mobile : visible dès que le bouton du haut n'est pas à l'écran. */}
+      <StickyOfferBar whenButtonHidden>
         <div className="cta-pulse">
           <Cta id="guide_sticky" className="py-3.5" />
         </div>
