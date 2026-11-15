@@ -21,16 +21,12 @@ export const metadata: Metadata = {
 const SHOWCASE = ["villa-v3-017", "villa-v4-005", "duplex-d5-012", "villa-v4-036", "villa-v4-032", "duplex-d4-034"];
 
 const FOR_YOU = [
-  "Vous avez un terrain, ou vous êtes en train d'en acheter un",
-  "Vous voulez construire dans les 12 prochains mois",
-  "Vous voulez savoir ce que votre budget permet avant de payer un architecte",
-  "Vous hésitez entre une villa et un duplex, ou sur le nombre de chambres",
+  "Vous avez un terrain, ou vous souhaitez acheter un terrain",
+  "Vous planifiez la construction de votre maison",
+  "Vous voulez savoir ce que vous pouvez construire avec votre budget",
+  "Vous hésitez entre une villa basse et un duplex, ou sur le nombre de chambres",
 ];
-const NOT_FOR_YOU = [
-  "Vous cherchez les plans complets pour lancer le chantier demain (c'est notre service de plans complets)",
-  "Vous cherchez une maison déjà construite à acheter ou à louer",
-  "Vous cherchez des idées de décoration intérieure",
-];
+const NOT_FOR_YOU = ["Vous n'avez pas de projet de construction", "Vous cherchez une maison déjà construite à acheter ou à louer"];
 
 const PAYMENTS = [
   { label: "Orange Money", className: "bg-[#FF7900] text-white" },
@@ -82,7 +78,6 @@ export default async function GuidePage() {
     budgetMax: p!.budgetMax,
     image: p!.coverImage!,
   }));
-  const others = GUIDE.announcedModels - models.length;
 
   return (
     <>
@@ -95,7 +90,7 @@ export default async function GuidePage() {
             <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-highlight">Guide PDF · {formatFcfa(GUIDE.price)}</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-5xl">Les maisons préférées de nos clients, avec leur budget</h1>
             <p className="mt-3 max-w-xl text-white/85">
-              Elles et {others} autres villas et duplex sont classées par budget dans le guide, avec la surface et le terrain de chacune.
+              Il y a {GUIDE.announcedModels} villas et duplex classés par budget dans le guide, avec la surface et le terrain nécessaire.
             </p>
             <div className="mt-5 md:hidden">
               <GuideModelGrid models={models} price={GUIDE.price} enabled={guideEnabled()} compact />

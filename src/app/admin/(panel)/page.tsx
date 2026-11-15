@@ -7,6 +7,7 @@ import {
   getChannelBreakdown,
   getDailySeries,
   getFunnelKpis,
+  getGuideToCatalogue,
   getPlanDevisStats,
   getSalesOverview,
   getSalesPageStats,
@@ -22,7 +23,7 @@ import { formatFcfa } from "@/lib/plans";
  */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ jours?: string; jour?: string }> }) {
   const range = parseRange(await searchParams);
-  const [k, overview, fiche, breakdown, series, salesPage, ctas] = await Promise.all([
+  const [k, overview, fiche, breakdown, series, salesPage, ctas, guide] = await Promise.all([
     getFunnelKpis(range),
     getSalesOverview(range),
     getPlanDevisStats(range),
@@ -30,6 +31,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     getDailySeries(range),
     getSalesPageStats(range),
     getTopCtas(range),
+    getGuideToCatalogue(range),
   ]);
   const slugs = [...new Set([...overview.models.map((m) => m.slug), ...overview.recent.map((r) => r.slug), ...fiche.models.map((m) => m.slug)].filter((s): s is string => Boolean(s)))];
   const plans = slugs.length ? await getDb().query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true } }) : [];
@@ -68,6 +70,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         <Stat label="Revenu des ventes" value={formatFcfa(overview.total.revenue)} hint={`${n(overview.total.n)} ventes, toutes offres`} />
+        <Stat
+          label="Guide → Catalogue"
+          value={`${n(guide.converted)} / ${n(guide.guideBuyers)}`}
+          hint={`${rate(guide.converted, guide.guideBuyers)} des acheteurs du guide · ${formatFcfa(guide.revenue)}${guide.avgDays !== null ? ` · ${guide.avgDays} j en moyenne` : ""}`}
+        />
         <Stat label="Ventes des fiches" value={n(overview.fiche.n)} hint={`${formatFcfa(overview.fiche.revenue)} · plan et devis + catalogue offert`} />
         <Stat label="Conversion des fiches" value={rate(fiche.purchases, fiche.ficheVisitors)} hint={`achats / ${n(fiche.ficheVisitors)} visiteurs des fiches`} />
         <Stat label="Paiements à relancer" value={n(toRelaunch)} hint={`${n(overview.abandoned)} abandonnés · ${n(overview.failed)} échoués · relance email automatique`} />

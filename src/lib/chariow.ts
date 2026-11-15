@@ -549,6 +549,30 @@ async function processGuideSale(
       const mail = guideAbandonAdminEmail({ name, email, phone, failed: status === "failed", whatsappUrl: phone ? whatsappLink(message, phone) : null });
       await sendEmail({ to: notifyAbandon, ...mail, template: "admin_guide_abandon" }).catch((error) => console.error("Alerte abandon du guide non envoyée", error));
     }
+    // Relance par email (2 emails) de la personne, sauf si elle a déjà payé (cette vente ou un autre achat du guide).
+    const alreadyBought = email
+      ? await db.query.checkoutIntents.findFirst({
+          where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID), eq(schema.checkoutIntents.status, "paid")),
+          columns: { id: true },
+        })
+      : null;
+    if (email && !alreadyBought && status !== "completed" && nextStatus !== "completed") {
+      await recordProspectEvent({
+        email,
+        name,
+        phone,
+        country,
+        event: status,
+        occurredAt: values.occurredAt,
+        saleId: sale.id,
+        amount,
+        source: "guide",
+        utmSource: values.utmSource,
+        utmCampaign: values.utmCampaign,
+        startSequence: true,
+        kind: "guide_relance",
+      }).catch((error) => console.error("CRM prospects : relance du guide non enregistrée", error));
+    }
     return "recorded";
   }
 

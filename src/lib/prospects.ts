@@ -3,8 +3,8 @@ import { getDb, schema } from "@/db";
 import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { giftReminderEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
-import { GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, guideKindForStep, guideProductId } from "@/lib/guide";
+import { giftReminderEmail, guideRelanceEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
@@ -61,7 +61,7 @@ type ProspectEventInput = {
   kind?: SequenceKind;
 };
 
-type SequenceKind = "relance" | "bienvenue" | "offre" | "guide";
+type SequenceKind = "relance" | "bienvenue" | "offre" | "guide" | "guide_relance";
 
 const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
   kind === "bienvenue"
@@ -70,7 +70,9 @@ const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
       ? OFFRE_DELAYS_HOURS
       : kind === "guide"
         ? GUIDE_DELAYS_HOURS
-        : settings.delaysHours;
+        : kind === "guide_relance"
+          ? GUIDE_RELANCE_DELAYS_HOURS
+          : settings.delaysHours;
 
 /** Ventes qui ne font pas d'une personne une cliente du catalogue : le guide (1 900 FCFA) prépare cet achat. */
 const notGuideSale = () => (guideProductId() ? ne(schema.sales.productId, guideProductId()) : undefined);
@@ -445,6 +447,24 @@ export async function runProspectSequence(now = new Date()) {
       });
       const sentOffre = await sendEmail({ to: p.email, ...mail, template: `offre_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
       await afterSend(p, step, delays, sentOffre.ok, now, result);
+      await pause(400);
+      continue;
+    }
+
+    // Séquence « guide_relance » : paiement du guide abandonné ou échoué (2 emails).
+    if (p.sequenceKind === "guide_relance") {
+      const unsubscribe = await unsubscribeUrl(p.email, "prospects");
+      const mail = guideRelanceEmail({
+        kind: guideRelanceKindForStep(step),
+        name: p.name,
+        failed: p.lastEvent === "failed",
+        checkoutUrl: siteUrl(`${GUIDE_PATH}?utm_source=email&utm_medium=relance&utm_campaign=guide_relance_${step + 1}`),
+        whatsappUrl: whatsappLink("Bonjour Tao, je n'arrive pas à payer le Guide des maisons, pouvez-vous m'aider ?", getEnv().WHATSAPP_NUMBER || undefined),
+        price: formatFcfa(GUIDE.price),
+        unsubscribe,
+      });
+      const sentRelance = await sendEmail({ to: p.email, ...mail, template: `guide_relance_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
+      await afterSend(p, step, delays, sentRelance.ok, now, result);
       await pause(400);
       continue;
     }

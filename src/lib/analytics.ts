@@ -494,3 +494,59 @@ export async function getSalesOverview(range: Range) {
     recent: recent.map((r) => ({ ...r, offer: saleOffer(r.productId) })),
   };
 }
+
+/**
+ * Passage du Guide des maisons au Catalogue Premium. Cohorte : acheteurs du guide dont l'achat tombe dans la période.
+ * Converti : une vente payée du catalogue (seul ou offre avec catalogue offert) APRÈS l'achat du guide, reconnue par
+ * l'email OU le numéro WhatsApp (une même personne paie parfois avec un autre email). Indépendant des UTM et des cookies.
+ */
+export async function getGuideToCatalogue(range: Range) {
+  const db = getDb();
+  const guide = guideId();
+  const buyers = await db
+    .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt })
+    .from(schema.sales)
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, guide), within(schema.sales.occurredAt, range), notOwnerSale()));
+  if (buyers.length === 0) return { guideBuyers: 0, converted: 0, rate: 0, revenue: 0, avgDays: null as number | null };
+  const emails = [...new Set(buyers.map((b) => b.email?.toLowerCase()).filter((e): e is string => Boolean(e)))];
+  const phones = [...new Set(buyers.map((b) => b.phone).filter((p): p is string => Boolean(p)))];
+  const catalogueIds = [...catalogueSaleProductIds()];
+  const conditions = [
+    emails.length ? inArray(sql`lower(${schema.sales.email})`, emails) : undefined,
+    phones.length ? inArray(schema.sales.phone, phones) : undefined,
+  ].filter(Boolean) as SQL[];
+  const later = await db
+    .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt, amount: schema.sales.amount })
+    .from(schema.sales)
+    .where(and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, catalogueIds), or(...conditions)));
+  let converted = 0;
+  let revenue = 0;
+  let days = 0;
+  for (const b of buyers) {
+    const match = later
+      .filter((s) => ((b.email && s.email?.toLowerCase() === b.email.toLowerCase()) || (b.phone && s.phone === b.phone)) && s.at.getTime() > b.at.getTime())
+      .sort((x, y) => x.at.getTime() - y.at.getTime())[0];
+    if (match) {
+      converted++;
+      revenue += match.amount;
+      days += (match.at.getTime() - b.at.getTime()) / 86400_000;
+    }
+  }
+  return {
+    guideBuyers: buyers.length,
+    converted,
+    rate: converted / buyers.length,
+    revenue,
+    avgDays: converted ? Math.round((days / converted) * 10) / 10 : null,
+  };
+}
+
+/** Produits qui donnent le Catalogue Premium : catalogue seul (actuel et anciens) et offres « plan et devis + catalogue offert ». */
+function catalogueSaleProductIds() {
+  const env = getEnv();
+  return new Set(
+    [env.CHARIOW_CATALOGUE_PRODUCT_ID, ...(env.CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS || "").split(","), ...offreProductIds().keys()]
+      .map((id) => id.trim())
+      .filter(Boolean),
+  );
+}

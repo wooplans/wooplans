@@ -170,42 +170,76 @@ export function GuideThanks(props: {
         </section>
       )}
 
-      {/* 3. Le Catalogue Premium */}
-      <section className="rounded-2xl bg-primary p-6 text-white md:p-10">
-        <p className="text-sm font-semibold uppercase tracking-wide text-highlight">L&apos;étape suivante</p>
-        <h2 className="mt-2 text-2xl font-bold md:text-3xl">Vous avez le guide. Voici le catalogue complet.</h2>
-        <p className="mt-3 max-w-2xl text-white/85">
-          Le guide vous montre chaque maison et son budget. Le Catalogue Premium vous montre l&apos;intérieur et le détail, pour choisir en toute
-          confiance.
-        </p>
-        {props.video && (
-          <video className="mt-6 aspect-video w-full max-w-3xl rounded-xl bg-black" controls playsInline preload="metadata" poster={props.videoPoster || undefined}>
-            <source src={props.video} type="video/mp4" />
-          </video>
-        )}
-        <ul className="mt-6 grid max-w-3xl gap-2 text-white/90 md:grid-cols-2">
-          {[
-            "Le plan de distribution coté de chaque niveau",
-            "Le tableau des pièces et de leurs surfaces",
-            "Le devis estimatif poste par poste",
-            "La fiche PDF de chaque modèle à télécharger",
-            "Le comparateur : 3 modèles côte à côte",
-            `Les ${props.announcedModels} modèles, nouveaux modèles inclus`,
-          ].map((t) => (
-            <li key={t} className="flex gap-2">
-              <span className="text-highlight" aria-hidden>
-                ✓
-              </span>
-              {t}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          <a href={props.catalogueUrl} data-cta="guide_merci_catalogue" className="btn btn-cta px-6 py-4 text-base">
-            Découvrir le Catalogue Premium
-          </a>
-          <p className="text-white/85">
-            <strong className="text-white">{props.cataloguePrice}</strong> · paiement unique · version numérique (espace en ligne + fiches PDF)
+      {/* 3. Le Catalogue Premium : ce que le guide ne montre pas (prix plein, aucune réduction ni compte à rebours). */}
+      <section className="overflow-hidden rounded-2xl bg-primary text-white">
+        <div className="p-6 md:p-10">
+          <p className="text-sm font-semibold uppercase tracking-wide text-highlight">L&apos;étape suivante</p>
+          <h2 className="mt-2 text-2xl font-bold md:text-3xl">Votre guide montre l&apos;extérieur. Le Catalogue Premium montre l&apos;intérieur.</h2>
+          <p className="mt-3 max-w-2xl text-white/85">
+            Pour choisir votre maison en toute confiance, il vous faut voir la place de chaque pièce et le coût de chaque étape du chantier.
+          </p>
+          {props.video ? (
+            <video className="mt-6 aspect-video w-full max-w-3xl rounded-xl bg-black" controls playsInline preload="none" poster={props.videoPoster || undefined}>
+              <source src={props.video} type="video/mp4" />
+            </video>
+          ) : (
+            <figure className="relative mt-6 max-w-3xl overflow-hidden rounded-xl bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/guide/premium-apercu.jpg" alt="Aperçu flouté d'un plan coté et d'un devis" loading="lazy" className="w-full" />
+              <figcaption className="absolute inset-0 grid place-items-center">
+                <span className="rounded-full bg-foreground/90 px-4 py-2 text-sm font-semibold text-white">Plans cotés et devis : dans le Catalogue Premium</span>
+              </figcaption>
+            </figure>
+          )}
+        </div>
+        <div className="grid gap-px bg-white/15 md:grid-cols-2">
+          <div className="bg-primary p-6 md:px-10">
+            <p className="font-semibold text-white/80">Dans votre guide</p>
+            <ul className="mt-3 space-y-2 text-sm text-white/80">
+              {["Le rendu de chaque maison", "Chambres, niveaux, surface", "Le terrain conseillé", "Le budget global estimé"].map((t) => (
+                <li key={t} className="flex gap-2">
+                  <span aria-hidden>✓</span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-primary-dark p-6 md:px-10">
+            <p className="font-semibold text-highlight">En plus dans le Catalogue Premium</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {[
+                "Le plan de distribution coté de chaque niveau",
+                "La surface de chaque pièce",
+                "Le devis poste par poste : fondation, élévations, toiture… jusqu'au carrelage",
+                "La fiche PDF de chaque modèle, à montrer à votre maçon",
+                "Le comparateur : 3 modèles côte à côte",
+                `Les ${props.announcedModels} modèles, nouveaux modèles inclus`,
+              ].map((t) => (
+                <li key={t} className="flex gap-2">
+                  <span className="text-highlight" aria-hidden>
+                    ✓
+                  </span>
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="p-6 md:px-10 md:pb-10">
+          <div className="flex flex-wrap items-center gap-4">
+            <a href={props.catalogueUrl} data-cta="guide_merci_catalogue" className="btn btn-cta px-6 py-4 text-base">
+              Voir le Catalogue Premium
+            </a>
+            <p className="text-white/85">
+              <strong className="text-white">{props.cataloguePrice}</strong> · paiement unique · version numérique (espace en ligne + fiches PDF)
+            </p>
+          </div>
+          <p className="mt-4 text-sm text-white/75">
+            Une question avant de vous décider ?{" "}
+            <a href={props.whatsappUrl} data-cta="guide_merci_whatsapp" className="font-semibold text-white underline">
+              Écrivez-moi sur WhatsApp
+            </a>
+            .
           </p>
         </div>
       </section>
