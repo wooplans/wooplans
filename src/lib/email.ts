@@ -798,3 +798,42 @@ export function guideSaleAdminEmail(p: { name: string | null; email: string; pho
   }<p style="color:#6B7280;font-size:13px">Le message est déjà rédigé avec son lien personnel. Le guide lui a aussi été envoyé par email.</p>`;
   return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
 }
+
+/** Alerte au propriétaire : paiement du guide abandonné ou échoué, avec le message de relance WhatsApp prêt à envoyer. */
+export function guideAbandonAdminEmail(p: { name: string | null; email: string | null; phone: string | null; failed: boolean; whatsappUrl: string | null }) {
+  const subject = `Guide : paiement ${p.failed ? "échoué" : "abandonné"}, ${p.name || p.email || "client"}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email || "—"}`, `WhatsApp : ${p.phone || "—"}`];
+  const body = `<p>${lines.map(escape).join("<br>")}</p>${
+    p.whatsappUrl ? button(p.whatsappUrl, "Le relancer sur WhatsApp") : "<p>Pas de numéro WhatsApp.</p>"
+  }<p style="color:#6B7280;font-size:13px">Souvent, c'est le solde ou la validation Mobile Money qui bloque. Le message propose de l'aider et redonne le lien de la page.</p>`;
+  return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
+}
+
+/** Relance d'un paiement du guide abandonné ou échoué (2 emails, src/lib/guide-rules.ts). Aucune fausse urgence. */
+export function guideRelanceEmail(p: { kind: "help" | "last"; name?: string | null; failed: boolean; checkoutUrl: string; whatsappUrl: string; price: string; unsubscribe: string }) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const subject =
+    p.kind === "help"
+      ? p.failed
+        ? "Votre paiement du Guide des maisons n'a pas abouti"
+        : "Votre Guide des maisons vous attend"
+      : "Dernier rappel : votre Guide des maisons";
+  const paragraphs =
+    p.kind === "help"
+      ? [
+          p.failed
+            ? "Votre paiement du Guide WooPlans des maisons n'a pas abouti. Souvent, c'est le solde ou la validation Mobile Money qui bloque : vous pouvez réessayer en une minute."
+            : "Vous avez commencé à commander le Guide WooPlans des maisons, sans aller jusqu'au paiement.",
+          `Pour rappel : 100 villas et duplex classés par budget, avec la surface et le terrain de chacun. ${p.price}, reçu tout de suite par email et sur WhatsApp.`,
+        ]
+      : [
+          "C'est mon dernier message à ce sujet. Si vous préparez la construction de votre maison, le guide vous montre en quelques minutes ce que votre budget permet de construire.",
+          `${p.price}, paiement par Mobile Money ou carte.`,
+        ];
+  const cta = p.kind === "help" && p.failed ? "Réessayer le paiement" : "Recevoir le guide";
+  const help = `Un souci pour payer ? <a href="${p.whatsappUrl}" style="color:#0F5B59;font-weight:600">Écrivez-moi sur WhatsApp</a>, je vous aide.`;
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${button(p.checkoutUrl, cta)}<p>${help}</p><p>Tao, fondateur de WooPlans</p>`;
+  const text = [helloText, ...paragraphs, `${cta} : ${p.checkoutUrl}`, `Un souci pour payer ? WhatsApp : ${p.whatsappUrl}`, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}

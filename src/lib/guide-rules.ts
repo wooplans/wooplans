@@ -105,3 +105,15 @@ export function guideKindForStep(step: number): GuideEmailKind {
   const kinds = ["open", "budget", "villa_duplex", "inside", "faq", "plans", "last"] as const;
   return kinds[Math.min(Math.max(step, 0), kinds.length - 1)];
 }
+
+/**
+ * Relance d'un paiement du guide abandonné ou échoué : 2 emails (aide au paiement 1 h après, dernier rappel 24 h après).
+ * Un achat du guide ensuite fait passer la personne dans la séquence « guide ».
+ */
+export const GUIDE_RELANCE_DELAYS_HOURS = [1, 24];
+
+export type GuideRelanceKind = "help" | "last";
+
+export function guideRelanceKindForStep(step: number): GuideRelanceKind {
+  return step <= 0 ? "help" : "last";
+}

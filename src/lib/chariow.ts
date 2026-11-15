@@ -2,7 +2,7 @@ import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, adminSaleEmail, guideAbandonAdminEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/site";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
@@ -539,6 +539,39 @@ async function processGuideSale(
   if (status !== "completed" || (sale.status && sale.status !== "completed")) {
     if (intent && intent.status === "started" && status !== "completed") {
       await db.update(schema.checkoutIntents).set({ status, saleId: sale.id, updatedAt: new Date() }).where(eq(schema.checkoutIntents.id, intent.id));
+    }
+    // Paiement abandonné ou échoué (première notification de cette vente) : alerte avec la relance WhatsApp prête.
+    const notifyAbandon = getEnv().ADMIN_NOTIFY_EMAIL;
+    const firstNotice = !existing || (existing.status !== status && existing.status !== "completed");
+    if (notifyAbandon && status !== "completed" && nextStatus !== "completed" && firstNotice) {
+      const first = (name || "").split(" ")[0];
+      const message = `Bonjour${first ? ` ${first}` : ""}, c'est Tao de WooPlans 👋 Votre paiement du Guide des maisons (1 900 FCFA) n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider. Pour réessayer : ${siteUrl(`${GUIDE_PATH}?utm_source=whatsapp&utm_medium=relance&utm_campaign=guide_abandon`)}`;
+      const mail = guideAbandonAdminEmail({ name, email, phone, failed: status === "failed", whatsappUrl: phone ? whatsappLink(message, phone) : null });
+      await sendEmail({ to: notifyAbandon, ...mail, template: "admin_guide_abandon" }).catch((error) => console.error("Alerte abandon du guide non envoyée", error));
+    }
+    // Relance par email (2 emails) de la personne, sauf si elle a déjà payé (cette vente ou un autre achat du guide).
+    const alreadyBought = email
+      ? await db.query.checkoutIntents.findFirst({
+          where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID), eq(schema.checkoutIntents.status, "paid")),
+          columns: { id: true },
+        })
+      : null;
+    if (email && !alreadyBought && status !== "completed" && nextStatus !== "completed") {
+      await recordProspectEvent({
+        email,
+        name,
+        phone,
+        country,
+        event: status,
+        occurredAt: values.occurredAt,
+        saleId: sale.id,
+        amount,
+        source: "guide",
+        utmSource: values.utmSource,
+        utmCampaign: values.utmCampaign,
+        startSequence: true,
+        kind: "guide_relance",
+      }).catch((error) => console.error("CRM prospects : relance du guide non enregistrée", error));
     }
     return "recorded";
   }

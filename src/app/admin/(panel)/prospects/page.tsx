@@ -1,4 +1,4 @@
-import { GUIDE_DELAYS_HOURS } from "@/lib/guide-rules";
+import { GUIDE_DELAYS_HOURS, GUIDE_RELANCE_DELAYS_HOURS } from "@/lib/guide-rules";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { and, desc, eq, gte, inArray, isNotNull, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
@@ -42,8 +42,8 @@ export default async function ProspectsPage({ searchParams }: { searchParams: Pr
   const db = getDb();
   const [settings, allowance] = await Promise.all([getProspectSettings(), automatedEmailAllowance()]);
   // Deux séquences : relance (paiement abandonné ou échoué, délais réglables) et bienvenue (plan et devis offert).
-  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length, offre: OFFRE_DELAYS_HOURS.length, guide: GUIDE_DELAYS_HOURS.length };
-  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre", guide: "Guide" } as const;
+  const totals = { relance: settings.delaysHours.length, bienvenue: WELCOME_DELAYS_HOURS.length, offre: OFFRE_DELAYS_HOURS.length, guide: GUIDE_DELAYS_HOURS.length, guide_relance: GUIDE_RELANCE_DELAYS_HOURS.length };
+  const SEQUENCES = { relance: "Relance", bienvenue: "Bienvenue", offre: "Relance offre", guide: "Guide", guide_relance: "Relance guide" } as const;
 
   const filters: SQL[] = [];
   if (vue === "a_envoyer") {

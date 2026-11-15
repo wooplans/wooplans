@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { GuideCheckoutButton } from "@/components/guide/GuideCheckoutButton";
+import { GuideModelGrid, type GuideModel } from "@/components/guide/GuideModelGrid";
+import { LazyVideo } from "@/components/guide/LazyVideo";
 import { StickyOfferBar } from "@/components/StickyOfferBar";
 import { GUIDE, GUIDE_PATH, guideEnabled } from "@/lib/guide";
 import { formatFcfa, getPublicPlan } from "@/lib/plans";
@@ -12,22 +14,27 @@ export const metadata: Metadata = {
   alternates: { canonical: GUIDE_PATH },
 };
 
-/** Modèles montrés sur la page : les plus achetés, puis les plus vus en organique (base du site, 14 nov. 2026). */
-const SHOWCASE = ["villa-v3-017", "duplex-d5-012", "villa-v4-005", "villa-v4-036", "duplex-d4-034", "villa-v3-037"];
+/**
+ * Les maisons préférées des clients (les plus achetées, puis les plus vues en organique : base du site, 14 nov. 2026).
+ * Même message que la pub qui vend le mieux (« Les maisons préférées de nos clients avec leur budget »).
+ */
+const SHOWCASE = ["villa-v3-017", "villa-v4-005", "duplex-d5-012", "villa-v4-036", "villa-v4-032", "duplex-d4-034"];
 
 const FOR_YOU = [
-  "Vous avez un terrain, ou vous êtes en train d'en acheter un",
-  "Vous voulez construire dans les 12 prochains mois",
-  "Vous voulez savoir ce que votre budget permet avant de payer un architecte",
-  "Vous hésitez entre une villa et un duplex, ou sur le nombre de chambres",
+  "Vous avez un terrain, ou vous souhaitez acheter un terrain",
+  "Vous planifiez la construction de votre maison",
+  "Vous voulez savoir ce que vous pouvez construire avec votre budget",
+  "Vous hésitez entre une villa basse et un duplex, ou sur le nombre de chambres",
 ];
-const NOT_FOR_YOU = [
-  "Vous cherchez les plans complets pour lancer le chantier demain (c'est notre service de plans complets)",
-  "Vous cherchez une maison déjà construite à acheter ou à louer",
-  "Vous cherchez des idées de décoration intérieure",
-];
+const NOT_FOR_YOU = ["Vous n'avez pas de projet de construction", "Vous cherchez une maison déjà construite à acheter ou à louer"];
 
-const millions = (v: number | null) => (v === null ? "" : (v / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }));
+const PAYMENTS = [
+  { label: "Orange Money", className: "bg-[#FF7900] text-white" },
+  { label: "MTN MoMo", className: "bg-[#FFCC00] text-black" },
+  { label: "Wave", className: "bg-[#1DC8F2] text-white" },
+  { label: "Moov Money", className: "bg-[#0058A8] text-white" },
+  { label: "Carte bancaire", className: "bg-white text-foreground" },
+];
 
 function Cta({ id, className = "" }: { id: string; className?: string }) {
   return (
@@ -41,81 +48,98 @@ function Cta({ id, className = "" }: { id: string; className?: string }) {
   );
 }
 
+function Payments({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className="mt-4">
+      <p className={`text-xs ${dark ? "text-white/70" : "text-muted"}`}>🔒 Paiement sécurisé · guide reçu tout de suite, par email et sur WhatsApp</p>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {PAYMENTS.map((p) => (
+          <li key={p.label} className={`rounded-md px-2 py-1 text-[11px] font-bold ${p.className}`}>
+            {p.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /** Page de vente du Guide WooPlans des maisons (lead magnet payant, src/config/guide.json). Sans en-tête ni pied de page. */
 export default async function GuidePage() {
   const plans = (await Promise.all(SHOWCASE.map((s) => getPublicPlan(s).catch(() => null)))).filter((p) => p?.coverImage);
+  const models: GuideModel[] = plans.map((p) => ({
+    slug: p!.slug,
+    code: p!.code,
+    category: p!.category,
+    bedrooms: p!.bedrooms,
+    levels: p!.levels,
+    surfaceTotal: p!.surfaceTotal,
+    landArea: p!.landArea ?? null,
+    budgetMin: p!.budgetMin,
+    budgetMax: p!.budgetMax,
+    image: p!.coverImage!,
+  }));
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero : même message que la pub qui vend, la grille des maisons tout de suite, puis le bouton. */}
       <section className="bg-primary text-white">
-        <div className="container-page grid items-center gap-8 pb-12 pt-6 md:grid-cols-[1.15fr_1fr] md:pb-16 md:pt-10">
+        <div className="container-page pb-10 pt-5 md:grid md:grid-cols-[1fr_1.1fr] md:items-center md:gap-10 md:pb-16 md:pt-10">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width={120} height={36} className="h-9 w-auto" />
-            <p className="mt-8 text-sm font-semibold uppercase tracking-wide text-highlight">Guide PDF · {formatFcfa(GUIDE.price)}</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-5xl">Quelle maison pouvez-vous construire avec votre budget ?</h1>
-            <p className="mt-4 max-w-xl text-lg text-white/85">
-              {GUIDE.announcedModels} villas et duplex classés par budget, avec la surface et le terrain de chacun.
+            <img src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width={120} height={36} className="h-8 w-auto" />
+            <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-highlight">Guide PDF · {formatFcfa(GUIDE.price)}</p>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-5xl">Les maisons préférées de nos clients, avec leur budget</h1>
+            <p className="mt-3 max-w-xl text-white/85">
+              Il y a {GUIDE.announcedModels} villas et duplex classés par budget dans le guide, avec la surface et le terrain nécessaire.
             </p>
-            <div id="offre-bouton" className="cta-pulse mt-7">
+            <div className="mt-5 md:hidden">
+              <GuideModelGrid models={models} price={GUIDE.price} enabled={guideEnabled()} compact />
+              <p className="mt-2 text-center text-xs text-white/70">Touchez une maison pour la voir en grand</p>
+            </div>
+            <div id="offre-bouton" className="cta-pulse mt-6">
               <Cta id="guide_hero" />
             </div>
-            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/80">
-              <li>📱 PDF sur votre téléphone</li>
-              <li>💳 Mobile Money ou carte</li>
-              <li>⚡ Reçu tout de suite</li>
-            </ul>
+            <Payments dark />
           </div>
-          {GUIDE.video ? (
-            <div className="mx-auto w-full max-w-[300px] md:max-w-[340px]">
-              <video
-                className="aspect-[9/20] w-full rounded-[2rem] border-[6px] border-black bg-black object-cover shadow-2xl"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                poster={GUIDE.videoPoster || undefined}
-              >
-                <source src={GUIDE.video} type="video/mp4" />
-              </video>
-            </div>
-          ) : null}
+          <div className="mt-8 hidden md:block">
+            <GuideModelGrid models={models} price={GUIDE.price} enabled={guideEnabled()} compact />
+            <p className="mt-2 text-center text-xs text-white/70">Cliquez sur une maison pour la voir en grand</p>
+          </div>
         </div>
       </section>
 
-      {/* Exemples */}
-      <section className="container-page py-12">
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Chaque maison avec son budget</h2>
-        <p className="mt-2 text-foreground/70">Quelques modèles parmi les {GUIDE.announcedModels} du guide, parmi les préférés de nos clients :</p>
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {plans.map((p) => (
-            <figure key={p!.slug} className="overflow-hidden rounded-xl bg-white shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${p!.coverImage}?w=480`} alt={`Rendu 3D ${p!.name}`} loading="lazy" className="aspect-video w-full object-cover" />
-              <figcaption className="px-3 py-2 text-xs">
-                <span className="font-semibold">{p!.code}</span> · {p!.bedrooms} ch. · {p!.surfaceTotal} m²
-                <span className="block font-semibold text-primary">
-                  {millions(p!.budgetMin)} à {millions(p!.budgetMax)} M FCFA
+      {/* Le guide dans le téléphone : vidéo chargée seulement quand elle arrive à l'écran. */}
+      <section className="container-page grid items-center gap-8 py-12 md:grid-cols-[1fr_1fr]">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Le guide, dans votre téléphone</h2>
+          <ul className="mt-5 space-y-2">
+            {[
+              `${GUIDE.announcedModels} villas et duplex, de moins de 15 à plus de 70 millions`,
+              "Pour chacune : chambres, niveaux, surface et terrain conseillé",
+              "Le tableau « Quel modèle pour mon terrain ? », de 200 à 750 m²",
+              "Les 5 décisions à prendre avant de construire",
+            ].map((t) => (
+              <li key={t} className="flex gap-2">
+                <span className="text-primary" aria-hidden>
+                  ✓
                 </span>
-              </figcaption>
-            </figure>
-          ))}
+                {t}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 hidden md:block">
+            <Cta id="guide_video" />
+          </div>
         </div>
-        <ul className="mt-8 grid gap-2 md:grid-cols-2">
-          {[
-            "Les maisons classées par budget : de moins de 15 à plus de 70 millions",
-            "Pour chacune : chambres, niveaux, surface et terrain conseillé",
-            "Le tableau « Quel modèle pour mon terrain ? », de 200 à 750 m²",
-            "Les 5 décisions à prendre avant de construire",
-          ].map((t) => (
-            <li key={t} className="flex gap-2">
-              <span className="text-primary" aria-hidden>✓</span>
-              {t}
-            </li>
-          ))}
-        </ul>
+        {GUIDE.video ? (
+          <div className="mx-auto w-full max-w-[280px]">
+            <LazyVideo
+              src={GUIDE.video}
+              poster={GUIDE.videoPoster || undefined}
+              className="aspect-[9/20] w-full rounded-[2rem] border-[6px] border-black bg-black object-cover shadow-2xl"
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* Pour qui ? */}
@@ -158,10 +182,10 @@ export default async function GuidePage() {
         <h2 className="text-2xl font-semibold tracking-tight">Questions fréquentes</h2>
         <dl className="mt-5 space-y-5">
           {[
+            ["Comment payer ?", "Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire, sur une page de paiement sécurisée."],
             ["Comment je reçois le guide ?", "Juste après le paiement : il s'ouvre à l'écran, il arrive par email et sur votre WhatsApp."],
             ["Est-ce un livre imprimé ?", "Non, c'est un PDF à lire sur votre téléphone ou votre ordinateur."],
             ["Le guide contient-il les plans cotés et les devis détaillés ?", "Non. Il montre chaque maison, ses surfaces et son budget estimé. Les plans cotés et les devis poste par poste sont dans le Catalogue Premium."],
-            ["Comment payer ?", "Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire."],
           ].map(([q, a]) => (
             <div key={q}>
               <dt className="font-semibold">{q}</dt>
@@ -183,8 +207,8 @@ export default async function GuidePage() {
         </div>
       </section>
 
-      {/* Barre d'achat mobile : apparaît une fois le bouton du haut dépassé. */}
-      <StickyOfferBar>
+      {/* Barre d'achat mobile : visible dès que le bouton du haut n'est pas à l'écran. */}
+      <StickyOfferBar whenButtonHidden>
         <div className="cta-pulse">
           <Cta id="guide_sticky" className="py-3.5" />
         </div>

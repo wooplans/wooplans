@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  * la barre n'apparaît qu'une fois ce bouton dépassé vers le haut, et disparaît quand on y revient : au début de la
  * fiche, l'offre est déjà à l'écran et la barre la cachait. Sans ce bouton (autres offres), la barre est toujours là.
  */
-export function StickyOfferBar({ children }: { children: React.ReactNode }) {
+export function StickyOfferBar({ children, whenButtonHidden = false }: { children: React.ReactNode; whenButtonHidden?: boolean }) {
   const [shown, setShown] = useState(false);
   const [watching, setWatching] = useState(true);
 
@@ -18,12 +18,14 @@ export function StickyOfferBar({ children }: { children: React.ReactNode }) {
       return;
     }
     const observer = new IntersectionObserver(
-      ([entry]) => setShown(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      // whenButtonHidden : la barre est là dès que le bouton n'est pas à l'écran, avant comme après lui
+      // (page du guide : la grille des maisons pousse le bouton sous le premier écran).
+      ([entry]) => setShown(!entry.isIntersecting && (whenButtonHidden || entry.boundingClientRect.top < 0)),
       { threshold: 0 },
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [whenButtonHidden]);
 
   const visible = !watching || shown;
   return (

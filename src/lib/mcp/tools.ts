@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, like, lte, ne, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { LEAD_STAGES, type LeadStage } from "@/db/schema";
-import { getChannelBreakdown, getFunnelKpis, getSalesOverview } from "@/lib/analytics";
+import { getChannelBreakdown, getFunnelKpis, getGuideToCatalogue, getSalesOverview } from "@/lib/analytics";
 import { parseRange } from "@/lib/date-range";
 import { randomId } from "@/lib/crypto";
 import { accessCodeEmail, leadFollowUpEmail, sendEmail } from "@/lib/email";
@@ -234,11 +234,18 @@ export const TOOLS: McpTool[] = [
     annotations: { readOnlyHint: true },
     handler: async (args) => {
       const range = parseRange({ jour: asString(args.day), jours: asNumber(args.days) });
-      const [kpis, breakdown, overview] = await Promise.all([getFunnelKpis(range), getChannelBreakdown(range), getSalesOverview(range)]);
+      const [kpis, breakdown, overview, guideToCatalogue] = await Promise.all([
+        getFunnelKpis(range),
+        getChannelBreakdown(range),
+        getSalesOverview(range),
+        getGuideToCatalogue(range),
+      ]);
       return {
         ...(range.day ? { day: range.day } : { period_days: range.days }),
         currency: "XAF",
         ...kpis,
+        // Acheteurs du guide de la période passés ensuite au Catalogue Premium (email ou WhatsApp identiques).
+        guide_to_catalogue: guideToCatalogue,
         sales_by_offer: overview.offers.map((o) => ({ offer: o.key, label: o.label, purchases: o.n, revenue: o.revenue })),
         sales_by_model: overview.models.map((m) => ({ plan: m.slug, purchases: m.n, revenue: m.revenue, by_offer: m.offers })),
         channels: breakdown.channels,
