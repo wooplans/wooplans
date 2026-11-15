@@ -27,5 +27,10 @@ export function LazyVideo({ src, poster, className }: { src: string; poster?: st
     return () => observer.disconnect();
   }, []);
 
+  // La source n'existe qu'après le premier passage à l'écran : lecture une fois qu'elle est posée.
+  useEffect(() => {
+    if (near) void ref.current?.play().catch(() => {});
+  }, [near]);
+
   return <video ref={ref} className={className} src={near ? src : undefined} poster={near ? poster : undefined} muted loop playsInline preload="none" />;
 }
