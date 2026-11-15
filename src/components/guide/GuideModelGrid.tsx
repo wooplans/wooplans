@@ -35,7 +35,7 @@ export function GuideModelGrid({ models, price, enabled, compact = false }: { mo
   return (
     <>
       <div className={`grid grid-cols-2 ${compact ? "gap-2" : "gap-3 md:grid-cols-3"}`}>
-        {models.map((m) => (
+        {models.map((m, i) => (
           <button
             key={m.slug}
             type="button"
@@ -47,7 +47,16 @@ export function GuideModelGrid({ models, price, enabled, compact = false }: { mo
           >
             <span className="relative block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${m.image}?w=480`} alt={`Rendu 3D ${m.code}`} loading={compact ? "eager" : "lazy"} className="aspect-video w-full object-cover" />
+              <img
+                src={`${m.image}?w=320`}
+                alt={`Rendu 3D ${m.code}`}
+                width={320}
+                height={180}
+                loading={compact && i < 4 ? "eager" : "lazy"}
+                fetchPriority={compact && i < 2 ? "high" : "auto"}
+                decoding="async"
+                className="aspect-video w-full object-cover"
+              />
               <span className="absolute bottom-1.5 left-1.5 rounded-md bg-primary/90 px-2 py-0.5 text-[11px] font-semibold text-white">
                 {millions(m.budgetMin)} à {millions(m.budgetMax)} M FCFA
               </span>
