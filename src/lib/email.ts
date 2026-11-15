@@ -798,3 +798,13 @@ export function guideSaleAdminEmail(p: { name: string | null; email: string; pho
   }<p style="color:#6B7280;font-size:13px">Le message est déjà rédigé avec son lien personnel. Le guide lui a aussi été envoyé par email.</p>`;
   return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
 }
+
+/** Alerte au propriétaire : paiement du guide abandonné ou échoué, avec le message de relance WhatsApp prêt à envoyer. */
+export function guideAbandonAdminEmail(p: { name: string | null; email: string | null; phone: string | null; failed: boolean; whatsappUrl: string | null }) {
+  const subject = `Guide : paiement ${p.failed ? "échoué" : "abandonné"}, ${p.name || p.email || "client"}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email || "—"}`, `WhatsApp : ${p.phone || "—"}`];
+  const body = `<p>${lines.map(escape).join("<br>")}</p>${
+    p.whatsappUrl ? button(p.whatsappUrl, "Le relancer sur WhatsApp") : "<p>Pas de numéro WhatsApp.</p>"
+  }<p style="color:#6B7280;font-size:13px">Souvent, c'est le solde ou la validation Mobile Money qui bloque. Le message propose de l'aider et redonne le lien de la page.</p>`;
+  return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
+}
