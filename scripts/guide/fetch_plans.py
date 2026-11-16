@@ -57,15 +57,27 @@ def main():
     args = ap.parse_args()
     (CACHE / "img").mkdir(parents=True, exist_ok=True)
 
-    listing = get(args.site + "/catalogue").decode("utf-8", "replace")
-    slugs = sorted(set(re.findall(r'href="/catalogue/([a-z0-9-]+)"', listing)))
-    print(f"{len(slugs)} modèles publiés")
+    # Données publiques des modèles publiés (/api/guide/modeles) : les fiches ne portent plus toutes leurs données
+    # dans la page depuis la nouvelle présentation (16 nov. 2026).
+    # Le site et ce générateur partent au même moment après un merge : on attend que l'adresse soit en ligne (45 min max).
+    for attempt in range(90):
+        try:
+            rows = json.loads(get(args.site + "/api/guide/modeles").decode("utf-8"))
+            break
+        except Exception as e:  # noqa: BLE001
+            if attempt == 89:
+                raise
+            print(f"  /api/guide/modeles pas encore en ligne ({e}), nouvel essai dans 30 s", flush=True)
+            time.sleep(30)
+    print(f"{len(rows)} modèles publiés")
     plans = []
-    for i, slug in enumerate(slugs, 1):
-        html = get(f"{args.site}/catalogue/{slug}").decode("utf-8", "replace")
-        plan = parse_plan(html, slug)
-        if not plan.get("cover"):
-            print(f"  ! {slug} : pas de rendu, ignoré", file=sys.stderr)
+    for i, row in enumerate(sorted(rows, key=lambda r: r["slug"]), 1):
+        slug = row["slug"]
+        plan = {k: row.get(k) for k in ["slug", "code", "name", "category", "cover"]}
+        for key in FIELDS_NUM:
+            plan[key] = None if row.get(key) is None else float(row[key])
+        if not plan.get("cover") or plan.get("budgetMin") is None or plan.get("budgetMax") is None:
+            print(f"  ! {slug} : rendu ou budget manquant, ignoré", file=sys.stderr)
             continue
         img_path = CACHE / "img" / f"{slug}.jpg"
         if not img_path.exists():
@@ -76,7 +88,7 @@ def main():
             im.save(img_path, "JPEG", quality=72, optimize=True, progressive=True)
         plan["image"] = str(img_path.relative_to(HERE))
         plans.append(plan)
-        print(f"  {i:3d}/{len(slugs)} {plan['code']}")
+        print(f"  {i:3d}/{len(rows)} {plan['code']}")
     (CACHE / "plans.json").write_text(json.dumps(plans, ensure_ascii=False, indent=1))
     print(f"OK : {len(plans)} modèles dans {CACHE / 'plans.json'}")
 
