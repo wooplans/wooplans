@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { pixelPurchase } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 
-type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null };
+type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean };
 
 /**
  * Page de remerciement du guide : deux choses seulement, livrer le guide puis présenter le Catalogue Premium
@@ -37,7 +37,7 @@ export function GuideThanks(props: {
       setAttempts(n);
       if (json?.status === "paid") {
         const key = `wp_purchase_${intentId ?? "x"}`;
-        if (!sessionStorage.getItem(key)) {
+        if (json.track && !sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
           pixelPurchase(pixelId, key, { value: props.guidePrice, currency: "XAF", content_name: "Guide WooPlans des maisons", content_ids: ["guide-maisons"], content_type: "product" });
         }
