@@ -31,7 +31,7 @@ export function PlanDevisTeaser({ slug, code, teaser }: { slug: string; code: st
     <section className="mt-12">
       <h2 className="text-xl font-semibold">Plan et devis</h2>
       <p className="mt-1 text-sm text-foreground/70">Le plan coté et le devis poste par poste du modèle {code}, dans le Catalogue Premium.</p>
-      <div className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+      <div className="no-scrollbar -mx-4 mt-4 flex items-start snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
         {levels.map((n, i) => (
           <figure key={n} className="relative w-[78%] shrink-0 snap-start overflow-hidden rounded-2xl border border-outline bg-white md:w-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
