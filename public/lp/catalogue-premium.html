@@ -68,7 +68,10 @@ section{padding:56px 0}
 .vsl.previewing .play{display:none}
 .vsl-count{font-size:12.5px;color:rgba(255,255,255,.85);text-align:center;margin:-4px 0 clamp(8px,1.6svh,14px)}
 .vsl-count b{color:var(--gold);font-variant-numeric:tabular-nums}
-.vsl .play{position:absolute;inset:0;z-index:1;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
+.vsl .play{position:absolute;inset:0;z-index:1;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:12px;padding-bottom:18px;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.6));color:#fff;font-weight:800;font-size:15px}
+.vsl .play span{background:rgba(0,0,0,.62);padding:8px 14px;border-radius:99px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.vsl .play i{animation:playPulse 1.6s ease-out infinite}
+@keyframes playPulse{0%{box-shadow:0 0 0 0 rgba(240,138,46,.75)}70%{box-shadow:0 0 0 22px rgba(240,138,46,0)}100%{box-shadow:0 0 0 0 rgba(240,138,46,0)}}
 .vsl .play i{width:66px;height:66px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(240,138,46,.5)}
 .vsl .play i::after{content:"";margin-left:5px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
 .price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:clamp(10px,1.8svh,16px);white-space:nowrap;line-height:1.1}
@@ -80,6 +83,13 @@ section{padding:56px 0}
 .cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:14px 20px;border-radius:14px;background:var(--orange);color:#fff;font-size:17.5px;font-weight:800;box-shadow:0 10px 26px rgba(240,138,46,.38);transition:transform .12s,background .2s}
 .cta:active{transform:scale(.98);background:var(--orange-dk)}
 .cta svg{width:20px;height:20px;fill:currentColor;flex-shrink:0}
+/* Boutons d'achat : légère pulsation et reflet lumineux qui passe toutes les 3 s (attire l'œil sans gêner). */
+.cta{position:relative;overflow:hidden;animation:ctaPulse 2.4s ease-in-out infinite}
+.cta::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:skewX(-20deg);animation:ctaShine 3s ease-in-out infinite;pointer-events:none}
+@keyframes ctaPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes ctaShine{0%{left:-60%}55%,100%{left:130%}}
+.ckform .cta{animation:none}
+@media (prefers-reduced-motion:reduce){.cta,.cta::after,.vsl .play i{animation:none}}
 .pay{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:clamp(10px,1.8svh,16px) 0 clamp(8px,1.5svh,14px)}
 .pay span{font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
 .trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-size:13px;color:rgba(255,255,255,.82)}
@@ -125,6 +135,21 @@ section{padding:56px 0}
 .model h3{font-size:17px;margin:2px 0 3px}
 .model p{font-size:13px;color:var(--gray)}
 .model .budget{margin-top:8px;font-size:13px;font-weight:800;color:var(--teal)}
+.model[data-model],.model.more{cursor:pointer}
+.model.more{display:flex;align-items:center;justify-content:center;text-align:center;background:var(--teal);color:#fff;border:0;min-height:260px}
+.model.more div{display:grid;gap:6px;padding:20px}
+.model.more b{font-size:42px;color:var(--gold);line-height:1}
+.model.more span{font-size:15px;font-weight:700}
+.model.more em{font-style:normal;margin-top:8px;font-weight:800;color:var(--gold)}
+.mbox{width:100%;max-width:520px;background:#fff;border-radius:22px 22px 0 0;overflow:hidden;position:relative;animation:up .25s ease-out;padding-bottom:env(safe-area-inset-bottom)}
+.mbox img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#E7ECEF}
+.mbox .close{background:rgba(0,0,0,.55);color:#fff}
+.mbox .mb{padding:16px 18px 18px}
+.mbox .type{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+.mbox h3{font-size:20px;margin:2px 0 4px;color:var(--dark)}
+.mbox p{font-size:14px;color:var(--gray)}
+.mbox .budget{margin-top:6px;font-weight:800;color:var(--teal)}
+.mbox .note{margin:10px 0 14px;font-size:13.5px;color:#46525E}
 .count-line{text-align:center;margin-top:8px;font-size:14px;color:var(--gray)}
 .count-line b{color:var(--teal)}
 
@@ -204,6 +229,7 @@ section{padding:56px 0}
 .promo-note{margin:-6px 0 14px;font-size:13px;font-weight:700;color:var(--red)}
 .guar{display:flex;gap:12px;align-items:center;margin-top:14px;padding:12px;border-radius:12px;background:var(--bg);font-size:13.5px}
 .guar b{display:block}
+.guar-line{margin-top:12px;text-align:center;font-size:13px;color:var(--gray)}
 .seal{flex-shrink:0;width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--teal-xdk);font-weight:900;font-size:13px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .seal small{font-size:8px;font-weight:800}
 
@@ -404,13 +430,13 @@ footer a{color:rgba(255,255,255,.7)}
     <div class="grid center">
       <div>
         <span class="eyebrow desk">Catalogue Premium 2026</span>
-        <h1>Choisissez votre maison. <em>Connaissez son vrai coût</em> avant de construire.</h1>
+        <h1>Plans de maisons <em>avec leur devis</em></h1>
         <p class="sub"><b><span data-wp-count>Nos</span> plans</b> de villas et duplex avec rendus 3D, plans cotés et devis détaillés. Sur votre téléphone.</p>
       </div>
       <div>
         <div class="vsl" id="vsl">
-          <img src="/assets/digital/catalogue-premium-mockup-540.webp" srcset="/assets/digital/catalogue-premium-mockup-540.webp 540w, /assets/digital/catalogue-premium-mockup.webp 1024w" sizes="(min-width: 900px) 440px, 90vw" alt="Catalogue Premium WOOPLANS : plus de 100 plans de villas et duplex avec devis, sur téléphone et en fiches PDF" width="540" height="675" fetchpriority="high">
-          <button type="button" class="play" data-cta="vsl_catalogue" onclick="openVsl()" aria-label="Voir le catalogue en vidéo"><i></i>Voir le catalogue en vidéo · 2 min</button>
+          <img src="/assets/catalogue/catalogue-video-4x5-540.webp" srcset="/assets/catalogue/catalogue-video-4x5-540.webp 540w, /assets/catalogue/catalogue-video-4x5.webp 1024w" sizes="(min-width: 900px) 440px, 90vw" alt="Tao, de WOOPLANS, présente le Catalogue Premium imprimé, l'ordinateur à côté" width="540" height="675" fetchpriority="high">
+          <button type="button" class="play" data-cta="vsl_catalogue" onclick="openVsl()" aria-label="Voir le catalogue en vidéo"><i></i><span>Voir le catalogue en vidéo · 2 min</span></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><s>60 000 FCFA</s><span class="now">29 000<small>FCFA</small></span><span class="badge">–52 %</span></div>
@@ -461,12 +487,12 @@ footer a{color:rgba(255,255,255,.7)}
         <p>Comparez plans, devis et budgets dans le Catalogue Premium (<b>29&nbsp;000&nbsp;FCFA</b>).</p>
       </div></li>
       <li><span class="dot">2</span><div>
-        <h3>Téléchargez sa fiche PDF</h3>
-        <p>Plan coté, pièces et surfaces, devis poste par poste : à montrer à votre famille et à votre entrepreneur.</p>
+        <h3>Personnalisez votre plan</h3>
+        <p>Nos architectes discutent avec vous sur WhatsApp pour adapter le plan à votre terrain et à vos besoins, avant d'obtenir les plans complets.</p>
       </div></li>
       <li><span class="dot">3</span><div>
         <h3>Lancez votre projet</h3>
-        <p>Budget en main, vous comparez les offres des entrepreneurs et vous avancez sans mauvaise surprise.</p>
+        <p>Avec vos plans complets, n'importe quel technicien qualifié peut construire votre projet en toute sérénité.</p>
       </div></li>
     </ol>
   </div>
@@ -476,19 +502,9 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap wide">
     <span class="eyebrow">Le catalogue</span>
     <h2>Villas et duplex, avec leur budget.</h2>
-    <p class="lead">Rendus 3D réels. Le budget indiqué est une fourchette ; le devis détaillé est dans le catalogue.</p>
+    <p class="lead">Les maisons préférées de nos clients, en rendu 3D. Touchez une maison pour la voir en grand.</p>
     <div class="rail" data-wp-gallery></div>
     <p class="count-line"><b><span data-wp-count>Tous les</span> modèles</b> à comparer · de nouveaux ajoutés chaque mois</p>
-  </div>
-</section>
-
-<section class="alt">
-  <div class="wrap">
-    <span class="eyebrow">Échantillon du catalogue</span>
-    <h2>Pour chaque modèle, tout ce qu'il faut pour décider.</h2>
-    <p class="lead">Voici un vrai modèle du catalogue, en entier&nbsp;: plan de distribution coté et devis poste par poste. Vous aurez la même fiche, téléchargeable en PDF, pour tous les modèles.</p>
-    <div data-wp-preview></div>
-    <div style="margin-top:20px"><button class="cta" data-cta="preview" onclick="buy(this)">Débloquer tous les modèles</button></div>
   </div>
 </section>
 
@@ -515,20 +531,6 @@ footer a{color:rgba(255,255,255,.7)}
       <li>Vous voulez choisir avec votre famille sur des plans concrets.</li>
       <li>Vous voulez discuter avec votre entrepreneur chiffres en main, sans vous faire arnaquer.</li>
     </ul>
-    <div class="value">
-      <p class="value-h">Ce que contient le catalogue, à sa vraie valeur</p>
-      <div><span>Sélection de <span data-wp-count>nos</span> plans</span><span>250 000 FCFA</span></div>
-      <div><span>Rendus 3D et présentation</span><span>100 000 FCFA</span></div>
-      <div><span>Plans cotés et dimensions</span><span>75 000 FCFA</span></div>
-      <div><span>Devis estimatifs par poste</span><span>75 000 FCFA</span></div>
-      <div class="tot"><span>Valeur totale</span><span><s>500 000 FCFA</s></span></div>
-      <figure class="vs" aria-label="Valeur 500 000 FCFA, votre prix 29 000 FCFA">
-        <p><span>Valeur</span><i style="width:100%"></i><b>500 000</b></p>
-        <p class="me"><span>Vous</span><i style="width:5.8%"></i><b>29 000</b></p>
-      </figure>
-      <div class="you"><span>Votre prix aujourd'hui</span><span>29 000 FCFA</span></div>
-      <p class="value-f">Soit <b><span data-wp-per-model>moins de 500</span> FCFA par modèle</b>, devis compris.</p>
-    </div>
   </div>
 </section>
 
@@ -537,18 +539,13 @@ footer a{color:rgba(255,255,255,.7)}
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
       <div class="price"><s>60 000 FCFA</s><span class="now">29 000<small>FCFA</small></span><span class="badge">–52 %</span></div>
-      <span class="save">Prix promotionnel : vous économisez 31 000 FCFA aujourd'hui</span>
       <ul class="incl">
-        <li>Accès immédiat à l'espace Premium, à vie</li>
-        <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex</span></li>
-        <li>Rendus 3D, plans cotés, pièces et surfaces</li>
-        <li>Devis estimatif détaillé poste par poste</li>
-        <li>Fiches PDF de chaque modèle en téléchargement</li>
-        <li class="bonus"><span><b>Bonus :</b> les nouveaux modèles ajoutés automatiquement, sans rien payer de plus</span></li>
+        <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex, nouveaux modèles inclus</span></li>
+        <li>Rendus 3D, plans cotés et devis poste par poste</li>
+        <li>Accès immédiat à vie, sur téléphone et en PDF</li>
       </ul>
-      <p class="promo-note">Ce prix promotionnel peut revenir à 60&nbsp;000&nbsp;FCFA à tout moment. Votre accès, lui, reste acquis à vie.</p>
       <button class="cta" data-cta="offer" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
-      <div class="guar"><div class="seal">7<small>JOURS</small></div><div><b>Satisfait ou remboursé</b>Un simple message WhatsApp dans les 7 jours suffit. Aucune question posée.</div></div>
+      <p class="guar-line">Satisfait ou remboursé sous 7 jours · paiement unique</p>
     </div>
   </div>
 </section>
@@ -630,6 +627,9 @@ footer a{color:rgba(255,255,255,.7)}
   </div>
 </div>
 
+<div class="ov" id="modelModal" onclick="if(event.target===this)closeModel()" aria-hidden="true">
+  <div class="mbox"><button class="close" onclick="closeModel()" aria-label="Fermer">✕</button><img id="mmImg" alt=""><div class="mb"><span class="type" id="mmType"></span><h3 id="mmName"></h3><p id="mmFacts"></p><p class="budget" id="mmBudget"></p><p class="note">Son plan coté et son devis poste par poste sont dans le Catalogue Premium, avec tous les autres modèles.</p><button class="cta" data-cta="gallery_model" onclick="closeModel();buy(this)">Obtenir le catalogue</button></div></div>
+</div>
 <div class="ov" id="videoModal" onclick="if(event.target===this)closeVideo()">
   <div class="vbox"><button class="close" onclick="closeVideo()" aria-label="Fermer">✕</button><video id="modalVideo" controls playsinline preload="none"></video></div>
 </div>
@@ -698,12 +698,30 @@ function openVideo(name,label,poster){
   v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});wpCapture('video_play',{video:name});
   document.getElementById('videoModal').classList.add('on');
 }
-/* Vidéo du catalogue (rushes de Tao : imprimé, version numérique, témoignages, prix). Chargée seulement au clic. */
+/* Vidéo du catalogue (Tao : catalogue imprimé, version numérique, témoignages, prix). Chargée seulement au clic. */
 function openVsl(){
   var v=document.getElementById('modalVideo');v.poster='/assets/catalogue/catalogue-premium-poster.jpg';
   v.src='/assets/catalogue/catalogue-premium.mp4';v.play().catch(function(){});wpCapture('video_play',{video:'catalogue'});
   document.getElementById('videoModal').classList.add('on');
 }
+/* Galerie : une maison s'ouvre en grand au toucher ; la dernière carte mène à l'achat. */
+function openModel(el){
+  var g=function(k){return el.getAttribute('data-'+k)||'';};
+  document.getElementById('mmImg').src=g('img');document.getElementById('mmImg').alt='Rendu 3D : '+g('name');
+  document.getElementById('mmType').textContent=g('type');document.getElementById('mmName').textContent=g('name');
+  document.getElementById('mmFacts').textContent=g('facts');
+  var b=g('budget');document.getElementById('mmBudget').textContent=b?'Budget indicatif : '+b:'';
+  document.getElementById('modelModal').classList.add('on');wpCapture('gallery_model_open',{model:g('name')});
+}
+function closeModel(){document.getElementById('modelModal').classList.remove('on');}
+document.addEventListener('click',function(e){
+  var m=e.target.closest&&e.target.closest('[data-wp-gallery] [data-model],[data-wp-gallery] [data-more]');
+  if(!m)return;
+  if(m.hasAttribute('data-more')){m.setAttribute('data-cta','gallery_more');buy(m);}else openModel(m);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;var m=e.target.closest&&e.target.closest('[data-wp-gallery] [data-model],[data-wp-gallery] [data-more]');if(m)m.click();
+});
 function closeVideo(){
   var v=document.getElementById('modalVideo');v.pause();v.removeAttribute('src');v.load();
   document.getElementById('videoModal').classList.remove('on');

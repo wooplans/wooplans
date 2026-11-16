@@ -13,11 +13,20 @@ test("galerie : cartes échappées avec budget, modèles sans rendu ignorés", (
     { name: "Sans image", category: "villa", coverImage: "", levels: 1, surfaceTotal: 90, bedrooms: 2 },
   ]);
   assert.equal(html.match(/<article/g)?.length, 2);
+  assert.match(html, /src="\/media\/upload-1\.webp\?w=480"/);
+  assert.match(html, /data-img="\/media\/upload-1\.webp\?w=960"/);
   assert.match(html, /Villa &lt;V3&gt;/);
   assert.match(html, /Plain-pied · 164 m² · 3 chambres/);
   assert.match(html, /Budget indicatif : 30 – 36 M FCFA/);
-  assert.match(html, /src="\/media\/upload%202\.webp"/);
+  assert.match(html, /src="\/media\/upload%202\.webp\?w=480"/);
   assert.match(html, /Duplex R\+1 · 4 chambres<\/p><\/div>/);
+  assert.doesNotMatch(html, /data-more/);
+});
+
+test("galerie : dernière carte avec les modèles restants", () => {
+  const html = galleryHtml([{ name: "Villa V3-017", category: "villa", coverImage: "/media/a.webp", levels: 1, surfaceTotal: 120, bedrooms: 3 }], 98);
+  assert.match(html, /data-more/);
+  assert.match(html, /\+97<\/b>/);
 });
 
 test("budget : fourchette arrondie en millions", () => {
@@ -53,8 +62,9 @@ test("page de vente générée : une seule page (ancienne B), alignée sur le li
   assert.doesNotMatch(b, /237653769998/);
   assert.match(b, /data-wp-gallery/);
   assert.match(b, /data-wp-count/);
-  assert.match(b, /data-wp-preview/);
-  assert.match(b, /Fiches PDF de chaque modèle en téléchargement/);
+  // Échantillon retiré (16 nov. 2026) : la vidéo du catalogue le remplace en haut de page.
+  assert.doesNotMatch(b, /data-wp-preview/);
+  assert.match(b, /openVsl\(\)/);
   assert.doesNotMatch(b, /50\+|Télécharger le Catalogue|b-cdn\.net/);
   // Paiement B : formulaire court sur la page puis page de paiement (/api/checkout), sans widget Chariow.
   assert.match(b, /id="ckForm"/);
@@ -74,9 +84,12 @@ test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans d�
   }
   assert.doesNotMatch(b, /déduit|revient à 0|revient donc à 0/i);
   assert.match(b, /id="parcours"/);
-  // Plans complets : seulement dans la FAQ (décision du 10 nov. 2026), ni dans le parcours ni dans l'offre.
+  // Plans complets : annoncés dans le parcours (accompagnement WhatsApp, décision de Tao du 16 nov. 2026) et la FAQ,
+  // jamais dans la carte de l'offre.
   const faq = b.indexOf('<div class="faq">');
-  assert.doesNotMatch(b.slice(b.indexOf("<body"), faq), /plans? complets?/i);
+  const offer = b.slice(b.indexOf('class="offer-card"'), b.indexOf("</section>", b.indexOf('class="offer-card"')));
+  assert.doesNotMatch(offer, /plans? complets?/i);
+  assert.match(b.slice(b.indexOf('id="parcours"'), b.indexOf("</section>", b.indexOf('id="parcours"'))), /WhatsApp/);
   assert.match(b, /Peut-on construire avec les plans du catalogue/);
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
