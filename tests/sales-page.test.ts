@@ -13,11 +13,20 @@ test("galerie : cartes échappées avec budget, modèles sans rendu ignorés", (
     { name: "Sans image", category: "villa", coverImage: "", levels: 1, surfaceTotal: 90, bedrooms: 2 },
   ]);
   assert.equal(html.match(/<article/g)?.length, 2);
+  assert.match(html, /src="\/media\/upload-1\.webp\?w=480"/);
+  assert.match(html, /data-img="\/media\/upload-1\.webp\?w=960"/);
   assert.match(html, /Villa &lt;V3&gt;/);
   assert.match(html, /Plain-pied · 164 m² · 3 chambres/);
   assert.match(html, /Budget indicatif : 30 – 36 M FCFA/);
-  assert.match(html, /src="\/media\/upload%202\.webp"/);
+  assert.match(html, /src="\/media\/upload%202\.webp\?w=480"/);
   assert.match(html, /Duplex R\+1 · 4 chambres<\/p><\/div>/);
+  assert.doesNotMatch(html, /data-more/);
+});
+
+test("galerie : dernière carte avec les modèles restants", () => {
+  const html = galleryHtml([{ name: "Villa V3-017", category: "villa", coverImage: "/media/a.webp", levels: 1, surfaceTotal: 120, bedrooms: 3 }], 98);
+  assert.match(html, /data-more/);
+  assert.match(html, /\+97<\/b>/);
 });
 
 test("budget : fourchette arrondie en millions", () => {

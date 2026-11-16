@@ -5,7 +5,9 @@ import { cataloguePrice } from "@/lib/site";
 import { PAY_COOKIE, paymentProvider } from "@/lib/wajub";
 import { galleryHtml, perModelLabel, previewHtml, SHOWCASE_CODE, type GalleryPlan } from "@/lib/sales-page";
 
-const GALLERY_SIZE = 8;
+const GALLERY_SIZE = 20;
+/** Les maisons préférées des clients en tête (les plus achetées puis les plus vues, comme le guide), puis les modèles en vedette. */
+const TOP_SLUGS = ["villa-v3-017", "villa-v4-005", "duplex-d5-012", "villa-v4-036", "villa-v4-032", "duplex-d4-034"];
 const DATA_TTL_MS = 5 * 60_000;
 let cached: { at: number; count: number; gallery: string; preview: string } | null = null;
 
@@ -15,7 +17,7 @@ async function salesPageData() {
   const db = getDb();
   const published = eq(schema.plans.status, "published");
   const columns = {
-    name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true, bathrooms: true,
+    slug: true, name: true, category: true, coverImage: true, levels: true, surfaceTotal: true, bedrooms: true, bathrooms: true,
     budgetMin: true, budgetMax: true, rooms: true, floorPlans: true, estimateLots: true,
   } as const;
   const [[total], plans, demo] = await Promise.all([
@@ -24,11 +26,12 @@ async function salesPageData() {
       columns,
       where: and(published),
       orderBy: [desc(schema.plans.featured), asc(schema.plans.sortOrder), desc(schema.plans.publishedAt)],
-      limit: GALLERY_SIZE * 3,
+      limit: 200,
     }),
     db.query.plans.findFirst({ columns, where: and(published, eq(schema.plans.code, SHOWCASE_CODE)) }),
   ]);
-  const withCover = plans.filter((p) => p.coverImage);
+  const rank = (slug: string) => (TOP_SLUGS.includes(slug) ? TOP_SLUGS.indexOf(slug) : TOP_SLUGS.length);
+  const withCover = plans.filter((p) => p.coverImage).sort((a, b) => rank(a.slug) - rank(b.slug));
   // Aperçu : le modèle de démonstration de la VSL (SHOWCASE_CODE), montré en entier : plans cotés
   // (servis filigranés par /api/apercu/plan/<n>) et devis avec ses montants. Sans lui, pas d'aperçu.
   const complete = (p: typeof demo) => Boolean(p?.coverImage && p.floorPlans.length > 0 && p.estimateLots.length > 0);
@@ -42,7 +45,7 @@ async function salesPageData() {
       modelsCount: total?.n ?? 0,
     },
   );
-  cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover.slice(0, GALLERY_SIZE) as GalleryPlan[]), preview };
+  cached = { at: Date.now(), count: total?.n ?? 0, gallery: galleryHtml(withCover.slice(0, GALLERY_SIZE) as GalleryPlan[], total?.n ?? 0), preview };
   return cached;
 }
 

@@ -4,6 +4,7 @@
  */
 
 export type GalleryPlan = {
+  slug?: string;
   name: string;
   category: string;
   coverImage: string;
@@ -60,15 +61,28 @@ function facts(p: GalleryPlan) {
   ].filter((f): f is string => Boolean(f));
 }
 
-/** Cartes de la galerie : rendu de couverture, caractéristiques et budget indicatif (données de la fiche). */
-export function galleryHtml(plans: GalleryPlan[]) {
-  return plans
-    .filter((p) => p.coverImage)
+/**
+ * Cartes de la galerie : rendu de couverture, caractéristiques et budget indicatif (données de la fiche). Chaque carte
+ * s'ouvre en grand au toucher (les visiteurs touchaient les images sans résultat). Si `total` dépasse le nombre de
+ * cartes, une dernière carte annonce les modèles restants à découvrir dans le catalogue.
+ */
+export function galleryHtml(plans: GalleryPlan[], total = 0) {
+  const shown = plans.filter((p) => p.coverImage);
+  const cards = shown
     .map((p) => {
       const budget = budgetLabel(p.budgetMin, p.budgetMax);
-      return `<article class="model"><img src="${escapeHtml(imageUrl(p.coverImage))}" width="600" height="375" loading="lazy" decoding="async" alt="Rendu 3D : ${escapeHtml(p.name)}"><div><span class="type">${escapeHtml(CATEGORY[p.category] ?? p.category)}</span><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(facts(p).join(" · "))}</p>${budget ? `<p class="budget">Budget indicatif : ${escapeHtml(budget)}</p>` : ""}</div></article>`;
+      const img = imageUrl(p.coverImage);
+      const sized = (w: number) => (img.startsWith("/media/") ? `${img}?w=${w}` : img);
+      const type = CATEGORY[p.category] ?? p.category;
+      const f = facts(p).join(" · ");
+      return `<article class="model" role="button" tabindex="0" data-model data-img="${escapeHtml(sized(960))}" data-name="${escapeHtml(p.name)}" data-type="${escapeHtml(type)}" data-facts="${escapeHtml(f)}" data-budget="${escapeHtml(budget ?? "")}"><img src="${escapeHtml(sized(480))}" width="600" height="375" loading="lazy" decoding="async" alt="Rendu 3D : ${escapeHtml(p.name)}"><div><span class="type">${escapeHtml(type)}</span><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(f)}</p>${budget ? `<p class="budget">Budget indicatif : ${escapeHtml(budget)}</p>` : ""}</div></article>`;
     })
     .join("");
+  const rest = total - shown.length;
+  const more = rest > 0
+    ? `<article class="model more" role="button" tabindex="0" data-more><div><b>+${rest}</b><span>autres modèles à découvrir dans le Catalogue Premium</span><em>Voir le catalogue →</em></div></article>`
+    : "";
+  return cards + more;
 }
 
 /** Aperçu d'un vrai modèle : un échantillon complet de ce que contient le catalogue pour chaque modèle. */

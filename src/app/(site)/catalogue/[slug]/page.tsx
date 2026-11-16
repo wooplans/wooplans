@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CatalogueBonus } from "@/components/CatalogueBonus";
 import { CtaCatalogue } from "@/components/CtaCatalogue";
-import { GuideBand } from "@/components/guide/GuideBand";
 import { PlanGrid } from "@/components/PlanCard";
 import { PlanGallery } from "@/components/PlanGallery";
 import { PlanSpecs } from "@/components/PlanSpecs";
@@ -30,7 +29,7 @@ import {
 } from "@/lib/plans";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
-import { cataloguePrice, cataloguePriceBefore, SITE, whatsappLink } from "@/lib/site";
+import { cataloguePrice, cataloguePriceBefore, SITE } from "@/lib/site";
 import { cataloguePath } from "../view";
 
 export const dynamic = "force-dynamic";
@@ -151,12 +150,12 @@ export default async function PlanPage({ params, searchParams }: Props) {
               </div>
             ) : null}
             {/*
-              Présentation alignée sur le tunnel (nov. 2026) : 1) choisir avec le Catalogue Premium, 2) construire avec les
-              plans complets à prix fixe (affiché : il situe le catalogue), et pour les indécis le Guide des maisons à 1 900 FCFA.
-              Plus d'offre « plan et devis » sur la fiche : le visiteur croyait acheter de quoi construire.
+              Une seule offre sur la fiche (décision de Tao, 16 nov. 2026) : le Catalogue Premium, qui contient le plan coté et le
+              devis de ce modèle. Le guide à 1 900 FCFA reste l'entrée des pubs ; les plans complets sont proposés après le
+              catalogue, sur WhatsApp. Plus d'offre « plan et devis » : le visiteur croyait acheter de quoi construire.
             */}
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 1 · Choisir</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Catalogue Premium</p>
               <p className="mt-1 font-semibold">Le plan coté et le devis de ce modèle sont dans le Catalogue Premium</p>
               <p className="mt-1 text-sm text-foreground/75">{planCount && planCount > 1 ? `Avec ${planCount - 1} autres modèles de villas et duplex à comparer.` : "Avec tous nos autres modèles de villas et duplex à comparer."}</p>
               <ul className="mt-3 space-y-1.5 text-sm text-foreground/80">
@@ -175,30 +174,6 @@ export default async function PlanPage({ params, searchParams }: Props) {
                 <strong className="text-foreground">{formatFcfa(cataloguePrice())}</strong> · paiement unique · version numérique · accès à vie
               </p>
             </div>
-            {offer ? (
-              <div className="mt-4 rounded-2xl border border-outline bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 2 · Construire</p>
-                <p className="mt-1 font-semibold">Les plans complets de ce modèle, adaptés à votre terrain</p>
-                <p className="mt-1 text-sm text-foreground/75">
-                  Plans architecturaux complets pour construire, à prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                  <Link href="/livrables-plans-complets" data-cta="plan_livrables" className="font-semibold text-primary hover:underline">
-                    Ce qui est livré →
-                  </Link>
-                  <a
-                    href={whatsappLink(`Bonjour WOOPLANS, je voudrais les plans complets du modèle ${plan.code}. Mon terrain fait … m².`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-whatsapp={`plan_complet_${plan.slug}`}
-                    className="font-semibold text-[#128C4B] hover:underline"
-                  >
-                    En parler sur WhatsApp →
-                  </a>
-                </div>
-              </div>
-            ) : null}
-            <GuideBand ctaId="plan_guide" compact />
             </>
             )}
           </div>
@@ -258,7 +233,7 @@ export default async function PlanPage({ params, searchParams }: Props) {
         </section>
 
         {faq ? null : (
-        <section className="mt-12 grid gap-6 md:grid-cols-2">
+        <section className="mt-12 max-w-3xl">
           <div className="card relative overflow-hidden p-6">
             <h2 className="text-lg font-semibold">Distribution cotée</h2>
             <p className="mt-2 text-sm text-foreground/70">
@@ -266,31 +241,6 @@ export default async function PlanPage({ params, searchParams }: Props) {
             </p>
             <div className="mt-5 grid h-40 place-items-center rounded-xl bg-[repeating-linear-gradient(45deg,#eef2f4,#eef2f4_10px,#e3e9ed_10px,#e3e9ed_20px)] text-sm font-medium text-muted">
               🔒 Réservé au Catalogue Premium
-            </div>
-          </div>
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold">Plans complets personnalisés</h2>
-            <p className="mt-2 text-sm text-foreground/70">
-              Ce modèle vous plaît ? Nos architectes l&apos;adaptent à votre terrain et réalisent le dossier complet.
-            </p>
-            {offer ? (
-              <p className="mt-3 text-sm">
-                Prix fixe : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
-              </p>
-            ) : (
-              <p className="mt-3 text-sm">Prix fixe.</p>
-            )}
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link href="/plans-personnalises" className="btn-ghost">En savoir plus</Link>
-              <a
-                href={whatsappLink(`Bonjour WOOPLANS, je suis intéressé(e) par le modèle ${plan.code} (${plan.name}).`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-whatsapp={`plan_${plan.slug}`}
-                className="btn border border-[#25D366] text-[#128C4B] hover:bg-[#25D366]/10"
-              >
-                Poser une question
-              </a>
             </div>
           </div>
         </section>

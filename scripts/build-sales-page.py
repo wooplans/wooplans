@@ -33,7 +33,6 @@ REQUIRED = [
     "var WP_VARIANT='b'",
     "data-wp-count",
     "data-wp-gallery",
-    "data-wp-preview",
     'id="ckForm"',
     "/api/checkout",
     "237694327885",
