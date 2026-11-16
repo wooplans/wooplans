@@ -25,9 +25,9 @@
     // En essai, ?paiement=wajub sur /catalogue-premium ou une fiche modèle active Wajub pour ce navigateur.
     "PAYMENT_PROVIDER": "chariow",
     "WHATSAPP_NUMBER": "237694327885",
-    // Offre « plan et devis » (10 000 FCFA, puis plans complets) sur les fiches villas et duplex :
-    // "1" = visible, "0" = ancien encart « Inclus dans le Catalogue Premium ».
-    "OFFRE_PROJET": "1",
+    // Offre « plan et devis » sur les fiches villas et duplex : "1" = visible, "0" = fiche à une seule offre
+    // (Catalogue Premium + teaser « Plan et devis »), en ligne depuis le 16 nov. 2026 (décision de Tao).
+    "OFFRE_PROJET": "0",
     "FB_PIXEL_ID": "1127775973645411",
     // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
     "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",

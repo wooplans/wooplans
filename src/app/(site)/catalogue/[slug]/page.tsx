@@ -12,6 +12,7 @@ import { StickyOfferBar } from "@/components/StickyOfferBar";
 import { PlanDescription } from "@/components/PlanDescription";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
 import { PlanDevisButton } from "@/components/PlanDevisButton";
+import { PlanDevisTeaser } from "@/components/PlanDevisTeaser";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
 import { ProjectOffer, projectFaq, projectStartLink } from "@/components/ProjectOffer";
 import { planProductId } from "@/lib/chariow";
@@ -23,6 +24,7 @@ import {
   countPublishedPlans,
   formatBudgetRange,
   formatFcfa,
+  getPlanTeaser,
   getPublicPlan,
   getSimilarPublicPlans,
   levelsLabel,
@@ -79,10 +81,11 @@ export default async function PlanPage({ params, searchParams }: Props) {
   const fiche2 = (await searchParams)?.apercu === "fiche2";
   const plan = await getPublicPlan((await params).slug);
   if (!plan) notFound();
-  const [similar, planCount, downloads] = await Promise.all([
+  const [similar, planCount, downloads, teaser] = await Promise.all([
     getSimilarPublicPlans(plan),
     countPublishedPlans(),
     countPlanDevisDownloads(),
+    getPlanTeaser(plan.slug).catch(() => null),
   ]);
   const budget = formatBudgetRange(plan.budgetMin, plan.budgetMax);
   const offer = customPlanOffer(plan.category);
@@ -232,19 +235,7 @@ export default async function PlanPage({ params, searchParams }: Props) {
           ) : null}
         </section>
 
-        {faq ? null : (
-        <section className="mt-12 max-w-3xl">
-          <div className="card relative overflow-hidden p-6">
-            <h2 className="text-lg font-semibold">Distribution cotée</h2>
-            <p className="mt-2 text-sm text-foreground/70">
-              Le plan de chaque niveau avec les cotes et la surface de chaque pièce est réservé aux membres Premium.
-            </p>
-            <div className="mt-5 grid h-40 place-items-center rounded-xl bg-[repeating-linear-gradient(45deg,#eef2f4,#eef2f4_10px,#e3e9ed_10px,#e3e9ed_20px)] text-sm font-medium text-muted">
-              🔒 Réservé au Catalogue Premium
-            </div>
-          </div>
-        </section>
-        )}
+        {!faq && teaser ? <PlanDevisTeaser slug={plan.slug} code={plan.code} teaser={teaser} /> : null}
 
         {similar.length > 0 ? (
           <section className="mt-16">
