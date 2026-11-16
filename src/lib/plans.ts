@@ -135,6 +135,23 @@ export async function getUpsellPlans(boughtSlug: string, limit = 4) {
     .map(({ p }) => p);
 }
 
+/**
+ * Teaser « Plan et devis » de la fiche publique : nombre de distributions et postes du devis. Les montants ne
+ * sortent jamais d'ici : seul leur nombre de chiffres est renvoyé, pour dessiner des montants factices floutés.
+ */
+export async function getPlanTeaser(slug: string) {
+  const row = await getDb().query.plans.findFirst({
+    columns: { floorPlans: true, estimateLots: true },
+    where: and(published, eq(schema.plans.slug, slug)),
+  });
+  if (!row) return null;
+  return {
+    /** Numéros (1, 2…) des distributions en image, pour /api/apercu/fiche/<modèle>?n=… (les PDF n'ont pas d'aperçu). */
+    floorPlans: row.floorPlans.flatMap((f, i) => (/\.pdf$/i.test(f) ? [] : [i + 1])).slice(0, 4),
+    lots: row.estimateLots.map((l) => ({ label: l.label, digits: String(Math.round(l.amount)).length })),
+  };
+}
+
 /* ─── Premium : réservé aux membres authentifiés (appelé après requireMember) ─── */
 
 export async function listPremiumPlans() {
