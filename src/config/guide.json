@@ -6,6 +6,6 @@
   "pdfFileName": "Guide-WooPlans-des-maisons.pdf",
   "video": "/assets/guide/guide-site.mp4",
   "videoPoster": "/assets/guide/guide-site-poster.jpg",
-  "catalogueVideo": "",
-  "catalogueVideoPoster": ""
+  "catalogueVideo": "/assets/catalogue/catalogue-premium.mp4",
+  "catalogueVideoPoster": "/assets/catalogue/catalogue-premium-poster.jpg"
 }

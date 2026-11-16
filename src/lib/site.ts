@@ -27,3 +27,9 @@ export function whatsappLink(message: string, number: string = process.env.WHATS
 export function cataloguePrice(): number {
   return catalogue.price;
 }
+
+/** Prix d'ancrage barré du Catalogue Premium (src/config/catalogue.json « priceBefore »), déjà affiché sur la page de vente. */
+export function cataloguePriceBefore(): number | null {
+  const v = (catalogue as { priceBefore?: unknown }).priceBefore;
+  return typeof v === "number" && v > cataloguePrice() ? v : null;
+}

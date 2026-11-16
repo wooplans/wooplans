@@ -27,11 +27,10 @@ import {
   getPublicPlan,
   getSimilarPublicPlans,
   levelsLabel,
-  withPlanCount,
 } from "@/lib/plans";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
-import { cataloguePrice, SITE, whatsappLink } from "@/lib/site";
+import { cataloguePrice, cataloguePriceBefore, SITE, whatsappLink } from "@/lib/site";
 import { cataloguePath } from "../view";
 
 export const dynamic = "force-dynamic";
@@ -158,7 +157,8 @@ export default async function PlanPage({ params, searchParams }: Props) {
             */}
             <div className="mt-6 rounded-2xl border-2 border-highlight/70 bg-highlight/10 p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Étape 1 · Choisir</p>
-              <p className="mt-1 font-semibold">Comparez ce modèle avec tous les autres dans le Catalogue Premium</p>
+              <p className="mt-1 font-semibold">Le plan coté et le devis de ce modèle sont dans le Catalogue Premium</p>
+              <p className="mt-1 text-sm text-foreground/75">{planCount && planCount > 1 ? `Avec ${planCount - 1} autres modèles de villas et duplex à comparer.` : "Avec tous nos autres modèles de villas et duplex à comparer."}</p>
               <ul className="mt-3 space-y-1.5 text-sm text-foreground/80">
                 {PREMIUM_CONTENT.map((item) => (
                   <li key={item} className="flex gap-2">
@@ -171,7 +171,8 @@ export default async function PlanPage({ params, searchParams }: Props) {
                 {SITE.catalogueCta}
               </Link>
               <p className="mt-2 text-center text-xs text-muted">
-                {formatFcfa(cataloguePrice())} · paiement unique · {withPlanCount(planCount, "modèles", "tous les")} · version numérique · accès à vie
+                {cataloguePriceBefore() ? <s className="mr-1">{formatFcfa(cataloguePriceBefore()!)}</s> : null}
+                <strong className="text-foreground">{formatFcfa(cataloguePrice())}</strong> · paiement unique · version numérique · accès à vie
               </p>
             </div>
             {offer ? (

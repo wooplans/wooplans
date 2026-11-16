@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { pixelPurchase } from "@/lib/pixel";
+import { phCapture } from "@/lib/posthog-browser";
 
 type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null };
 
@@ -97,7 +98,14 @@ export function GuideThanks(props: {
             Pour choisir votre maison en toute confiance, il vous faut voir la place de chaque pièce et le coût de chaque étape du chantier.
           </p>
           {props.video ? (
-            <video className="mt-6 aspect-video w-full max-w-3xl rounded-xl bg-black" controls playsInline preload="none" poster={props.videoPoster || undefined}>
+            <video
+              className="mx-auto mt-6 aspect-[9/16] w-full max-w-[340px] rounded-xl bg-black"
+              controls
+              playsInline
+              preload="none"
+              poster={props.videoPoster || undefined}
+              onPlay={() => phCapture("guide_merci_video_play")}
+            >
               <source src={props.video} type="video/mp4" />
             </video>
           ) : (
