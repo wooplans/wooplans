@@ -5,15 +5,9 @@ type Teaser = { floorPlans: number[]; lots: { label: string; digits: number }[] 
 
 const levelName = (i: number, n: number) => (n === 1 ? "Plan de distribution coté" : i === 0 ? "Rez-de-chaussée coté" : i === 1 && n === 2 ? "Étage coté" : `Niveau ${i} coté`);
 
-/** Montant factice d'autant de chiffres que le vrai (le vrai montant n'est jamais envoyé), affiché flouté. */
-function fakeAmount(digits: number, seed: number) {
-  let x = (seed * 9301 + 49297) % 233280;
-  let out = "";
-  for (let i = 0; i < Math.max(digits, 1); i++) {
-    x = (x * 9301 + 49297) % 233280;
-    out += i === 0 ? String(1 + (x % 9)) : String(x % 10);
-  }
-  return Number(out).toLocaleString("fr-FR");
+/** Montant masqué d'autant de chiffres que le vrai (le vrai montant n'est jamais envoyé) : « 0 000 000 », affiché flouté. */
+function maskedAmount(digits: number) {
+  return Number("8".repeat(Math.max(digits, 1))).toLocaleString("fr-FR").replace(/8/g, "0");
 }
 
 function Lock() {
@@ -27,7 +21,7 @@ function Lock() {
 /**
  * Teaser « Plan et devis » de la fiche (décision de Tao, 16 nov. 2026) : le vrai plan coté, flouté légèrement par le
  * serveur (/api/apercu/fiche/<modèle>?doux=1, l'original n'est jamais transmis), et le vrai devis avec ses postes,
- * montants factices floutés. En glissement horizontal sur mobile pour ne pas prendre trop de place.
+ * montants masqués et floutés. En glissement horizontal sur mobile pour ne pas prendre trop de place.
  */
 export function PlanDevisTeaser({ slug, code, teaser }: { slug: string; code: string; teaser: Teaser }) {
   const levels = teaser.floorPlans;
@@ -55,12 +49,12 @@ export function PlanDevisTeaser({ slug, code, teaser }: { slug: string; code: st
               {lots.map((l, i) => (
                 <li key={l.label + i} className="flex justify-between gap-3 border-b border-outline/70 pb-1.5">
                   <span className="truncate">{l.label}</span>
-                  <span className="select-none font-semibold blur-[3.5px]">{fakeAmount(l.digits, i + code.length)}</span>
+                  <span className="select-none font-semibold blur-[3.5px]">{maskedAmount(l.digits)}</span>
                 </li>
               ))}
               <li className="flex justify-between gap-3 pt-1 font-bold text-primary">
                 <span>Total estimatif</span>
-                <span className="select-none blur-[4px]">{fakeAmount(Math.max(...lots.map((l) => l.digits)) + 1, 7)} FCFA</span>
+                <span className="select-none blur-[4px]">{maskedAmount(Math.max(...lots.map((l) => l.digits)) + 1)} FCFA</span>
               </li>
             </ul>
             <Lock />
