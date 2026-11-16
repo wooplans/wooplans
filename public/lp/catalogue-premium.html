@@ -68,7 +68,7 @@ section{padding:56px 0}
 .vsl.previewing .play{display:none}
 .vsl-count{font-size:12.5px;color:rgba(255,255,255,.85);text-align:center;margin:-4px 0 clamp(8px,1.6svh,14px)}
 .vsl-count b{color:var(--gold);font-variant-numeric:tabular-nums}
-.vsl .play{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
+.vsl .play{position:absolute;inset:0;z-index:1;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.45));color:#fff;font-weight:700;font-size:14px}
 .vsl .play i{width:66px;height:66px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(240,138,46,.5)}
 .vsl .play i::after{content:"";margin-left:5px;border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent}
 .price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 12px;margin-bottom:clamp(10px,1.8svh,16px);white-space:nowrap;line-height:1.1}
@@ -410,6 +410,7 @@ footer a{color:rgba(255,255,255,.7)}
       <div>
         <div class="vsl" id="vsl">
           <img src="/assets/digital/catalogue-premium-mockup-540.webp" srcset="/assets/digital/catalogue-premium-mockup-540.webp 540w, /assets/digital/catalogue-premium-mockup.webp 1024w" sizes="(min-width: 900px) 440px, 90vw" alt="Catalogue Premium WOOPLANS : plus de 100 plans de villas et duplex avec devis, sur téléphone et en fiches PDF" width="540" height="675" fetchpriority="high">
+          <button type="button" class="play" data-cta="vsl_catalogue" onclick="openVsl()" aria-label="Voir le catalogue en vidéo"><i></i>Voir le catalogue en vidéo · 2 min</button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><s>60 000 FCFA</s><span class="now">29 000<small>FCFA</small></span><span class="badge">–52 %</span></div>
@@ -695,6 +696,12 @@ function openVideo(name,label,poster){
   var v=document.getElementById('modalVideo');
   if(poster)v.poster=poster;else v.removeAttribute('poster');
   v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});wpCapture('video_play',{video:name});
+  document.getElementById('videoModal').classList.add('on');
+}
+/* Vidéo du catalogue (rushes de Tao : imprimé, version numérique, témoignages, prix). Chargée seulement au clic. */
+function openVsl(){
+  var v=document.getElementById('modalVideo');v.poster='/assets/catalogue/catalogue-premium-poster.jpg';
+  v.src='/assets/catalogue/catalogue-premium.mp4';v.play().catch(function(){});wpCapture('video_play',{video:'catalogue'});
   document.getElementById('videoModal').classList.add('on');
 }
 function closeVideo(){
