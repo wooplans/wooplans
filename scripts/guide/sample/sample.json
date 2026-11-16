@@ -1,0 +1,8 @@
+[
+ {"slug": "villa-v3-017", "code": "V3-017", "name": "Villa V3-017", "kind": "Villa de plain-pied", "bedrooms": 3, "bathrooms": 2, "surface": 120, "land": "350 m² (17,54 × 18,64 m)", "size": "14,54 × 11,64 m",
+  "plans": [["sample/v3-017-1.jpg", "Plan de distribution coté"]],
+  "lots": [["Fondation", 2419200], ["Élévations", 3542400], ["Charpente et toiture", 2678400], ["Crépissage et antivols", 2534400], ["Portes et fenêtres", 1900800], ["Plomberie et électricité", 1584000], ["Plafond et peinture", 2217600], ["Carrelage", 2323200]]},
+ {"slug": "duplex-d4-006", "code": "D4-006", "name": "Duplex D4-006", "kind": "Duplex (R+1)", "bedrooms": 4, "bathrooms": 3, "surface": 195, "land": "300 m² (12 × 21 m)", "size": "9 × 14 m",
+  "plans": [["sample/d4-006-1.jpg", "Rez-de-chaussée coté"], ["sample/d4-006-2.jpg", "Étage coté"]],
+  "lots": [["Fondation", 3601300], ["Élévation RDC", 2653600], ["Dalle", 5117600], ["Élévation étage", 3032600], ["Charpente et toiture", 4549000], ["Crépissage et antivols", 5559800], ["Portes et fenêtres", 4169900], ["Plomberie et électricité", 3474900], ["Plafond et peinture", 4864900], ["Carrelage", 5096400]]}
+]
