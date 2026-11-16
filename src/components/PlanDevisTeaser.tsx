@@ -41,7 +41,7 @@ export function PlanDevisTeaser({ slug, code, teaser }: { slug: string; code: st
         {levels.map((n, i) => (
           <figure key={n} className="relative w-[78%] shrink-0 snap-start overflow-hidden rounded-2xl border border-outline bg-white md:w-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/apercu/fiche/${slug}?n=${n}&doux=1`} alt="" loading="lazy" decoding="async" className="aspect-[4/5] w-full scale-105 object-cover" />
+            <img src={`/api/apercu/fiche/${slug}?n=${n}&doux=1`} alt="" loading="lazy" decoding="async" className="aspect-[4/5] w-full bg-white object-contain p-2" />
             <Lock />
             <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2 pt-6 text-sm font-semibold text-white">
               {levelName(i, levels.length)}
