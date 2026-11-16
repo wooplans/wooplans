@@ -12,7 +12,7 @@ const WIDTH = 320;
 const BLUR = 18;
 /** ?doux=1 : teaser « Plan et devis » de la fiche (16 nov. 2026) : plus grand et flou léger, on devine les pièces
  *  sans pouvoir lire les cotes ; toujours flouté par le serveur avant l'envoi. */
-const SOFT = { width: 560, blur: 9, quality: 68 };
+const SOFT = { width: 560, blur: 13, quality: 66 };
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   if (!key) return new Response("Introuvable", { status: 404 });
 
   const cache = typeof caches !== "undefined" ? (caches as unknown as { default?: Cache }).default : undefined;
-  const cacheKey = new Request(`https://www.wooplans.com/__apercu-fiche/${soft ? "doux1" : "v1"}/${encodeURIComponent(key)}`);
+  const cacheKey = new Request(`https://www.wooplans.com/__apercu-fiche/${soft ? "doux2" : "v1"}/${encodeURIComponent(key)}`);
   const hit = await cache?.match(cacheKey).catch(() => undefined);
   if (hit) return hit;
 

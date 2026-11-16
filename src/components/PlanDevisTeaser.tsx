@@ -3,7 +3,7 @@ import { SITE } from "@/lib/site";
 
 type Teaser = { floorPlans: number[]; lots: { label: string; digits: number }[] };
 
-const levelName = (i: number, n: number) => (n === 1 ? "Plan de distribution coté" : i === 0 ? "Rez-de-chaussée coté" : i === 1 && n === 2 ? "Étage coté" : `Niveau ${i} coté`);
+const levelName = (i: number, n: number) => (n === 1 ? "Plan de distribution coté" : i === 0 ? "Rez-de-chaussée coté" : "Étage coté");
 
 /** Montant masqué d'autant de chiffres que le vrai (le vrai montant n'est jamais envoyé) : « 0 000 000 », affiché flouté. */
 function maskedAmount(digits: number) {
@@ -36,6 +36,9 @@ export function PlanDevisTeaser({ slug, code, teaser }: { slug: string; code: st
           <figure key={n} className="relative w-[78%] shrink-0 snap-start overflow-hidden rounded-2xl border border-outline bg-white md:w-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/api/apercu/fiche/${slug}?n=${n}&doux=1`} alt="" loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-white object-contain p-1" />
+            {/* Dégradé : le flou s'épaissit vers le bas, un voile blanc couvre le bas du plan. */}
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/0 via-white/25 to-white/85" aria-hidden />
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 backdrop-blur-[3px] [mask-image:linear-gradient(to_bottom,transparent,black)]" aria-hidden />
             <Lock />
             <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2 pt-6 text-sm font-semibold text-white">
               {levelName(i, levels.length)}

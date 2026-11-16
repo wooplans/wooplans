@@ -141,13 +141,17 @@ export async function getUpsellPlans(boughtSlug: string, limit = 4) {
  */
 export async function getPlanTeaser(slug: string) {
   const row = await getDb().query.plans.findFirst({
-    columns: { floorPlans: true, estimateLots: true },
+    columns: { category: true, floorPlans: true, estimateLots: true },
     where: and(published, eq(schema.plans.slug, slug)),
   });
   if (!row) return null;
   return {
     /** Numéros (1, 2…) des distributions en image, pour /api/apercu/fiche/<modèle>?n=… (les PDF n'ont pas d'aperçu). */
-    floorPlans: row.floorPlans.flatMap((f, i) => (/\.pdf$/i.test(f) ? [] : [i + 1])).slice(0, 4),
+    // Une villa a un seul plan de distribution, un duplex deux (RDC + étage) : on n'en montre pas plus. Certaines
+    // fiches rangent aussi une image du devis ou une variante meublée après les plans (V3-018, V3-037, D4-034…).
+    floorPlans: row.floorPlans
+      .slice(0, row.category === "duplex" ? 2 : 1)
+      .flatMap((f, i) => (/\.pdf$/i.test(f) ? [] : [i + 1])),
     lots: row.estimateLots.map((l) => ({ label: l.label, digits: String(Math.round(l.amount)).length })),
   };
 }
