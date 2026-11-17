@@ -632,7 +632,7 @@ def build(out: Path):
     c.showPage()
     c.save()
     insert_sample_pages(out, sample_after)
-    print(f"OK : {out} ({n + len(SAMPLE_PAGES)} pages, {len(plans)} modèles, {out.stat().st_size / 1e6:.1f} Mo)")
+    print(f"OK : {out} ({n} pages, {len(plans)} modèles, {out.stat().st_size / 1e6:.1f} Mo)")
 
 
 if __name__ == "__main__":
