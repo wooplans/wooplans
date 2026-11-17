@@ -2,7 +2,8 @@ import { runAfterSale } from "@/lib/after-sale";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
 import { runLegacyCodes } from "@/lib/legacy-codes";
-import { enrollStaleIntents, runProspectSequence } from "@/lib/prospects";
+import { runWhatsappSequence } from "@/lib/pipeline";
+import { enrollStaleIntents, reconcileProspects, runProspectSequence } from "@/lib/prospects";
 
 /**
  * Tâche toutes les 15 minutes (cron du Worker, voir worker.ts) : séquence de relance des prospects
@@ -16,6 +17,12 @@ export async function POST(request: Request) {
 
   const enrolled = await enrollStaleIntents();
   const relances = await runProspectSequence();
+  // Clients du catalogue (email ou téléphone) : « converti », et « client » dans le pipeline des acheteurs du guide.
+  await reconcileProspects().catch((error) => console.error("Rapprochement prospects/clients : échec", error));
+  const whatsapp = await runWhatsappSequence().catch((error) => {
+    console.error("Séquence WhatsApp : échec", error);
+    return null;
+  });
   const afterSale = await runAfterSale().catch((error) => {
     console.error("Emails après l'achat : échec", error);
     return null;
@@ -24,5 +31,5 @@ export async function POST(request: Request) {
     console.error("Codes anciens abonnés : échec", error);
     return null;
   });
-  return Response.json({ ok: true, enrolled, ...relances, afterSale, codes });
+  return Response.json({ ok: true, enrolled, ...relances, whatsapp, afterSale, codes });
 }

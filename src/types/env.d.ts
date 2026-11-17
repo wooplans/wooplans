@@ -15,6 +15,11 @@ interface CloudflareEnv {
   MCP_TOKEN?: string;
   CRON_SECRET?: string;
   ANTHROPIC_API_KEY?: string;
+  /** WhatsApp (Genuka, API officielle) : clé API (pk_live_…) et secret de signature du webhook (whsec_…). */
+  GENUKA_API_KEY?: string;
+  GENUKA_WEBHOOK_SECRET?: string;
+  /** Connexion du numéro +237 653 76 99 98 (variable publique, wrangler.jsonc). Vide = WhatsApp désactivé. */
+  GENUKA_CONNECTION_ID?: string;
 }
 
 interface Window {

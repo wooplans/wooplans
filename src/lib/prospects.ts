@@ -81,7 +81,7 @@ const notGuideSale = () => (guideProductId() ? ne(schema.sales.productId, guideP
  * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
  * (une même personne paie parfois avec un autre email que celui de sa tentative abandonnée).
  */
-async function isCustomer(email: string, phone: string | null | undefined) {
+export async function isCustomer(email: string, phone: string | null | undefined) {
   const db = getDb();
   const member = await db.query.members.findFirst({
     where: and(eq(schema.members.status, "active"), phone ? or(eq(schema.members.email, email), eq(schema.members.phone, phone)) : eq(schema.members.email, email)),
@@ -119,6 +119,11 @@ export async function reconcileProspects() {
       .update(schema.prospects)
       .set({ status: "converted", convertedAt: new Date(), nextEmailAt: null, updatedAt: new Date() })
       .where(inArray(schema.prospects.id, ids.slice(i, i + 50)));
+    // Pipeline des acheteurs du guide : un client du catalogue sort de la séquence WhatsApp et des campagnes.
+    await db
+      .update(schema.prospects)
+      .set({ pipelineStage: "client", pipelineUpdatedAt: new Date(), waNextAt: null })
+      .where(and(inArray(schema.prospects.id, ids.slice(i, i + 50)), isNotNull(schema.prospects.pipelineStage)));
   }
   return ids.length;
 }
