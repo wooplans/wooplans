@@ -99,6 +99,13 @@
       "when": 1794900000572,
       "tag": "0013_whatsapp_pipeline",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794946224634,
+      "tag": "0014_whatsapp_campagnes",
+      "breakpoints": true
     }
   ]
 }

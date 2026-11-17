@@ -5,7 +5,10 @@ import { PIPELINE_STAGES, type PipelineStage } from "@/db/schema";
 import { Badge, fmtDate, PageTitle } from "@/components/admin/ui";
 import { whatsappUrl } from "@/lib/phone";
 import { STAGE_LABELS } from "@/lib/pipeline";
-import { moveProspect } from "./actions";
+import { cookies } from "next/headers";
+import campaigns from "@/config/wa-campaigns.json";
+import { campaignAudience, type WaCampaign } from "@/lib/pipeline";
+import { moveProspect, sendCampaign } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +37,10 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   const total = rows.length;
   const clients = byStage.client.length;
   const listStage = PIPELINE_STAGES.includes(numeros as PipelineStage) ? (numeros as PipelineStage) : null;
+  const notice = (await cookies()).get("wp_notice")?.value;
+  const offers = await Promise.all(
+    Object.entries(campaigns as Record<string, WaCampaign>).map(async ([key, c]) => ({ key, c, audience: (await campaignAudience(key, c)).length })),
+  );
 
   return (
     <div>
@@ -55,6 +62,31 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
           </div>
         ))}
       </div>
+
+      {notice ? <p className="mb-4 rounded-lg bg-primary/10 p-3 text-sm">{notice}</p> : null}
+
+      {offers.map(({ key, c, audience }) => (
+        <section key={key} className="mb-6 rounded-xl border border-orange-300 bg-orange-50 p-4">
+          <p className="font-semibold">Campagne WhatsApp : {c.label}</p>
+          <p className="mt-1 text-sm text-foreground/75">
+            Cible : {c.stages.map((s) => STAGE_LABELS[s]).join(" + ")} · <strong>{audience} destinataire(s)</strong> (désinscrits et personnes déjà touchées exclus) · code{" "}
+            <strong>{c.code}</strong> pré-rempli sur la page de vente · modèle Meta « {c.template} ».
+          </p>
+          <form action={sendCampaign} className="mt-3 flex flex-wrap items-end gap-3 text-sm">
+            <input type="hidden" name="campaign" value={key} />
+            <label className="flex flex-col gap-1">
+              Date limite de l&apos;offre (écrite dans le message)
+              <input name="deadline" required placeholder="jeudi 20 novembre à minuit" className="w-64 rounded border border-outline px-2 py-1" />
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="confirm" value="oui" required /> J&apos;ai créé le code {c.code} sur Chariow avec cette date de fin
+            </label>
+            <button disabled={audience === 0} className="rounded-lg bg-orange-500 px-4 py-2 font-semibold text-white disabled:opacity-40">
+              Envoyer à {audience} personne(s)
+            </button>
+          </form>
+        </section>
+      ))}
 
       {listStage ? (
         <section id="numeros" className="mb-6 rounded-xl border border-outline bg-white p-4">

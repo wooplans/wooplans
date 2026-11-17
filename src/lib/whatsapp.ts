@@ -91,6 +91,28 @@ export function sendGuideTestimonial(to: string, prospectId: string) {
   });
 }
 
+/** Campagne d'offre (modèle marketing) : image, prénom, date limite, code promo et bouton suivi (/r/<prospect>.<campagne>). */
+export function sendCampaignOffer(
+  to: string,
+  c: { template: string; image: string },
+  name: string | null,
+  prospectId: string,
+  campaignKey: string,
+  deadline: string,
+  code: string,
+) {
+  return send({
+    to,
+    template: {
+      name: c.template,
+      language: "fr",
+      header: { image: { link: siteUrl(c.image) } },
+      body: [firstName(name), deadline, code],
+      buttons: [{ type: "url", text: `${prospectId}.${campaignKey}` }],
+    },
+  });
+}
+
 /** Message libre : seulement dans les 24 h qui suivent un message du client. */
 export function sendText(to: string, text: string) {
   return send({ to, text });

@@ -367,6 +367,9 @@ export const prospects = sqliteTable(
     /** Étape du pipeline (CRM des acheteurs du guide), modifiable à la main depuis l'admin. */
     pipelineStage: text("pipeline_stage", { enum: PIPELINE_STAGES }),
     pipelineUpdatedAt: integer("pipeline_updated_at", { mode: "timestamp_ms" }),
+    /** Dernière campagne WhatsApp reçue (clé de src/config/wa-campaigns.json) et sa date : jamais deux fois la même. */
+    waCampaign: text("wa_campaign"),
+    waCampaignAt: integer("wa_campaign_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

@@ -651,6 +651,15 @@ function guessCountry(){
     for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===d.country){sel.selectedIndex=i;setCountry(sel,true);return;}
   }).catch(function(){});
 }
+/* Lien d'une campagne WhatsApp (?code=GUIDE19) : code promo pré-rempli dans le formulaire de paiement. */
+(function(){
+  var code=(new URLSearchParams(location.search).get('code')||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,30);
+  if(!code)return;
+  var input=document.getElementById('ckCode');if(!input)return;
+  input.value=code.toUpperCase();
+  document.getElementById('ckPromoLink').hidden=true;document.getElementById('ckPromo').hidden=false;
+  try{wpCapture('promo_code_prefilled',{code:input.value});}catch(e){}
+})();
 function showPromo(){
   document.getElementById('ckPromoLink').hidden=true;document.getElementById('ckPromo').hidden=false;document.getElementById('ckCode').focus();
 }
