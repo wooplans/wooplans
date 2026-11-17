@@ -315,6 +315,9 @@ export const webhookDeliveries = sqliteTable("webhook_deliveries", {
 
 /** bounced = adresse qui rejette nos emails (ou signalement en spam) : plus aucun email automatique. */
 export const PROSPECT_STATUSES = ["open", "converted", "unsubscribed", "lost", "bounced"] as const;
+/** Pipeline des acheteurs du guide : séquence WhatsApp en cours, puis chaud / tiède / froid, client, projet, désinscrit. */
+export const PIPELINE_STAGES = ["sequence", "chaud", "tiede", "froid", "client", "projet", "desinscrit"] as const;
+export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 export type ProspectStatus = (typeof PROSPECT_STATUSES)[number];
 
 /**
@@ -350,11 +353,27 @@ export const prospects = sqliteTable(
     whatsappSentAt: integer("whatsapp_sent_at", { mode: "timestamp_ms" }),
     convertedAt: integer("converted_at", { mode: "timestamp_ms" }),
     notes: text("notes").notNull().default(""),
+    /**
+     * Séquence WhatsApp du guide (Genuka, 17 nov. 2026) : 3 messages modèles (livraison J0, vidéo du catalogue J1,
+     * témoignage + prix J3), puis classement automatique dans le pipeline à J4.
+     */
+    waStep: integer("wa_step").notNull().default(0),
+    waNextAt: integer("wa_next_at", { mode: "timestamp_ms" }),
+    waLastSentAt: integer("wa_last_sent_at", { mode: "timestamp_ms" }),
+    waReadAt: integer("wa_read_at", { mode: "timestamp_ms" }),
+    waClickedAt: integer("wa_clicked_at", { mode: "timestamp_ms" }),
+    waRepliedAt: integer("wa_replied_at", { mode: "timestamp_ms" }),
+    waOptOutAt: integer("wa_opt_out_at", { mode: "timestamp_ms" }),
+    /** Étape du pipeline (CRM des acheteurs du guide), modifiable à la main depuis l'admin. */
+    pipelineStage: text("pipeline_stage", { enum: PIPELINE_STAGES }),
+    pipelineUpdatedAt: integer("pipeline_updated_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
     uniqueIndex("prospects_email_idx").on(t.email),
+    index("prospects_wa_next_idx").on(t.waNextAt),
+    index("prospects_pipeline_idx").on(t.pipelineStage),
     index("prospects_status_idx").on(t.status, t.lastEventAt),
     index("prospects_next_email_idx").on(t.nextEmailAt),
   ],

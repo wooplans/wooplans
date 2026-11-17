@@ -11,6 +11,7 @@ const NAV = [
   { href: "/admin/crm", label: "CRM plans complets" },
   { href: "/admin/plan-devis", label: "Fiches (détail)" },
   { href: "/admin/ventes", label: "Ventes" },
+  { href: "/admin/pipeline", label: "Pipeline guide" },
   { href: "/admin/prospects", label: "Prospects" },
   { href: "/admin/membres", label: "Membres" },
   { href: "/admin/temoignages", label: "Témoignages" },

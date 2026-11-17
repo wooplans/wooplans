@@ -14,6 +14,7 @@ import { buildUpsellEmail } from "@/lib/upsell-server";
 import { recordProspectEvent } from "@/lib/prospects";
 import { offreProductIds, type Offre } from "@/lib/offres";
 import { recordPurchasedPlan } from "@/lib/pdf-quota";
+import { startGuideWhatsapp } from "@/lib/pipeline";
 import { GUIDE, GUIDE_CTA_ID, GUIDE_PATH, guideProductId } from "@/lib/guide";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
@@ -615,6 +616,8 @@ async function processGuideSale(
       startSequence: true,
       kind: "guide",
     }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
+    // WhatsApp (Genuka) : livraison du guide puis séquence J1 / J3 et classement dans le pipeline.
+    await startGuideWhatsapp(to, phone, name, intentId).catch((error) => console.error("WhatsApp : séquence du guide non démarrée", error));
   }
   if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${GUIDE_PATH}/merci`, ctaId: GUIDE_CTA_ID });
 
