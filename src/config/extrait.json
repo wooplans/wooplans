@@ -1,0 +1,14 @@
+{
+  "price": 1900,
+  "chariowProductId": "prd_7k9frkz8",
+  "models": 5,
+  "slugs": [
+    "duplex-d4-006",
+    "duplex-d4-036",
+    "villa-v4-034",
+    "villa-v4-001",
+    "villa-v3-001"
+  ],
+  "pdfKey": "private/guide/extrait-catalogue-premium.pdf",
+  "pdfFileName": "Extrait-Catalogue-Premium-WooPlans.pdf"
+}

@@ -1,0 +1,584 @@
+[
+{
+"code": "V2-001",
+"category": "villa",
+"bedrooms": 2,
+"surface": 89
+},
+{
+"code": "V3-001",
+"category": "villa",
+"bedrooms": 3,
+"surface": 92
+},
+{
+"code": "V3-002",
+"category": "villa",
+"bedrooms": 3,
+"surface": 98
+},
+{
+"code": "V3-003",
+"category": "villa",
+"bedrooms": 3,
+"surface": 99
+},
+{
+"code": "V3-004",
+"category": "villa",
+"bedrooms": 3,
+"surface": 110
+},
+{
+"code": "V3-005",
+"category": "villa",
+"bedrooms": 3,
+"surface": 96
+},
+{
+"code": "V3-006",
+"category": "villa",
+"bedrooms": 3,
+"surface": 107
+},
+{
+"code": "V3-007",
+"category": "villa",
+"bedrooms": 3,
+"surface": 149
+},
+{
+"code": "V3-008",
+"category": "villa",
+"bedrooms": 3,
+"surface": 189
+},
+{
+"code": "V3-009",
+"category": "villa",
+"bedrooms": 3,
+"surface": 127
+},
+{
+"code": "V3-014",
+"category": "villa",
+"bedrooms": 3,
+"surface": 201
+},
+{
+"code": "V3-015",
+"category": "villa",
+"bedrooms": 3,
+"surface": 120
+},
+{
+"code": "V3-017",
+"category": "villa",
+"bedrooms": 3,
+"surface": 120
+},
+{
+"code": "V3-018",
+"category": "villa",
+"bedrooms": 3,
+"surface": 127
+},
+{
+"code": "V3-021",
+"category": "villa",
+"bedrooms": 3,
+"surface": 149
+},
+{
+"code": "V3-022",
+"category": "villa",
+"bedrooms": 3,
+"surface": 89
+},
+{
+"code": "V3-025",
+"category": "villa",
+"bedrooms": 3,
+"surface": 108
+},
+{
+"code": "V3-026",
+"category": "villa",
+"bedrooms": 3,
+"surface": 148
+},
+{
+"code": "V3-027",
+"category": "villa",
+"bedrooms": 3,
+"surface": 69
+},
+{
+"code": "V3-028",
+"category": "villa",
+"bedrooms": 3,
+"surface": 119
+},
+{
+"code": "V3-029",
+"category": "villa",
+"bedrooms": 3,
+"surface": 215
+},
+{
+"code": "V3-030",
+"category": "villa",
+"bedrooms": 3,
+"surface": 144
+},
+{
+"code": "V3-037",
+"category": "villa",
+"bedrooms": 3,
+"surface": 164
+},
+{
+"code": "V3-038",
+"category": "villa",
+"bedrooms": 3,
+"surface": 124
+},
+{
+"code": "V3-039",
+"category": "villa",
+"bedrooms": 3,
+"surface": 122
+},
+{
+"code": "V3-043",
+"category": "villa",
+"bedrooms": 3,
+"surface": 144
+},
+{
+"code": "V4-001",
+"category": "villa",
+"bedrooms": 4,
+"surface": 116
+},
+{
+"code": "V4-002",
+"category": "villa",
+"bedrooms": 4,
+"surface": 155
+},
+{
+"code": "V4-003",
+"category": "villa",
+"bedrooms": 4,
+"surface": 144
+},
+{
+"code": "V4-004",
+"category": "villa",
+"bedrooms": 4,
+"surface": 124
+},
+{
+"code": "V4-005",
+"category": "villa",
+"bedrooms": 4,
+"surface": 201
+},
+{
+"code": "V4-006",
+"category": "villa",
+"bedrooms": 4,
+"surface": 120
+},
+{
+"code": "V4-007",
+"category": "villa",
+"bedrooms": 4,
+"surface": 136
+},
+{
+"code": "V4-008",
+"category": "villa",
+"bedrooms": 4,
+"surface": 128
+},
+{
+"code": "V4-009",
+"category": "villa",
+"bedrooms": 4,
+"surface": 184
+},
+{
+"code": "V4-010",
+"category": "villa",
+"bedrooms": 4,
+"surface": 148
+},
+{
+"code": "V4-013",
+"category": "villa",
+"bedrooms": 4,
+"surface": 147
+},
+{
+"code": "V4-014",
+"category": "villa",
+"bedrooms": 4,
+"surface": 147
+},
+{
+"code": "V4-016",
+"category": "villa",
+"bedrooms": 4,
+"surface": 221
+},
+{
+"code": "V4-019",
+"category": "villa",
+"bedrooms": 4,
+"surface": 158
+},
+{
+"code": "V4-022",
+"category": "villa",
+"bedrooms": 4,
+"surface": 174
+},
+{
+"code": "V4-024",
+"category": "villa",
+"bedrooms": 4,
+"surface": 168
+},
+{
+"code": "V4-025",
+"category": "villa",
+"bedrooms": 4,
+"surface": 189
+},
+{
+"code": "V4-026",
+"category": "villa",
+"bedrooms": 4,
+"surface": 222
+},
+{
+"code": "V4-028",
+"category": "villa",
+"bedrooms": 4,
+"surface": 151
+},
+{
+"code": "V4-029",
+"category": "villa",
+"bedrooms": 4,
+"surface": 122
+},
+{
+"code": "V4-030",
+"category": "villa",
+"bedrooms": 4,
+"surface": 132
+},
+{
+"code": "V4-032",
+"category": "villa",
+"bedrooms": 4,
+"surface": 177
+},
+{
+"code": "V4-034",
+"category": "villa",
+"bedrooms": 4,
+"surface": 146
+},
+{
+"code": "V4-036",
+"category": "villa",
+"bedrooms": 4,
+"surface": 233
+},
+{
+"code": "V4-042",
+"category": "villa",
+"bedrooms": 4,
+"surface": 177
+},
+{
+"code": "V5-002",
+"category": "villa",
+"bedrooms": 5,
+"surface": 224
+},
+{
+"code": "V5-005",
+"category": "villa",
+"bedrooms": 5,
+"surface": 224
+},
+{
+"code": "V5-006",
+"category": "villa",
+"bedrooms": 5,
+"surface": 253
+},
+{
+"code": "V5-007",
+"category": "villa",
+"bedrooms": 5,
+"surface": 157
+},
+{
+"code": "V5-008",
+"category": "villa",
+"bedrooms": 5,
+"surface": 159
+},
+{
+"code": "V5-009",
+"category": "villa",
+"bedrooms": 5,
+"surface": 152
+},
+{
+"code": "D4-001",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 532
+},
+{
+"code": "D4-002",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 204
+},
+{
+"code": "D4-003",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 323
+},
+{
+"code": "D4-004",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 313
+},
+{
+"code": "D4-005",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 212
+},
+{
+"code": "D4-006",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 195
+},
+{
+"code": "D4-007",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 271
+},
+{
+"code": "D4-008",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 219
+},
+{
+"code": "D4-009",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 320
+},
+{
+"code": "D4-010",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 201
+},
+{
+"code": "D4-011",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 500
+},
+{
+"code": "D4-012",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 195
+},
+{
+"code": "D4-013",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 324
+},
+{
+"code": "D4-015",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 300
+},
+{
+"code": "D4-016",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 287
+},
+{
+"code": "D4-017",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 280
+},
+{
+"code": "D4-019",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 338
+},
+{
+"code": "D4-020",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 266
+},
+{
+"code": "D4-024",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 362
+},
+{
+"code": "D4-026",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 235
+},
+{
+"code": "D4-032",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 198
+},
+{
+"code": "D4-033",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 226
+},
+{
+"code": "D4-034",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 143
+},
+{
+"code": "D4-035",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 140
+},
+{
+"code": "D4-036",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 127
+},
+{
+"code": "D4-040",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 155
+},
+{
+"code": "D4-043",
+"category": "duplex",
+"bedrooms": 4,
+"surface": 318
+},
+{
+"code": "D5-001",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 325
+},
+{
+"code": "D5-002",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 490
+},
+{
+"code": "D5-003",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 320
+},
+{
+"code": "D5-005",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 512
+},
+{
+"code": "D5-011",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 326
+},
+{
+"code": "D5-012",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 234
+},
+{
+"code": "D5-013",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 340
+},
+{
+"code": "D5-014",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 364
+},
+{
+"code": "D5-015",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 203
+},
+{
+"code": "D5-016",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 219
+},
+{
+"code": "D5-018",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 480
+},
+{
+"code": "D5-019",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 401
+},
+{
+"code": "D5-020",
+"category": "duplex",
+"bedrooms": 5,
+"surface": 307
+}
+]

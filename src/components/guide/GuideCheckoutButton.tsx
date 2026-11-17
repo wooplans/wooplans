@@ -19,7 +19,27 @@ function nationalNumber(raw: string, dial: string) {
  * Achat du Guide des maisons : même formulaire que le plan et devis des fiches (nom, email, WhatsApp), titre et prix du
  * guide. Aucun compte à rebours : le prix du guide est fixe.
  */
-export function GuideCheckoutButton({ label, ctaId, className, price, enabled }: { label: React.ReactNode; ctaId: string; className: string; price: number; enabled: boolean }) {
+const OFFER_TEXT = {
+  guide: { eyebrow: "Guide WooPlans des maisons", title: "100 villas et duplex", contentName: "Guide WooPlans des maisons", contentId: "guide-maisons" },
+  extrait: { eyebrow: "Extrait du Catalogue Premium", title: "5 maisons avec plan et devis", contentName: "Extrait du Catalogue Premium", contentId: "extrait-catalogue" },
+} as const;
+
+export function GuideCheckoutButton({
+  label,
+  ctaId,
+  className,
+  price,
+  enabled,
+  offer = "guide",
+}: {
+  label: React.ReactNode;
+  ctaId: string;
+  className: string;
+  price: number;
+  enabled: boolean;
+  offer?: "guide" | "extrait";
+}) {
+  const text = OFFER_TEXT[offer];
   const [open, setOpen] = useState(false);
   const [country, setCountry] = useState<CountryCode>("CI");
   const countryChosen = useRef(false);
@@ -46,7 +66,7 @@ export function GuideCheckoutButton({ label, ctaId, className, price, enabled }:
     const response = await fetch("/api/guide/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: (form.name || "").trim(), email: form.email, phone: nationalNumber(form.phone || "", dial), countryCode: country }),
+      body: JSON.stringify({ name: (form.name || "").trim(), email: form.email, phone: nationalNumber(form.phone || "", dial), countryCode: country, offer }),
       signal: AbortSignal.timeout(25000),
     }).catch(() => null);
     const body = (await response?.json().catch(() => null)) as { url?: string; error?: string; metaEventId?: string | null } | null;
@@ -55,8 +75,8 @@ export function GuideCheckoutButton({ label, ctaId, className, price, enabled }:
       setSending(false);
       return;
     }
-    phCapture("checkout_open", { cta_id: ctaId, mode: "redirect", offer: "guide", provider: "chariow" });
-    pixelTrack("InitiateCheckout", { content_name: "Guide WooPlans des maisons", content_ids: ["guide-maisons"], content_type: "product", value: price, currency: "XAF" }, body.metaEventId);
+    phCapture("checkout_open", { cta_id: ctaId, mode: "redirect", offer, provider: "chariow" });
+    pixelTrack("InitiateCheckout", { content_name: text.contentName, content_ids: [text.contentId], content_type: "product", value: price, currency: "XAF" }, body.metaEventId);
     const url = body.url;
     setTimeout(() => {
       window.location.href = url;
@@ -71,7 +91,7 @@ export function GuideCheckoutButton({ label, ctaId, className, price, enabled }:
         className={className}
         disabled={!enabled}
         onClick={() => {
-          phCapture("guide_form_open", { cta_id: ctaId });
+          phCapture("guide_form_open", { cta_id: ctaId, offer });
           setOpen(true);
         }}
       >
@@ -86,8 +106,8 @@ export function GuideCheckoutButton({ label, ctaId, className, price, enabled }:
       >
         <form onSubmit={onSubmit} className="grid gap-4 p-5 text-left sm:p-6">
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
-            <p className="eyebrow px-8">Guide WooPlans des maisons</p>
-            <h2 id={`guide-title-${ctaId}`} className="mt-1 text-lg font-bold">100 villas et duplex</h2>
+            <p className="eyebrow px-8">{text.eyebrow}</p>
+            <h2 id={`guide-title-${ctaId}`} className="mt-1 text-lg font-bold">{text.title}</h2>
             <p className="mt-1 text-4xl font-bold tracking-tight">
               {price.toLocaleString("fr-FR").replace(/ | /g, " ")} <span className="text-base font-medium">FCFA</span>
             </p>

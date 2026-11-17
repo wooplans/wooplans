@@ -1,7 +1,7 @@
 import { and, eq, lt, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
-import { GUIDE, GUIDE_CTA_ID } from "@/lib/guide";
+import { leadOfferByCta } from "@/lib/lead-offers";
 
 /** Téléchargements autorisés par achat (autre téléphone, fichier perdu…). */
 const MAX_DOWNLOADS = 15;
@@ -14,10 +14,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const db = getDb();
   const id = (await params).id;
   const intent = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, id), columns: { id: true, ctaId: true, status: true } });
-  if (!intent || intent.ctaId !== GUIDE_CTA_ID || intent.status !== "paid") {
+  const offer = leadOfferByCta(intent?.ctaId);
+  if (!intent || !offer || intent.status !== "paid") {
     return new Response("Lien invalide ou paiement non confirmé.", { status: 404 });
   }
-  const object = await getEnv().MEDIA.get(GUIDE.pdfKey);
+  const object = await getEnv().MEDIA.get(offer.pdfKey);
   if (!object) return new Response("Le guide est en cours de mise à jour. Réessayez dans quelques minutes ou écrivez-nous sur WhatsApp.", { status: 503 });
 
   const counted = await db
@@ -32,7 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     headers: {
       "Content-Type": "application/pdf",
       "Content-Length": String(object.size),
-      "Content-Disposition": `attachment; filename="${GUIDE.pdfFileName}"`,
+      "Content-Disposition": `attachment; filename="${offer.pdfFileName}"`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Robots-Tag": "noindex",

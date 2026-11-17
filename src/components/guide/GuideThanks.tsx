@@ -21,8 +21,11 @@ export function GuideThanks(props: {
   video: string;
   videoPoster: string;
   announcedModels: number;
+  offer?: "guide" | "extrait";
 }) {
   const { intentId, pixelId } = props;
+  const extrait = props.offer === "extrait";
+  const product = extrait ? "Extrait du Catalogue Premium" : "Guide WooPlans des maisons";
   const [data, setData] = useState<Status | null>(null);
   const [attempts, setAttempts] = useState(0);
   useEffect(() => {
@@ -39,7 +42,7 @@ export function GuideThanks(props: {
         const key = `wp_purchase_${intentId ?? "x"}`;
         if (json.track && !sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
-          pixelPurchase(pixelId, key, { value: props.guidePrice, currency: "XAF", content_name: "Guide WooPlans des maisons", content_ids: ["guide-maisons"], content_type: "product" });
+          pixelPurchase(pixelId, key, { value: props.guidePrice, currency: "XAF", content_name: product, content_ids: [extrait ? "extrait-catalogue" : "guide-maisons"], content_type: "product" });
         }
         return;
       }
@@ -63,11 +66,11 @@ export function GuideThanks(props: {
         {paid ? (
           <>
             <p className="eyebrow">Paiement confirmé</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre Guide WooPlans des maisons est prêt</h1>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre {product} est prêt</h1>
             <p className="mt-3 text-foreground/75">Il vous est aussi envoyé par email et sur WhatsApp. Gardez ce message : il vous permet de le retélécharger.</p>
             {data?.download && (
-              <a href={data.download} data-cta="guide_telecharger" className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
-                Télécharger mon guide (PDF)
+              <a href={data.download} data-cta={extrait ? "extrait_telecharger" : "guide_telecharger"} className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
+                Télécharger mon {extrait ? "extrait" : "guide"} (PDF)
               </a>
             )}
           </>
@@ -80,7 +83,7 @@ export function GuideThanks(props: {
           <>
             <h1 className="text-2xl font-bold tracking-tight">Nous n&apos;avons pas encore reçu la confirmation du paiement</h1>
             <p className="mt-3 text-foreground/75">
-              Si vous avez payé, le guide arrivera par email dans quelques minutes. Sinon, écrivez-nous sur WhatsApp : nous vous aidons.
+              Si vous avez payé, le PDF arrivera par email dans quelques minutes. Sinon, écrivez-nous sur WhatsApp : nous vous aidons.
             </p>
             <a href={props.whatsappUrl} className="btn btn-primary mt-5 inline-flex">
               Écrire sur WhatsApp
@@ -93,9 +96,17 @@ export function GuideThanks(props: {
       <section className="overflow-hidden rounded-2xl bg-primary text-white">
         <div className="p-6 md:p-10">
           <p className="text-sm font-semibold uppercase tracking-wide text-highlight">L&apos;étape suivante</p>
-          <h2 className="mt-2 text-2xl font-bold md:text-3xl">Votre guide montre l&apos;extérieur. Le Catalogue Premium montre l&apos;intérieur.</h2>
+          <h2 className="mt-2 text-2xl font-bold md:text-3xl">
+            {extrait ? (
+              <>Vous avez 5 maisons. Le Catalogue Premium vous les donne toutes.</>
+            ) : (
+              <>Votre guide montre l&apos;extérieur. Le Catalogue Premium montre l&apos;intérieur.</>
+            )}
+          </h2>
           <p className="mt-3 max-w-2xl text-white/85">
-            Pour choisir votre maison en toute confiance, il vous faut voir la place de chaque pièce et le coût de chaque étape du chantier.
+            {extrait
+              ? `Les ${props.announcedModels} villas et duplex au même format que votre extrait : plan de distribution et devis poste par poste pour chacun.`
+              : "Pour choisir votre maison en toute confiance, il vous faut voir la place de chaque pièce et le coût de chaque étape du chantier."}
           </p>
           {props.video ? (
             <video
@@ -104,7 +115,7 @@ export function GuideThanks(props: {
               playsInline
               preload="none"
               poster={props.videoPoster || undefined}
-              onPlay={() => phCapture("guide_merci_video_play")}
+              onPlay={() => phCapture("guide_merci_video_play", { offer: props.offer ?? "guide" })}
             >
               <source src={props.video} type="video/mp4" />
             </video>
@@ -120,9 +131,12 @@ export function GuideThanks(props: {
         </div>
         <div className="grid gap-px bg-white/15 md:grid-cols-2">
           <div className="bg-primary p-6 md:px-10">
-            <p className="font-semibold text-white/80">Dans votre guide</p>
+            <p className="font-semibold text-white/80">Dans votre {extrait ? "extrait" : "guide"}</p>
             <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {["Le rendu de chaque maison", "Chambres, niveaux, surface", "Le terrain conseillé", "Le budget global estimé"].map((t) => (
+              {(extrait
+                ? ["5 maisons de budgets différents", "Le plan de distribution de chacune", "Le devis poste par poste de chacune"]
+                : ["Le rendu de chaque maison", "Chambres, niveaux, surface", "Le terrain conseillé", "Le budget global estimé"]
+              ).map((t) => (
                 <li key={t} className="flex gap-2">
                   <span aria-hidden>✓</span>
                   {t}
@@ -153,7 +167,7 @@ export function GuideThanks(props: {
         </div>
         <div className="p-6 md:px-10 md:pb-10">
           <div className="flex flex-wrap items-center gap-4">
-            <a href={props.catalogueUrl} data-cta="guide_merci_catalogue" className="cta-pulse btn btn-cta w-full px-6 py-4 text-base sm:w-auto">
+            <a href={props.catalogueUrl} data-cta={extrait ? "extrait_merci_catalogue" : "guide_merci_catalogue"} className="cta-pulse btn btn-cta w-full px-6 py-4 text-base sm:w-auto">
               Voir le Catalogue Premium
             </a>
             <p className="text-white/85">

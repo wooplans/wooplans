@@ -3,7 +3,8 @@ import { getDb, schema } from "@/db";
 import { createChariowCheckout } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
 import { siteUrl } from "@/lib/env";
-import { GUIDE, GUIDE_CTA_ID, GUIDE_PATH, guideEnabled, guideProductId, parseHeardFrom } from "@/lib/guide";
+import { parseHeardFrom } from "@/lib/guide";
+import { LEAD_OFFERS } from "@/lib/lead-offers";
 import { normalizeEmail } from "@/lib/members";
 import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { internationalPhone } from "@/lib/phone";
@@ -11,14 +12,16 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { recordServerEvent } from "@/lib/tracking";
 
-type Body = { name?: string; email?: string; phone?: string; countryCode?: string; heardFrom?: string };
+type Body = { name?: string; email?: string; phone?: string; countryCode?: string; heardFrom?: string; offer?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Achat du Guide WooPlans des maisons : intention (attribution, « comment nous avez-vous connu ? ») puis paiement Chariow. */
 export async function POST(request: NextRequest) {
-  if (!guideEnabled()) return NextResponse.json({ error: "Le guide sera bientôt disponible." }, { status: 404 });
   const body = (await request.json().catch(() => ({}))) as Body;
+  // Offre d'entrée : le guide (par défaut) ou l'extrait du Catalogue Premium.
+  const offer = body.offer === "extrait" ? LEAD_OFFERS.extrait : LEAD_OFFERS.guide;
+  if (!offer.productId) return NextResponse.json({ error: "Bientôt disponible." }, { status: 404 });
   const name = (body.name || "").trim().replace(/\s+/g, " ").slice(0, 100);
   const email = normalizeEmail(body.email || "");
   const phone = (body.phone || "").replace(/\D/g, "");
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
   if (name.length < 2 || !EMAIL_RE.test(email) || phone.length < 6) {
     return NextResponse.json({ error: "Merci de renseigner votre nom, un email valide et votre numéro WhatsApp." }, { status: 400 });
   }
-  if (!(await rateLimit(`guide:${clientIp(request.headers)}`, 15, 60 * 60 * 1000))) {
+  if (!(await rateLimit(`lead:${clientIp(request.headers)}`, 15, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
   }
 
@@ -39,14 +42,14 @@ export async function POST(request: NextRequest) {
     id: intentId,
     visitorId,
     email,
-    ctaId: GUIDE_CTA_ID,
+    ctaId: offer.ctaId,
     heardFrom,
     metaContext: metaBrowser ? JSON.stringify(metaBrowser) : null,
   });
-  if (visitorId) await recordServerEvent({ visitorId, type: "checkout_start", path: GUIDE_PATH, ctaId: GUIDE_CTA_ID }).catch(() => {});
+  if (visitorId) await recordServerEvent({ visitorId, type: "checkout_start", path: offer.path, ctaId: offer.ctaId }).catch(() => {});
 
   const visitor = visitorId ? await db.query.visitors.findFirst({ where: (v, { eq }) => eq(v.id, visitorId) }) : null;
-  const metadata: Record<string, string> = { cta_id: GUIDE_CTA_ID };
+  const metadata: Record<string, string> = { cta_id: offer.ctaId };
   if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
   if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
   if (heardFrom) metadata.heard_from = heardFrom;
@@ -55,10 +58,10 @@ export async function POST(request: NextRequest) {
   const checkout = await createChariowCheckout({
     customer: { email, firstName, lastName: rest.join(" "), phoneNumber: phone, countryCode },
     intentId,
-    redirectUrl: siteUrl(`${GUIDE_PATH}/merci?i=${intentId}`),
+    redirectUrl: siteUrl(`${offer.path}/merci?i=${intentId}`),
     metadata,
     customerIp: clientIp(request.headers),
-    productId: guideProductId(),
+    productId: offer.productId,
   });
   if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
 
@@ -67,10 +70,10 @@ export async function POST(request: NextRequest) {
     sendMetaEventInBackground({
       eventName: "InitiateCheckout",
       eventId,
-      eventSourceUrl: siteUrl(GUIDE_PATH),
+      eventSourceUrl: siteUrl(offer.path),
       user: { email, phone: internationalPhone(phone, countryCode), name, country: countryCode, externalId: visitorId },
       browser: metaBrowser,
-      customData: { content_name: "Guide WooPlans des maisons", content_ids: ["guide-maisons"], content_type: "product", value: GUIDE.price, currency: "XAF" },
+      customData: { content_name: offer.name, content_ids: [offer.key === "guide" ? "guide-maisons" : "extrait-catalogue"], content_type: "product", value: offer.price, currency: "XAF" },
     });
   }
   const response = NextResponse.json({ url: checkout.url, intentId, metaEventId: eventId });

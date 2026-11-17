@@ -23,7 +23,20 @@ const millions = (v: number | null) => (v === null ? "" : (v / 1_000_000).toLoca
  * Grille des maisons préférées des clients (même message que la pub qui vend). Un toucher sur une maison l'ouvre en
  * grand avec ses chiffres et le bouton d'achat du guide : les visiteurs touchaient les photos sans résultat.
  */
-export function GuideModelGrid({ models, price, enabled, compact = false }: { models: GuideModel[]; price: number; enabled: boolean; compact?: boolean }) {
+export function GuideModelGrid({
+  models,
+  price,
+  enabled,
+  compact = false,
+  offer = "guide",
+}: {
+  models: GuideModel[];
+  price: number;
+  enabled: boolean;
+  compact?: boolean;
+  offer?: "guide" | "extrait";
+}) {
+  const extrait = offer === "extrait";
   const [open, setOpen] = useState<GuideModel | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
 
@@ -40,7 +53,7 @@ export function GuideModelGrid({ models, price, enabled, compact = false }: { mo
             key={m.slug}
             type="button"
             onClick={() => {
-              phCapture("guide_model_open", { plan: m.slug });
+              phCapture("guide_model_open", { plan: m.slug, offer });
               setOpen(m);
             }}
             className="group overflow-hidden rounded-xl bg-white text-left text-foreground shadow-sm ring-primary transition hover:ring-2"
@@ -116,11 +129,16 @@ export function GuideModelGrid({ models, price, enabled, compact = false }: { mo
                   {millions(open.budgetMin)} à {millions(open.budgetMax)} millions FCFA
                 </strong>
               </p>
-              <p className="mt-3 text-sm text-foreground/75">Ce modèle et 99 autres, classés par budget, sont dans le Guide WooPlans des maisons.</p>
+              <p className="mt-3 text-sm text-foreground/75">
+                {extrait
+                  ? "Son plan de distribution et son devis poste par poste sont dans le Catalogue Premium. Découvrez ce format avec l'extrait : 5 maisons complètes."
+                  : "Ce modèle et 99 autres, classés par budget, sont dans le Guide WooPlans des maisons."}
+              </p>
               <div className="cta-pulse mt-4">
                 <GuideCheckoutButton
-                  label="Recevoir le guide · 1 900 FCFA"
-                  ctaId={`guide_modele_${open.code.toLowerCase()}`}
+                  label={`Recevoir ${extrait ? "l'extrait" : "le guide"} · ${price.toLocaleString("fr-FR").replace(/ | /g, " ")} FCFA`}
+                  ctaId={`${offer}_modele_${open.code.toLowerCase()}`}
+                  offer={offer}
                   price={price}
                   enabled={enabled}
                   className="btn-cta w-full py-4 text-base"

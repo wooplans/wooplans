@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { GUIDE_CTA_ID } from "@/lib/guide";
+import { LEAD_CTA_IDS } from "@/lib/lead-offers";
 import { INTENT_COOKIE } from "@/lib/session";
 
 /** Statut d'un achat du guide pour la page de remerciement : le lien de téléchargement apparaît dès le paiement confirmé. */
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     where: eq(schema.checkoutIntents.id, intentId),
     columns: { id: true, ctaId: true, status: true, qualification: true },
   });
-  if (!intent || intent.ctaId !== GUIDE_CTA_ID) return NextResponse.json({ status: "unknown" }, { headers: { "Cache-Control": "no-store" } });
+  if (!intent || !LEAD_CTA_IDS.includes(intent.ctaId ?? "")) return NextResponse.json({ status: "unknown" }, { headers: { "Cache-Control": "no-store" } });
   // Achat envoyé au Pixel une seule fois par paiement, quel que soit l'onglet ou le navigateur qui rouvre la page
   // (Meta comptait 24 achats pour 16 ventes Chariow les 15-16 nov.) : le premier affichage « payé » réserve l'envoi.
   let track = false;
