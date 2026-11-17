@@ -131,7 +131,7 @@ export function GuideModelGrid({
               </p>
               <p className="mt-3 text-sm text-foreground/75">
                 {extrait
-                  ? "Ce modèle est dans l'Extrait du Catalogue Premium, avec son plan de distribution et son devis détaillé."
+                  ? "Son plan de distribution et son devis poste par poste sont dans le Catalogue Premium. Découvrez ce format avec l'extrait : 5 maisons complètes."
                   : "Ce modèle et 99 autres, classés par budget, sont dans le Guide WooPlans des maisons."}
               </p>
               <div className="cta-pulse mt-4">

@@ -105,7 +105,7 @@ export function GuideThanks(props: {
           </h2>
           <p className="mt-3 max-w-2xl text-white/85">
             {extrait
-              ? `Les ${props.announcedModels} villas et duplex au même format que votre extrait : plan de distribution et devis détaillé pour chacun.`
+              ? `Les ${props.announcedModels} villas et duplex au même format que votre extrait : plan de distribution et devis poste par poste pour chacun.`
               : "Pour choisir votre maison en toute confiance, il vous faut voir la place de chaque pièce et le coût de chaque étape du chantier."}
           </p>
           {props.video ? (
@@ -134,7 +134,7 @@ export function GuideThanks(props: {
             <p className="font-semibold text-white/80">Dans votre {extrait ? "extrait" : "guide"}</p>
             <ul className="mt-3 space-y-2 text-sm text-white/80">
               {(extrait
-                ? ["5 maisons de budgets différents", "Le plan de distribution de chacune", "Le devis détaillé de chacune"]
+                ? ["5 maisons de budgets différents", "Le plan de distribution de chacune", "Le devis poste par poste de chacune"]
                 : ["Le rendu de chaque maison", "Chambres, niveaux, surface", "Le terrain conseillé", "Le budget global estimé"]
               ).map((t) => (
                 <li key={t} className="flex gap-2">

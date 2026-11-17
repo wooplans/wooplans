@@ -3,7 +3,7 @@
 
 Contenu : couverture, mode d'emploi, les 5 vraies pages A3 du Catalogue Premium (scripts/extrait/pages/, extraites
 des PDF A3 de Tao du 12 nov. 2026, sans aucune retouche des chiffres), la liste verrouillée des autres modèles
-(scripts/extrait/models.json) puis l'appel vers le Catalogue Premium.
+(scripts/extrait/models.json, avec la façade de chacun : scripts/extrait/thumbs/) puis l'appel vers le Catalogue Premium.
 Usage : python scripts/extrait/build_extrait.py [--out extrait-catalogue-premium.pdf]
 """
 from __future__ import annotations
@@ -67,7 +67,7 @@ def cover(c):
     c.drawString(M + c.stringWidth("Extrait du Catalogue ", "Head", 64), H / 2 + 30, "Premium")
     c.setFillColor(white)
     c.setFont("Semi", 24)
-    c.drawString(M, H / 2 - 20, f"{len(ORDER)} maisons avec leur plan de distribution et leur devis détaillé")
+    c.drawString(M, H / 2 - 20, f"{len(ORDER)} maisons avec leur plan de distribution et leur devis poste par poste")
     c.setStrokeColor(ACCENT)
     c.setLineWidth(1.5)
     c.line(M, 130, W - M, 130)
@@ -130,40 +130,54 @@ def stamp(c, n: int, total: int):
     c.drawCentredString(W * 0.51, 21, f"Extrait du Catalogue Premium · page {n} / {total}")
 
 
-def others(c):
-    models = [m for m in json.loads((HERE / "models.json").read_text()) if m["code"] not in ORDER]
+def others_models():
+    return [m for m in json.loads((HERE / "models.json").read_text()) if m["code"] not in ORDER]
+
+
+def others(c, category: str, first: bool):
+    """Les autres modèles du catalogue, en image (façade de leur fiche), verrouillés : le meilleur teaser du catalogue."""
+    allm = others_models()
+    models = [m for m in allm if m["category"] == category]
     c.setFillColor(white)
     c.rect(0, 0, W, H, fill=1, stroke=0)
     c.setFillColor(PRIMARY)
-    c.setFont("Head", 36)
-    c.drawString(M, H - M - 36, f"Et {len(models)} autres maisons dans le Catalogue Premium")
+    c.setFont("Head", 34)
+    title = f"Et {len(allm)} autres maisons dans le Catalogue Premium" if first else "Les duplex du Catalogue Premium"
+    c.drawString(M, H - M - 34, title)
     c.setFillColor(DARK)
     c.setFont("Semi", 16)
-    c.drawString(M, H - M - 70, "Chacune avec la même fiche : rendu 3D, plan de distribution coté et devis détaillé.")
-    cols = 8
-    gap = 8
+    noun = "villas" if category == "villa" else "duplex"
+    c.drawString(M, H - M - 66, f"{len(models)} {noun}, chacune avec la même fiche : rendu 3D, plan de distribution coté et devis poste par poste.")
+    cols = 9 if len(models) > 40 else 8
+    gap = 10
     cw = (W - 2 * M - (cols - 1) * gap) / cols
-    ch = 44
-    top = H - M - 110
+    ih = cw * 192 / 408
+    ch = ih + 36
+    top = H - M - 96
     for i, m in enumerate(models):
         r, k = divmod(i, cols)
         x = M + k * (cw + gap)
         y = top - (r + 1) * (ch + gap)
         c.setFillColor(SOFT)
-        c.setStrokeColor(LINE)
-        c.roundRect(x, y, cw, ch, 7, fill=1, stroke=1)
+        c.roundRect(x, y, cw, ch, 6, fill=1, stroke=0)
+        thumb = HERE / "thumbs" / f"{m['code'].lower()}.jpg"
+        if thumb.exists():
+            c.drawImage(str(thumb), x, y + 36, width=cw, height=ih)
         c.setFillColor(PRIMARY)
-        c.setFont("Head", 13)
-        c.drawString(x + 10, y + 24, m["code"])
+        c.setFont("Head", 12)
+        c.drawString(x + 7, y + 20, m["code"])
         c.setFillColor(MUTED)
-        c.setFont("Semi", 10)
-        c.drawString(x + 10, y + 9, f"{m['bedrooms']} ch. · {m['surface']} m²")
-        # cadenas
+        c.setFont("Semi", 9.5)
+        c.drawString(x + 7, y + 7, f"{m['bedrooms']} chambres · {m['surface']} m²")
+        # cadenas sur l'image
+        lx, ly = x + cw - 22, y + ch - 22
+        c.setFillColor(white)
+        c.circle(lx + 7, ly + 7, 11, fill=1, stroke=0)
         c.setFillColor(ACCENT)
-        c.roundRect(x + cw - 24, y + 14, 13, 11, 2, fill=1, stroke=0)
+        c.roundRect(lx + 1.5, ly + 1, 11, 9, 1.5, fill=1, stroke=0)
         c.setStrokeColor(ACCENT)
-        c.setLineWidth(1.8)
-        c.arc(x + cw - 22, y + 19, x + cw - 13, y + 31, 0, 180)
+        c.setLineWidth(1.6)
+        c.arc(lx + 3.5, ly + 5, lx + 10.5, ly + 15, 0, 180)
 
 
 def cta(c):
@@ -175,7 +189,7 @@ def cta(c):
     c.setFont("Head", 46)
     c.drawCentredString(W / 2, H - 230, "Toutes les maisons, au même format")
     c.setFont("Semi", 20)
-    c.drawCentredString(W / 2, H - 275, "Le Catalogue Premium : plan de distribution et devis détaillé de chaque modèle,")
+    c.drawCentredString(W / 2, H - 275, "Le Catalogue Premium : plan de distribution et devis poste par poste de chaque modèle,")
     c.drawCentredString(W / 2, H - 302, "fiches PDF à montrer à votre maçon, nouveaux modèles inclus.")
     y = H / 2 - 30
     if isinstance(before, int) and before > price:
@@ -208,7 +222,7 @@ def main():
     ap.add_argument("--out", default=str(HERE / "out" / "extrait-catalogue-premium.pdf"))
     args = ap.parse_args()
     register_fonts()
-    total = len(ORDER) + 4
+    total = len(ORDER) + 5
     out = PdfWriter()
     out.add_page(page(cover).pages[0])
     out.add_page(page(intro).pages[0])
@@ -216,7 +230,8 @@ def main():
         src = PdfReader(str(HERE / "pages" / f"{code.lower()}.pdf")).pages[0]
         p = out.add_page(src)
         p.merge_page(page(lambda c, n=i + 3: stamp(c, n, total)).pages[0])
-    out.add_page(page(others).pages[0])
+    out.add_page(page(lambda c: others(c, "villa", True)).pages[0])
+    out.add_page(page(lambda c: others(c, "duplex", False)).pages[0])
     out.add_page(page(cta).pages[0])
     out.add_metadata({"/Title": "Extrait du Catalogue Premium · WooPlans", "/Author": "WooPlans"})
     out.compress_identical_objects()

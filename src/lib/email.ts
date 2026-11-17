@@ -660,7 +660,7 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
     "Vérifiez la surface de terrain conseillée pour chaque modèle.",
     "Notez vos 3 favoris sur la page prévue à la fin du guide.",
   ])}
-<p>Un modèle vous plaît ? Les plans de distribution et le devis détaillé de chaque modèle sont dans le Catalogue Premium : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
+<p>Un modèle vous plaît ? Les plans de distribution et le devis poste par poste de chaque modèle sont dans le Catalogue Premium : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
@@ -678,14 +678,14 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
 export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number }) {
   const subject = "Votre Extrait du Catalogue Premium est prêt";
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
-  const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis détaillé de chacune.</p>
+  const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis poste par poste de chacune.</p>
 ${button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.</p>
 <p>Le Catalogue Premium complet contient tous nos modèles au même format : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
-    `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis détaillé de chacune.`,
+    `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis poste par poste de chacune.`,
     `Télécharger : ${p.downloadUrl}`,
     "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.",
     `Le Catalogue Premium complet : ${p.thanksUrl}`,
