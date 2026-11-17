@@ -12,6 +12,9 @@ import { classify } from "@/lib/whatsapp-rules";
 import { sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
 
 const HOUR = 3_600_000;
+/** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 24 h au plus. */
+const RETRY_MS = 30 * 60_000;
+const RETRY_MAX_MS = 24 * HOUR;
 /** Délais après le message précédent : J1 (24 h), J3 (48 h plus tard), classement à J4 (24 h plus tard). */
 export const WA_DELAYS_HOURS = [24, 48, 24] as const;
 
@@ -37,13 +40,13 @@ export async function startGuideWhatsapp(email: string, phone: string | null, na
     return to ? "disabled" : "no_phone";
   }
   const sent = await sendGuideDelivery(to, name ?? prospect.name, intentId);
-  if (!sent.ok) console.error("WhatsApp : livraison du guide non envoyée", email, sent.error);
+  if (!sent.ok) console.error("WhatsApp : livraison du guide non envoyée, nouvel essai dans 30 min", email, sent.error);
   await db
     .update(schema.prospects)
     .set({
-      waStep: 1,
+      waStep: sent.ok ? 1 : 0,
       waLastSentAt: sent.ok ? now : null,
-      waNextAt: new Date(now.getTime() + WA_DELAYS_HOURS[0] * HOUR),
+      waNextAt: new Date(now.getTime() + (sent.ok ? WA_DELAYS_HOURS[0] * HOUR : RETRY_MS)),
       waOptOutAt: null,
       pipelineStage: "sequence",
       pipelineUpdatedAt: now,
@@ -70,10 +73,25 @@ export async function runWhatsappSequence(now = new Date(), limit = 40) {
       out.classified++;
       continue;
     }
-    const sent = p.waStep === 1 ? await sendGuideCatalogueVideo(to, p.name, p.id) : await sendGuideTestimonial(to, p.id);
+    let sent;
+    if (p.waStep === 0) {
+      const intent = await db.query.checkoutIntents.findFirst({
+        where: and(eq(schema.checkoutIntents.email, p.email), eq(schema.checkoutIntents.ctaId, "guide"), eq(schema.checkoutIntents.status, "paid")),
+        orderBy: (t, { desc }) => [desc(t.createdAt)],
+        columns: { id: true },
+      });
+      sent = intent ? await sendGuideDelivery(to, p.name, intent.id) : ({ ok: false, error: "intent_not_found" } as const);
+    } else sent = p.waStep === 1 ? await sendGuideCatalogueVideo(to, p.name, p.id) : await sendGuideTestimonial(to, p.id);
     if (!sent.ok) {
       console.error(`WhatsApp : message ${p.waStep + 1} non envoyé`, p.email, sent.error);
       out.failed++;
+      // Nouvel essai dans 30 min tant que le retard reste sous 24 h ; au-delà, on passe au message suivant.
+      const due = p.waStep === 0 || !p.waLastSentAt ? p.lastEventAt.getTime() : p.waLastSentAt.getTime() + WA_DELAYS_HOURS[p.waStep - 1] * HOUR;
+      const late = now.getTime() - due;
+      if (late < RETRY_MAX_MS) {
+        await db.update(schema.prospects).set({ waNextAt: new Date(now.getTime() + RETRY_MS), updatedAt: now }).where(eq(schema.prospects.id, p.id));
+        continue;
+      }
     } else out.sent++;
     await db
       .update(schema.prospects)
