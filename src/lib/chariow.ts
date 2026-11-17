@@ -1,8 +1,8 @@
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
-import { and, desc, eq, gte, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, ne, notInArray, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, guideAbandonAdminEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, adminSaleEmail, extraitDeliveryEmail, guideAbandonAdminEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/site";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
@@ -15,7 +15,8 @@ import { recordProspectEvent } from "@/lib/prospects";
 import { offreProductIds, type Offre } from "@/lib/offres";
 import { recordPurchasedPlan } from "@/lib/pdf-quota";
 import { startGuideWhatsapp } from "@/lib/pipeline";
-import { GUIDE, GUIDE_CTA_ID, GUIDE_PATH, guideProductId } from "@/lib/guide";
+import { GUIDE } from "@/lib/guide";
+import { EXTRAIT_MODELS, LEAD_CTA_IDS, leadOfferByProduct, type LeadOffer } from "@/lib/lead-offers";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -138,7 +139,8 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   const productId = payload.product?.id;
   if (!sale?.id || !productId) return "invalid_payload";
   if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
-  if (guideProductId() && productId === guideProductId()) return processGuideSale(payload, status);
+  const leadOffer = leadOfferByProduct(productId);
+  if (leadOffer) return processGuideSale(payload, status, leadOffer);
   const offre = offreProductIds().get(productId);
   if (!offre && !catalogueProductIds().has(productId)) return "ignored_product";
   return processCatalogueSale(payload, status, provider, offre ?? null);
@@ -501,6 +503,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
 async function processGuideSale(
   payload: ChariowSalePayload,
   status: "completed" | "abandoned" | "failed",
+  offer: LeadOffer,
 ): Promise<PulseOutcome> {
   const db = getDb();
   const sale = payload.sale!;
@@ -512,13 +515,13 @@ async function processGuideSale(
   const amount = Math.round(Number(sale.amount?.value ?? sale.original_amount?.value ?? 0)) || 0;
   const metadata = sale.custom_metadata ?? {};
 
-  const intent = await findGuideIntent(metadata.intent_id, email);
+  const intent = await findGuideIntent(metadata.intent_id, email, offer.ctaId);
   const visitor = intent?.visitorId ? await db.query.visitors.findFirst({ where: eq(schema.visitors.id, intent.visitorId) }) : null;
   const existing = await db.query.sales.findFirst({ where: eq(schema.sales.chariowSaleId, sale.id!) });
   const nextStatus = existing?.status === "completed" ? "completed" : status;
   const values = {
     productId: payload.product!.id!,
-    productName: "Guide WooPlans des maisons",
+    productName: offer.name,
     status: nextStatus,
     amount,
     currency: sale.amount?.currency || sale.original_amount?.currency || "XAF",
@@ -546,14 +549,14 @@ async function processGuideSale(
     const firstNotice = !existing || (existing.status !== status && existing.status !== "completed");
     if (notifyAbandon && status !== "completed" && nextStatus !== "completed" && firstNotice) {
       const first = (name || "").split(" ")[0];
-      const message = `Bonjour${first ? ` ${first}` : ""}, c'est Tao de WooPlans 👋 Votre paiement du Guide des maisons (1 900 FCFA) n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider. Pour réessayer : ${siteUrl(`${GUIDE_PATH}?utm_source=whatsapp&utm_medium=relance&utm_campaign=guide_abandon`)}`;
-      const mail = guideAbandonAdminEmail({ name, email, phone, failed: status === "failed", whatsappUrl: phone ? whatsappLink(message, phone) : null });
+      const message = `Bonjour${first ? ` ${first}` : ""}, c'est Tao de WooPlans 👋 Votre paiement (${offer.name}, ${offer.price.toLocaleString("fr-FR")} FCFA) n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider. Pour réessayer : ${siteUrl(`${offer.path}?utm_source=whatsapp&utm_medium=relance&utm_campaign=${offer.key}_abandon`)}`;
+      const mail = guideAbandonAdminEmail({ name, email, phone, failed: status === "failed", whatsappUrl: phone ? whatsappLink(message, phone) : null, product: offer.name });
       await sendEmail({ to: notifyAbandon, ...mail, template: "admin_guide_abandon" }).catch((error) => console.error("Alerte abandon du guide non envoyée", error));
     }
     // Relance par email (2 emails) de la personne, sauf si elle a déjà payé (cette vente ou un autre achat du guide).
     const alreadyBought = email
       ? await db.query.checkoutIntents.findFirst({
-          where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID), eq(schema.checkoutIntents.status, "paid")),
+          where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, offer.ctaId), eq(schema.checkoutIntents.status, "paid")),
           columns: { id: true },
         })
       : null;
@@ -570,7 +573,8 @@ async function processGuideSale(
         source: "guide",
         utmSource: values.utmSource,
         utmCampaign: values.utmCampaign,
-        startSequence: true,
+        // Les 2 emails de relance parlent du guide : pas de relance par email pour l'extrait.
+        startSequence: offer.key === "guide",
         kind: "guide_relance",
       }).catch((error) => console.error("CRM prospects : relance du guide non enregistrée", error));
     }
@@ -582,7 +586,7 @@ async function processGuideSale(
   let intentId = intent?.id ?? null;
   if (!intentId) {
     intentId = randomId();
-    await db.insert(schema.checkoutIntents).values({ id: intentId, email, ctaId: GUIDE_CTA_ID, status: "started" });
+    await db.insert(schema.checkoutIntents).values({ id: intentId, email, ctaId: offer.ctaId, status: "started" });
   }
   // Verrou : une seule notification livre le guide.
   const claimed = await db
@@ -594,13 +598,13 @@ async function processGuideSale(
 
   const to = email ?? intent?.email ?? null;
   if (to) {
-    const mail = guideDeliveryEmail({
-      name,
-      downloadUrl: siteUrl(`/api/guide/${intentId}`),
-      thanksUrl: siteUrl(`${GUIDE_PATH}/merci?i=${intentId}`),
-      announcedModels: GUIDE.announcedModels,
-    });
-    await sendEmail({ to, ...mail, template: "guide_livraison" });
+    const downloadUrl = siteUrl(`/api/guide/${intentId}`);
+    const thanksUrl = siteUrl(`${offer.path}/merci?i=${intentId}`);
+    const mail =
+      offer.key === "extrait"
+        ? extraitDeliveryEmail({ name, downloadUrl, thanksUrl, models: EXTRAIT_MODELS })
+        : guideDeliveryEmail({ name, downloadUrl, thanksUrl, announcedModels: GUIDE.announcedModels });
+    await sendEmail({ to, ...mail, template: `${offer.key}_livraison` });
     await recordProspectEvent({
       email: to,
       name,
@@ -613,38 +617,39 @@ async function processGuideSale(
       source: "guide",
       utmSource: values.utmSource,
       utmCampaign: values.utmCampaign,
-      startSequence: true,
+      // Les 7 emails du guide parlent du guide : l'extrait n'a que la séquence WhatsApp.
+      startSequence: offer.key === "guide",
       kind: "guide",
     }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
     // WhatsApp (Genuka) : livraison du guide puis séquence J1 / J3 et classement dans le pipeline.
     await startGuideWhatsapp(to, phone, name, intentId).catch((error) => console.error("WhatsApp : séquence du guide non démarrée", error));
   }
-  if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${GUIDE_PATH}/merci`, ctaId: GUIDE_CTA_ID });
+  if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${offer.path}/merci`, ctaId: offer.ctaId });
 
   // Livraison aussi à la main sur WhatsApp par Tao (puis présentation du Catalogue Premium) : message prêt à envoyer.
   const notify = getEnv().ADMIN_NOTIFY_EMAIL;
   if (notify && to) {
     const downloadUrl = siteUrl(`/api/guide/${intentId}`);
     const first = (name || "").split(" ")[0];
-    const message = `Bonjour${first ? ` ${first}` : ""} 👋 C'est Tao de WooPlans. Merci pour votre achat ! Voici votre Guide WooPlans des maisons : ${downloadUrl}\n\nParcourez-le et notez vos 3 modèles préférés. Vous avez déjà un terrain ?`;
-    const mail = guideSaleAdminEmail({ name, email: to, phone, country, downloadUrl, whatsappUrl: phone ? whatsappLink(message, phone) : null });
+    const message = `Bonjour${first ? ` ${first}` : ""} 👋 C'est Tao de WooPlans. Merci pour votre achat ! Voici votre ${offer.name} : ${downloadUrl}\n\nUn modèle vous plaît particulièrement ? Vous avez déjà un terrain ?`;
+    const mail = guideSaleAdminEmail({ name, email: to, phone, country, downloadUrl, whatsappUrl: phone ? whatsappLink(message, phone) : null, product: offer.name });
     await sendEmail({ to: notify, ...mail, template: "admin_guide_vente" });
   }
   return "guide_delivered";
 }
 
-async function findGuideIntent(intentId: string | undefined, email: string | null) {
+async function findGuideIntent(intentId: string | undefined, email: string | null, ctaId: string) {
   const db = getDb();
   if (intentId) {
     const byId = await db.query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intentId) });
-    if (byId?.ctaId === GUIDE_CTA_ID) return byId;
+    if (byId?.ctaId === ctaId) return byId;
   }
   if (!email) return null;
   return (
     (await db.query.checkoutIntents.findFirst({
       where: and(
         eq(schema.checkoutIntents.email, email),
-        eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID),
+        eq(schema.checkoutIntents.ctaId, ctaId),
         ne(schema.checkoutIntents.status, "paid"),
         gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
       ),
@@ -700,7 +705,7 @@ async function findIntent(intentId: string | undefined, email: string | null) {
         eq(schema.checkoutIntents.email, email),
         isNull(schema.checkoutIntents.planSlug),
         // Un achat du guide (1 900 FCFA) n'est jamais l'intention d'un achat du catalogue.
-        or(isNull(schema.checkoutIntents.ctaId), ne(schema.checkoutIntents.ctaId, GUIDE_CTA_ID)),
+        or(isNull(schema.checkoutIntents.ctaId), notInArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS)),
         gte(schema.checkoutIntents.createdAt, new Date(Date.now() - 48 * 60 * 60 * 1000)),
       ),
       orderBy: desc(schema.checkoutIntents.createdAt),

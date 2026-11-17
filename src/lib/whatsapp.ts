@@ -13,6 +13,8 @@ const API = "https://wa.genuka.com/api/v1";
 /** Modèles soumis à Meta le 17 nov. 2026 (textes validés par Tao). */
 export const WA_TEMPLATES = {
   livraison: "guide_livraison",
+  /** Livraison de l'Extrait du Catalogue Premium (à soumettre à Meta après accord de Tao sur le texte). */
+  livraisonExtrait: "extrait_livraison",
   catalogueVideo: "guide_catalogue_video",
   temoignagePrix: "guide_temoignage_prix",
 } as const;
@@ -51,13 +53,19 @@ async function send(body: Record<string, unknown>): Promise<SendResult> {
 }
 
 /** J0 : le guide en pièce jointe + bouton « Télécharger le guide » (/api/guide/<achat>). */
-export function sendGuideDelivery(to: string, name: string | null, intentId: string) {
+export function sendGuideDelivery(to: string, name: string | null, intentId: string, offer: "guide" | "extrait" = "guide") {
+  const extrait = offer === "extrait";
   return send({
     to,
     template: {
-      name: WA_TEMPLATES.livraison,
+      name: extrait ? WA_TEMPLATES.livraisonExtrait : WA_TEMPLATES.livraison,
       language: "fr",
-      header: { document: { link: siteUrl(`/api/guide/${intentId}`), filename: "Guide-WooPlans-des-maisons.pdf" } },
+      header: {
+        document: {
+          link: siteUrl(`/api/guide/${intentId}`),
+          filename: extrait ? "Extrait-Catalogue-Premium-WooPlans.pdf" : "Guide-WooPlans-des-maisons.pdf",
+        },
+      },
       body: [firstName(name)],
       buttons: [{ type: "url", text: intentId }],
     },

@@ -11,6 +11,7 @@ import type { PipelineStage } from "@/db/schema";
 import { isCustomer } from "@/lib/prospects";
 import { classify } from "@/lib/whatsapp-rules";
 import { sendCampaignOffer, sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
+import { LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
 
 const HOUR = 3_600_000;
 /** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 48 h au plus. */
@@ -98,11 +99,13 @@ export async function runWhatsappSequence(now = new Date(), limit = 40) {
     let sent;
     if (p.waStep === 0) {
       const intent = await db.query.checkoutIntents.findFirst({
-        where: and(eq(schema.checkoutIntents.email, p.email), eq(schema.checkoutIntents.ctaId, "guide"), eq(schema.checkoutIntents.status, "paid")),
+        where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
         orderBy: (t, { desc }) => [desc(t.createdAt)],
-        columns: { id: true },
+        columns: { id: true, ctaId: true },
       });
-      sent = intent ? await sendGuideDelivery(to, p.name, intent.id) : ({ ok: false, error: "intent_not_found" } as const);
+      sent = intent
+        ? await sendGuideDelivery(to, p.name, intent.id, intent.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide")
+        : ({ ok: false, error: "intent_not_found" } as const);
     } else sent = p.waStep === 1 ? await sendGuideCatalogueVideo(to, p.name, p.id) : await sendGuideTestimonial(to, p.id);
     if (!sent.ok) {
       console.error(`WhatsApp : message ${p.waStep + 1} non envoyé`, p.email, sent.error);

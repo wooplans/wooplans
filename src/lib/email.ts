@@ -660,7 +660,7 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
     "Vérifiez la surface de terrain conseillée pour chaque modèle.",
     "Notez vos 3 favoris sur la page prévue à la fin du guide.",
   ])}
-<p>Vous avez déjà un terrain ? Répondez aux 3 questions sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a> : si votre projet démarre bientôt, je vous écris personnellement sur WhatsApp.</p>
+<p>Un modèle vous plaît ? Les plans de distribution et le devis détaillé de chaque modèle sont dans le Catalogue Premium : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
@@ -668,7 +668,27 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
     `Télécharger : ${p.downloadUrl}`,
     "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger le guide.",
     "Pour bien commencer : allez à votre tranche de budget, vérifiez le terrain conseillé, notez vos 3 favoris.",
-    `Vous avez déjà un terrain ? Répondez aux 3 questions de votre page de confirmation : ${p.thanksUrl}`,
+    `Un modèle vous plaît ? Les plans de distribution et le devis de chaque modèle sont dans le Catalogue Premium : ${p.thanksUrl}`,
+    "Tao, fondateur de WooPlans",
+  ].join("\n\n");
+  return { subject, html: layout(subject, body), text };
+}
+
+/** Livraison de l'Extrait du Catalogue Premium (1 900 FCFA) : 5 maisons complètes, plan et devis. */
+export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number }) {
+  const subject = "Votre Extrait du Catalogue Premium est prêt";
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis détaillé de chacune.</p>
+${button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.</p>
+<p>Le Catalogue Premium complet contient tous nos modèles au même format : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
+<p>Tao, fondateur de WooPlans</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis détaillé de chacune.`,
+    `Télécharger : ${p.downloadUrl}`,
+    "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.",
+    `Le Catalogue Premium complet : ${p.thanksUrl}`,
     "Tao, fondateur de WooPlans",
   ].join("\n\n");
   return { subject, html: layout(subject, body), text };
@@ -790,18 +810,18 @@ export function guideHotLeadAdminEmail(p: { name: string | null; email: string; 
  * Alerte au propriétaire à chaque vente du guide : lien WhatsApp avec le message de livraison déjà rédigé
  * (Tao envoie aussi le guide à la main sur WhatsApp, puis présente le Catalogue Premium).
  */
-export function guideSaleAdminEmail(p: { name: string | null; email: string; phone: string | null; country: string | null; downloadUrl: string; whatsappUrl: string | null }) {
-  const subject = `Guide vendu : ${p.name || p.email}${p.country ? ` (${p.country})` : ""}`;
-  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email}`, `WhatsApp : ${p.phone || "—"}`, `Lien du guide : ${p.downloadUrl}`];
+export function guideSaleAdminEmail(p: { name: string | null; email: string; phone: string | null; country: string | null; downloadUrl: string; whatsappUrl: string | null; product?: string }) {
+  const subject = `${p.product ?? "Guide"} vendu : ${p.name || p.email}${p.country ? ` (${p.country})` : ""}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email}`, `WhatsApp : ${p.phone || "—"}`, `Lien de téléchargement : ${p.downloadUrl}`];
   const body = `<p>${lines.map(escape).join("<br>")}</p>${
-    p.whatsappUrl ? button(p.whatsappUrl, "Envoyer le guide sur WhatsApp") : "<p>Pas de numéro WhatsApp : livraison par email seulement.</p>"
-  }<p style="color:#6B7280;font-size:13px">Le message est déjà rédigé avec son lien personnel. Le guide lui a aussi été envoyé par email.</p>`;
+    p.whatsappUrl ? button(p.whatsappUrl, "Lui écrire sur WhatsApp") : "<p>Pas de numéro WhatsApp : livraison par email seulement.</p>"
+  }<p style="color:#6B7280;font-size:13px">Le message est déjà rédigé avec son lien personnel. Le PDF lui a aussi été envoyé par email.</p>`;
   return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
 }
 
 /** Alerte au propriétaire : paiement du guide abandonné ou échoué, avec le message de relance WhatsApp prêt à envoyer. */
-export function guideAbandonAdminEmail(p: { name: string | null; email: string | null; phone: string | null; failed: boolean; whatsappUrl: string | null }) {
-  const subject = `Guide : paiement ${p.failed ? "échoué" : "abandonné"}, ${p.name || p.email || "client"}`;
+export function guideAbandonAdminEmail(p: { name: string | null; email: string | null; phone: string | null; failed: boolean; whatsappUrl: string | null; product?: string }) {
+  const subject = `${p.product ?? "Guide"} : paiement ${p.failed ? "échoué" : "abandonné"}, ${p.name || p.email || "client"}`;
   const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email || "—"}`, `WhatsApp : ${p.phone || "—"}`];
   const body = `<p>${lines.map(escape).join("<br>")}</p>${
     p.whatsappUrl ? button(p.whatsappUrl, "Le relancer sur WhatsApp") : "<p>Pas de numéro WhatsApp.</p>"

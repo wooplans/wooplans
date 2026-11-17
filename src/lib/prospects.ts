@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, ne, notInArray, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
@@ -6,6 +6,7 @@ import { randomId } from "@/lib/crypto";
 import { giftReminderEmail, guideRelanceEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
 import { GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
+import { LEAD_CTA_IDS, leadProductIds } from "@/lib/lead-offers";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { automatedEmailAllowance } from "@/lib/email-budget";
@@ -75,7 +76,8 @@ const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
           : settings.delaysHours;
 
 /** Ventes qui ne font pas d'une personne une cliente du catalogue : le guide (1 900 FCFA) prépare cet achat. */
-const notGuideSale = () => (guideProductId() ? ne(schema.sales.productId, guideProductId()) : undefined);
+// Les offres d'entrée à 1 900 FCFA (guide, extrait) ne font pas d'un acheteur un client du catalogue.
+const notGuideSale = () => (leadProductIds().length ? notInArray(schema.sales.productId, leadProductIds()) : undefined);
 
 /**
  * Déjà client ? Membre actif ou vente payée, avec le même email OU le même numéro WhatsApp
@@ -254,7 +256,7 @@ async function giftInfo(email: string) {
 async function guideIntent(email: string) {
   return (
     (await getDb().query.checkoutIntents.findFirst({
-      where: and(eq(schema.checkoutIntents.email, email), eq(schema.checkoutIntents.ctaId, GUIDE_CTA_ID), eq(schema.checkoutIntents.status, "paid")),
+      where: and(eq(schema.checkoutIntents.email, email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
       orderBy: desc(schema.checkoutIntents.createdAt),
       columns: { id: true, downloads: true },
     })) ?? null
