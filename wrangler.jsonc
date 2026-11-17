@@ -29,10 +29,10 @@
     // (Catalogue Premium + teaser « Plan et devis »), en ligne depuis le 16 nov. 2026 (décision de Tao).
     "OFFRE_PROJET": "0",
     "FB_PIXEL_ID": "1127775973645411",
-    // WhatsApp automatique (Genuka) : connexion du numéro +237 653 76 99 98 (cmwjrv3da004t06l3c9v8za5g).
-    // Vide = aucun envoi WhatsApp. À remplir quand Meta a validé les 3 modèles (guide_livraison, guide_catalogue_video,
-    // guide_temoignage_prix) : les acheteurs du guide entrent alors dans la séquence J0 / J1 / J3.
-    "GENUKA_CONNECTION_ID": "",
+    // WhatsApp automatique (Genuka) : connexion du numéro +237 653 76 99 98. Vide = aucun envoi WhatsApp.
+    // Activé le 17 nov. 2026 (accord de Tao) : séquence J0 / J1 / J3 des acheteurs du guide, réessais toutes les 30 min
+    // tant qu'un modèle n'est pas encore validé par Meta.
+    "GENUKA_CONNECTION_ID": "cmwjrv3da004t06l3c9v8za5g",
     // PostHog (analyse du comportement) : clé publique du projet (phc_…), région UE. Vide = désactivé.
     "POSTHOG_KEY": "phc_qG7K8TbjpQjaxJWc9ZHGfT2W6YX7UPsnT4mqeY2qoN68",
     "POSTHOG_HOST": "https://eu.i.posthog.com",
