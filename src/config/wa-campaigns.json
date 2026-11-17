@@ -1,0 +1,9 @@
+{
+  "c19k": {
+    "label": "Catalogue Premium à 19 000 FCFA (acheteurs du guide)",
+    "template": "offre_catalogue_19k",
+    "image": "/assets/whatsapp/offre-19000.jpg",
+    "code": "GUIDE19",
+    "stages": ["chaud", "tiede"]
+  }
+}

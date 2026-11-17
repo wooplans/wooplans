@@ -4,13 +4,13 @@
  * client (a acheté), chaud (a cliqué ou répondu), tiède (a lu), froid (rien), désinscrit (STOP).
  * Les campagnes WhatsApp ciblent ensuite une étape du pipeline.
  */
-import { and, eq, isNull, lte, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, lte, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import type { PipelineStage } from "@/db/schema";
 import { isCustomer } from "@/lib/prospects";
 import { classify } from "@/lib/whatsapp-rules";
-import { sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
+import { sendCampaignOffer, sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
 
 const HOUR = 3_600_000;
 /** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 48 h au plus. */
@@ -181,4 +181,33 @@ export async function recordWhatsappReply(phoneDigits: string, stop: boolean) {
     }
   }
   return rows.length;
+}
+
+export type WaCampaign = { label: string; template: string; image: string; code: string; stages: PipelineStage[] };
+
+/** Destinataires d'une campagne : étapes visées, avec numéro, pas désinscrits, pas déjà touchés par cette campagne. */
+export async function campaignAudience(key: string, c: WaCampaign) {
+  const rows = await getDb().query.prospects.findMany({
+    where: inArray(schema.prospects.pipelineStage, c.stages),
+    columns: { id: true, name: true, phone: true, waOptOutAt: true, waCampaign: true },
+  });
+  return rows.filter((p) => waNumber(p.phone) && !p.waOptOutAt && p.waCampaign !== key);
+}
+
+/** Envoi d'une campagne (après confirmation de Tao dans l'admin). */
+export async function launchCampaign(key: string, c: WaCampaign, deadline: string, limit = 300) {
+  const db = getDb();
+  const audience = (await campaignAudience(key, c)).slice(0, limit);
+  const out = { sent: 0, failed: 0, errors: [] as string[] };
+  for (const p of audience) {
+    const sent = await sendCampaignOffer(waNumber(p.phone)!, c, p.name, p.id, key, deadline, c.code);
+    if (sent.ok) {
+      out.sent++;
+      await db.update(schema.prospects).set({ waCampaign: key, waCampaignAt: new Date(), updatedAt: new Date() }).where(eq(schema.prospects.id, p.id));
+    } else {
+      out.failed++;
+      if (out.errors.length < 3) out.errors.push(sent.error);
+    }
+  }
+  return out;
 }
