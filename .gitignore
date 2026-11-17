@@ -55,3 +55,4 @@ scripts/framer/out/
 # Guide des maisons : cache des rendus et PDF générés
 scripts/guide/cache/
 scripts/guide/out/
+scripts/extrait/out/

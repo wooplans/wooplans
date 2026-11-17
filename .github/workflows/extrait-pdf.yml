@@ -1,0 +1,44 @@
+name: Extrait du Catalogue Premium (PDF)
+
+# Fabrique l'« Extrait du Catalogue Premium » (5 pages A3 du catalogue + couverture, liste des autres modèles, appel)
+# et le dépose dans R2 (clé src/config/extrait.json « pdfKey »), où /api/guide/<achat> le sert aux acheteurs.
+on:
+  push:
+    branches: [master]
+    paths: ["scripts/extrait/**", "src/config/extrait.json", ".github/workflows/extrait-pdf.yml"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Déposer le PDF dans R2 (sinon : artefact à contrôler seulement)"
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Dépendances
+        run: pip install reportlab pillow fonttools brotli pypdf
+      - name: PDF
+        run: python scripts/extrait/build_extrait.py --out extrait-catalogue-premium.pdf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extrait-catalogue-premium
+          path: extrait-catalogue-premium.pdf
+      - uses: actions/setup-node@v4
+        if: github.event_name == 'push' || inputs.publish
+        with:
+          node-version: 22
+      - name: Dépôt dans R2
+        if: github.event_name == 'push' || inputs.publish
+        run: |
+          KEY=$(node -p "require('./src/config/extrait.json').pdfKey")
+          npx --yes wrangler@4 r2 object put "plans-catalogue-images/$KEY" --file extrait-catalogue-premium.pdf --content-type application/pdf --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
