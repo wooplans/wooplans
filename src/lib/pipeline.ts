@@ -6,15 +6,16 @@
  */
 import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { randomId } from "@/lib/crypto";
 import type { PipelineStage } from "@/db/schema";
 import { isCustomer } from "@/lib/prospects";
 import { classify } from "@/lib/whatsapp-rules";
 import { sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
 
 const HOUR = 3_600_000;
-/** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 24 h au plus. */
+/** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 48 h au plus. */
 const RETRY_MS = 30 * 60_000;
-const RETRY_MAX_MS = 24 * HOUR;
+const RETRY_MAX_MS = 48 * HOUR;
 /** Délais après le message précédent : J1 (24 h), J3 (48 h plus tard), classement à J4 (24 h plus tard). */
 export const WA_DELAYS_HOURS = [24, 48, 24] as const;
 
@@ -32,7 +33,28 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 export async function startGuideWhatsapp(email: string, phone: string | null, name: string | null, intentId: string) {
   const db = getDb();
   const prospect = await db.query.prospects.findFirst({ where: eq(schema.prospects.email, email) });
-  if (!prospect) return "no_prospect";
+  if (!prospect) {
+    // Déjà membre du catalogue (aucune fiche prospect créée) : il apparaît quand même dans le pipeline, en « client ».
+    const now = new Date();
+    await db
+      .insert(schema.prospects)
+      .values({
+        id: randomId(),
+        email,
+        name,
+        phone,
+        status: "converted",
+        lastEvent: "guide",
+        lastEventAt: now,
+        source: "guide",
+        sequenceKind: "guide",
+        convertedAt: now,
+        pipelineStage: "client",
+        pipelineUpdatedAt: now,
+      })
+      .onConflictDoNothing();
+    return "customer";
+  }
   const to = waNumber(phone ?? prospect.phone);
   const now = new Date();
   if (!to || !waEnabled()) {
@@ -85,7 +107,7 @@ export async function runWhatsappSequence(now = new Date(), limit = 40) {
     if (!sent.ok) {
       console.error(`WhatsApp : message ${p.waStep + 1} non envoyé`, p.email, sent.error);
       out.failed++;
-      // Nouvel essai dans 30 min tant que le retard reste sous 24 h ; au-delà, on passe au message suivant.
+      // Nouvel essai dans 30 min tant que le retard reste sous 48 h ; au-delà, on passe au message suivant.
       const due = p.waStep === 0 || !p.waLastSentAt ? p.lastEventAt.getTime() : p.waLastSentAt.getTime() + WA_DELAYS_HOURS[p.waStep - 1] * HOUR;
       const late = now.getTime() - due;
       if (late < RETRY_MAX_MS) {
