@@ -5,8 +5,8 @@ Prérequis : python scripts/guide/fetch_plans.py (données publiques + rendus da
 Usage    : python scripts/guide/build_guide.py [--out guide-wooplans-des-maisons.pdf]
 
 Contenu : données publiques du site (rendu, chambres, niveaux, surface, terrain conseillé, budget indicatif), plus
-un ÉCHANTILLON du Catalogue Premium (décision de Tao, 16 nov. 2026) : 2 modèles complets, plan coté filigrané et devis
-poste par poste (scripts/guide/sample/). Les distributions et devis des autres modèles restent réservés au catalogue.
+un ÉCHANTILLON du Catalogue Premium : 2 vraies pages A3 du catalogue (D4-034 et V3-038, scripts/guide/sample/),
+insérées en A4 paysage (décision de Tao, 17 nov. 2026). Les distributions et devis des autres modèles restent réservés au catalogue.
 """
 from __future__ import annotations
 
@@ -541,112 +541,51 @@ def page_whatsapp(c, n):
 
 
 # ---------------------------------------------------------------- échantillon du Catalogue Premium
-SAMPLE = json.loads((HERE / "sample" / "sample.json").read_text(encoding="utf-8"))
-
-
-def fcfa(v: int) -> str:
-    return f"{v:,}".replace(",", " ") + " FCFA"
-
-
-def fit_image(c, path, x, y, w, h):
-    """Image entière (contain), centrée dans le cadre, bordure fine."""
-    im = Image.open(HERE / path)
-    r = min(w / im.width, h / im.height)
-    iw, ih = im.width * r, im.height * r
-    c.setStrokeColor(LINE)
-    c.setLineWidth(0.8)
-    c.roundRect(x, y, w, h, 3 * mm, stroke=1, fill=0)
-    c.drawImage(ImageReader(str(HERE / path)), x + (w - iw) / 2, y + (h - ih) / 2, iw, ih)
+# Deux vraies pages A3 du Catalogue Premium (fournies par Tao le 17 nov. 2026), insérées en pages A4 paysage
+# après la page d'introduction, sans perte de qualité (pypdf, après la génération du guide).
+SAMPLE_PAGES = [HERE / "sample" / "d4-034-premium.pdf", HERE / "sample" / "v3-038-premium.pdf"]
 
 
 def page_sample_intro(c, n):
-    y = title_block(c, "Exemple réel du Catalogue Premium", "Ce que contient le catalogue, pour chaque maison")
-    y = para(c, "Votre guide montre les maisons et leur budget. Le Catalogue Premium va plus loin : pour chacun des "
-                f"{ANNOUNCED_MODELS} modèles, il donne le plan coté de chaque niveau et le devis de construction poste par "
-                "poste. Voici deux modèles en entier, exactement comme dans le catalogue : une villa et un duplex.",
-             M, y, W - 2 * M, size=12) - 6 * mm
-    for s in SAMPLE:
-        p = next((pp for pp in json.loads((CACHE / "plans.json").read_text()) if pp["slug"] == s["slug"]), None)
-        h = 62 * mm
-        if p:
-            rounded_image(c, HERE / p["image"], M, y - h, 92 * mm, h)
-        x = M + 98 * mm
-        yy = y - 6 * mm
-        c.setFont("Head", 16)
-        c.setFillColor(PRIMARY)
-        c.drawString(x, yy, s["name"])
-        yy -= 7 * mm
-        for line in [s["kind"], f"{s['bedrooms']} chambres · {s['bathrooms']} salles de bain", f"Surface : {s['surface']} m²",
-                     f"Bâtiment : {s['size']}", f"Terrain conseillé : {s['land']}", f"Devis total : {fcfa(sum(v for _, v in s['lots']))}"]:
-            c.setFont("Body", 10.5)
-            c.setFillColor(DARK)
-            c.drawString(x, yy, line)
-            yy -= 6 * mm
-        y -= h + 10 * mm
-    c.setFont("Semi", 10)
-    c.setFillColor(MUTED)
-    c.drawString(M, y, "Pages suivantes : leurs plans cotés et leurs devis détaillés.")
-    footer(c, n)
-
-
-def page_sample_plans(c, s, n):
-    y = title_block(c, f"Échantillon · {s['name']}", "Le plan coté")
-    y = para(c, "La place de chaque pièce, avec ses dimensions : de quoi vérifier que la maison convient à votre famille "
-                "avant de lancer le chantier.", M, y, W - 2 * M, size=11, color=MUTED) - 4 * mm
-    plans = s["plans"]
-    avail = y - 22 * mm
-    each = (avail - (len(plans) - 1) * 6 * mm) / len(plans)
-    for path, label in plans:
-        c.setFont("Head7", 11)
-        c.setFillColor(PRIMARY)
-        c.drawString(M, y - 4 * mm, label)
-        fit_image(c, path, M, y - each, W - 2 * M, each - 7 * mm)
-        y -= each + 6 * mm
-    footer(c, n)
-
-
-def page_sample_devis(c, s, n, last):
-    y = title_block(c, f"Échantillon · {s['name']}", "Le devis poste par poste")
-    y = para(c, "Le coût estimé de chaque étape du chantier, des fondations aux finitions : pour prévoir votre budget et "
-                "discuter avec votre maçon chiffres en main.", M, y, W - 2 * M, size=11, color=MUTED) - 6 * mm
-    row = 10.5 * mm
+    y = title_block(c, "Exemple réel du Catalogue Premium", "Voici à quoi ressemble chaque maison dans le catalogue")
+    y = para(c, "Votre guide montre les maisons et leur budget. Dans le Catalogue Premium, chaque modèle a sa page "
+                "complète : rendus 3D, plan de distribution coté de chaque niveau, terrain nécessaire et devis de "
+                "construction poste par poste.", M, y, W - 2 * M, size=12.5) - 4 * mm
+    y = para(c, "Les deux pages suivantes sont de vraies pages du catalogue : le duplex D4-034 et la villa V3-038. "
+                "Tournez votre téléphone pour les voir en grand.", M, y, W - 2 * M, size=12.5) - 10 * mm
+    y = bullet_list(c, [
+        "Le plan coté de chaque niveau, avec la dimension de chaque pièce.",
+        "Le devis estimatif clé en main, poste par poste : fondation, élévations, toiture, finitions.",
+        "Le terrain nécessaire et l'emprise au sol du bâtiment.",
+    ], M, y, W - 2 * M, size=12) - 8 * mm
+    c.setFillColor(BG)
+    c.roundRect(M, y - 42 * mm, W - 2 * M, 42 * mm, 4 * mm, stroke=0, fill=1)
+    c.setFont("Head", 15)
     c.setFillColor(PRIMARY)
-    c.roundRect(M, y - row, W - 2 * M, row, 2 * mm, stroke=0, fill=1)
-    c.setFont("Head7", 10.5)
-    c.setFillColor(white)
-    c.drawString(M + 5 * mm, y - row + 3.6 * mm, "Poste")
-    c.drawRightString(W - M - 5 * mm, y - row + 3.6 * mm, "Montant estimé")
-    y -= row
-    for i, (label, v) in enumerate(s["lots"]):
-        if i % 2:
-            c.setFillColor(BG)
-            c.rect(M, y - row, W - 2 * M, row, stroke=0, fill=1)
-        c.setFont("Body", 11)
-        c.setFillColor(DARK)
-        c.drawString(M + 5 * mm, y - row + 3.6 * mm, label)
-        c.drawRightString(W - M - 5 * mm, y - row + 3.6 * mm, fcfa(v))
-        y -= row
-    c.setFillColor(HIGHLIGHT)
-    c.rect(M, y - row, W - 2 * M, row, stroke=0, fill=1)
-    c.setFont("Head7", 12)
-    c.setFillColor(DARK)
-    c.drawString(M + 5 * mm, y - row + 3.4 * mm, "Total estimatif (clé en main, hors terrain)")
-    c.drawRightString(W - M - 5 * mm, y - row + 3.4 * mm, fcfa(sum(v for _, v in s["lots"])))
-    y -= row + 5 * mm
-    y = para(c, "Estimation indicative, à ajuster selon votre ville, vos finitions et les prix du moment.",
-             M, y, W - 2 * M, size=9, color=MUTED) - 6 * mm
-    if last:
-        c.setFillColor(BG)
-        c.roundRect(M, y - 40 * mm, W - 2 * M, 40 * mm, 4 * mm, stroke=0, fill=1)
-        c.setFont("Head", 15)
-        c.setFillColor(PRIMARY)
-        c.drawString(M + 6 * mm, y - 11 * mm, f"Les {ANNOUNCED_MODELS - 2} autres modèles, avec la même précision")
-        para(c, "Plan coté et devis poste par poste pour chaque maison du guide, dans le Catalogue Premium : "
-                f"{CATALOGUE_PRICE}, paiement unique, nouveaux modèles inclus.", M + 6 * mm, y - 18 * mm, W - 2 * M - 12 * mm,
-             size=10.5, color=DARK)
-        button(c, M + 6 * mm, y - 36 * mm, W - 2 * M - 12 * mm, 9 * mm,
-               "Voir le Catalogue Premium sur wooplans.com", CATALOGUE_URL, size=11)
+    c.drawString(M + 6 * mm, y - 11 * mm, f"Les {ANNOUNCED_MODELS - 2} autres modèles, avec la même page complète")
+    para(c, f"Dans le Catalogue Premium : {CATALOGUE_PRICE}, paiement unique par Mobile Money ou carte, accès immédiat, "
+            "nouveaux modèles inclus.", M + 6 * mm, y - 18 * mm, W - 2 * M - 12 * mm, size=10.5, color=DARK)
+    button(c, M + 6 * mm, y - 37 * mm, W - 2 * M - 12 * mm, 9 * mm,
+           "Voir le Catalogue Premium sur wooplans.com", CATALOGUE_URL, size=11)
     footer(c, n)
+
+
+def insert_sample_pages(path: Path, after_page: int):
+    """Insère les pages A3 du catalogue, réduites en A4 paysage, après la page `after_page` (numérotée à partir de 1)."""
+    from pypdf import PdfReader, PdfWriter
+
+    guide = PdfReader(str(path))
+    out = PdfWriter()
+    for i, page in enumerate(guide.pages, 1):
+        out.add_page(page)
+        if i == after_page:
+            for sample in SAMPLE_PAGES:
+                p = PdfReader(str(sample)).pages[0]
+                p.scale_by(min(841.89 / float(p.mediabox.width), 595.28 / float(p.mediabox.height)))
+                out.add_page(p)
+    out.compress_identical_objects()
+    with open(path, "wb") as f:
+        out.write(f)
 
 
 # ---------------------------------------------------------------- assemblage
@@ -667,12 +606,8 @@ def build(out: Path):
     page_decisions(c, n)
     c.showPage(); n += 1
     page_sample_intro(c, n)
-    c.showPage(); n += 1
-    for k, s in enumerate(SAMPLE):
-        page_sample_plans(c, s, n)
-        c.showPage(); n += 1
-        page_sample_devis(c, s, n, last=k == len(SAMPLE) - 1)
-        c.showPage(); n += 1
+    sample_after = n
+    c.showPage(); n += 1 + len(SAMPLE_PAGES)
     for label, lo, hi in BRACKETS:
         group = [p for p in plans if lo <= mid(p) < hi]
         if not group:
@@ -696,6 +631,7 @@ def build(out: Path):
     page_whatsapp(c, n)
     c.showPage()
     c.save()
+    insert_sample_pages(out, sample_after)
     print(f"OK : {out} ({n} pages, {len(plans)} modèles, {out.stat().st_size / 1e6:.1f} Mo)")
 
 
