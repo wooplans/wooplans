@@ -70,7 +70,8 @@ const count = salesHtml.match(/<span data-wp-count>(\d+)<\/span>/)?.[1];
 ok("page de vente : nombre de modèles lu en base", Number(count) > 0, count || "absent");
 const gallery = (salesHtml.match(/data-wp-gallery>([\s\S]*?)<\/div>\s*<p class="count-line"/)?.[1] || "").match(/<article/g)?.length ?? 0;
 ok("page de vente : galerie des modèles en vedette", gallery > 0, `${gallery} cartes`);
-ok("page de vente : aperçu d'un vrai modèle (sans montants)", /data-wp-preview><article class="preview"/.test(salesHtml) && !/class="lots"[^]*?\d{3} \d{3} FCFA/.test(salesHtml.split("data-wp-preview")[1]?.split("</article>")[0] || ""));
+// Échantillon retiré le 16 nov. 2026 (la vidéo du catalogue le remplace) : vérifier la vidéo en haut de page.
+ok("page de vente : vidéo du catalogue en haut de page", /onclick="openVsl\(\)"/.test(salesHtml));
 ok("page de vente : plus de variante A (aucun widget Chariow)", !salesHtml.includes("chariow-widget"));
 
 // Mesure du comportement : PostHog sur le site public, jamais sur l'administration ; plus de Microsoft Clarity
