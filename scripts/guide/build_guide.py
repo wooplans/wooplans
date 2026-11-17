@@ -580,9 +580,8 @@ def insert_sample_pages(path: Path, after_page: int):
         out.add_page(page)
         if i == after_page:
             for sample in SAMPLE_PAGES:
-                p = PdfReader(str(sample)).pages[0]
+                p = out.add_page(PdfReader(str(sample)).pages[0])  # rattachée au writer avant la mise à l'échelle (pypdf 7)
                 p.scale_by(min(841.89 / float(p.mediabox.width), 595.28 / float(p.mediabox.height)))
-                out.add_page(p)
     out.compress_identical_objects()
     with open(path, "wb") as f:
         out.write(f)
