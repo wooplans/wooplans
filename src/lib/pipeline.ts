@@ -10,7 +10,7 @@ import { randomId } from "@/lib/crypto";
 import type { PipelineStage } from "@/db/schema";
 import { isCustomer } from "@/lib/prospects";
 import { classify } from "@/lib/whatsapp-rules";
-import { sendCampaignOffer, sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waNumber } from "@/lib/whatsapp";
+import { sendCampaignOffer, sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waManual, waNumber } from "@/lib/whatsapp";
 import { LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
 
 const HOUR = 3_600_000;
@@ -58,6 +58,14 @@ export async function startGuideWhatsapp(email: string, phone: string | null, na
   }
   const to = waNumber(phone ?? prospect.phone);
   const now = new Date();
+  if (to && waManual()) {
+    // Mode manuel : le message 1 (livraison) apparaît tout de suite dans /admin/relances.
+    await db
+      .update(schema.prospects)
+      .set({ waStep: 0, waLastSentAt: null, waNextAt: now, waOptOutAt: null, pipelineStage: "sequence", pipelineUpdatedAt: now, updatedAt: now })
+      .where(eq(schema.prospects.id, prospect.id));
+    return "manual";
+  }
   if (!to || !waEnabled()) {
     await db.update(schema.prospects).set({ pipelineStage: "froid", pipelineUpdatedAt: now, updatedAt: now }).where(eq(schema.prospects.id, prospect.id));
     return to ? "disabled" : "no_phone";
@@ -83,19 +91,22 @@ export async function startGuideWhatsapp(email: string, phone: string | null, na
 export async function runWhatsappSequence(now = new Date(), limit = 40) {
   const db = getDb();
   const due = await db.query.prospects.findMany({
-    where: and(eq(schema.prospects.pipelineStage, "sequence"), lte(schema.prospects.waNextAt, now)),
+    // Mode manuel : seuls les 3 messages envoyés et le délai de J4 écoulé passent ici (classement) ; le reste attend Tao.
+    where: and(eq(schema.prospects.pipelineStage, "sequence"), lte(schema.prospects.waNextAt, now), waManual() ? gte(schema.prospects.waStep, 3) : undefined),
     limit,
   });
   const out = { sent: 0, failed: 0, classified: 0 };
   for (const p of due) {
     const customer = await isCustomer(p.email, p.phone);
     const to = waNumber(p.phone);
-    if (customer || p.waOptOutAt || p.waStep >= 3 || !to || !waEnabled()) {
+    if (customer || p.waOptOutAt || p.waStep >= 3 || !to || (!waEnabled() && !waManual())) {
       const stage = classify(p, customer);
       await db.update(schema.prospects).set({ pipelineStage: stage, pipelineUpdatedAt: now, waNextAt: null, updatedAt: now }).where(eq(schema.prospects.id, p.id));
       out.classified++;
       continue;
     }
+    // Mode manuel : rien n'est envoyé par l'API, Tao envoie depuis /admin/relances.
+    if (waManual()) continue;
     let sent;
     if (p.waStep === 0) {
       const intent = await db.query.checkoutIntents.findFirst({

@@ -7,7 +7,7 @@ import {
   getChannelBreakdown,
   getDailySeries,
   getFunnelKpis,
-  getGuideToCatalogue,
+  getLeadOffersStats,
   getPlanDevisStats,
   getSalesOverview,
   getSalesPageStats,
@@ -15,6 +15,7 @@ import {
 } from "@/lib/analytics";
 import { localDay, parseRange } from "@/lib/date-range";
 import { formatFcfa } from "@/lib/plans";
+import { relanceQueue } from "@/lib/relances";
 
 /**
  * Tableau de bord : l'offre principale est la fiche modèle (plan et devis + Catalogue Premium offert, prix selon le pays).
@@ -23,7 +24,7 @@ import { formatFcfa } from "@/lib/plans";
  */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ jours?: string; jour?: string }> }) {
   const range = parseRange(await searchParams);
-  const [k, overview, fiche, breakdown, series, salesPage, ctas, guide] = await Promise.all([
+  const [k, overview, fiche, breakdown, series, salesPage, ctas, leads, relances] = await Promise.all([
     getFunnelKpis(range),
     getSalesOverview(range),
     getPlanDevisStats(range),
@@ -31,8 +32,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     getDailySeries(range),
     getSalesPageStats(range),
     getTopCtas(range),
-    getGuideToCatalogue(range),
+    getLeadOffersStats(range),
+    relanceQueue().catch(() => []),
   ]);
+  const relancesDue = relances.filter((r) => r.due).length;
+  const catalogueSold = overview.offers.find((o) => o.key === "catalogue");
   const slugs = [...new Set([...overview.models.map((m) => m.slug), ...overview.recent.map((r) => r.slug), ...fiche.models.map((m) => m.slug)].filter((s): s is string => Boolean(s)))];
   const plans = slugs.length ? await getDb().query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true } }) : [];
   const code = (slug: string | null) => (slug ? (plans.find((p) => p.slug === slug)?.code ?? slug) : "—");
@@ -68,18 +72,66 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Stat label="Revenu des ventes" value={formatFcfa(overview.total.revenue)} hint={`${n(overview.total.n)} ventes, toutes offres`} />
-        <Stat
-          label="Guide → Catalogue"
-          value={`${n(guide.converted)} / ${n(guide.guideBuyers)}`}
-          hint={`${rate(guide.converted, guide.guideBuyers)} des acheteurs du guide · ${formatFcfa(guide.revenue)}${guide.avgDays !== null ? ` · ${guide.avgDays} j en moyenne` : ""}`}
-        />
-        <Stat label="Ventes des fiches" value={n(overview.fiche.n)} hint={`${formatFcfa(overview.fiche.revenue)} · plan et devis + catalogue offert`} />
-        <Stat label="Conversion des fiches" value={rate(fiche.purchases, fiche.ficheVisitors)} hint={`achats / ${n(fiche.ficheVisitors)} visiteurs des fiches`} />
+        {leads.map((l) => (
+          <Stat
+            key={l.key}
+            label={`${l.key === "extrait" ? "Extrait" : "Guide"} → Catalogue`}
+            value={`${n(l.converted)} / ${n(l.guideBuyers)}`}
+            hint={`${rate(l.converted, l.guideBuyers)} des acheteurs · ${formatFcfa(l.revenue)}${l.avgDays !== null ? ` · ${l.avgDays} j en moyenne` : ""}`}
+          />
+        ))}
+        <Stat label="Catalogue Premium vendu" value={n(catalogueSold?.n ?? 0)} hint={`${formatFcfa(catalogueSold?.revenue ?? 0)} · page de vente, WhatsApp, PDF`} />
         <Stat label="Paiements à relancer" value={n(toRelaunch)} hint={`${n(overview.abandoned)} abandonnés · ${n(overview.failed)} échoués · relance email automatique`} />
         <Stat label="Plans complets encaissés" value={formatFcfa(k.customPlanRevenue)} hint={`${n(k.newLeads)} nouvelles fiches CRM · ${n(k.activeMembers)} membres actifs`} />
       </div>
+
+      <Link
+        href="/admin/relances"
+        className={`mt-4 flex items-center justify-between rounded-xl border p-4 ${relancesDue ? "border-[#25D366] bg-[#25D366]/10" : "border-outline bg-white"}`}
+      >
+        <span>
+          <span className="block font-semibold">Relances WhatsApp du jour</span>
+          <span className="text-sm text-muted">
+            {relancesDue
+              ? `${n(relancesDue)} message${relancesDue > 1 ? "s" : ""} à envoyer maintenant · un clic par message`
+              : "Rien à envoyer pour l'instant"}
+          </span>
+        </span>
+        <span className="text-2xl font-bold">{n(relancesDue)} →</span>
+      </Link>
+
+      <section className="card mt-6 p-5">
+        <h2 className="text-sm font-semibold">Offres d&apos;entrée à 1 900 FCFA → Catalogue Premium</h2>
+        <p className="mt-1 text-xs text-muted">
+          Cohorte : acheteurs de la période. Converti = achat du catalogue après l&apos;offre d&apos;entrée, même email ou même numéro.
+        </p>
+        <table className="mt-3 w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-muted">
+              <th className="py-1 pr-2 font-medium">Offre</th>
+              <th className="py-1 pr-2 text-right font-medium">Ventes</th>
+              <th className="py-1 pr-2 text-right font-medium">Revenu</th>
+              <th className="py-1 pr-2 text-right font-medium">→ Catalogue</th>
+              <th className="py-1 pr-2 text-right font-medium">Taux</th>
+              <th className="py-1 text-right font-medium">Revenu catalogue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((l) => (
+              <tr key={l.key} className="border-t border-outline/60">
+                <td className="py-2 pr-2 font-medium">{l.label}</td>
+                <td className="py-2 pr-2 text-right font-semibold">{n(l.guideBuyers)}</td>
+                <td className="py-2 pr-2 text-right">{formatFcfa(l.leadRevenue)}</td>
+                <td className="py-2 pr-2 text-right font-semibold">{n(l.converted)}</td>
+                <td className="py-2 pr-2 text-right">{rate(l.converted, l.guideBuyers)}</td>
+                <td className="py-2 text-right">{formatFcfa(l.revenue)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <section className="card p-5">
@@ -104,7 +156,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </section>
 
         <section className="card p-5">
-          <h2 className="text-sm font-semibold">Tunnel des fiches</h2>
+          <h2 className="text-sm font-semibold">Tunnel des fiches modèles</h2>
+          <p className="mt-1 text-xs text-muted">{n(overview.fiche.n)} ventes des fiches ({formatFcfa(overview.fiche.revenue)}) · conversion {rate(fiche.purchases, fiche.ficheVisitors)}</p>
           <ol className="mt-3 grid grid-cols-2 gap-3">
             {funnel.map((step, i) => {
               const prev = i > 0 ? funnel[i - 1].value : null;
@@ -159,7 +212,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </td>
               <td className="px-4 py-2.5">{r.country || "—"}</td>
               <td className="px-4 py-2.5">
-                <Badge tone={r.offer.fiche ? "good" : "info"}>{r.offer.fiche ? (r.offer.key === "plan_seul" ? "Plan seul" : `Offre ${r.offer.key}`) : r.offer.key === "guide" ? "Guide 1 900" : "Catalogue seul"}</Badge>
+                <Badge tone={r.offer.fiche ? "good" : "info"}>{r.offer.fiche ? (r.offer.key === "plan_seul" ? "Plan seul" : `Offre ${r.offer.key}`) : r.offer.key === "guide" ? "Guide 1 900" : r.offer.key === "extrait" ? "Extrait 1 900" : "Catalogue seul"}</Badge>
               </td>
               <td className="px-4 py-2.5 font-medium">{code(r.slug)}</td>
               <td className="px-4 py-2.5">{formatFcfa(r.amount)}</td>

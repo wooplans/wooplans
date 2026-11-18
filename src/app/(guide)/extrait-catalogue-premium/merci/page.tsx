@@ -6,6 +6,9 @@ import { LEAD_OFFERS } from "@/lib/lead-offers";
 import { formatFcfa } from "@/lib/plans";
 import { cataloguePrice, whatsappLink } from "@/lib/site";
 
+/** Numéro WhatsApp Business de WooPlans (celui des relances). */
+const WHATSAPP_BUSINESS = "237653769998";
+
 export const metadata: Metadata = { title: "Merci pour votre achat de l'extrait", robots: { index: false, follow: false } };
 
 export default async function ExtraitThanksPage({ searchParams }: { searchParams: Promise<{ i?: string }> }) {
@@ -23,6 +26,7 @@ export default async function ExtraitThanksPage({ searchParams }: { searchParams
         video={GUIDE.catalogueVideo}
         videoPoster={GUIDE.catalogueVideoPoster}
         announcedModels={GUIDE.announcedModels}
+        waDeliveryUrl={whatsappLink("Bonjour WooPlans, je viens d'acheter l'Extrait du Catalogue Premium. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
       />
     </div>
   );

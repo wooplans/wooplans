@@ -8,10 +8,11 @@ export const metadata: Metadata = { title: "Admin", robots: { index: false, foll
 
 const NAV = [
   { href: "/admin", label: "Tableau de bord" },
+  { href: "/admin/relances", label: "Relances WhatsApp" },
   { href: "/admin/crm", label: "CRM plans complets" },
   { href: "/admin/plan-devis", label: "Fiches (détail)" },
   { href: "/admin/ventes", label: "Ventes" },
-  { href: "/admin/pipeline", label: "Pipeline guide" },
+  { href: "/admin/pipeline", label: "Pipeline (guide, extrait)" },
   { href: "/admin/prospects", label: "Prospects" },
   { href: "/admin/membres", label: "Membres" },
   { href: "/admin/temoignages", label: "Témoignages" },

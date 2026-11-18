@@ -25,6 +25,8 @@
     // En essai, ?paiement=wajub sur /catalogue-premium ou une fiche modèle active Wajub pour ce navigateur.
     "PAYMENT_PROVIDER": "chariow",
     "WHATSAPP_NUMBER": "237694327885",
+    // Relances WhatsApp : "manuel" = Tao envoie depuis /admin/relances (compte bloqué côté paiement Meta, 18 nov. 2026) ; vide = envoi par l'API Genuka.
+    "WHATSAPP_MODE": "manuel",
     // Offre « plan et devis » sur les fiches villas et duplex : "1" = visible, "0" = fiche à une seule offre
     // (Catalogue Premium + teaser « Plan et devis »), en ligne depuis le 16 nov. 2026 (décision de Tao).
     "OFFRE_PROJET": "0",

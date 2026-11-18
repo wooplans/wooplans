@@ -20,6 +20,8 @@ interface CloudflareEnv {
   GENUKA_WEBHOOK_SECRET?: string;
   /** Connexion du numéro +237 653 76 99 98 (variable publique, wrangler.jsonc). Vide = WhatsApp désactivé. */
   GENUKA_CONNECTION_ID?: string;
+  /** « manuel » : les messages de la séquence sont envoyés à la main depuis /admin/relances (pas d'envoi par l'API). */
+  WHATSAPP_MODE?: string;
 }
 
 interface Window {

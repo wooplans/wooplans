@@ -506,14 +506,14 @@ export async function getSalesOverview(range: Range) {
  * Converti : une vente payée du catalogue (seul ou offre avec catalogue offert) APRÈS l'achat du guide, reconnue par
  * l'email OU le numéro WhatsApp (une même personne paie parfois avec un autre email). Indépendant des UTM et des cookies.
  */
-export async function getGuideToCatalogue(range: Range) {
+export async function getGuideToCatalogue(range: Range, productId: string = guideId()) {
   const db = getDb();
-  const guide = guideId();
   const buyers = await db
-    .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt })
+    .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt, amount: schema.sales.amount })
     .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, guide), within(schema.sales.occurredAt, range), notOwnerSale()));
-  if (buyers.length === 0) return { guideBuyers: 0, converted: 0, rate: 0, revenue: 0, avgDays: null as number | null };
+    .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, productId), within(schema.sales.occurredAt, range), notOwnerSale()));
+  const leadRevenue = buyers.reduce((sum, b) => sum + (b.amount || 0), 0);
+  if (buyers.length === 0) return { guideBuyers: 0, leadRevenue: 0, converted: 0, rate: 0, revenue: 0, avgDays: null as number | null };
   const emails = [...new Set(buyers.map((b) => b.email?.toLowerCase()).filter((e): e is string => Boolean(e)))];
   const phones = [...new Set(buyers.map((b) => b.phone).filter((p): p is string => Boolean(p)))];
   const catalogueIds = [...catalogueSaleProductIds()];
@@ -540,11 +540,21 @@ export async function getGuideToCatalogue(range: Range) {
   }
   return {
     guideBuyers: buyers.length,
+    leadRevenue,
     converted,
     rate: converted / buyers.length,
     revenue,
     avgDays: converted ? Math.round((days / converted) * 10) / 10 : null,
   };
+}
+
+/** Offres d'entrée à 1 900 FCFA (guide, extrait) côte à côte : ventes et passage au Catalogue Premium. */
+export async function getLeadOffersStats(range: Range) {
+  const offers = [
+    { key: "extrait", label: "Extrait du Catalogue Premium", productId: extraitId() },
+    { key: "guide", label: "Guide des maisons", productId: guideId() },
+  ];
+  return Promise.all(offers.map(async (o) => ({ ...o, ...(await getGuideToCatalogue(range, o.productId)) })));
 }
 
 /** Produits qui donnent le Catalogue Premium : catalogue seul (actuel et anciens) et offres « plan et devis + catalogue offert ». */
