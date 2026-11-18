@@ -5,6 +5,9 @@ import { GUIDE } from "@/lib/guide";
 import { formatFcfa } from "@/lib/plans";
 import { cataloguePrice, whatsappLink } from "@/lib/site";
 
+/** Numéro WhatsApp Business de WooPlans (celui des relances). */
+const WHATSAPP_BUSINESS = "237653769998";
+
 export const metadata: Metadata = { title: "Merci pour votre achat du guide", robots: { index: false, follow: false } };
 
 export default async function GuideThanksPage({ searchParams }: { searchParams: Promise<{ i?: string }> }) {
@@ -21,6 +24,7 @@ export default async function GuideThanksPage({ searchParams }: { searchParams: 
         video={GUIDE.catalogueVideo}
         videoPoster={GUIDE.catalogueVideoPoster}
         announcedModels={GUIDE.announcedModels}
+        waDeliveryUrl={whatsappLink("Bonjour WooPlans, je viens d'acheter le Guide WooPlans des maisons. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
       />
     </div>
   );

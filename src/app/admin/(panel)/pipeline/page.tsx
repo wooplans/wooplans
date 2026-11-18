@@ -45,8 +45,8 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <PageTitle
-        title="Pipeline des acheteurs du guide"
-        subtitle={`${total} acheteurs du guide · ${clients} passés au Catalogue Premium (${total ? Math.round((clients / total) * 100) : 0} %) · séquence WhatsApp : J0 livraison, J1 vidéo, J3 témoignage + prix, classement à J4`}
+        title="Pipeline des acheteurs (guide et extrait)"
+        subtitle={`${total} acheteurs du guide ou de l'extrait · ${clients} passés au Catalogue Premium (${total ? Math.round((clients / total) * 100) : 0} %) · messages : J0 livraison, J1 vidéo, J3 témoignage + prix, classement à J4 · envois du jour : Relances WhatsApp`}
       />
 
       <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
@@ -117,7 +117,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
                   <article key={p.id} className="rounded-lg border border-outline bg-white p-2.5 text-sm shadow-sm">
                     <p className="font-semibold">{p.name || p.email}</p>
                     <p className="text-xs text-muted">
-                      {p.email} · guide le {fmtDate(p.lastEventAt)}
+                      {p.email} · achat le {fmtDate(p.lastEventAt)}
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {s === "sequence" ? <Badge tone="info">Message {Math.min(p.waStep, 3)}/3</Badge> : null}

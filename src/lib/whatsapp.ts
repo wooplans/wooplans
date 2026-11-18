@@ -24,6 +24,11 @@ export const WA_MEDIA = {
   temoignage: "/assets/whatsapp/temoignage-bassirou.mp4",
 };
 
+/** Mode manuel (provisoire, compte WhatsApp bloqué côté paiement Meta) : Tao envoie chaque message depuis /admin/relances. */
+export function waManual() {
+  return (getEnv().WHATSAPP_MODE || "").trim().toLowerCase() === "manuel";
+}
+
 export function waEnabled() {
   const env = getEnv();
   return Boolean(env.GENUKA_API_KEY && env.GENUKA_CONNECTION_ID);

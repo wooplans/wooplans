@@ -22,6 +22,8 @@ export function GuideThanks(props: {
   videoPoster: string;
   announcedModels: number;
   offer?: "guide" | "extrait";
+  /** Lien wa.me vers le numéro WooPlans, message pré-rempli : le client nous écrit en premier pour recevoir le PDF. */
+  waDeliveryUrl?: string;
 }) {
   const { intentId, pixelId } = props;
   const extrait = props.offer === "extrait";
@@ -67,12 +69,24 @@ export function GuideThanks(props: {
           <>
             <p className="eyebrow">Paiement confirmé</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre {product} est prêt</h1>
-            <p className="mt-3 text-foreground/75">Il vous est aussi envoyé par email et sur WhatsApp. Gardez ce message : il vous permet de le retélécharger.</p>
+            <p className="mt-3 text-foreground/75">Il est aussi dans votre boîte email. Gardez ce message : il vous permet de le retélécharger.</p>
             {data?.download && (
               <a href={data.download} data-cta={extrait ? "extrait_telecharger" : "guide_telecharger"} className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
                 Télécharger mon {extrait ? "extrait" : "guide"} (PDF)
               </a>
             )}
+            {props.waDeliveryUrl ? (
+              <a
+                href={props.waDeliveryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"}
+                onClick={() => phCapture("lead_merci_whatsapp", { offer: props.offer ?? "guide" })}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#25D366] px-6 py-3 font-semibold text-[#128C4B] sm:w-auto sm:inline-flex sm:ml-3"
+              >
+                Le recevoir aussi sur WhatsApp
+              </a>
+            ) : null}
           </>
         ) : waiting ? (
           <>
