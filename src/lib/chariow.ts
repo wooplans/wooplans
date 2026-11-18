@@ -622,7 +622,7 @@ async function processGuideSale(
       kind: "guide",
     }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
     // WhatsApp (Genuka) : livraison du guide puis séquence J1 / J3 et classement dans le pipeline.
-    await startGuideWhatsapp(to, phone, name, intentId).catch((error) => console.error("WhatsApp : séquence du guide non démarrée", error));
+    await startGuideWhatsapp(to, phone, name, intentId, offer.key).catch((error) => console.error("WhatsApp : séquence du guide non démarrée", error));
   }
   if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${offer.path}/merci`, ctaId: offer.ctaId });
 
