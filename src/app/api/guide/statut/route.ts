@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { LEAD_CTA_IDS } from "@/lib/lead-offers";
+import { syncLeadSales } from "@/lib/lead-sync";
+import { rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE } from "@/lib/session";
 
 /** Statut d'un achat du guide pour la page de remerciement : le lien de téléchargement apparaît dès le paiement confirmé. */
@@ -15,6 +17,12 @@ export async function GET(request: NextRequest) {
   if (!intent || !LEAD_CTA_IDS.includes(intent.ctaId ?? "")) return NextResponse.json({ status: "unknown" }, { headers: { "Cache-Control": "no-store" } });
   // Achat envoyé au Pixel une seule fois par paiement, quel que soit l'onglet ou le navigateur qui rouvre la page
   // (Meta comptait 24 achats pour 16 ventes Chariow les 15-16 nov.) : le premier affichage « payé » réserve l'envoi.
+  // Paiement pas encore notifié par Chariow : on va lire la vente nous-mêmes (au plus une fois toutes les 20 s par achat).
+  if (intent.status === "started" && (await rateLimit(`lead-sync:${intent.id}`, 1, 20_000).catch(() => false))) {
+    await syncLeadSales(20).catch((error) => console.error("Synchro des ventes d'entrée (page merci) : échec", error));
+    const fresh = await getDb().query.checkoutIntents.findFirst({ where: eq(schema.checkoutIntents.id, intent.id), columns: { status: true } });
+    if (fresh) intent.status = fresh.status;
+  }
   let track = false;
   if (intent.status === "paid") {
     const claimed = await getDb()
