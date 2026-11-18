@@ -31,7 +31,7 @@ export const STAGE_LABELS: Record<PipelineStage, string> = {
 };
 
 /** J0 : livraison du guide sur WhatsApp, et entrée dans le pipeline (étape « séquence »). */
-export async function startGuideWhatsapp(email: string, phone: string | null, name: string | null, intentId: string) {
+export async function startGuideWhatsapp(email: string, phone: string | null, name: string | null, intentId: string, offer: "guide" | "extrait" = "guide") {
   const db = getDb();
   const prospect = await db.query.prospects.findFirst({ where: eq(schema.prospects.email, email) });
   if (!prospect) {
@@ -62,7 +62,7 @@ export async function startGuideWhatsapp(email: string, phone: string | null, na
     await db.update(schema.prospects).set({ pipelineStage: "froid", pipelineUpdatedAt: now, updatedAt: now }).where(eq(schema.prospects.id, prospect.id));
     return to ? "disabled" : "no_phone";
   }
-  const sent = await sendGuideDelivery(to, name ?? prospect.name, intentId);
+  const sent = await sendGuideDelivery(to, name ?? prospect.name, intentId, offer);
   if (!sent.ok) console.error("WhatsApp : livraison du guide non envoyée, nouvel essai dans 30 min", email, sent.error);
   await db
     .update(schema.prospects)
