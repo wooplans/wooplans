@@ -1,4 +1,5 @@
 import { runAfterSale } from "@/lib/after-sale";
+import { syncLeadSales } from "@/lib/lead-sync";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
 import { runLegacyCodes } from "@/lib/legacy-codes";
@@ -15,6 +16,11 @@ export async function POST(request: Request) {
   const secret = request.headers.get("x-cron-secret") || "";
   if (!env.CRON_SECRET || !timingSafeEqual(secret, env.CRON_SECRET)) return new Response("Non autorisé", { status: 401 });
 
+  // Ventes du guide / de l'extrait dont la notification Chariow n'est pas arrivée : livrées ici.
+  const leadSync = await syncLeadSales().catch((error) => {
+    console.error("Synchro des ventes d'entrée : échec", error);
+    return null;
+  });
   const enrolled = await enrollStaleIntents();
   const relances = await runProspectSequence();
   // Clients du catalogue (email ou téléphone) : « converti », et « client » dans le pipeline des acheteurs du guide.
@@ -31,5 +37,5 @@ export async function POST(request: Request) {
     console.error("Codes anciens abonnés : échec", error);
     return null;
   });
-  return Response.json({ ok: true, enrolled, ...relances, whatsapp, afterSale, codes });
+  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes });
 }
