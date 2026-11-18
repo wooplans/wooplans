@@ -34,7 +34,11 @@ réservés au Catalogue Premium (la page « Ce qu'il vous manque » montre une i
 1. **Chariow** : créer le produit « Guide WooPlans des maisons », prix 1 900 FCFA, du même type que le produit
    « Plan et devis » (pour que l'API de paiement accepte le produit et transmette `intent_id`).
    Ne rien mettre en fichier à livrer sur Chariow : le site livre le PDF.
-2. Ajouter ce produit au **Pulse** Chariow du site (vente réussie / abandonnée / échouée).
+2. Ajouter ce produit au **Pulse** Chariow du site (vente réussie / abandonnée / échouée). Un seul Pulse vers
+   `https://www.wooplans.com/api/webhooks/chariow` (recréé le 18 nov. 2026 avec l'Extrait du Catalogue Premium) :
+   si on le recrée, copier son nouveau secret dans le secret GitHub `CHARIOW_PULSE_SECRET` puis **redéployer**
+   (le Worker ne prend le secret qu'au déploiement). Filet de sécurité : les ventes payées du guide et de l'extrait
+   sont aussi lues dans l'API Chariow toutes les 15 min et depuis la page merci (`src/lib/lead-sync.ts`).
 3. Copier son identifiant `prd_…` dans `src/config/guide.json` → `chariowProductId`. Tant qu'il est vide, la page
    s'affiche mais le bouton indique « Bientôt disponible ».
 4. **PDF** : Actions → « Guide des maisons (PDF) » → Run workflow, d'abord sans « publish » pour contrôler
