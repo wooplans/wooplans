@@ -4,7 +4,7 @@
  * client (a acheté), chaud (a cliqué ou répondu), tiède (a lu), froid (rien), désinscrit (STOP).
  * Les campagnes WhatsApp ciblent ensuite une étape du pipeline.
  */
-import { and, eq, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import type { PipelineStage } from "@/db/schema";
@@ -154,8 +154,40 @@ export async function recordWhatsappClick(prospectId: string) {
   return true;
 }
 
+/**
+ * Numéro renvoyé par WhatsApp (« recipient_id », « from ») : souvent l'ancien format, sans le 0 ajouté en Côte d'Ivoire
+ * en 2021 (22544089680 pour 2250544089680). On compare l'indicatif (3 chiffres) et les 8 derniers chiffres.
+ */
 function phoneMatch(digits: string) {
-  return or(eq(schema.prospects.phone, digits), eq(schema.prospects.phone, `+${digits}`));
+  const d = digits.replace(/\D/g, "");
+  if (d.length < 11) return or(eq(schema.prospects.phone, d), eq(schema.prospects.phone, `+${d}`));
+  const plain = sql`replace(${schema.prospects.phone}, '+', '')`;
+  return or(
+    eq(schema.prospects.phone, d),
+    eq(schema.prospects.phone, `+${d}`),
+    and(sql`substr(${plain}, 1, 3) = ${d.slice(0, 3)}`, sql`substr(${plain}, -8) = ${d.slice(-8)}`),
+  );
+}
+
+/**
+ * Message refusé par WhatsApp après envoi (webhook « failed », ex. 131042 : moyen de paiement du compte WhatsApp
+ * Business manquant) : on revient à l'étape précédente pour le renvoyer au prochain passage, au lieu de le compter envoyé.
+ */
+export async function recordWhatsappFailed(phoneDigits: string) {
+  const db = getDb();
+  const now = new Date();
+  const since = new Date(now.getTime() - 6 * HOUR);
+  const rows = await db.query.prospects.findMany({
+    where: and(phoneMatch(phoneDigits), eq(schema.prospects.pipelineStage, "sequence"), gte(schema.prospects.waLastSentAt, since)),
+    columns: { id: true, waStep: true },
+  });
+  for (const p of rows) {
+    if (p.waStep <= 0) continue;
+    await db
+      .update(schema.prospects)
+      .set({ waStep: p.waStep - 1, waLastSentAt: null, waNextAt: new Date(now.getTime() + RETRY_MS), updatedAt: now })
+      .where(eq(schema.prospects.id, p.id));
+  }
 }
 
 /** Statut « lu » d'un message envoyé (webhook). */

@@ -1,5 +1,5 @@
 import { getEnv } from "@/lib/env";
-import { recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
+import { recordWhatsappFailed, recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
 import { isStopRequest, verifyGenukaSignature } from "@/lib/whatsapp";
 
 type Inbound = { from?: string; type?: string; text?: { body?: string }; button?: { text?: string }; interactive?: { button_reply?: { title?: string } } };
@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     // Statut d'un message envoyé : { status: "read", recipient_id: "237…" } (ou la liste Meta « statuses »).
     const statuses = (Array.isArray(data.statuses) ? data.statuses : data.status ? [data] : []) as { status?: string; recipient_id?: string }[];
     for (const s of statuses) {
-      if (s.status === "read" && s.recipient_id) await recordWhatsappRead(String(s.recipient_id).replace(/\D/g, ""));
+      if (!s.recipient_id) continue;
+      const to = String(s.recipient_id).replace(/\D/g, "");
+      if (s.status === "read") await recordWhatsappRead(to);
+      else if (s.status === "failed") await recordWhatsappFailed(to);
     }
     // Message reçu : liste Meta « messages », ou un seul message.
     const messages = (Array.isArray(data.messages) ? data.messages : data.from ? [data] : []) as Inbound[];
