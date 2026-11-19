@@ -13,7 +13,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SHOWN = 24;
+const SHOWN = 40;
+/** Les maisons préférées des clients en tête (mêmes que la page de vente du catalogue), puis les modèles en vedette. */
+const TOP_SLUGS = ["villa-v3-017", "villa-v4-005", "duplex-d5-012", "villa-v4-036", "villa-v4-032", "duplex-d4-034"];
 const millions = (v: number | null) => (v === null ? "" : (v / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }));
 
 const PAYMENTS = [
@@ -28,13 +30,13 @@ function Cta({ id, total, price, before, className = "" }: { id: string; total: 
   return (
     <GuideCheckoutButton
       offer="catalogue"
-      label={`Débloquer les ${total} maisons · ${formatFcfa(price)}`}
+      label={<span className="whitespace-nowrap">Débloquer les {total} maisons →</span>}
       title={`Les ${total} villas et duplex avec plan et devis`}
       ctaId={id}
       price={price}
       priceBefore={before}
       enabled
-      className={`btn-cta w-full py-4 text-base sm:w-auto sm:px-10 ${className}`}
+      className={`btn-cta w-full whitespace-nowrap px-4 py-4 text-base sm:w-auto sm:px-10 ${className}`}
     />
   );
 }
@@ -47,10 +49,12 @@ function Cta({ id, total, price, before, className = "" }: { id: string; total: 
 export default async function ExtraitSuitePage() {
   const [all, count] = await Promise.all([listPublicPlans({ limit: 200 }).catch(() => [] as PublicPlan[]), countPublishedPlans()]);
   const total = count ?? GUIDE.announcedModels;
-  const others = all.filter((p) => p.coverImage && !EXTRAIT_SLUGS.includes(p.slug));
+  const rank = (slug: string) => (TOP_SLUGS.includes(slug) ? TOP_SLUGS.indexOf(slug) : TOP_SLUGS.length);
+  const others = all.filter((p) => p.coverImage && !EXTRAIT_SLUGS.includes(p.slug)).sort((a, b) => rank(a.slug) - rank(b.slug));
   const othersCount = Math.max(total - EXTRAIT_MODELS, 0);
   const price = cataloguePrice();
   const before = cataloguePriceBefore();
+  const discount = before && before > price ? Math.round((1 - price / before) * 100) : null;
   return (
     <>
       <section className="bg-primary text-white">
@@ -68,9 +72,10 @@ export default async function ExtraitSuitePage() {
           <div className="mt-6 flex flex-wrap items-end gap-3">
             {before ? <span className="text-xl text-white/60 line-through">{formatFcfa(before)}</span> : null}
             <span className="text-4xl font-bold">{formatFcfa(price)}</span>
+            {discount ? <span className="mb-1 rounded-full bg-secondary px-2.5 py-1 text-sm font-bold text-white">-{discount} %</span> : null}
             <span className="pb-1 text-sm text-white/80">paiement unique · version numérique</span>
           </div>
-          <div id="offre-bouton" className="cta-pulse mt-5">
+          <div id="offre-bouton" className="cta-pulse cta-flash mt-5">
             <Cta id="extrait_suite_hero" total={total} price={price} before={before} />
           </div>
           <ul className="mt-4 flex flex-wrap gap-1.5">
@@ -151,7 +156,7 @@ export default async function ExtraitSuitePage() {
               </div>
             ) : null}
           </div>
-          <div className="mt-6 text-center">
+          <div className="cta-pulse cta-flash mt-6 text-center">
             <Cta id="extrait_suite_grille" total={total} price={price} before={before} />
           </div>
         </div>
@@ -176,7 +181,19 @@ export default async function ExtraitSuitePage() {
       <section className="bg-primary pb-28 pt-10 text-white sm:pb-10">
         <div className="container-page text-center">
           <h2 className="text-2xl font-bold">Choisissez votre maison parmi les {total}</h2>
-          <div className="mt-5">
+          <p className="mt-2 text-white/80">Regardez le Catalogue Premium de l&apos;intérieur.</p>
+          {GUIDE.catalogueVideo ? (
+            <video
+              className="mx-auto mt-5 aspect-[9/16] w-full max-w-[320px] rounded-2xl bg-black shadow-2xl"
+              controls
+              playsInline
+              preload="none"
+              poster={GUIDE.catalogueVideoPoster || undefined}
+            >
+              <source src={GUIDE.catalogueVideo} type="video/mp4" />
+            </video>
+          ) : null}
+          <div className="cta-pulse cta-flash mt-5">
             <Cta id="extrait_suite_bas" total={total} price={price} before={before} />
           </div>
           <p className="mt-8 text-xs text-white/50">© WOOPLANS · wooplans.com</p>
@@ -184,7 +201,7 @@ export default async function ExtraitSuitePage() {
       </section>
 
       <StickyOfferBar whenButtonHidden>
-        <div className="cta-pulse">
+        <div className="cta-pulse cta-flash">
           <Cta id="extrait_suite_sticky" total={total} price={price} before={before} className="py-3.5" />
         </div>
       </StickyOfferBar>
