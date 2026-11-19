@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
   env: wranglerVars(),
   images: { unoptimized: true },
   poweredByHeader: false,
+  // Retour sur un onglet déjà ouvert (admin, espace membre) : affichage instantané depuis le cache du navigateur
+  // pendant 30 s. Les actions (enregistrer, envoyer…) vident ce cache aussitôt.
+  experimental: { staleTimes: { dynamic: 30 } },
   async redirects() {
     return legacyRedirects;
   },

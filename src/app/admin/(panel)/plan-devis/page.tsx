@@ -1,6 +1,7 @@
 import { inArray } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
+import { inChunks } from "@/lib/sql-chunks";
 import { DailyBars } from "@/components/admin/DailyBars";
 import { Badge, DayPicker, fmtDateTime, PageTitle, PeriodTabs, pct, Stat, Table } from "@/components/admin/ui";
 import { getPlanDevisSeries, getPlanDevisStats } from "@/lib/analytics";
@@ -28,7 +29,7 @@ export default async function PlanDevisDashboard({
   const range = parseRange(params);
   const [k, series, campaign] = await Promise.all([getPlanDevisStats(range), getPlanDevisSeries(range), upsellCampaignRecipients()]);
   const slugs = [...new Set([...k.models.map((m) => m.slug), ...k.recent.map((r) => r.slug).filter((s): s is string => Boolean(s))])];
-  const plans = slugs.length ? await getDb().query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true } }) : [];
+  const plans = await inChunks(slugs, (chunk) => getDb().query.plans.findMany({ where: inArray(schema.plans.slug, chunk), columns: { slug: true, code: true } }));
   const code = (slug: string | null) => (slug ? (plans.find((p) => p.slug === slug)?.code ?? slug) : "—");
   const n = (v: number) => v.toLocaleString("fr-FR");
   const rate = (a: number, b: number) => (b ? pct(a / b) : "—");
