@@ -125,6 +125,10 @@ html[data-focus] [data-focus-hide] { display: none !important; }
   50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(240 138 46 / 0); }
 }
 .cta-pulse > button, .cta-pulse > a { animation: cta-pulse 1.8s ease-in-out infinite; }
+/* Bandeau « Offre flash » (page de suite de l'extrait) : clignotement doux. */
+@keyframes flash-badge { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .82; transform: scale(1.04); } }
+.flash-badge { animation: flash-badge 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .flash-badge { animation: none; } }
 /* Reflet qui balaie le bouton (pages de vente de l'extrait). */
 @keyframes cta-flash { 0% { transform: translateX(-120%) skewX(-20deg); } 60%, 100% { transform: translateX(260%) skewX(-20deg); } }
 .cta-flash > button, .cta-flash > a { position: relative; overflow: hidden; }
