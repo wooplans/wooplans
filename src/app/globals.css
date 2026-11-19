@@ -125,8 +125,13 @@ html[data-focus] [data-focus-hide] { display: none !important; }
   50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(240 138 46 / 0); }
 }
 .cta-pulse > button, .cta-pulse > a { animation: cta-pulse 1.8s ease-in-out infinite; }
+/* Reflet qui balaie le bouton (pages de vente de l'extrait). */
+@keyframes cta-flash { 0% { transform: translateX(-120%) skewX(-20deg); } 60%, 100% { transform: translateX(260%) skewX(-20deg); } }
+.cta-flash > button, .cta-flash > a { position: relative; overflow: hidden; }
+.cta-flash > button::after, .cta-flash > a::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: cta-flash 2.4s ease-in-out infinite; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .cta-pulse > button, .cta-pulse > a { animation: none; }
+  .cta-flash > button::after, .cta-flash > a::after { animation: none; display: none; }
 }
 
 /* Chrono de l'offre aux clients (page /merci) : pulsation rapide pour l'urgence. */
