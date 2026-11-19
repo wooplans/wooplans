@@ -26,6 +26,15 @@ const PAYMENTS = [
   { label: "Carte bancaire", className: "bg-white text-foreground" },
 ];
 
+/** Bandeau « Offre flash » réservé aux acheteurs de l'extrait (décision de Tao, 19 nov. : à la place d'un chrono). */
+function FlashBadge({ className = "" }: { className?: string }) {
+  return (
+    <p className={`flash-badge inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-extrabold uppercase tracking-wide text-white shadow-lg ${className}`}>
+      <span aria-hidden>⚡</span> Offre flash · réservée aux acheteurs de l&apos;extrait
+    </p>
+  );
+}
+
 function Cta({ id, total, price, before, className = "" }: { id: string; total: number; price: number; before: number | null; className?: string }) {
   return (
     <GuideCheckoutButton
@@ -61,7 +70,7 @@ export default async function ExtraitSuitePage() {
         <div className="container-page max-w-3xl pb-10 pt-6 md:pb-14 md:pt-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width={120} height={36} className="h-8 w-auto" />
-          <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-highlight">La suite de votre extrait</p>
+          <FlashBadge className="mt-6" />
           <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-5xl">
             Vous avez vu {EXTRAIT_MODELS} maisons. Voici les {othersCount} autres.
           </h1>
@@ -126,6 +135,7 @@ export default async function ExtraitSuitePage() {
 
       <section className="bg-surface py-10">
         <div className="container-page">
+          <FlashBadge className="mb-3" />
           <h2 className="text-2xl font-semibold tracking-tight">Les maisons qui vous attendent</h2>
           <p className="mt-1 text-sm text-foreground/70">Chacune avec son plan coté et son devis, comme dans votre extrait.</p>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -180,6 +190,7 @@ export default async function ExtraitSuitePage() {
 
       <section className="bg-primary pb-28 pt-10 text-white sm:pb-10">
         <div className="container-page text-center">
+          <FlashBadge className="mb-3" />
           <h2 className="text-2xl font-bold">Choisissez votre maison parmi les {total}</h2>
           <p className="mt-2 text-white/80">Regardez le Catalogue Premium de l&apos;intérieur.</p>
           {GUIDE.catalogueVideo ? (
