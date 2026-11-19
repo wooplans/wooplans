@@ -22,6 +22,7 @@ function nationalNumber(raw: string, dial: string) {
 const OFFER_TEXT = {
   guide: { eyebrow: "Guide WooPlans des maisons", title: "100 villas et duplex", contentName: "Guide WooPlans des maisons", contentId: "guide-maisons" },
   extrait: { eyebrow: "Extrait du Catalogue Premium", title: "5 maisons avec plan et devis", contentName: "Extrait du Catalogue Premium", contentId: "extrait-catalogue" },
+  catalogue: { eyebrow: "Catalogue Premium", title: "Toutes les maisons avec plan et devis", contentName: "Catalogue Premium Wooplans", contentId: "cpbook-premium-2026" },
 } as const;
 
 export function GuideCheckoutButton({
@@ -31,15 +32,22 @@ export function GuideCheckoutButton({
   price,
   enabled,
   offer = "guide",
+  priceBefore,
+  title,
 }: {
   label: React.ReactNode;
   ctaId: string;
   className: string;
   price: number;
   enabled: boolean;
-  offer?: "guide" | "extrait";
+  offer?: "guide" | "extrait" | "catalogue";
+  /** Prix barré affiché au-dessus du prix (catalogue). */
+  priceBefore?: number | null;
+  /** Titre du formulaire (sinon celui de l'offre). */
+  title?: string;
 }) {
   const text = OFFER_TEXT[offer];
+  const catalogue = offer === "catalogue";
   const [open, setOpen] = useState(false);
   const [country, setCountry] = useState<CountryCode>("CI");
   const countryChosen = useRef(false);
@@ -63,10 +71,12 @@ export function GuideCheckoutButton({
     const form = Object.fromEntries(new FormData(event.currentTarget)) as Record<string, string>;
     setError(null);
     setSending(true);
-    const response = await fetch("/api/guide/checkout", {
+    const fields = { name: (form.name || "").trim(), email: form.email, phone: nationalNumber(form.phone || "", dial), countryCode: country };
+    // Catalogue : même tunnel que la page de vente (/api/checkout, accès Premium) ; sinon offre d'entrée.
+    const response = await fetch(catalogue ? "/api/checkout" : "/api/guide/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: (form.name || "").trim(), email: form.email, phone: nationalNumber(form.phone || "", dial), countryCode: country, offer }),
+      body: JSON.stringify(catalogue ? { ...fields, mode: "redirect", ctaId } : { ...fields, offer }),
       signal: AbortSignal.timeout(25000),
     }).catch(() => null);
     const body = (await response?.json().catch(() => null)) as { url?: string; error?: string; metaEventId?: string | null } | null;
@@ -107,11 +117,14 @@ export function GuideCheckoutButton({
         <form onSubmit={onSubmit} className="grid gap-4 p-5 text-left sm:p-6">
           <div className="relative -mx-5 -mt-5 border-b border-outline bg-primary/5 px-5 pb-4 pt-5 text-center sm:-mx-6 sm:-mt-6 sm:px-6">
             <p className="eyebrow px-8">{text.eyebrow}</p>
-            <h2 id={`guide-title-${ctaId}`} className="mt-1 text-lg font-bold">{text.title}</h2>
+            <h2 id={`guide-title-${ctaId}`} className="mt-1 text-lg font-bold">{title ?? text.title}</h2>
+            {priceBefore ? (
+              <p className="mt-1 text-base text-muted line-through">{priceBefore.toLocaleString("fr-FR").replace(/ | /g, " ")} FCFA</p>
+            ) : null}
             <p className="mt-1 text-4xl font-bold tracking-tight">
               {price.toLocaleString("fr-FR").replace(/ | /g, " ")} <span className="text-base font-medium">FCFA</span>
             </p>
-            <p className="mt-1 text-sm font-semibold">Téléchargement instantané</p>
+            <p className="mt-1 text-sm font-semibold">{catalogue ? "Paiement unique · accès immédiat" : "Téléchargement instantané"}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}

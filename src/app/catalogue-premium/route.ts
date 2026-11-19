@@ -56,6 +56,10 @@ async function salesPageData() {
 export async function GET(request: Request) {
   const env = getEnv();
   const url = new URL(request.url);
+  // Acheteurs de l'extrait (lien du PDF, page merci) : page de suite, sans la présentation complète (19 nov. 2026).
+  if (url.searchParams.get("utm_source") === "extrait") {
+    return new Response(null, { status: 302, headers: { Location: `/extrait-catalogue-premium/catalogue${url.search}`, "Cache-Control": "no-store" } });
+  }
 
   const asset = await env.ASSETS!.fetch(new URL("/lp/catalogue-premium", request.url));
   if (!asset.ok) return new Response("Page indisponible", { status: 502 });

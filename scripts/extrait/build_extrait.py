@@ -37,7 +37,7 @@ CONFIG = json.loads((ROOT / "src" / "config" / "extrait.json").read_text())
 CATALOGUE = json.loads((ROOT / "src" / "config" / "catalogue.json").read_text())
 ORDER = [s.split("-", 1)[1].upper() for s in CONFIG["slugs"]]  # villa-v3-001 -> V3-001
 UTM = "utm_source=extrait&utm_medium=pdf&utm_campaign=extrait_catalogue"
-CATALOGUE_URL = f"https://wooplans.com/catalogue-premium?{UTM}"
+CATALOGUE_URL = f"https://wooplans.com/extrait-catalogue-premium/catalogue?{UTM}"
 
 
 def fcfa(v: int) -> str:
