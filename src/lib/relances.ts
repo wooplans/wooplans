@@ -91,10 +91,10 @@ export function relanceMessage(item: Pick<RelanceItem, "id" | "name" | "offer" |
   const extrait = item.offer === "extrait";
   const models = modelsCount || GUIDE.announcedModels;
   if (item.step === 0) {
-    const download = item.intentId ? siteUrl(`/api/guide/${item.intentId}`) : siteUrl(LEAD_OFFERS[item.offer].path);
+    // Modèle de Tao (19 nov.) : le PDF est joint à la main dans WhatsApp, pas de lien.
     return extrait
-      ? `Merci ${first} pour votre achat 🙏\nVoici votre Extrait du Catalogue Premium : ${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste.\n📄 Le PDF est juste ici. Votre lien personnel : ${download}`
-      : `Merci ${first} pour votre achat 🙏\nVoici votre Guide WooPlans des maisons : ${models} villas et duplex avec leur budget. Aux pages 4 à 6, un exemple du Catalogue Premium.\n📄 Le PDF est juste ici. Votre lien personnel : ${download}`;
+      ? `Merci ${first} pour votre achat 🙏\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)`
+      : `Merci ${first} pour votre achat 🙏\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
   }
   if (item.step === 1) {
     const link = siteUrl(`/r/${item.id}.j1`);
