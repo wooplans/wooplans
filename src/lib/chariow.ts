@@ -15,6 +15,7 @@ import { recordProspectEvent } from "@/lib/prospects";
 import { offreProductIds, type Offre } from "@/lib/offres";
 import { recordPurchasedPlan } from "@/lib/pdf-quota";
 import { startGuideWhatsapp } from "@/lib/pipeline";
+import { parseBrowserContext, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_MODELS, LEAD_CTA_IDS, leadOfferByProduct, type LeadOffer } from "@/lib/lead-offers";
 
@@ -282,6 +283,18 @@ async function processCatalogueSale(
         updatedAt: new Date(),
       })
       .where(eq(schema.checkoutIntents.id, intent.id));
+    if (!attributionOnly) {
+      sendSalePurchaseToMeta({
+        intent,
+        payload,
+        email,
+        phone: normalizePhone(payload.customer?.phone),
+        name: payload.customer?.name ?? null,
+        country: customerCountry(payload.customer ?? {}),
+        contentName: plan ? `Plan et devis ${plan.code} + Catalogue Premium offert` : "Catalogue Premium Wooplans",
+        ...(plan ? { contentIds: [plan.code] } : {}),
+      });
+    }
   }
   if (visitor) {
     await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: intent?.ctaId ?? null });
@@ -494,6 +507,40 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
   return "plan_delivered";
 }
 
+/**
+ * Achat → évènement Purchase de l'API de conversion Meta, UN par vente payée, avec l'event_id du Pixel de la page merci
+ * (wp_purchase_<intention>) : Meta déduplique navigateur + serveur. Remplace l'intégration Meta de Chariow, qui envoyait
+ * ses propres achats (autre event_id) et doublait le compte des campagnes (38 achats reçus pour 14 ventes le 18 nov.).
+ * Envoyé seulement si la mesure était autorisée au début du paiement (contexte du navigateur enregistré).
+ */
+function sendSalePurchaseToMeta(p: {
+  intent: { id: string; email: string | null; visitorId: string | null; metaContext: string | null } | null;
+  payload: ChariowSalePayload;
+  email: string | null;
+  phone: string | null;
+  name: string | null;
+  country: string | null;
+  contentName: string;
+  contentIds?: string[];
+}) {
+  const browser = parseBrowserContext(p.intent?.metaContext);
+  if (!p.intent || !browser) return;
+  const sale = p.payload.sale ?? {};
+  sendMetaEventInBackground({
+    eventName: "Purchase",
+    eventId: `wp_purchase_${p.intent.id}`,
+    eventSourceUrl: browser.url,
+    user: { email: p.email ?? p.intent.email, phone: p.phone, name: p.name, country: p.country, externalId: p.intent.visitorId },
+    browser,
+    customData: {
+      value: Math.round(Number(sale.amount?.value ?? sale.original_amount?.value ?? 0)) || 0,
+      currency: sale.amount?.currency || sale.original_amount?.currency || "XAF",
+      content_name: p.contentName,
+      ...(p.contentIds ? { content_ids: p.contentIds, content_type: "product" } : {}),
+    },
+  });
+}
+
 /* ─────────────── Guide WooPlans des maisons (1 900 FCFA) ─────────────── */
 
 /**
@@ -595,6 +642,18 @@ async function processGuideSale(
     .where(and(eq(schema.checkoutIntents.id, intentId), ne(schema.checkoutIntents.status, "paid")))
     .returning({ id: schema.checkoutIntents.id });
   if (claimed.length === 0) return "already_granted";
+  if (intent) {
+    sendSalePurchaseToMeta({
+      intent,
+      payload,
+      email,
+      phone,
+      name,
+      country,
+      contentName: offer.name,
+      contentIds: [offer.key === "guide" ? "guide-maisons" : "extrait-catalogue"],
+    });
+  }
 
   const to = email ?? intent?.email ?? null;
   if (to) {
