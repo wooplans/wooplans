@@ -1,7 +1,9 @@
 import { and, desc, eq, gte, inArray, sum } from "drizzle-orm";
+import Link from "next/link";
 import { getDb, schema } from "@/db";
 import { Badge, fmtDateTime, PageTitle, Table } from "@/components/admin/ui";
 import { siteUrl } from "@/lib/env";
+import { inChunks } from "@/lib/sql-chunks";
 import { formatFcfa } from "@/lib/plans";
 import { UPSELL, formatDeadline, upsellCataloguePath, upsellDeadline } from "@/lib/upsell";
 import { upsellPrices } from "@/lib/upsell-server";
@@ -35,31 +37,36 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   const { statut } = await searchParams;
   const status = (["completed", "abandoned", "failed"] as const).find((s) => s === statut);
   const db = getDb();
-  const sales = await db.query.sales.findMany({
-    where: status ? eq(schema.sales.status, status) : undefined,
-    orderBy: desc(schema.sales.occurredAt),
-    limit: 300,
-  });
-  // Achats du plan et devis : modèle acheté et nombre de téléchargements, pour le renvoi sur WhatsApp.
-  const intentIds = sales.map((s) => s.intentId).filter((id): id is string => Boolean(id));
-  const intents = intentIds.length
-    ? await db.query.checkoutIntents.findMany({
-        where: inArray(schema.checkoutIntents.id, intentIds),
-        columns: { id: true, planSlug: true, status: true, downloads: true },
-      })
-    : [];
-  const intentById = new Map(intents.map((i) => [i.id, i]));
-  const slugs = [...new Set(intents.map((i) => i.planSlug).filter((v): v is string => Boolean(v)))];
-  const plans = slugs.length
-    ? await db.query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true, category: true } })
-    : [];
-  const codeBySlug = new Map(plans.map((p) => [p.slug, p.code]));
-  const categoryBySlug = new Map(plans.map((p) => [p.slug, p.category]));
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const [month] = await db
-    .select({ total: sum(schema.sales.amount) })
-    .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, monthStart)));
+  const [sales, [month]] = await Promise.all([
+    db.query.sales.findMany({
+      where: status ? eq(schema.sales.status, status) : undefined,
+      orderBy: desc(schema.sales.occurredAt),
+      limit: 300,
+    }),
+    db
+      .select({ total: sum(schema.sales.amount) })
+      .from(schema.sales)
+      .where(and(eq(schema.sales.status, "completed"), gte(schema.sales.occurredAt, monthStart))),
+  ]);
+  // Achats du plan et devis : modèle acheté et nombre de téléchargements, pour le renvoi sur WhatsApp.
+  // D1 refuse plus de 100 paramètres par requête (la page plantait au-delà de 100 ventes liées) : lots de 50, en une seule jointure.
+  const intentIds = [...new Set(sales.map((s) => s.intentId).filter((id): id is string => Boolean(id)))];
+  const intents = await inChunks(intentIds, (ids) =>
+    db
+      .select({
+        id: schema.checkoutIntents.id,
+        planSlug: schema.checkoutIntents.planSlug,
+        status: schema.checkoutIntents.status,
+        downloads: schema.checkoutIntents.downloads,
+        code: schema.plans.code,
+        category: schema.plans.category,
+      })
+      .from(schema.checkoutIntents)
+      .leftJoin(schema.plans, eq(schema.plans.slug, schema.checkoutIntents.planSlug))
+      .where(inArray(schema.checkoutIntents.id, ids)),
+  );
+  const intentById = new Map(intents.map((i) => [i.id, i]));
 
   return (
     <>
@@ -69,9 +76,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
       />
       <div className="mb-4 flex gap-2 text-sm">
         {[["", "Toutes"], ["completed", "Payées"], ["abandoned", "Abandonnées"], ["failed", "Échouées"]].map(([v, l]) => (
-          <a key={v} href={v ? `/admin/ventes?statut=${v}` : "/admin/ventes"} className={`rounded-full px-3 py-1 ${statut === v || (!statut && !v) ? "bg-primary text-white" : "bg-surface"}`}>
+          <Link key={v} href={v ? `/admin/ventes?statut=${v}` : "/admin/ventes"} className={`rounded-full border px-3 py-1 font-medium ${statut === v || (!statut && !v) ? "border-primary bg-primary text-white" : "border-outline bg-surface text-foreground/70 hover:text-primary"}`}>
             {l}
-          </a>
+          </Link>
         ))}
       </div>
       <Table head={["Date", "Client", "Montant", "Statut", "Source / campagne", "Produit"]} empty={sales.length === 0}>
@@ -79,7 +86,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           const phone = (s.phone || "").replace(/\D/g, "");
           const intent = s.intentId ? intentById.get(s.intentId) : undefined;
           const planDevis = s.status === "completed" && intent?.planSlug && (intent.status === "paid" || intent.status === "gift") ? intent : null;
-          const code = planDevis?.planSlug ? (codeBySlug.get(planDevis.planSlug) ?? planDevis.planSlug) : null;
+          const code = planDevis?.planSlug ? (planDevis.code ?? planDevis.planSlug) : null;
           return (
             <tr key={s.id}>
               <td className="px-4 py-2.5 whitespace-nowrap">{fmtDateTime(s.occurredAt)}</td>
@@ -103,7 +110,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                     <div className="flex flex-wrap gap-1.5">
                       {phone ? (
                         <a
-                          href={planDevisWhatsapp({ phone, name: s.name, code, category: categoryBySlug.get(planDevis.planSlug!) ?? null, intentId: planDevis.id, paidAt: s.occurredAt, country: s.country })}
+                          href={planDevisWhatsapp({ phone, name: s.name, code, category: planDevis.category ?? null, intentId: planDevis.id, paidAt: s.occurredAt, country: s.country })}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full bg-[#25D366] px-3 py-1 font-semibold text-white"

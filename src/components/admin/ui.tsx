@@ -5,7 +5,7 @@ export function PageTitle({ title, subtitle, actions }: { title: string; subtitl
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight md:text-[28px]">{title}</h1>
         {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
@@ -15,9 +15,9 @@ export function PageTitle({ title, subtitle, actions }: { title: string; subtitl
 
 export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="card p-4">
+    <div className="card p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-shadow hover:shadow-md">
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight">{value}</p>
+      <p className="mt-1 text-2xl font-bold tracking-tight text-primary-dark">{value}</p>
       {hint ? <p className="mt-0.5 text-xs text-muted">{hint}</p> : null}
     </div>
   );
@@ -73,12 +73,12 @@ export function DayPicker({ day, today, base }: { day: string | null; today: str
 
 export function Table({ head, children, empty }: { head: string[]; children: React.ReactNode; empty?: boolean }) {
   return (
-    <div className="card overflow-x-auto">
+    <div className="card overflow-x-auto shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
       <table className="w-full min-w-[560px] text-sm">
-        <thead className="bg-background text-left text-xs uppercase tracking-wide text-muted">
-          <tr>{head.map((h) => <th key={h} className="px-4 py-3 font-medium">{h}</th>)}</tr>
+        <thead className="sticky top-0 bg-background/95 text-left text-[11px] uppercase tracking-wider text-muted backdrop-blur">
+          <tr>{head.map((h) => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr>
         </thead>
-        <tbody className="divide-y divide-outline">{children}</tbody>
+        <tbody className="divide-y divide-outline [&>tr:hover]:bg-background/60">{children}</tbody>
       </table>
       {empty ? <p className="p-6 text-center text-sm text-muted">Rien à afficher pour le moment.</p> : null}
     </div>

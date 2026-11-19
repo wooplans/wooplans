@@ -514,17 +514,17 @@ export async function getGuideToCatalogue(range: Range, productId: string = guid
     .where(and(eq(schema.sales.status, "completed"), eq(schema.sales.productId, productId), within(schema.sales.occurredAt, range), notOwnerSale()));
   const leadRevenue = buyers.reduce((sum, b) => sum + (b.amount || 0), 0);
   if (buyers.length === 0) return { guideBuyers: 0, leadRevenue: 0, converted: 0, rate: 0, revenue: 0, avgDays: null as number | null };
-  const emails = [...new Set(buyers.map((b) => b.email?.toLowerCase()).filter((e): e is string => Boolean(e)))];
-  const phones = [...new Set(buyers.map((b) => b.phone).filter((p): p is string => Boolean(p)))];
+  // Toutes les ventes payées du catalogue (quelques centaines de lignes), rapprochées en mémoire : une liste
+  // d'adresses dans la requête dépassait la limite de 100 paramètres de D1 sur les longues périodes.
+  const emails = new Set(buyers.map((b) => b.email?.toLowerCase()).filter((e): e is string => Boolean(e)));
+  const phones = new Set(buyers.map((b) => b.phone).filter((p): p is string => Boolean(p)));
   const catalogueIds = [...catalogueSaleProductIds()];
-  const conditions = [
-    emails.length ? inArray(sql`lower(${schema.sales.email})`, emails) : undefined,
-    phones.length ? inArray(schema.sales.phone, phones) : undefined,
-  ].filter(Boolean) as SQL[];
-  const later = await db
-    .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt, amount: schema.sales.amount })
-    .from(schema.sales)
-    .where(and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, catalogueIds), or(...conditions)));
+  const later = (
+    await db
+      .select({ email: schema.sales.email, phone: schema.sales.phone, at: schema.sales.occurredAt, amount: schema.sales.amount })
+      .from(schema.sales)
+      .where(and(eq(schema.sales.status, "completed"), inArray(schema.sales.productId, catalogueIds)))
+  ).filter((s) => (s.email && emails.has(s.email.toLowerCase())) || (s.phone && phones.has(s.phone)));
   let converted = 0;
   let revenue = 0;
   let days = 0;

@@ -11,7 +11,8 @@ import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_MODELS, LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
 import { WA_DELAYS_HOURS } from "@/lib/pipeline";
 import { formatFcfa } from "@/lib/plans";
-import { isCustomer } from "@/lib/prospects";
+import { customerLookup } from "@/lib/prospects";
+import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, cataloguePriceBefore } from "@/lib/site";
 import { firstName, waNumber } from "@/lib/whatsapp-rules";
 
@@ -41,30 +42,41 @@ export type RelanceItem = {
   lastSentAt: Date | null;
 };
 
-/** Toute la file : les messages à envoyer aujourd'hui (due) et ceux à venir. */
+/**
+ * Toute la file : les messages à envoyer aujourd'hui (due) et ceux à venir.
+ * 3 requêtes en parallèle au plus (prospects, clients, achats), quel que soit le nombre de personnes :
+ * auparavant 2 requêtes PAR personne, l'une après l'autre, d'où une page très lente.
+ */
 export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
   const db = getDb();
-  const rows = await db.query.prospects.findMany({
-    where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, 3), isNull(schema.prospects.waOptOutAt)),
-    orderBy: [desc(schema.prospects.lastEventAt)],
-    limit: 500,
-  });
-  const withPhone = rows.filter((r) => waNumber(r.phone));
-  const emails = withPhone.map((r) => r.email);
-  const intents = emails.length
-    ? await db.query.checkoutIntents.findMany({
+  const [rows, isClient] = await Promise.all([
+    db.query.prospects.findMany({
+      where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, 3), isNull(schema.prospects.waOptOutAt)),
+      orderBy: [desc(schema.prospects.lastEventAt)],
+      limit: 500,
+    }),
+    customerLookup(),
+  ]);
+  // Déjà client du catalogue (le rapprochement passe toutes les 15 min) : on ne le relance pas.
+  const withPhone = rows.filter((r) => waNumber(r.phone) && !isClient(r.email, r.phone));
+  // D1 refuse plus de 100 paramètres par requête : adresses par lots.
+  const intents = await inChunks(
+    withPhone.map((r) => r.email),
+    (emails) =>
+      db.query.checkoutIntents.findMany({
         where: and(inArray(schema.checkoutIntents.email, emails), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
         orderBy: [desc(schema.checkoutIntents.createdAt)],
-        columns: { id: true, email: true, ctaId: true },
-      })
-    : [];
-  const items: RelanceItem[] = [];
-  for (const r of withPhone) {
-    // Déjà client du catalogue (le rapprochement passe toutes les 15 min) : on ne le relance pas.
-    if (await isCustomer(r.email, r.phone)) continue;
-    const intent = intents.find((i) => i.email === r.email);
+        columns: { id: true, email: true, ctaId: true, createdAt: true },
+      }),
+    40,
+  );
+  intents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const intentByEmail = new Map<string, (typeof intents)[number]>();
+  for (const i of intents) if (i.email && !intentByEmail.has(i.email)) intentByEmail.set(i.email, i);
+  return withPhone.map((r) => {
+    const intent = intentByEmail.get(r.email);
     const dueAt = r.waNextAt ?? r.lastEventAt;
-    items.push({
+    return {
       id: r.id,
       name: r.name,
       email: r.email,
@@ -80,9 +92,21 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       clicked: Boolean(r.waClickedAt),
       replied: Boolean(r.waRepliedAt),
       lastSentAt: r.waLastSentAt,
-    });
-  }
-  return items;
+    };
+  });
+}
+
+/** Une seule personne de la file (lien de secours /admin/relances/envoyer) : 2 petites requêtes, pas toute la file. */
+export async function relanceItem(id: string) {
+  const db = getDb();
+  const p = await db.query.prospects.findFirst({ where: eq(schema.prospects.id, id), columns: { id: true, name: true, email: true, phone: true } });
+  if (!p) return null;
+  const intent = await db.query.checkoutIntents.findFirst({
+    where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
+    orderBy: [desc(schema.checkoutIntents.createdAt)],
+    columns: { id: true, ctaId: true },
+  });
+  return { ...p, offer: (intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide") as RelanceItem["offer"], intentId: intent?.id ?? null };
 }
 
 /** Texte pré-rempli du message (les liens sont suivis : téléchargement du PDF, clics vers le catalogue). */

@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { Badge, PageTitle } from "@/components/admin/ui";
 import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
-import { RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, type RelanceItem } from "@/lib/relances";
+import { RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
 import { undoRelance } from "./actions";
 
@@ -28,7 +28,8 @@ function when(date: Date, now: Date) {
 
 function Card({ item, models, now }: { item: RelanceItem; models: number; now: Date }) {
   const file = relanceAttachment(item);
-  const preview = relanceMessage(item, models).split("\n")[0];
+  const text = relanceMessage(item, models);
+  const preview = text.split("\n").find((l) => l.trim()) ?? "";
   return (
     <article className="rounded-xl border border-outline bg-white p-3 text-sm shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -48,8 +49,11 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
         </div>
       ) : null}
       <p className="mt-2 line-clamp-2 text-xs text-foreground/60">« {preview} »</p>
-      {/* Le clic note l'envoi puis ouvre WhatsApp avec le message écrit (route /admin/relances/envoyer). */}
-      <WhatsappSendButton href={`/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=${item.step}`}>
+      {/* Le clic ouvre WhatsApp aussitôt (message déjà écrit) et note l'envoi en arrière-plan. */}
+      <WhatsappSendButton
+        waUrl={relanceWhatsappUrl(item.phone, text)}
+        recordUrl={`/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=${item.step}`}
+      >
         Envoyer le message {item.step + 1} sur WhatsApp
       </WhatsappSendButton>
       <p className="mt-2 text-center text-xs text-muted">

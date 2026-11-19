@@ -101,6 +101,25 @@ export async function isCustomer(email: string, phone: string | null | undefined
   return Boolean(sale);
 }
 
+/**
+ * Tous les clients d'un coup (membres actifs + ventes payées hors offres d'entrée), pour vérifier une liste entière
+ * sans une requête par personne : deux requêtes au lieu de 2 × N allers-retours vers D1.
+ */
+export async function customerLookup() {
+  const db = getDb();
+  const [members, sales] = await Promise.all([
+    db.query.members.findMany({ where: eq(schema.members.status, "active"), columns: { email: true, phone: true } }),
+    db.query.sales.findMany({ where: and(eq(schema.sales.status, "completed"), notGuideSale()), columns: { email: true, phone: true } }),
+  ]);
+  const emails = new Set<string>();
+  const phones = new Set<string>();
+  for (const c of [...members, ...sales]) {
+    if (c.email) emails.add(c.email);
+    if (c.phone) phones.add(c.phone);
+  }
+  return (email: string, phone: string | null | undefined) => emails.has(email) || Boolean(phone && phones.has(phone));
+}
+
 /** Passe en « converti » tous les prospects ouverts qui sont devenus clients (email ou téléphone). */
 export async function reconcileProspects() {
   const db = getDb();

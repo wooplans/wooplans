@@ -16,6 +16,7 @@ import {
 import { localDay, parseRange } from "@/lib/date-range";
 import { formatFcfa } from "@/lib/plans";
 import { relanceQueue } from "@/lib/relances";
+import { inChunks } from "@/lib/sql-chunks";
 
 /**
  * Tableau de bord : l'offre principale est la fiche modèle (plan et devis + Catalogue Premium offert, prix selon le pays).
@@ -38,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const relancesDue = relances.filter((r) => r.due).length;
   const catalogueSold = overview.offers.find((o) => o.key === "catalogue");
   const slugs = [...new Set([...overview.models.map((m) => m.slug), ...overview.recent.map((r) => r.slug), ...fiche.models.map((m) => m.slug)].filter((s): s is string => Boolean(s)))];
-  const plans = slugs.length ? await getDb().query.plans.findMany({ where: inArray(schema.plans.slug, slugs), columns: { slug: true, code: true } }) : [];
+  const plans = await inChunks(slugs, (chunk) => getDb().query.plans.findMany({ where: inArray(schema.plans.slug, chunk), columns: { slug: true, code: true } }));
   const code = (slug: string | null) => (slug ? (plans.find((p) => p.slug === slug)?.code ?? slug) : "—");
   const views = new Map(fiche.models.map((m) => [m.slug, m]));
 
