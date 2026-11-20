@@ -4,7 +4,7 @@ import { getDb, schema } from "@/db";
 import { Badge, PageTitle } from "@/components/admin/ui";
 import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
-import { RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type RelanceItem } from "@/lib/relances";
+import { projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
 import { undoRelance } from "./actions";
 
@@ -81,6 +81,34 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
   );
 }
 
+function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
+  const recordUrl = `/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=projet`;
+  return (
+    <article className="rounded-xl border border-outline bg-white p-3 text-sm shadow-sm">
+      <p className="truncate font-semibold">{item.name || item.email}</p>
+      <p className="text-xs text-muted">
+        {item.country || "—"} · achat {ago(item.boughtAt, now)} · +{item.phone.replace(/\D/g, "")}
+      </p>
+      {item.civilite ? (
+        <WhatsappSendButton waUrl={relanceWhatsappUrl(item.phone, projectMessage(item))} recordUrl={recordUrl}>
+          Envoyer le formulaire sur WhatsApp
+        </WhatsappSendButton>
+      ) : (
+        <>
+          <p className="mt-2 text-center text-xs text-muted">Prénom non reconnu : choisissez</p>
+          <div className="grid grid-cols-2 gap-2">
+            {(["M.", "Mme"] as const).map((civilite) => (
+              <WhatsappSendButton key={civilite} waUrl={relanceWhatsappUrl(item.phone, projectMessage({ ...item, civilite }))} recordUrl={recordUrl}>
+                {civilite === "M." ? "Monsieur" : "Madame"}
+              </WhatsappSendButton>
+            ))}
+          </div>
+        </>
+      )}
+    </article>
+  );
+}
+
 /**
  * CRM des relances WhatsApp à la main (provisoire) : 3 colonnes = les 3 messages. Une carte n'apparaît que le jour
  * où son message est dû. Un clic ouvre WhatsApp avec le message écrit et passe la personne à l'étape suivante.
@@ -88,7 +116,7 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
 export default async function RelancesPage() {
   const now = new Date();
   const startOfDay = new Date(now.getTime() - ((now.getTime() + 3_600_000) % 86_400_000));
-  const [queue, models, recentClients] = await Promise.all([
+  const [queue, models, recentClients, projects] = await Promise.all([
     relanceQueue(now),
     countPublishedPlans(),
     getDb().query.prospects.findMany({
@@ -97,6 +125,7 @@ export default async function RelancesPage() {
       limit: 20,
       columns: { id: true, name: true, email: true, pipelineUpdatedAt: true },
     }),
+    projectQueue(now),
   ]);
   const due = queue.filter((i) => i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   const upcoming = queue.filter((i) => !i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
@@ -184,6 +213,23 @@ export default async function RelancesPage() {
           );
         })}
       </div>
+
+      <section className="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 p-3">
+        <h2 className="flex items-center justify-between px-1 font-semibold">
+          Accompagnement · Formulaire « Mon projet » (J10)
+          <span className="rounded-full bg-white px-2.5 py-0.5 text-sm">{projects.length}</span>
+        </h2>
+        <p className="mb-3 px-1 text-xs text-muted">
+          10 jours après l&apos;achat, une fois les 3 messages envoyés. Le lien est personnel : les réponses vont sur la fiche, puis la personne arrive sur le
+          catalogue des villas ou des duplex. Rien à joindre.
+        </p>
+        {projects.length === 0 ? <p className="rounded-xl bg-white/70 p-3 text-center text-sm text-muted">Rien à envoyer pour l&apos;instant ✅</p> : null}
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          {projects.map((item) => (
+            <ProjectCard key={item.id} item={item} now={now} />
+          ))}
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-outline bg-white p-4">

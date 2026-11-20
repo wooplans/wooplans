@@ -803,9 +803,11 @@ export function guideSequenceEmail(p: {
  * en plus des 3 messages WhatsApp. Lien : la page réservée aux acheteurs de l'extrait. Aucune fausse urgence.
  */
 export function extraitSequenceEmail(p: {
-  kind: "offre" | "devis" | "faq" | "recap";
+  kind: "offre" | "devis" | "faq" | "recap" | "projet";
   name?: string | null;
   downloaded: boolean;
+  /** Lien personnel du formulaire « Mon projet » (email J10). */
+  projectUrl?: string;
   downloadUrl: string | null;
   catalogueUrl: string;
   price: string;
@@ -852,6 +854,14 @@ export function extraitSequenceEmail(p: {
       ];
       cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
       break;
+    case "projet":
+      subject = "Votre projet en 4 questions";
+      paragraphs = [
+        "Pour vous montrer les maisons qui correspondent vraiment à votre projet, j'ai 4 questions rapides : votre terrain, quand vous voulez commencer, votre budget et le type de maison.",
+        "Il suffit de toucher vos réponses : 20 secondes, rien à écrire.",
+      ];
+      cta = { href: p.projectUrl ?? p.catalogueUrl, label: "Répondre aux 4 questions" };
+      break;
     default:
       subject = "Ce que contient le Catalogue Premium";
       paragraphs = [`Pour chacune des ${p.models} villas et duplex :`];
@@ -865,9 +875,17 @@ export function extraitSequenceEmail(p: {
       ];
       cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
   }
-  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}<p>${escape(priceLine)}</p><p>Tao, fondateur de WooPlans</p>`;
-  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, priceLine, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].join("\n\n");
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}${p.kind === "projet" ? "" : `<p>${escape(priceLine)}</p>`}<p>Tao, fondateur de WooPlans</p>`;
+  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, p.kind === "projet" ? "" : priceLine, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].filter(Boolean).join("\n\n");
   return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
+/** Alerte au propriétaire : formulaire « Mon projet » rempli avec terrain + démarrage dans les 6 mois (prospect brûlant). */
+export function projectHotAdminEmail(p: { name: string | null; email: string; phone: string | null; summary: string; whatsappUrl: string | null }) {
+  const subject = `Prospect brûlant : ${p.name || p.email}`;
+  const lines = [`Nom : ${p.name || "—"}`, `Email : ${p.email}`, `WhatsApp : ${p.phone || "—"}`, p.summary];
+  const body = `<p>${lines.map(escape).join("<br>")}</p>${p.whatsappUrl ? button(p.whatsappUrl, "Lui écrire sur WhatsApp") : ""}<p>Il a son terrain et veut construire dans les 6 mois. Il n'a pas encore le Catalogue Premium.</p>`;
+  return { subject, html: layout(subject, body), text: [...lines, p.whatsappUrl ?? ""].join("\n") };
 }
 
 /** Alerte au propriétaire : acheteur du guide avec terrain et démarrage dans les 6 mois. */

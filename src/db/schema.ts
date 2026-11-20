@@ -370,6 +370,13 @@ export const prospects = sqliteTable(
     /** Dernière campagne WhatsApp reçue (clé de src/config/wa-campaigns.json) et sa date : jamais deux fois la même. */
     waCampaign: text("wa_campaign"),
     waCampaignAt: integer("wa_campaign_at", { mode: "timestamp_ms" }),
+    /** Formulaire « Mon projet » (lien personnel /mon-projet/<id>) : réponses en JSON (terrain, start, budget, type). */
+    projectAnswers: text("project_answers"),
+    projectAnsweredAt: integer("project_answered_at", { mode: "timestamp_ms" }),
+    /** Première ouverture du formulaire (signal d'intérêt même sans réponse). */
+    projectOpenedAt: integer("project_opened_at", { mode: "timestamp_ms" }),
+    /** Lien du formulaire envoyé sur WhatsApp (relance manuelle J10). */
+    projectSentAt: integer("project_sent_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

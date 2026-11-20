@@ -1,6 +1,6 @@
 import { getCurrentAdmin, requireAdmin } from "@/lib/auth";
 import { countPublishedPlans } from "@/lib/plans";
-import { recordManualSend, relanceItem, relanceMessage, relanceWhatsappUrl } from "@/lib/relances";
+import { projectMessage, recordManualSend, recordProjectSent, relanceItem, relanceMessage, relanceWhatsappUrl } from "@/lib/relances";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,14 @@ function parse(url: URL) {
  */
 export async function POST(request: Request) {
   if (!(await getCurrentAdmin())) return Response.json({ ok: false }, { status: 401 });
-  const { id, step, valid } = parse(new URL(request.url));
+  const url = new URL(request.url);
+  // Formulaire « Mon projet » (phase d'accompagnement, J10).
+  if (url.searchParams.get("etape") === "projet") {
+    const id = url.searchParams.get("id") || "";
+    if (!id) return Response.json({ ok: false }, { status: 400 });
+    return Response.json({ ok: true, recorded: await recordProjectSent(id) }, { headers: { "Cache-Control": "no-store" } });
+  }
+  const { id, step, valid } = parse(url);
   if (!valid) return Response.json({ ok: false }, { status: 400 });
   const recorded = await recordManualSend(id, step);
   return Response.json({ ok: true, recorded }, { headers: { "Cache-Control": "no-store" } });
@@ -27,6 +34,13 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   await requireAdmin();
   const url = new URL(request.url);
+  if (url.searchParams.get("etape") === "projet") {
+    const pid = url.searchParams.get("id") || "";
+    const p = pid ? await relanceItem(pid) : null;
+    if (!p?.phone) return Response.redirect(new URL("/admin/relances", url), 303);
+    await recordProjectSent(pid);
+    return new Response(null, { status: 302, headers: { Location: relanceWhatsappUrl(p.phone, projectMessage({ id: pid, name: p.name })), "Cache-Control": "no-store" } });
+  }
   const { id, step, valid } = parse(url);
   const [item, models] = await Promise.all([valid ? relanceItem(id) : null, countPublishedPlans()]);
   if (!item?.phone || !valid) return Response.redirect(new URL("/admin/relances", url), 303);
