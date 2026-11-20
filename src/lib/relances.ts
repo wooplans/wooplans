@@ -1,11 +1,13 @@
 /**
  * Relances WhatsApp à la main (provisoire, tant que Meta bloque les envois par l'API) : chaque acheteur du guide
  * ou de l'extrait reçoit 3 messages, que Tao envoie en un clic depuis /admin/relances (lien wa.me pré-rempli).
- * Message 1 = livraison (tout de suite), message 2 = le catalogue (+24 h), message 3 = témoignage + prix (+48 h).
+ * Message 1 = livraison (tout de suite), message 2 = la page de l'offre réservée aux acheteurs (+24 h),
+ * message 3 = témoignage + prix (+48 h). « M. » ou « Mme » devant le nom (src/lib/civilite.ts).
  * Un acheteur du Catalogue Premium sort de la file automatiquement (rapprochement toutes les 15 min, et ici).
  */
 import { and, desc, eq, inArray, isNull, lt } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { guessCivilite, salutation, type Civilite } from "@/lib/civilite";
 import { siteUrl } from "@/lib/env";
 import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_MODELS, LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
@@ -14,19 +16,21 @@ import { formatFcfa } from "@/lib/plans";
 import { customerLookup } from "@/lib/prospects";
 import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, cataloguePriceBefore } from "@/lib/site";
-import { firstName, waNumber } from "@/lib/whatsapp-rules";
+import { waNumber } from "@/lib/whatsapp-rules";
 
 const HOUR = 3_600_000;
 
 export const RELANCE_STEPS = [
   { title: "Message 1 · Livraison", when: "dès l'achat", file: "Le PDF" },
-  { title: "Message 2 · Le catalogue", when: "le lendemain", file: "La vidéo du catalogue" },
+  { title: "Message 2 · Offre flash", when: "le lendemain", file: "La vidéo du catalogue" },
   { title: "Message 3 · Témoignage + prix", when: "2 jours après", file: "La vidéo de Bassirou" },
 ] as const;
 
 export type RelanceItem = {
   id: string;
   name: string | null;
+  /** Déduite du prénom ; null = inconnue (la page propose M. et Mme). */
+  civilite: Civilite | null;
   email: string;
   phone: string;
   country: string | null;
@@ -79,6 +83,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
     return {
       id: r.id,
       name: r.name,
+      civilite: guessCivilite(r.name),
       email: r.email,
       phone: r.phone!,
       country: r.country,
@@ -106,29 +111,41 @@ export async function relanceItem(id: string) {
     orderBy: [desc(schema.checkoutIntents.createdAt)],
     columns: { id: true, ctaId: true },
   });
-  return { ...p, offer: (intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide") as RelanceItem["offer"], intentId: intent?.id ?? null };
+  return { ...p, civilite: guessCivilite(p.name), offer: (intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide") as RelanceItem["offer"], intentId: intent?.id ?? null };
 }
 
-/** Texte pré-rempli du message (les liens sont suivis : téléchargement du PDF, clics vers le catalogue). */
-export function relanceMessage(item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step">, modelsCount: number) {
-  const first = firstName(item.name);
+/**
+ * Texte pré-rempli du message (les liens sont suivis : téléchargement du PDF, clics vers la page de l'offre).
+ * `civilite` : celle choisie sur la carte quand le prénom n'a pas suffi ; sinon celle déduite du prénom.
+ */
+export function relanceMessage(
+  item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step"> & { civilite?: Civilite | null },
+  modelsCount: number,
+) {
+  const who = salutation(item.name, item.civilite === undefined ? guessCivilite(item.name) : item.civilite);
   const extrait = item.offer === "extrait";
   const models = modelsCount || GUIDE.announcedModels;
   if (item.step === 0) {
     // Modèle de Tao (19 nov.) : le PDF est joint à la main dans WhatsApp, pas de lien.
+    const merci = who ? `Merci ${who} pour votre achat 🙏` : "Merci pour votre achat 🙏";
     return extrait
-      ? `Merci ${first} pour votre achat 🙏\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)`
-      : `Merci ${first} pour votre achat 🙏\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
+      ? `${merci}\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)`
+      : `${merci}\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
   }
-  if (item.step === 1) {
-    const link = siteUrl(`/r/${item.id}.j1`);
-    return extrait
-      ? `Bonjour ${first} 👋\nVous avez vu le format avec les ${EXTRAIT_MODELS} maisons de l'extrait. Le Catalogue Premium contient nos ${models} villas et duplex, chacun avec son plan de distribution coté et son devis poste par poste.\n👉 ${link}`
-      : `Bonjour ${first} 👋\nVoici nos ${models} plans modèles en vidéo. Dans le Catalogue Premium, chaque maison a son plan de distribution coté et son devis poste par poste.\n👉 ${link}`;
-  }
+  const hello = who ? `Bonjour ${who} 👋` : "Bonjour 👋";
+  const price = cataloguePrice();
   const before = cataloguePriceBefore();
+  const priceText = `${before ? `~${formatFcfa(before)}~ ` : ""}*${formatFcfa(price)}*`;
+  if (item.step === 1) {
+    // Le lien mène à la page réservée aux acheteurs de l'extrait ou du guide (/extrait-catalogue-premium/catalogue).
+    const link = siteUrl(`/r/${item.id}.j1`);
+    const discount = before && before > price ? ` (-${Math.round((1 - price / before) * 100)} %)` : "";
+    return extrait
+      ? `${hello}\n\nVous avez vu les ${EXTRAIT_MODELS} maisons de votre extrait. Voici les ${Math.max(models - EXTRAIT_MODELS, 0)} autres, au même format : plan de distribution coté et devis poste par poste pour chaque maison.\n\n⚡ *Offre flash réservée aux acheteurs de l'extrait* : le Catalogue Premium complet à ${priceText}${discount}, paiement unique.\n\n👉 ${link}`
+      : `${hello}\n\nDans votre guide, vous avez vu nos ${models} villas et duplex. Le Catalogue Premium vous donne, pour chacune, le plan de distribution coté et le devis poste par poste.\n\n⚡ *Offre flash réservée aux acheteurs du guide* : ${priceText}${discount}, paiement unique.\n\n👉 ${link}`;
+  }
   const link = siteUrl(`/r/${item.id}.j3`);
-  return `${first}, voici ce que Mamadou Bassirou a fait avec le Catalogue Premium 🎥\nPrix actuel : ${before ? `~${formatFcfa(before)}~ ` : ""}*${formatFcfa(cataloguePrice())}*, paiement unique, accès à vie.\n👉 ${link}\n(Répondez Stop pour ne plus recevoir de messages.)`;
+  return `${who ? `${who}, voici` : "Voici"} ce que Mamadou Bassirou a fait avec le Catalogue Premium 🎥\nPrix actuel : ${priceText}, paiement unique, accès à vie.\n👉 ${link}\n(Répondez Stop pour ne plus recevoir de messages.)`;
 }
 
 /** Fichier à joindre à la main dans WhatsApp (Tao le télécharge une fois sur son téléphone). */
