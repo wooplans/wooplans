@@ -99,6 +99,19 @@ export function qualificationSummary(q: Qualification) {
  */
 export const GUIDE_DELAYS_HOURS = [24, 48, 96, 144, 192, 216, 240];
 
+/**
+ * Acheteurs de l'extrait (phase de conversion, J0 à J7) : 4 emails en plus de la livraison et des 3 messages WhatsApp
+ * (décision de Tao, 20 nov.). Délais depuis l'achat (heures) : J1, J2, J5, J7.
+ */
+export const EXTRAIT_DELAYS_HOURS = [24, 48, 120, 168];
+
+export type ExtraitEmailKind = "offre" | "devis" | "faq" | "recap";
+
+export function extraitKindForStep(step: number): ExtraitEmailKind {
+  const kinds = ["offre", "devis", "faq", "recap"] as const;
+  return kinds[Math.min(Math.max(step, 0), kinds.length - 1)];
+}
+
 export type GuideEmailKind = "open" | "budget" | "villa_duplex" | "inside" | "faq" | "plans" | "last";
 
 export function guideKindForStep(step: number): GuideEmailKind {

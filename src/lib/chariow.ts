@@ -676,9 +676,9 @@ async function processGuideSale(
       source: "guide",
       utmSource: values.utmSource,
       utmCampaign: values.utmCampaign,
-      // Les 7 emails du guide parlent du guide : l'extrait n'a que la séquence WhatsApp.
-      startSequence: offer.key === "guide",
-      kind: "guide",
+      // Guide : 7 emails sur 10 jours. Extrait : 4 emails de conversion (J1, J2, J5, J7), en plus des 3 WhatsApp.
+      startSequence: true,
+      kind: offer.key === "extrait" ? "extrait" : "guide",
     }).catch((error) => console.error("CRM prospects : acheteur du guide non enregistré", error));
     // WhatsApp (Genuka) : livraison du guide puis séquence J1 / J3 et classement dans le pipeline.
     await startGuideWhatsapp(to, phone, name, intentId, offer.key).catch((error) => console.error("WhatsApp : séquence du guide non démarrée", error));

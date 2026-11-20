@@ -24,7 +24,8 @@ export default async function GuideThanksPage({ searchParams }: { searchParams: 
         video={GUIDE.catalogueVideo}
         videoPoster={GUIDE.catalogueVideoPoster}
         announcedModels={GUIDE.announcedModels}
-        waDeliveryUrl={whatsappLink("Bonjour WooPlans, je viens d'acheter le Guide WooPlans des maisons. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
+        waDeliveryUrl={whatsappLink("Salut l'équipe WooPlans 👋 Je viens d'acheter le Guide WooPlans des maisons. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
+        waDeliveryNumber={WHATSAPP_BUSINESS}
       />
     </div>
   );

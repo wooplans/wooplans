@@ -798,6 +798,78 @@ export function guideSequenceEmail(p: {
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
+/**
+ * Les 4 emails de conversion après l'achat de l'extrait (src/lib/guide-rules.ts, EXTRAIT_DELAYS_HOURS : J1, J2, J5, J7),
+ * en plus des 3 messages WhatsApp. Lien : la page réservée aux acheteurs de l'extrait. Aucune fausse urgence.
+ */
+export function extraitSequenceEmail(p: {
+  kind: "offre" | "devis" | "faq" | "recap";
+  name?: string | null;
+  downloaded: boolean;
+  downloadUrl: string | null;
+  catalogueUrl: string;
+  price: string;
+  priceBefore: string | null;
+  models: number;
+  extraitModels: number;
+  unsubscribe: string;
+}) {
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
+  const others = Math.max(p.models - p.extraitModels, 0);
+  const priceLine = `Catalogue Premium : ${p.priceBefore ? `${p.price} au lieu de ${p.priceBefore}` : p.price}, paiement unique, accès à vie.`;
+  let subject: string;
+  let paragraphs: string[];
+  let items: string[] = [];
+  let cta = { href: p.catalogueUrl, label: `Voir les ${p.models} maisons` };
+  switch (p.kind) {
+    case "offre":
+      subject = `Vous avez vu ${p.extraitModels} maisons. Voici les ${others} autres.`;
+      paragraphs = [
+        `Votre extrait vous a montré ${p.extraitModels} maisons avec leur plan de distribution et leur devis poste par poste.`,
+        `Le Catalogue Premium contient nos ${p.models} villas et duplex, toutes au même format. Comme acheteur de l'extrait, vous avez accès à une page réservée :`,
+      ];
+      if (!p.downloaded && p.downloadUrl) paragraphs.push(`Vous n'avez pas encore ouvert votre extrait ? Le voici : ${p.downloadUrl}`);
+      break;
+    case "devis":
+      subject = "Comment lire un devis poste par poste";
+      paragraphs = [
+        "Le budget total d'une maison ne suffit pas pour décider. Ce qui compte, c'est le coût de chaque étape : vous savez ce que vous pouvez payer tout de suite, et ce qui peut attendre.",
+        "Dans votre extrait, chaque devis suit l'ordre du chantier :",
+      ];
+      items = ["Fondation", "Élévations", "Charpente et toiture", "Crépissage", "Portes et fenêtres", "Plomberie et électricité", "Plafond et peinture", "Carrelage"];
+      cta = { href: p.catalogueUrl, label: "Voir les devis des autres maisons" };
+      break;
+    case "faq":
+      subject = "Vos questions sur le Catalogue Premium";
+      paragraphs = ["Les questions que les acheteurs de l'extrait nous posent le plus souvent :"];
+      items = [
+        "Quand ai-je accès ? Juste après le paiement : votre code d'accès arrive par email.",
+        "Comment payer ? Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire.",
+        "Les maisons de mon extrait sont-elles dedans ? Oui, avec toutes les autres.",
+        "Est-ce que je reçois un livre ? Vous recevez la version numérique : un espace en ligne et la fiche PDF de chaque modèle.",
+        "Les nouveaux modèles sont-ils inclus ? Oui, ils s'ajoutent à votre espace sans frais.",
+      ];
+      cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
+      break;
+    default:
+      subject = "Ce que contient le Catalogue Premium";
+      paragraphs = [`Pour chacune des ${p.models} villas et duplex :`];
+      items = [
+        "Le rendu 3D",
+        "Le plan de distribution coté de chaque niveau",
+        "Le devis poste par poste, de la fondation au carrelage",
+        "La fiche PDF du modèle, à montrer à votre famille ou à votre maçon",
+        "Le comparateur : 3 modèles côte à côte",
+        "Les nouveaux modèles, ajoutés sans frais",
+      ];
+      cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
+  }
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}<p>${escape(priceLine)}</p><p>Tao, fondateur de WooPlans</p>`;
+  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, priceLine, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
 /** Alerte au propriétaire : acheteur du guide avec terrain et démarrage dans les 6 mois. */
 export function guideHotLeadAdminEmail(p: { name: string | null; email: string; phone: string | null; summary: string; whatsappUrl: string | null }) {
   const subject = `Guide : lead chaud à contacter sur WhatsApp, ${p.name || p.email}`;

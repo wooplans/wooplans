@@ -1,5 +1,5 @@
 import { getEnv } from "@/lib/env";
-import { recordWhatsappFailed, recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
+import { linkWhatsappByOrderCode, recordWhatsappFailed, recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
 import { isStopRequest, verifyGenukaSignature } from "@/lib/whatsapp";
 
 type Inbound = { from?: string; type?: string; text?: { body?: string }; button?: { text?: string }; interactive?: { button_reply?: { title?: string } } };
@@ -31,11 +31,16 @@ export async function POST(request: Request) {
       else if (s.status === "failed") await recordWhatsappFailed(to);
     }
     // Message reçu : liste Meta « messages », ou un seul message.
-    const messages = (Array.isArray(data.messages) ? data.messages : data.from ? [data] : []) as Inbound[];
+    // Les copies des messages que Tao envoie lui-même depuis WhatsApp Business (« coexistence », champ « to ») ne sont pas des réponses.
+    const echo = /echo/i.test(String((event as { event?: string })?.event ?? event?.type ?? "")) || Boolean(data.to);
+    const messages = (Array.isArray(data.messages) ? data.messages : data.from && !echo ? [data] : []) as Inbound[];
     for (const m of messages) {
       if (!m.from) continue;
       const text = m.text?.body ?? m.button?.text ?? m.interactive?.button_reply?.title ?? "";
-      await recordWhatsappReply(String(m.from).replace(/\D/g, ""), isStopRequest(text));
+      const from = String(m.from).replace(/\D/g, "");
+      // Code de commande de la page merci : le numéro WhatsApp remplace celui de la fiche avant d'enregistrer la réponse.
+      await linkWhatsappByOrderCode(from, text).catch((error) => console.error("Rattachement du numéro WhatsApp : échec", error));
+      await recordWhatsappReply(from, isStopRequest(text));
     }
   } catch (error) {
     console.error("Webhook WhatsApp : traitement impossible", error);

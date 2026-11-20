@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { pixelPurchase } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 
-type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean };
+type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean; waText?: string | null };
 
 /**
  * Page de remerciement du guide : deux choses seulement, livrer le guide puis présenter le Catalogue Premium
@@ -24,6 +24,8 @@ export function GuideThanks(props: {
   offer?: "guide" | "extrait";
   /** Lien wa.me vers le numéro WooPlans, message pré-rempli : le client nous écrit en premier pour recevoir le PDF. */
   waDeliveryUrl?: string;
+  /** Numéro WhatsApp Business (chiffres) : le message pré-rempli définitif (code de commande + nom) vient de /api/guide/statut. */
+  waDeliveryNumber?: string;
 }) {
   const { intentId, pixelId } = props;
   const extrait = props.offer === "extrait";
@@ -77,14 +79,14 @@ export function GuideThanks(props: {
             )}
             {props.waDeliveryUrl ? (
               <a
-                href={props.waDeliveryUrl}
+                href={data?.waText && props.waDeliveryNumber ? `https://wa.me/${props.waDeliveryNumber}?text=${encodeURIComponent(data.waText)}` : props.waDeliveryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 data-cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"}
                 onClick={() => phCapture("lead_merci_whatsapp", { offer: props.offer ?? "guide" })}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#25D366] px-6 py-3 font-semibold text-[#128C4B] sm:w-auto sm:inline-flex sm:ml-3"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a] sm:w-auto sm:inline-flex sm:ml-3"
               >
-                Le recevoir aussi sur WhatsApp
+                Recevoir aussi mon PDF sur WhatsApp
               </a>
             ) : null}
           </>

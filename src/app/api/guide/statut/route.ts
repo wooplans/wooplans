@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { LEAD_CTA_IDS } from "@/lib/lead-offers";
+import { LEAD_CTA_IDS, leadOfferByCta } from "@/lib/lead-offers";
+import { merciWhatsappText, orderCode } from "@/lib/order-code";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE } from "@/lib/session";
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   if (!intentId) return NextResponse.json({ status: "unknown" }, { headers: { "Cache-Control": "no-store" } });
   const intent = await getDb().query.checkoutIntents.findFirst({
     where: eq(schema.checkoutIntents.id, intentId),
-    columns: { id: true, ctaId: true, status: true, qualification: true },
+    columns: { id: true, ctaId: true, status: true, qualification: true, email: true },
   });
   if (!intent || !LEAD_CTA_IDS.includes(intent.ctaId ?? "")) return NextResponse.json({ status: "unknown" }, { headers: { "Cache-Control": "no-store" } });
   // Achat envoyé au Pixel une seule fois par paiement, quel que soit l'onglet ou le navigateur qui rouvre la page
@@ -34,9 +35,20 @@ export async function GET(request: NextRequest) {
     // En cas d'erreur de la base, on envoie quand même (mieux vaut un doublon qu'un achat perdu).
     track = claimed === null || claimed.length > 0;
   }
+  // Message WhatsApp pré-rempli de la page merci : code de commande (rattache le numéro WhatsApp à la fiche) + nom.
+  let waText: string | null = null;
+  if (intent.status === "paid") {
+    const prospect = intent.email
+      ? await getDb().query.prospects.findFirst({ where: eq(schema.prospects.email, intent.email), columns: { name: true } }).catch(() => null)
+      : null;
+    const offer = leadOfferByCta(intent.ctaId);
+    const product = offer?.key === "extrait" ? "l'Extrait du Catalogue Premium" : "le Guide WooPlans des maisons";
+    waText = merciWhatsappText({ product, code: orderCode(intent.id), name: prospect?.name });
+  }
   return NextResponse.json(
     {
       status: intent.status,
+      waText,
       track,
       download: intent.status === "paid" ? `/api/guide/${intent.id}` : null,
       answered: Boolean(intent.qualification),
