@@ -12,6 +12,7 @@ import { isCustomer } from "@/lib/prospects";
 import { classify } from "@/lib/whatsapp-rules";
 import { sendCampaignOffer, sendGuideCatalogueVideo, sendGuideDelivery, sendGuideTestimonial, waEnabled, waManual, waNumber } from "@/lib/whatsapp";
 import { LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
+import { findOrderCode, orderCode, samePhone } from "@/lib/order-code";
 
 const HOUR = 3_600_000;
 /** Message refusé (modèle pas encore validé par Meta, coupure…) : nouvel essai 30 min plus tard, pendant 48 h au plus. */
@@ -227,6 +228,37 @@ export async function recordWhatsappReply(phoneDigits: string, stop: boolean) {
     }
   }
   return rows.length;
+}
+
+/**
+ * Message reçu avec un code de commande (« … commande WP-482193 … », bouton WhatsApp de la page merci) : on retrouve
+ * l'achat, puis la fiche du prospect, et le numéro WhatsApp qui écrit devient le numéro de la fiche (les relances
+ * partent de là). L'ancien numéro est gardé dans les notes. Renvoie le nombre de fiches mises à jour.
+ */
+export async function linkWhatsappByOrderCode(phoneDigits: string, text: string, now = new Date()) {
+  const code = findOrderCode(text);
+  const from = phoneDigits.replace(/\D/g, "");
+  if (!code || from.length < 9) return 0;
+  const db = getDb();
+  const intents = await db.query.checkoutIntents.findMany({
+    where: and(inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid"), gte(schema.checkoutIntents.createdAt, new Date(now.getTime() - 180 * 86_400_000))),
+    columns: { id: true, email: true, createdAt: true },
+  });
+  const match = intents.filter((i) => i.email && orderCode(i.id) === code).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  if (!match?.email) return 0;
+  const rows = await db.query.prospects.findMany({ where: eq(schema.prospects.email, match.email), columns: { id: true, phone: true, notes: true } });
+  let updated = 0;
+  for (const p of rows) {
+    if (samePhone(p.phone, from)) continue;
+    const day = now.toLocaleDateString("fr-FR", { timeZone: "Africa/Abidjan" });
+    const note = `${day} : numéro WhatsApp mis à jour par le code ${code} (ancien numéro : ${p.phone || "aucun"}).`;
+    await db
+      .update(schema.prospects)
+      .set({ phone: `+${from}`, notes: p.notes ? `${p.notes}\n${note}` : note, updatedAt: now })
+      .where(eq(schema.prospects.id, p.id));
+    updated++;
+  }
+  return updated;
 }
 
 export type WaCampaign = { label: string; template: string; image: string; code: string; stages: PipelineStage[] };

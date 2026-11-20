@@ -3,10 +3,10 @@ import { getDb, schema } from "@/db";
 import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
-import { giftReminderEmail, guideRelanceEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
-import { GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
+import { extraitSequenceEmail, giftReminderEmail, guideRelanceEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
+import { EXTRAIT_DELAYS_HOURS, extraitKindForStep, GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
-import { LEAD_CTA_IDS, leadProductIds } from "@/lib/lead-offers";
+import { EXTRAIT_MODELS, EXTRAIT_SUITE_PATH, LEAD_CTA_IDS, leadProductIds } from "@/lib/lead-offers";
 import { normalizeEmail } from "@/lib/members";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { automatedEmailAllowance } from "@/lib/email-budget";
@@ -26,7 +26,7 @@ import {
   type ProspectSequenceSettings,
 } from "@/lib/prospect-sequence";
 import { getSetting, setSetting } from "@/lib/settings";
-import { cataloguePrice, whatsappLink } from "@/lib/site";
+import { cataloguePrice, cataloguePriceBefore, whatsappLink } from "@/lib/site";
 import { optedOutEmails, unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
 
 const SETTINGS_KEY = "prospect_sequence";
@@ -62,7 +62,7 @@ type ProspectEventInput = {
   kind?: SequenceKind;
 };
 
-type SequenceKind = "relance" | "bienvenue" | "offre" | "guide" | "guide_relance";
+type SequenceKind = "relance" | "bienvenue" | "offre" | "guide" | "guide_relance" | "extrait";
 
 const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
   kind === "bienvenue"
@@ -73,6 +73,8 @@ const delaysFor = (kind: SequenceKind, settings: ProspectSequenceSettings) =>
         ? GUIDE_DELAYS_HOURS
         : kind === "guide_relance"
           ? GUIDE_RELANCE_DELAYS_HOURS
+          : kind === "extrait"
+            ? EXTRAIT_DELAYS_HOURS
           : settings.delaysHours;
 
 /** Ventes qui ne font pas d'une personne une cliente du catalogue : le guide (1 900 FCFA) prépare cet achat. */
@@ -491,6 +493,29 @@ export async function runProspectSequence(now = new Date()) {
       });
       const sentRelance = await sendEmail({ to: p.email, ...mail, template: `guide_relance_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
       await afterSend(p, step, delays, sentRelance.ok, now, result);
+      await pause(400);
+      continue;
+    }
+
+    // Séquence « extrait » : acheteur de l'extrait, phase de conversion (J1, J2, J5, J7), page réservée aux acheteurs.
+    if (p.sequenceKind === "extrait") {
+      const lead = await guideIntent(p.email);
+      const unsubscribe = await unsubscribeUrl(p.email, "prospects");
+      const before = cataloguePriceBefore();
+      const mail = extraitSequenceEmail({
+        kind: extraitKindForStep(step),
+        name: p.name,
+        downloaded: (lead?.downloads ?? 0) > 0,
+        downloadUrl: lead ? siteUrl(`/api/guide/${lead.id}`) : null,
+        catalogueUrl: siteUrl(`${EXTRAIT_SUITE_PATH}?utm_source=email&utm_medium=sequence&utm_campaign=extrait_${step + 1}`),
+        price,
+        priceBefore: before ? formatFcfa(before) : null,
+        models: planCount,
+        extraitModels: EXTRAIT_MODELS,
+        unsubscribe,
+      });
+      const sentExtrait = await sendEmail({ to: p.email, ...mail, template: `extrait_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
+      await afterSend(p, step, delays, sentExtrait.ok, now, result);
       await pause(400);
       continue;
     }

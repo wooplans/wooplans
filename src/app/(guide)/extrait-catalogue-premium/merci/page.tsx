@@ -26,7 +26,8 @@ export default async function ExtraitThanksPage({ searchParams }: { searchParams
         video={GUIDE.catalogueVideo}
         videoPoster={GUIDE.catalogueVideoPoster}
         announcedModels={GUIDE.announcedModels}
-        waDeliveryUrl={whatsappLink("Bonjour WooPlans, je viens d'acheter l'Extrait du Catalogue Premium. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
+        waDeliveryUrl={whatsappLink("Salut l'équipe WooPlans 👋 Je viens d'acheter l'Extrait du Catalogue Premium. Pouvez-vous me l'envoyer ici sur WhatsApp ?", WHATSAPP_BUSINESS)}
+        waDeliveryNumber={WHATSAPP_BUSINESS}
       />
     </div>
   );
