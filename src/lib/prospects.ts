@@ -512,6 +512,7 @@ export async function runProspectSequence(now = new Date()) {
         priceBefore: before ? formatFcfa(before) : null,
         models: planCount,
         extraitModels: EXTRAIT_MODELS,
+        projectUrl: siteUrl(`/mon-projet/${p.id}?utm_source=email&utm_medium=sequence&utm_campaign=extrait_projet`),
         unsubscribe,
       });
       const sentExtrait = await sendEmail({ to: p.email, ...mail, template: `extrait_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });

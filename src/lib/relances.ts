@@ -5,7 +5,7 @@
  * message 3 = témoignage + prix (+48 h). « M. » ou « Mme » devant le nom (src/lib/civilite.ts).
  * Un acheteur du Catalogue Premium sort de la file automatiquement (rapprochement toutes les 15 min, et ici).
  */
-import { and, desc, eq, inArray, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lt, lte, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { guessCivilite, salutation, type Civilite } from "@/lib/civilite";
 import { siteUrl } from "@/lib/env";
@@ -186,4 +186,54 @@ export async function undoManualSend(id: string, now = new Date()) {
     .set({ waStep: p.waStep - 1, waLastSentAt: null, waNextAt: now, pipelineStage: "sequence", pipelineUpdatedAt: now, updatedAt: now })
     .where(eq(schema.prospects.id, id));
   return true;
+}
+
+/* ─────────────── Phase d'accompagnement : formulaire « Mon projet » (J10) ─────────────── */
+
+export const PROJECT_FORM_AFTER_DAYS = 10;
+
+export type ProjectItem = { id: string; name: string | null; civilite: Civilite | null; email: string; phone: string; country: string | null; boughtAt: Date };
+
+/**
+ * Prospects dont les 3 messages de conversion sont faits, 10 jours après l'achat, à qui le lien du formulaire
+ * n'a pas encore été envoyé (ni rempli). Les clients du Catalogue Premium et les désinscrits sont exclus.
+ */
+export async function projectQueue(now = new Date()): Promise<ProjectItem[]> {
+  const db = getDb();
+  const [rows, isClient] = await Promise.all([
+    db.query.prospects.findMany({
+      where: and(
+        gte(schema.prospects.waStep, 3),
+        isNull(schema.prospects.projectSentAt),
+        isNull(schema.prospects.projectAnsweredAt),
+        isNull(schema.prospects.waOptOutAt),
+        notInArray(schema.prospects.pipelineStage, ["client", "desinscrit"]),
+        lte(schema.prospects.lastEventAt, new Date(now.getTime() - PROJECT_FORM_AFTER_DAYS * 24 * HOUR)),
+      ),
+      orderBy: [desc(schema.prospects.lastEventAt)],
+      limit: 300,
+      columns: { id: true, name: true, email: true, phone: true, country: true, lastEventAt: true },
+    }),
+    customerLookup(),
+  ]);
+  return rows
+    .filter((r) => waNumber(r.phone) && !isClient(r.email, r.phone))
+    .map((r) => ({ id: r.id, name: r.name, civilite: guessCivilite(r.name), email: r.email, phone: r.phone!, country: r.country, boughtAt: r.lastEventAt }));
+}
+
+/** Message WhatsApp du formulaire (lien personnel : aucune information à saisir). */
+export function projectMessage(item: Pick<ProjectItem, "id" | "name"> & { civilite?: Civilite | null }) {
+  const who = salutation(item.name, item.civilite === undefined ? guessCivilite(item.name) : item.civilite);
+  const link = siteUrl(`/mon-projet/${item.id}?utm_source=whatsapp&utm_medium=relance&utm_campaign=projet`);
+  return `${who ? `Bonjour ${who} 👋` : "Bonjour 👋"}\n\nPour vous montrer les maisons qui correspondent à votre projet, j'ai 4 questions rapides : 20 secondes, rien à écrire.\n\n👉 ${link}`;
+}
+
+/** Lien du formulaire envoyé sur WhatsApp (clic sur « Envoyer »). */
+export async function recordProjectSent(id: string, now = new Date()) {
+  const updated = await getDb()
+    .update(schema.prospects)
+    .set({ projectSentAt: now, waLastSentAt: now, updatedAt: now })
+    .where(and(eq(schema.prospects.id, id), isNull(schema.prospects.projectSentAt)))
+    .returning({ id: schema.prospects.id });
+  return updated.length > 0;
 }
