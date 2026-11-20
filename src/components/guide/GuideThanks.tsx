@@ -71,24 +71,38 @@ export function GuideThanks(props: {
           <>
             <p className="eyebrow">Paiement confirmé</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre {product} est prêt</h1>
-            <p className="mt-3 text-foreground/75">Il est aussi dans votre boîte email. Gardez ce message : il vous permet de le retélécharger.</p>
-            {data?.download && (
-              <a href={data.download} data-cta={extrait ? "extrait_telecharger" : "guide_telecharger"} className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
-                Télécharger mon {extrait ? "extrait" : "guide"} (PDF)
-              </a>
-            )}
             {props.waDeliveryUrl ? (
-              <a
-                href={data?.waText && props.waDeliveryNumber ? `https://wa.me/${props.waDeliveryNumber}?text=${encodeURIComponent(data.waText)}` : props.waDeliveryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"}
-                onClick={() => phCapture("lead_merci_whatsapp", { offer: props.offer ?? "guide" })}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 font-semibold text-white hover:bg-[#1ebe5a] sm:w-auto sm:inline-flex sm:ml-3"
-              >
-                Recevoir aussi mon PDF sur WhatsApp
-              </a>
-            ) : null}
+              <>
+                {/* Un seul choix (décision de Tao, 20 nov.) : le client nous écrit en premier sur WhatsApp. Cela rend nos liens
+                    cliquables dans la conversation et rattache son vrai numéro WhatsApp à sa fiche (code de commande). */}
+                <p className="mt-3 text-foreground/75">Nous l&apos;avons aussi envoyé dans votre boîte email.</p>
+                <div className="cta-pulse-wa cta-flash mt-5 rounded-xl">
+                  <a
+                    href={data?.waText && props.waDeliveryNumber ? `https://wa.me/${props.waDeliveryNumber}?text=${encodeURIComponent(data.waText)}` : props.waDeliveryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"}
+                    onClick={() => phCapture("lead_merci_whatsapp", { offer: props.offer ?? "guide" })}
+                    className="flex w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-xl bg-[#25D366] px-4 py-4 text-base font-bold text-white shadow-lg transition hover:bg-[#1ebe5a] active:scale-[0.99] sm:text-lg"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 fill-current">
+                      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z" />
+                    </svg>
+                    Recevoir aussi sur WhatsApp
+                  </a>
+                </div>
+                <p className="mt-3 text-center text-sm text-foreground/60">WhatsApp s&apos;ouvre avec le message déjà écrit, il vous suffit de l&apos;envoyer.</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-foreground/75">Il est aussi dans votre boîte email. Gardez ce message : il vous permet de le retélécharger.</p>
+                {data?.download && (
+                  <a href={data.download} data-cta={extrait ? "extrait_telecharger" : "guide_telecharger"} className="btn btn-cta mt-5 inline-flex px-6 py-4 text-base">
+                    Télécharger mon {extrait ? "extrait" : "guide"} (PDF)
+                  </a>
+                )}
+              </>
+            )}
           </>
         ) : waiting ? (
           <>
