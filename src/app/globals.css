@@ -125,6 +125,12 @@ html[data-focus] [data-focus-hide] { display: none !important; }
   50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(240 138 46 / 0); }
 }
 .cta-pulse > button, .cta-pulse > a { animation: cta-pulse 1.8s ease-in-out infinite; }
+/* Variante verte (bouton WhatsApp de la page merci). */
+@keyframes cta-pulse-wa {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(37 211 102 / 0.55); }
+  50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(37 211 102 / 0); }
+}
+.cta-pulse-wa > a { animation: cta-pulse-wa 1.8s ease-in-out infinite; }
 /* Bandeau « Offre flash » (page de suite de l'extrait) : clignotement doux. */
 @keyframes flash-badge { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .82; transform: scale(1.04); } }
 .flash-badge { animation: flash-badge 1.2s ease-in-out infinite; }
@@ -134,7 +140,7 @@ html[data-focus] [data-focus-hide] { display: none !important; }
 .cta-flash > button, .cta-flash > a { position: relative; overflow: hidden; }
 .cta-flash > button::after, .cta-flash > a::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: cta-flash 2.4s ease-in-out infinite; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
-  .cta-pulse > button, .cta-pulse > a { animation: none; }
+  .cta-pulse > button, .cta-pulse > a, .cta-pulse-wa > a { animation: none; }
   .cta-flash > button::after, .cta-flash > a::after { animation: none; display: none; }
 }
 
