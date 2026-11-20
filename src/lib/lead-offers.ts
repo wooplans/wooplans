@@ -23,6 +23,8 @@ export type LeadOffer = {
 };
 
 export const EXTRAIT_PATH = "/extrait-catalogue-premium";
+/** Page du Catalogue Premium réservée aux acheteurs de l'extrait (lien du PDF) et du guide (?de=guide). */
+export const EXTRAIT_SUITE_PATH = `${EXTRAIT_PATH}/catalogue`;
 
 export const LEAD_OFFERS: Record<LeadOfferKey, LeadOffer> = {
   guide: {

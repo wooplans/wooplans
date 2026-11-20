@@ -27,10 +27,10 @@ const PAYMENTS = [
 ];
 
 /** Bandeau « Offre flash » réservé aux acheteurs de l'extrait (décision de Tao, 19 nov. : à la place d'un chrono). */
-function FlashBadge({ className = "" }: { className?: string }) {
+function FlashBadge({ className = "", buyers = "de l'extrait" }: { className?: string; buyers?: string }) {
   return (
     <p className={`flash-badge inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-extrabold uppercase tracking-wide text-white shadow-lg ${className}`}>
-      <span aria-hidden>⚡</span> Offre flash · réservée aux acheteurs de l&apos;extrait
+      <span aria-hidden>⚡</span> Offre flash · réservée aux acheteurs {buyers}
     </p>
   );
 }
@@ -54,13 +54,16 @@ function Cta({ id, total, price, before, className = "" }: { id: string; total: 
  * Page de la dernière page du PDF de l'extrait (« Voir le Catalogue Premium ») : pour quelqu'un qui a déjà vu le format
  * sur 5 maisons. Pas de nouvelle présentation : les autres maisons, ce qu'il y a en plus, le prix et le paiement tout de suite.
  * Les anciens PDF (lien /catalogue-premium?utm_source=extrait…) arrivent ici aussi (redirection dans /catalogue-premium).
+ * ?de=guide : même page pour les acheteurs du guide (message 2 des relances WhatsApp), textes adaptés.
  */
-export default async function ExtraitSuitePage() {
+export default async function ExtraitSuitePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const guide = (await searchParams).de === "guide";
   const [all, count] = await Promise.all([listPublicPlans({ limit: 200 }).catch(() => [] as PublicPlan[]), countPublishedPlans()]);
   const total = count ?? GUIDE.announcedModels;
   const rank = (slug: string) => (TOP_SLUGS.includes(slug) ? TOP_SLUGS.indexOf(slug) : TOP_SLUGS.length);
   const others = all.filter((p) => p.coverImage && !EXTRAIT_SLUGS.includes(p.slug)).sort((a, b) => rank(a.slug) - rank(b.slug));
   const othersCount = Math.max(total - EXTRAIT_MODELS, 0);
+  const buyers = guide ? "du guide" : "de l'extrait";
   const price = cataloguePrice();
   const before = cataloguePriceBefore();
   const discount = before && before > price ? Math.round((1 - price / before) * 100) : null;
@@ -70,13 +73,14 @@ export default async function ExtraitSuitePage() {
         <div className="container-page max-w-3xl pb-10 pt-6 md:pb-14 md:pt-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width={120} height={36} className="h-8 w-auto" />
-          <FlashBadge className="mt-6" />
+          <FlashBadge className="mt-6" buyers={buyers} />
           <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight md:text-5xl">
-            Vous avez vu {EXTRAIT_MODELS} maisons. Voici les {othersCount} autres.
+            {guide ? `Vous avez vu nos ${total} maisons. Voici leurs plans et leurs devis.` : `Vous avez vu ${EXTRAIT_MODELS} maisons. Voici les ${othersCount} autres.`}
           </h1>
           <p className="mt-3 text-white/85">
-            Le Catalogue Premium : les {total} villas et duplex au même format que votre extrait. Rendu 3D, plan de distribution coté et devis poste par
-            poste pour chaque maison.
+            {guide
+              ? `Le Catalogue Premium : pour chacune des ${total} villas et duplex de votre guide, le rendu 3D, le plan de distribution coté et le devis poste par poste.`
+              : `Le Catalogue Premium : les ${total} villas et duplex au même format que votre extrait. Rendu 3D, plan de distribution coté et devis poste par poste pour chaque maison.`}
           </p>
           <div className="mt-6 flex flex-wrap items-end gap-3">
             {before ? <span className="text-xl text-white/60 line-through">{formatFcfa(before)}</span> : null}
@@ -100,9 +104,12 @@ export default async function ExtraitSuitePage() {
       <section className="container-page max-w-3xl py-10">
         <div className="grid gap-px overflow-hidden rounded-2xl border border-outline bg-outline md:grid-cols-2">
           <div className="bg-white p-5">
-            <p className="font-semibold text-foreground/70">Votre extrait</p>
+            <p className="font-semibold text-foreground/70">{guide ? "Votre guide" : "Votre extrait"}</p>
             <ul className="mt-3 space-y-2 text-sm text-foreground/70">
-              {[`${EXTRAIT_MODELS} maisons`, "Le plan de distribution de chacune", "Le devis poste par poste de chacune"].map((t) => (
+              {(guide
+                ? [`${total} maisons en rendu 3D`, "Le budget estimé de chacune", "Sans plan de distribution ni devis"]
+                : [`${EXTRAIT_MODELS} maisons`, "Le plan de distribution de chacune", "Le devis poste par poste de chacune"]
+              ).map((t) => (
                 <li key={t} className="flex gap-2">
                   <span aria-hidden>✓</span>
                   {t}
@@ -135,9 +142,9 @@ export default async function ExtraitSuitePage() {
 
       <section className="bg-surface py-10">
         <div className="container-page">
-          <FlashBadge className="mb-3" />
+          <FlashBadge className="mb-3" buyers={buyers} />
           <h2 className="text-2xl font-semibold tracking-tight">Les maisons qui vous attendent</h2>
-          <p className="mt-1 text-sm text-foreground/70">Chacune avec son plan coté et son devis, comme dans votre extrait.</p>
+          <p className="mt-1 text-sm text-foreground/70">Chacune avec son plan coté et son devis{guide ? "" : ", comme dans votre extrait"}.</p>
           <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
             {others.slice(0, SHOWN).map((p) => (
               <div key={p.slug} className="overflow-hidden rounded-xl border border-outline bg-white">
@@ -176,7 +183,9 @@ export default async function ExtraitSuitePage() {
         <h2 className="text-xl font-semibold">Questions fréquentes</h2>
         <dl className="mt-4 space-y-4 text-sm">
           {[
-            ["Les maisons de mon extrait sont-elles dedans ?", `Oui. Le catalogue contient les ${total} maisons, dont les ${EXTRAIT_MODELS} de votre extrait.`],
+            guide
+              ? ["Les maisons de mon guide sont-elles dedans ?", `Oui. Le catalogue contient les ${total} maisons de votre guide, chacune avec son plan coté et son devis.`]
+              : ["Les maisons de mon extrait sont-elles dedans ?", `Oui. Le catalogue contient les ${total} maisons, dont les ${EXTRAIT_MODELS} de votre extrait.`],
             ["Comment je reçois le catalogue ?", "Juste après le paiement : un accès à votre espace en ligne, avec la fiche PDF de chaque modèle à télécharger."],
             ["Comment payer ?", "Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire, sur une page de paiement sécurisée."],
           ].map(([q, a]) => (
@@ -190,7 +199,7 @@ export default async function ExtraitSuitePage() {
 
       <section className="bg-primary pb-28 pt-10 text-white sm:pb-10">
         <div className="container-page text-center">
-          <FlashBadge className="mb-3" />
+          <FlashBadge className="mb-3" buyers={buyers} />
           <h2 className="text-2xl font-bold">Choisissez votre maison parmi les {total}</h2>
           <p className="mt-2 text-white/80">Regardez le Catalogue Premium de l&apos;intérieur.</p>
           {GUIDE.catalogueVideo ? (

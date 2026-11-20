@@ -30,7 +30,9 @@ export async function GET(request: Request) {
   const { id, step, valid } = parse(url);
   const [item, models] = await Promise.all([valid ? relanceItem(id) : null, countPublishedPlans()]);
   if (!item?.phone || !valid) return Response.redirect(new URL("/admin/relances", url), 303);
-  const text = relanceMessage({ id, name: item.name, offer: item.offer, intentId: item.intentId, step: step as 0 | 1 | 2 }, models ?? 0);
+  const civ = url.searchParams.get("civ");
+  const civilite = civ === "M." || civ === "Mme" ? civ : item.civilite;
+  const text = relanceMessage({ id, name: item.name, civilite, offer: item.offer, intentId: item.intentId, step: step as 0 | 1 | 2 }, models ?? 0);
   await recordManualSend(id, step);
   return new Response(null, { status: 302, headers: { Location: relanceWhatsappUrl(item.phone, text), "Cache-Control": "no-store" } });
 }

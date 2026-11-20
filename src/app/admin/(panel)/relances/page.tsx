@@ -30,6 +30,7 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
   const file = relanceAttachment(item);
   const text = relanceMessage(item, models);
   const preview = text.split("\n").find((l) => l.trim()) ?? "";
+  const recordUrl = `/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=${item.step}`;
   return (
     <article className="rounded-xl border border-outline bg-white p-3 text-sm shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -50,12 +51,23 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
       ) : null}
       <p className="mt-2 line-clamp-2 text-xs text-foreground/60">« {preview} »</p>
       {/* Le clic ouvre WhatsApp aussitôt (message déjà écrit) et note l'envoi en arrière-plan. */}
-      <WhatsappSendButton
-        waUrl={relanceWhatsappUrl(item.phone, text)}
-        recordUrl={`/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=${item.step}`}
-      >
-        Envoyer le message {item.step + 1} sur WhatsApp
-      </WhatsappSendButton>
+      {item.civilite ? (
+        <WhatsappSendButton waUrl={relanceWhatsappUrl(item.phone, text)} recordUrl={recordUrl}>
+          Envoyer le message {item.step + 1} sur WhatsApp
+        </WhatsappSendButton>
+      ) : (
+        <>
+          {/* Prénom inconnu : Tao choisit la civilité d'un clic. */}
+          <p className="mt-2 text-center text-xs text-muted">Prénom non reconnu : choisissez</p>
+          <div className="grid grid-cols-2 gap-2">
+            {(["M.", "Mme"] as const).map((civilite) => (
+              <WhatsappSendButton key={civilite} waUrl={relanceWhatsappUrl(item.phone, relanceMessage({ ...item, civilite }, models))} recordUrl={recordUrl}>
+                {civilite === "M." ? "Monsieur" : "Madame"}
+              </WhatsappSendButton>
+            ))}
+          </div>
+        </>
+      )}
       <p className="mt-2 text-center text-xs text-muted">
         📎 Joindre : {file.url ? (
           <a href={file.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
