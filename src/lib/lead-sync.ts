@@ -3,7 +3,7 @@
  * par exemple parce que le produit n'a pas été coché dans le Pulse, on lit les dernières ventes payées dans l'API
  * Chariow et on les traite comme une notification. Sans effet sur une vente déjà livrée (verrou de l'intention).
  */
-import { inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { processSaleEvent, type ChariowSalePayload } from "@/lib/chariow";
 import { getEnv } from "@/lib/env";
@@ -37,12 +37,14 @@ export async function syncLeadSales(perPage = 50) {
       new Date(s.completed_at || s.created_at || 0).getTime() >= since,
   );
   if (sales.length === 0) return { scanned: body.data?.length ?? 0, processed: 0 };
-  // Ventes déjà livrées (notification reçue) : on ne les retraite pas.
-  const known = await getDb().query.sales.findMany({
-    where: inArray(schema.sales.chariowSaleId, sales.map((s) => s.id)),
-    columns: { chariowSaleId: true, status: true },
+  // Ventes déjà livrées : une intention « payée » porte cette vente. On ne regarde pas le statut de la ligne « sales » :
+  // Chariow envoie parfois « successful.sale » avant la fin du paiement (vente encore « en attente ») ; la ligne passait
+  // alors « completed » sans livraison, et ce filet de sécurité ne la reprenait jamais (vente du Gabon, 20 nov.).
+  const delivered = await getDb().query.checkoutIntents.findMany({
+    where: and(inArray(schema.checkoutIntents.saleId, sales.map((s) => s.id)), eq(schema.checkoutIntents.status, "paid")),
+    columns: { saleId: true },
   });
-  const done = new Set(known.filter((k) => k.status === "completed").map((k) => k.chariowSaleId));
+  const done = new Set(delivered.map((d) => d.saleId));
   let processed = 0;
   for (const s of sales) {
     if (done.has(s.id)) continue;
