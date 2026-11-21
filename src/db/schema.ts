@@ -377,6 +377,8 @@ export const prospects = sqliteTable(
     projectOpenedAt: integer("project_opened_at", { mode: "timestamp_ms" }),
     /** Lien du formulaire envoyé sur WhatsApp (relance manuelle J10). */
     projectSentAt: integer("project_sent_at", { mode: "timestamp_ms" }),
+    /** Numéro de la fiche sans WhatsApp (signalé par Tao) : plus de relance WhatsApp, les emails continuent. */
+    waInvalidAt: integer("wa_invalid_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

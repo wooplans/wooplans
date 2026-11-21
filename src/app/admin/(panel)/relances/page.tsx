@@ -4,9 +4,9 @@ import { getDb, schema } from "@/db";
 import { Badge, PageTitle } from "@/components/admin/ui";
 import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
-import { projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
+import { noWhatsappList, projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
-import { undoRelance } from "./actions";
+import { fixWhatsappNumber, noWhatsapp, undoRelance } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,31 @@ function when(date: Date, now: Date) {
   const h = Math.ceil((date.getTime() - now.getTime()) / 3_600_000);
   if (h <= 24) return `dans ${h} h`;
   return date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Douala" });
+}
+
+/** Numéro incorrect : corriger (indicatif compris) ou signaler « pas de WhatsApp » (la carte sort des relances WhatsApp). */
+function PhoneFix({ id }: { id: string }) {
+  return (
+    <details className="mt-2 text-xs">
+      <summary className="cursor-pointer text-center text-muted">Numéro incorrect ?</summary>
+      <form action={fixWhatsappNumber} className="mt-2 flex gap-1.5">
+        <input type="hidden" name="id" value={id} />
+        <input
+          name="phone"
+          id={`phone-${id}`}
+          inputMode="tel"
+          placeholder="Vrai WhatsApp, ex. 2250701020304"
+          className="min-w-0 flex-1 rounded border border-outline px-2 py-1.5"
+          required
+        />
+        <button className="rounded bg-primary px-2.5 py-1.5 font-semibold text-white">Corriger</button>
+      </form>
+      <form action={noWhatsapp} className="mt-1.5">
+        <input type="hidden" name="id" value={id} />
+        <button className="w-full rounded border border-red-200 px-2 py-1.5 text-red-700 hover:bg-red-50">Pas de WhatsApp : retirer des relances</button>
+      </form>
+    </details>
+  );
 }
 
 function Card({ item, models, now }: { item: RelanceItem; models: number; now: Date }) {
@@ -77,6 +102,7 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           file.label
         )}
       </p>
+      <PhoneFix id={item.id} />
     </article>
   );
 }
@@ -105,6 +131,7 @@ function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
           </div>
         </>
       )}
+      <PhoneFix id={item.id} />
     </article>
   );
 }
@@ -116,7 +143,7 @@ function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
 export default async function RelancesPage() {
   const now = new Date();
   const startOfDay = new Date(now.getTime() - ((now.getTime() + 3_600_000) % 86_400_000));
-  const [queue, models, recentClients, projects] = await Promise.all([
+  const [queue, models, recentClients, projects, noWa] = await Promise.all([
     relanceQueue(now),
     countPublishedPlans(),
     getDb().query.prospects.findMany({
@@ -126,6 +153,7 @@ export default async function RelancesPage() {
       columns: { id: true, name: true, email: true, pipelineUpdatedAt: true },
     }),
     projectQueue(now),
+    noWhatsappList(),
   ]);
   const due = queue.filter((i) => i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   const upcoming = queue.filter((i) => !i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
@@ -262,6 +290,27 @@ export default async function RelancesPage() {
           </p>
         </section>
       </div>
+
+      {noWa.length ? (
+        <section className="mt-6 rounded-2xl border border-outline bg-white p-4">
+          <h2 className="font-semibold">Sans WhatsApp ({noWa.length})</h2>
+          <p className="mt-1 text-xs text-muted">Hors des relances WhatsApp ; les emails continuent. Corrigez le numéro pour les remettre dans la file.</p>
+          <ul className="mt-2 divide-y divide-outline/60 text-sm">
+            {noWa.map((p) => (
+              <li key={p.id} className="py-2">
+                <p>
+                  {p.name || p.email} · <span className="text-muted">{p.phone || "—"}</span>
+                </p>
+                <form action={fixWhatsappNumber} className="mt-1.5 flex gap-1.5 text-xs">
+                  <input type="hidden" name="id" value={p.id} />
+                  <input name="phone" id={`phone-nowa-${p.id}`} inputMode="tel" placeholder="Vrai WhatsApp avec indicatif" className="min-w-0 flex-1 rounded border border-outline px-2 py-1.5" required />
+                  <button className="rounded bg-primary px-2.5 py-1.5 font-semibold text-white">Corriger</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

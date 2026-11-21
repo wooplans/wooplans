@@ -5,7 +5,7 @@
  * message 3 = témoignage + prix (+48 h). « M. » ou « Mme » devant le nom (src/lib/civilite.ts).
  * Un acheteur du Catalogue Premium sort de la file automatiquement (rapprochement toutes les 15 min, et ici).
  */
-import { and, desc, eq, gte, inArray, isNull, lt, lte, notInArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { guessCivilite, salutation, type Civilite } from "@/lib/civilite";
 import { siteUrl } from "@/lib/env";
@@ -55,7 +55,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
   const db = getDb();
   const [rows, isClient] = await Promise.all([
     db.query.prospects.findMany({
-      where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, 3), isNull(schema.prospects.waOptOutAt)),
+      where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, 3), isNull(schema.prospects.waOptOutAt), isNull(schema.prospects.waInvalidAt)),
       orderBy: [desc(schema.prospects.lastEventAt)],
       limit: 500,
     }),
@@ -207,6 +207,7 @@ export async function projectQueue(now = new Date()): Promise<ProjectItem[]> {
         isNull(schema.prospects.projectSentAt),
         isNull(schema.prospects.projectAnsweredAt),
         isNull(schema.prospects.waOptOutAt),
+        isNull(schema.prospects.waInvalidAt),
         notInArray(schema.prospects.pipelineStage, ["client", "desinscrit"]),
         lte(schema.prospects.lastEventAt, new Date(now.getTime() - PROJECT_FORM_AFTER_DAYS * 24 * HOUR)),
       ),
@@ -236,4 +237,44 @@ export async function recordProjectSent(id: string, now = new Date()) {
     .where(and(eq(schema.prospects.id, id), isNull(schema.prospects.projectSentAt)))
     .returning({ id: schema.prospects.id });
   return updated.length > 0;
+}
+
+/* ─────────────── Numéro sans WhatsApp ─────────────── */
+
+/** « Pas de WhatsApp » : la fiche sort des relances WhatsApp (les emails continuent). */
+export async function markNoWhatsapp(id: string, now = new Date()) {
+  const db = getDb();
+  const p = await db.query.prospects.findFirst({ where: eq(schema.prospects.id, id), columns: { notes: true, phone: true } });
+  if (!p) return false;
+  const line = `${now.toISOString().slice(0, 10)} : numéro ${p.phone || "—"} signalé sans WhatsApp.`;
+  await db
+    .update(schema.prospects)
+    .set({ waInvalidAt: now, notes: p.notes ? `${p.notes}\n${line}` : line, updatedAt: now })
+    .where(eq(schema.prospects.id, id));
+  return true;
+}
+
+/** Correction du numéro WhatsApp (indicatif compris) : la fiche revient dans les relances, à la même étape. */
+export async function correctWhatsappNumber(id: string, input: string, now = new Date()) {
+  const digits = input.replace(/\D/g, "").replace(/^00/, "");
+  if (digits.length < 11 || digits.length > 15) return false;
+  const db = getDb();
+  const p = await db.query.prospects.findFirst({ where: eq(schema.prospects.id, id), columns: { notes: true, phone: true } });
+  if (!p) return false;
+  const line = `${now.toISOString().slice(0, 10)} : numéro WhatsApp corrigé à la main (ancien : ${p.phone || "aucun"}).`;
+  await db
+    .update(schema.prospects)
+    .set({ phone: digits, waInvalidAt: null, notes: p.notes ? `${p.notes}\n${line}` : line, updatedAt: now })
+    .where(eq(schema.prospects.id, id));
+  return true;
+}
+
+/** Fiches signalées sans WhatsApp (encore dans la séquence ou en accompagnement), pour corriger le numéro plus tard. */
+export async function noWhatsappList() {
+  return getDb().query.prospects.findMany({
+    where: and(isNotNull(schema.prospects.waInvalidAt), isNull(schema.prospects.waOptOutAt), notInArray(schema.prospects.pipelineStage, ["client", "desinscrit"])),
+    orderBy: [desc(schema.prospects.waInvalidAt)],
+    limit: 100,
+    columns: { id: true, name: true, email: true, phone: true },
+  });
 }
