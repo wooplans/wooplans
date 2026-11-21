@@ -2,7 +2,7 @@ import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne, notInArray, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, adminSaleEmail, extraitDeliveryEmail, guideAbandonAdminEmail, guideDeliveryEmail, guideSaleAdminEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, extraitDeliveryEmail, guideDeliveryEmail, planDevisEmail, sendEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/site";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
@@ -362,12 +362,8 @@ async function processCatalogueSale(
     }
   }
 
-  const notify = getEnv().ADMIN_NOTIFY_EMAIL;
-  if (notify) {
-    const adminMail = adminSaleEmail({ email, name, amount, product: values.productName });
-    await sendEmail({ to: notify, ...adminMail, template: "admin_sale", ...(leadId ? { leadId } : {}) });
-  }
 
+  // Pas d'alerte email à Tao pour chaque vente : Chariow l'envoie déjà (quota Resend préservé, décision du 21 nov.).
   return "access_granted";
 }
 
@@ -501,10 +497,7 @@ Contactez le client pour savoir quel modèle lui envoyer.`,
   });
 
   if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: "/merci", ctaId: intent.ctaId ?? null });
-  if (notify) {
-    const adminMail = adminSaleEmail({ email: to || "—", name, amount, product: `Plan et devis ${plan.code}` });
-    await sendEmail({ to: notify, ...adminMail, template: "admin_sale", leadId });
-  }
+  // Pas d'alerte email à Tao pour chaque vente : Chariow l'envoie déjà (quota Resend préservé, 21 nov.).
   return "plan_delivered";
 }
 
@@ -591,15 +584,6 @@ async function processGuideSale(
   if (status !== "completed" || (sale.status && sale.status !== "completed")) {
     if (intent && intent.status === "started" && status !== "completed") {
       await db.update(schema.checkoutIntents).set({ status, saleId: sale.id, updatedAt: new Date() }).where(eq(schema.checkoutIntents.id, intent.id));
-    }
-    // Paiement abandonné ou échoué (première notification de cette vente) : alerte avec la relance WhatsApp prête.
-    const notifyAbandon = getEnv().ADMIN_NOTIFY_EMAIL;
-    const firstNotice = !existing || (existing.status !== status && existing.status !== "completed");
-    if (notifyAbandon && status !== "completed" && nextStatus !== "completed" && firstNotice) {
-      const first = (name || "").split(" ")[0];
-      const message = `Bonjour${first ? ` ${first}` : ""}, c'est Tao de WooPlans 👋 Votre paiement (${offer.name}, ${offer.price.toLocaleString("fr-FR")} FCFA) n'a pas abouti. Souvent c'est le solde ou la validation Mobile Money qui bloque : je peux vous aider. Pour réessayer : ${siteUrl(`${offer.path}?utm_source=whatsapp&utm_medium=relance&utm_campaign=${offer.key}_abandon`)}`;
-      const mail = guideAbandonAdminEmail({ name, email, phone, failed: status === "failed", whatsappUrl: phone ? whatsappLink(message, phone) : null, product: offer.name });
-      await sendEmail({ to: notifyAbandon, ...mail, template: "admin_guide_abandon" }).catch((error) => console.error("Alerte abandon du guide non envoyée", error));
     }
     // Relance par email (2 emails) de la personne, sauf si elle a déjà payé (cette vente ou un autre achat du guide).
     const alreadyBought = email
@@ -693,15 +677,6 @@ async function processGuideSale(
   }
   if (visitor) await recordServerEvent({ visitorId: visitor.id, type: "purchase", path: `${offer.path}/merci`, ctaId: offer.ctaId });
 
-  // Livraison aussi à la main sur WhatsApp par Tao (puis présentation du Catalogue Premium) : message prêt à envoyer.
-  const notify = getEnv().ADMIN_NOTIFY_EMAIL;
-  if (notify && to) {
-    const downloadUrl = siteUrl(`/api/guide/${intentId}`);
-    const first = (name || "").split(" ")[0];
-    const message = `Bonjour${first ? ` ${first}` : ""} 👋 C'est Tao de WooPlans. Merci pour votre achat ! Voici votre ${offer.name} : ${downloadUrl}\n\nUn modèle vous plaît particulièrement ? Vous avez déjà un terrain ?`;
-    const mail = guideSaleAdminEmail({ name, email: to, phone, country, downloadUrl, whatsappUrl: phone ? whatsappLink(message, phone) : null, product: offer.name });
-    await sendEmail({ to: notify, ...mail, template: "admin_guide_vente" });
-  }
   return "guide_delivered";
 }
 
