@@ -89,6 +89,11 @@ ${bodyHtml}
 </table></td></tr></table></body></html>`;
 }
 
+/** Bouton vert WhatsApp (emails de livraison : le client nous écrit en premier sur WhatsApp). */
+function whatsappButton(href: string, label: string) {
+  return `<p style="margin:16px 0 24px"><a href="${href}" style="background:#25D366;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
+}
+
 function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${href}" style="background:#F08A2E;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700;display:inline-block">${escape(label)}</a></p>`;
 }
@@ -675,12 +680,13 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
 }
 
 /** Livraison de l'Extrait du Catalogue Premium (1 900 FCFA) : 5 maisons complètes, plan et devis. */
-export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number }) {
+export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number; whatsappUrl?: string | null }) {
   const subject = "Votre Extrait du Catalogue Premium est prêt";
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis poste par poste de chacune.</p>
 ${button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
 <p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.</p>
+${p.whatsappUrl ? `<p><strong>Recevez aussi votre extrait sur WhatsApp</strong> : un clic, le message est déjà écrit, il vous suffit de l'envoyer.</p>${whatsappButton(p.whatsappUrl, "Recevoir aussi sur WhatsApp")}` : ""}
 <p>Le Catalogue Premium complet contient tous nos modèles au même format : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
@@ -688,9 +694,12 @@ ${button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
     `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis poste par poste de chacune.`,
     `Télécharger : ${p.downloadUrl}`,
     "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.",
+    p.whatsappUrl ? `Recevez aussi votre extrait sur WhatsApp : ${p.whatsappUrl}` : "",
     `Le Catalogue Premium complet : ${p.thanksUrl}`,
     "Tao, fondateur de WooPlans",
-  ].join("\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   return { subject, html: layout(subject, body), text };
 }
 

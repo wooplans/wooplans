@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { pixelPurchase } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
+import { StickyOfferBar } from "@/components/StickyOfferBar";
 
 type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean; waText?: string | null };
 
@@ -11,6 +12,25 @@ type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" 
  * (prix plein, aucune réduction). Pas de questionnaire ni de lien WhatsApp à côté du bouton : ils détournaient
  * les clics du catalogue (décision de Tao, 15 nov.). L'achat du guide suffit à qualifier le contact.
  */
+/** Bouton vert WhatsApp (haut de page et barre fixe en bas) : le seul choix proposé après l'achat. */
+function WhatsappDeliveryButton({ href, cta, offer, className = "" }: { href: string; cta: string; offer: string; className?: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-cta={cta}
+      onClick={() => phCapture("lead_merci_whatsapp", { offer, cta })}
+      className={`flex w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-xl bg-[#25D366] px-4 py-4 text-base font-bold text-white shadow-lg transition hover:bg-[#1ebe5a] active:scale-[0.99] sm:text-lg ${className}`}
+    >
+      <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 fill-current">
+        <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z" />
+      </svg>
+      Recevoir aussi sur WhatsApp
+    </a>
+  );
+}
+
 export function GuideThanks(props: {
   intentId?: string;
   pixelId?: string;
@@ -61,10 +81,16 @@ export function GuideThanks(props: {
   }, [intentId, pixelId]);
 
   const paid = data?.status === "paid";
+  // Message pré-rempli définitif (code de commande + nom) dès que /api/guide/statut le donne.
+  const waHref = props.waDeliveryUrl
+    ? data?.waText && props.waDeliveryNumber
+      ? `https://wa.me/${props.waDeliveryNumber}?text=${encodeURIComponent(data.waText)}`
+      : props.waDeliveryUrl
+    : null;
   const waiting = !paid && attempts < 40 && data?.status !== "failed";
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 ${props.waDeliveryUrl ? "pb-24" : ""}`}>
       {/* 1. Le guide */}
       <section className="card p-6 md:p-8">
         {paid ? (
@@ -76,20 +102,8 @@ export function GuideThanks(props: {
                 {/* Un seul choix (décision de Tao, 20 nov.) : le client nous écrit en premier sur WhatsApp. Cela rend nos liens
                     cliquables dans la conversation et rattache son vrai numéro WhatsApp à sa fiche (code de commande). */}
                 <p className="mt-3 text-foreground/75">Nous l&apos;avons aussi envoyé dans votre boîte email.</p>
-                <div className="cta-pulse-wa cta-flash mt-5 rounded-xl">
-                  <a
-                    href={data?.waText && props.waDeliveryNumber ? `https://wa.me/${props.waDeliveryNumber}?text=${encodeURIComponent(data.waText)}` : props.waDeliveryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"}
-                    onClick={() => phCapture("lead_merci_whatsapp", { offer: props.offer ?? "guide" })}
-                    className="flex w-full items-center justify-center gap-2.5 whitespace-nowrap rounded-xl bg-[#25D366] px-4 py-4 text-base font-bold text-white shadow-lg transition hover:bg-[#1ebe5a] active:scale-[0.99] sm:text-lg"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 fill-current">
-                      <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z" />
-                    </svg>
-                    Recevoir aussi sur WhatsApp
-                  </a>
+                <div id="offre-bouton" className="cta-pulse-wa cta-flash mt-5 rounded-xl">
+                  <WhatsappDeliveryButton href={waHref!} cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"} offer={props.offer ?? "guide"} />
                 </div>
                 <p className="mt-3 text-center text-sm text-foreground/60">WhatsApp s&apos;ouvre avec le message déjà écrit, il vous suffit de l&apos;envoyer.</p>
               </>
@@ -197,15 +211,28 @@ export function GuideThanks(props: {
         </div>
         <div className="p-6 md:px-10 md:pb-10">
           <div className="flex flex-wrap items-center gap-4">
-            <a href={props.catalogueUrl} data-cta={extrait ? "extrait_merci_catalogue" : "guide_merci_catalogue"} className="cta-pulse btn btn-cta w-full px-6 py-4 text-base sm:w-auto">
-              Voir le Catalogue Premium
-            </a>
+            {/* Pas de bouton vers le catalogue quand la livraison WhatsApp est proposée (décision de Tao, 21 nov.) :
+                ce bloc prépare la suite, le seul clic attendu ici est WhatsApp. */}
+            {waHref ? null : (
+              <a href={props.catalogueUrl} data-cta={extrait ? "extrait_merci_catalogue" : "guide_merci_catalogue"} className="cta-pulse btn btn-cta w-full px-6 py-4 text-base sm:w-auto">
+                Voir le Catalogue Premium
+              </a>
+            )}
             <p className="text-white/85">
               <strong className="text-white">{props.cataloguePrice}</strong> · paiement unique · version numérique (espace en ligne + fiches PDF)
             </p>
           </div>
         </div>
       </section>
+
+      {/* Barre fixe en bas : le bouton WhatsApp revient dès que celui du haut sort de l'écran. */}
+      {paid && waHref ? (
+        <StickyOfferBar whenButtonHidden allSizes>
+          <div className="cta-pulse-wa cta-flash mx-auto max-w-xl rounded-xl">
+            <WhatsappDeliveryButton href={waHref} cta={extrait ? "extrait_merci_whatsapp_bas" : "guide_merci_whatsapp_bas"} offer={props.offer ?? "guide"} className="py-3.5" />
+          </div>
+        </StickyOfferBar>
+      ) : null}
     </div>
   );
 }

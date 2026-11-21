@@ -17,7 +17,8 @@ import { recordPurchasedPlan } from "@/lib/pdf-quota";
 import { startGuideWhatsapp } from "@/lib/pipeline";
 import { parseBrowserContext, sendMetaEventInBackground } from "@/lib/meta-capi";
 import { GUIDE } from "@/lib/guide";
-import { EXTRAIT_MODELS, LEAD_CTA_IDS, leadOfferByProduct, type LeadOffer } from "@/lib/lead-offers";
+import { EXTRAIT_MODELS, LEAD_CTA_IDS, leadOfferByProduct, WHATSAPP_BUSINESS_NUMBER, type LeadOffer } from "@/lib/lead-offers";
+import { merciWhatsappText, orderCode } from "@/lib/order-code";
 
 function customerCountry(customer: { phone?: ChariowPhone; country?: string | { code?: string } | null }) {
   const c = customer.country;
@@ -661,7 +662,14 @@ async function processGuideSale(
     const thanksUrl = siteUrl(`${offer.path}/merci?i=${intentId}`);
     const mail =
       offer.key === "extrait"
-        ? extraitDeliveryEmail({ name, downloadUrl, thanksUrl, models: EXTRAIT_MODELS })
+        ? extraitDeliveryEmail({
+            name,
+            downloadUrl,
+            thanksUrl,
+            models: EXTRAIT_MODELS,
+            // Bouton WhatsApp (code de commande : le numéro qui écrit est rattaché à la fiche), utile aux acheteurs sur ordinateur.
+            whatsappUrl: whatsappLink(merciWhatsappText({ product: "l'Extrait du Catalogue Premium", code: orderCode(intentId), name }), WHATSAPP_BUSINESS_NUMBER),
+          })
         : guideDeliveryEmail({ name, downloadUrl, thanksUrl, announcedModels: GUIDE.announcedModels });
     await sendEmail({ to, ...mail, template: `${offer.key}_livraison` });
     await recordProspectEvent({
