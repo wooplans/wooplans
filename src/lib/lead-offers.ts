@@ -24,6 +24,9 @@ export type LeadOffer = {
 
 export const EXTRAIT_PATH = "/extrait-catalogue-premium";
 /** Page du Catalogue Premium réservée aux acheteurs de l'extrait (lien du PDF) et du guide (?de=guide). */
+/** Numéro WhatsApp Business de WooPlans (celui des relances) : livraison des offres d'entrée sur WhatsApp. */
+export const WHATSAPP_BUSINESS_NUMBER = "237653769998";
+
 export const EXTRAIT_SUITE_PATH = `${EXTRAIT_PATH}/catalogue`;
 
 export const LEAD_OFFERS: Record<LeadOfferKey, LeadOffer> = {

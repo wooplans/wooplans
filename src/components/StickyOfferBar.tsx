@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  * la barre n'apparaît qu'une fois ce bouton dépassé vers le haut, et disparaît quand on y revient : au début de la
  * fiche, l'offre est déjà à l'écran et la barre la cachait. Sans ce bouton (autres offres), la barre est toujours là.
  */
-export function StickyOfferBar({ children, whenButtonHidden = false }: { children: React.ReactNode; whenButtonHidden?: boolean }) {
+export function StickyOfferBar({ children, whenButtonHidden = false, allSizes = false }: { children: React.ReactNode; whenButtonHidden?: boolean; allSizes?: boolean }) {
   const [shown, setShown] = useState(false);
   const [watching, setWatching] = useState(true);
 
@@ -30,7 +30,7 @@ export function StickyOfferBar({ children, whenButtonHidden = false }: { childre
   const visible = !watching || shown;
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 px-3 pb-3 pt-2 backdrop-blur transition-transform duration-300 sm:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-20 border-t border-outline bg-surface/95 px-3 pb-3 pt-2 backdrop-blur transition-transform duration-300 ${allSizes ? "" : "sm:hidden"} ${
         visible ? "translate-y-0" : "pointer-events-none translate-y-full"
       }`}
       aria-hidden={!visible}
