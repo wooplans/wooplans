@@ -90,7 +90,7 @@ export function GuideThanks(props: {
   const waiting = !paid && attempts < 40 && data?.status !== "failed";
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 ${props.waDeliveryUrl ? "pb-24" : ""}`}>
       {/* 1. Le guide */}
       <section className="card p-6 md:p-8">
         {paid ? (
