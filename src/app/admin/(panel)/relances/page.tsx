@@ -1,3 +1,4 @@
+import { deadlineLabel } from "@/lib/catalogue-offer-rules";
 import Link from "next/link";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
@@ -6,11 +7,20 @@ import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
 import { noWhatsappList, projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
-import { fixWhatsappNumber, noWhatsapp, undoRelance } from "./actions";
+import { fixWhatsappNumber, noWhatsapp, reopenOffer, undoRelance } from "./actions";
+import { siteUrl } from "@/lib/env";
+import { catalogueReservedPrice } from "@/lib/site";
+import { formatFcfa } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
-const COLUMN_STYLE = ["border-sky-300 bg-sky-50", "border-amber-300 bg-amber-50", "border-orange-300 bg-orange-50"];
+const COLUMN_STYLE = [
+  "border-sky-300 bg-sky-50",
+  "border-amber-300 bg-amber-50",
+  "border-orange-300 bg-orange-50",
+  "border-rose-300 bg-rose-50",
+  "border-red-300 bg-red-50",
+];
 
 function ago(date: Date, now: Date) {
   const h = Math.floor((now.getTime() - date.getTime()) / 3_600_000);
@@ -64,6 +74,9 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           <p className="text-xs text-muted">
             {item.country || "—"} · achat {ago(item.boughtAt, now)} · +{item.phone.replace(/\D/g, "")}
           </p>
+          {item.step >= 1 && item.reservedUntil ? (
+            <p className="text-xs text-muted">Prix réservé jusqu&apos;au {deadlineLabel(item.reservedUntil)}</p>
+          ) : null}
         </div>
         <Badge tone={item.offer === "extrait" ? "good" : "info"}>{item.offer === "extrait" ? "Extrait" : "Guide"}</Badge>
       </div>
@@ -93,15 +106,19 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           </div>
         </>
       )}
-      <p className="mt-2 text-center text-xs text-muted">
-        📎 Joindre : {file.url ? (
-          <a href={file.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
-            {file.label}
-          </a>
-        ) : (
-          file.label
-        )}
-      </p>
+      {file ? (
+        <p className="mt-2 text-center text-xs text-muted">
+          📎 Joindre : {file.url ? (
+            <a href={file.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+              {file.label}
+            </a>
+          ) : (
+            file.label
+          )}
+        </p>
+      ) : (
+        <p className="mt-2 text-center text-xs text-muted">Texte seul, sans pièce jointe</p>
+      )}
       <PhoneFix id={item.id} />
     </article>
   );
@@ -137,11 +154,16 @@ function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
 }
 
 /**
- * CRM des relances WhatsApp à la main (provisoire) : 3 colonnes = les 3 messages. Une carte n'apparaît que le jour
+ * CRM des relances WhatsApp à la main (provisoire) : 5 colonnes = les 5 messages (22 nov. 2026). Une carte n'apparaît que le jour
  * où son message est dû. Un clic ouvre WhatsApp avec le message écrit et passe la personne à l'étape suivante.
  */
-export default async function RelancesPage() {
+export default async function RelancesPage({ searchParams }: { searchParams: Promise<{ rouvrir?: string }> }) {
   const now = new Date();
+  const reopenedId = (await searchParams).rouvrir || null;
+  const reopened =
+    reopenedId && reopenedId !== "introuvable"
+      ? await getDb().query.prospects.findFirst({ where: eq(schema.prospects.id, reopenedId), columns: { id: true, name: true, email: true, phone: true, offerReopenUntil: true } })
+      : null;
   const startOfDay = new Date(now.getTime() - ((now.getTime() + 3_600_000) % 86_400_000));
   const [queue, models, recentClients, projects, noWa] = await Promise.all([
     relanceQueue(now),
@@ -189,7 +211,7 @@ export default async function RelancesPage() {
         </p>
       </details>
 
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {RELANCE_STEPS.map((s, step) => {
           const cards = due.filter((i) => i.step === step);
           const later = upcoming.filter((i) => i.step === step);
@@ -200,18 +222,12 @@ export default async function RelancesPage() {
                 <span className="rounded-full bg-white px-2.5 py-0.5 text-sm">{cards.length}</span>
               </h2>
               <p className="mb-3 px-1 text-xs text-muted">
-                À envoyer {s.when} · 📎 {s.file}
+                À envoyer {s.when}
+                {s.file ? ` · 📎 ${s.file}` : " · texte seul"}
                 {step === 1 ? (
                   <>
                     {" "}·{" "}
                     <a href="/assets/catalogue/catalogue-premium.mp4" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary">
-                      télécharger
-                    </a>
-                  </>
-                ) : step === 2 ? (
-                  <>
-                    {" "}·{" "}
-                    <a href="/assets/whatsapp/temoignage-bassirou.mp4" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary">
                       télécharger
                     </a>
                   </>
@@ -248,7 +264,7 @@ export default async function RelancesPage() {
           <span className="rounded-full bg-white px-2.5 py-0.5 text-sm">{projects.length}</span>
         </h2>
         <p className="mb-3 px-1 text-xs text-muted">
-          10 jours après l&apos;achat, une fois les 3 messages envoyés. Le lien est personnel : les réponses vont sur la fiche, puis la personne arrive sur le
+          10 jours après l&apos;achat, une fois la phase de l&apos;offre terminée. Le lien est personnel : les réponses vont sur la fiche, puis la personne arrive sur le
           catalogue des villas ou des duplex. Rien à joindre.
         </p>
         {projects.length === 0 ? <p className="rounded-xl bg-white/70 p-3 text-center text-sm text-muted">Rien à envoyer pour l&apos;instant ✅</p> : null}
@@ -290,6 +306,31 @@ export default async function RelancesPage() {
           </p>
         </section>
       </div>
+
+      <section id="deuxieme-chance" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4">
+        <h2 className="font-semibold">Deuxième chance · Rouvrir l&apos;offre 24 h</h2>
+        <p className="mt-1 text-xs text-muted">
+          Quelqu&apos;un vous demande le prix réservé après sa date : entrez son email ou son numéro WhatsApp. Son prix de{" "}
+          {formatFcfa(catalogueReservedPrice())} redevient valable 24 h (la page affiche la nouvelle date), puis envoyez-lui son lien personnel.
+        </p>
+        <form action={reopenOffer} className="mt-2 flex max-w-lg gap-1.5 text-sm">
+          <input name="q" placeholder="Email ou numéro WhatsApp" className="min-w-0 flex-1 rounded border border-outline bg-white px-2 py-1.5" required />
+          <button className="rounded bg-secondary px-3 py-1.5 font-semibold text-white">Rouvrir 24 h</button>
+        </form>
+        {reopenedId === "introuvable" ? (
+          <p className="mt-2 text-sm text-red-700">Aucune fiche trouvée (ou plusieurs avec ce numéro) : essayez avec l&apos;email.</p>
+        ) : null}
+        {reopened?.offerReopenUntil ? (
+          <div className="mt-2 rounded-lg bg-white p-3 text-sm">
+            <p>
+              ✅ Offre rouverte pour <strong>{reopened.name || reopened.email}</strong> jusqu&apos;au {deadlineLabel(reopened.offerReopenUntil)} (heure d&apos;Abidjan).
+            </p>
+            <p className="mt-1 break-all text-xs">
+              Lien personnel à envoyer : <span className="font-mono">{siteUrl(`/r/${reopened.id}.offre`)}</span>
+            </p>
+          </div>
+        ) : null}
+      </section>
 
       {noWa.length ? (
         <section className="mt-6 rounded-2xl border border-outline bg-white p-4">

@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { getEnv } from "@/lib/env";
 import { cataloguePrice } from "@/lib/site";
+import { offerFor, RESERVED_COOKIE } from "@/lib/catalogue-offer";
 import { PAY_COOKIE, paymentProvider } from "@/lib/wajub";
 import { galleryHtml, perModelLabel, previewHtml, SHOWCASE_CODE, type GalleryPlan } from "@/lib/sales-page";
 
@@ -59,6 +60,15 @@ export async function GET(request: Request) {
   // Acheteurs de l'extrait (lien du PDF, page merci) : page de suite, sans la présentation complète (19 nov. 2026).
   if (url.searchParams.get("utm_source") === "extrait") {
     return new Response(null, { status: 302, headers: { Location: `/extrait-catalogue-premium/catalogue${url.search}`, "Cache-Control": "no-store" } });
+  }
+  // Prix réservé (acheteur reconnu par son cookie) ou promo datée (?promo=) : la page statique affiche le prix public,
+  // on envoie donc la personne sur la page qui affiche son prix et sa date (22 nov. 2026).
+  const token = request.headers.get("cookie")?.match(new RegExp(`(?:^|;\\s*)${RESERVED_COOKIE}=([^;]+)`))?.[1];
+  if (token || url.searchParams.get("promo")) {
+    const { offer } = await offerFor({ token, promo: url.searchParams.get("promo") }).catch(() => ({ offer: null }));
+    if (offer && offer.tier !== "public") {
+      return new Response(null, { status: 302, headers: { Location: `/extrait-catalogue-premium/catalogue${url.search}`, "Cache-Control": "no-store" } });
+    }
   }
 
   const asset = await env.ASSETS!.fetch(new URL("/lp/catalogue-premium", request.url));

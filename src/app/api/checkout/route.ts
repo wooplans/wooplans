@@ -8,7 +8,7 @@ import { browserContext, metaAllowedForRequest, metaEventId, sendMetaEventInBack
 import { internationalPhone } from "@/lib/phone";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
-import { cataloguePrice } from "@/lib/site";
+import { offerFor, RESERVED_COOKIE } from "@/lib/catalogue-offer";
 import { recordServerEvent } from "@/lib/tracking";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
@@ -23,6 +23,8 @@ type Body = {
   discountCode?: string;
   /** « wajub » : formulaire Wajub de la page de vente (sinon PAYMENT_PROVIDER ou l'aperçu ?paiement=). */
   provider?: string;
+  /** Promo datée (?promo= du lien) : 19 000 FCFA seulement pendant ses dates (src/config/catalogue.json). */
+  promo?: string;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,9 +63,13 @@ export async function POST(request: NextRequest) {
     await recordServerEvent({ visitorId, type: "checkout_start", path: "/catalogue-premium", ctaId }).catch(() => {});
   }
 
+  // Prix décidé par le serveur : réservé (acheteur de l'extrait ou du guide reconnu par son lien, son cookie ou cet email),
+  // promo datée, sinon public. Le produit Chariow correspondant est payé (jamais un prix envoyé par le navigateur).
+  const { offer } = await offerFor({ token: request.cookies.get(RESERVED_COOKIE)?.value, email, promo: body.promo });
+
   const [firstName, ...rest] = name.split(" ");
   const visitor = visitorId ? await db.query.visitors.findFirst({ where: (v, { eq }) => eq(v.id, visitorId) }) : null;
-  const metadata: Record<string, string> = { cta_id: ctaId };
+  const metadata: Record<string, string> = { cta_id: ctaId, tier: offer.tier };
   if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
   if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
 
@@ -77,6 +83,7 @@ export async function POST(request: NextRequest) {
           customer: { name, email, phone: internationalPhone(phone, countryCode) },
           callbackUrl: siteUrl(`/merci?i=${intentId}`),
           metadata: { ...metadata, country: countryCode },
+          amount: offer.price,
         }).then((r) => ("error" in r ? r : { url: r.url, mode: "wajub" as const }))
       : await createChariowCheckout({
           customer: { email, firstName, lastName: rest.join(" "), phoneNumber: phone, countryCode },
@@ -84,6 +91,7 @@ export async function POST(request: NextRequest) {
           redirectUrl: siteUrl(`/merci?i=${intentId}`),
           metadata,
           customerIp: clientIp(request.headers),
+          productId: offer.productId,
           discountCode,
         });
 
@@ -102,12 +110,12 @@ export async function POST(request: NextRequest) {
         content_name: "Catalogue Premium Wooplans",
         content_ids: ["cpbook-premium-2026"],
         content_type: "product",
-        value: cataloguePrice(),
+        value: offer.price,
         currency: "XAF",
       },
     });
   }
-  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId, metaEventId: metaEventIdValue });
+  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId, metaEventId: metaEventIdValue, price: offer.price, tier: offer.tier });
   response.cookies.set(INTENT_COOKIE, intentId, {
     httpOnly: true,
     secure: true,

@@ -1,4 +1,7 @@
 {
-  "price": 29000,
-  "priceBefore": 60000
+  "price": 39000,
+  "productId": "prd_rhaso5i5",
+  "reserved": { "price": 29000, "productId": "prd_9cbatg", "days": 7 },
+  "promo": { "price": 19000, "productId": "prd_ytnf02e2" },
+  "promos": []
 }

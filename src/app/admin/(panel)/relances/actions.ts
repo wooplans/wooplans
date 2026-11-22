@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
-import { correctWhatsappNumber, markNoWhatsapp, undoManualSend } from "@/lib/relances";
+import { correctWhatsappNumber, findProspectForReopen, markNoWhatsapp, reopenReservedOffer, undoManualSend } from "@/lib/relances";
 
 /** « Pas envoyé » : le message revient dans la file du jour. */
 export async function undoRelance(form: FormData) {
@@ -27,4 +28,15 @@ export async function fixWhatsappNumber(form: FormData) {
   const phone = String(form.get("phone") || "");
   if (id && phone) await correctWhatsappNumber(id, phone);
   revalidatePath("/admin/relances");
+}
+
+/** « Rouvrir l'offre 24 h » (deuxième chance demandée par le prospect) : prix réservé valable 24 h de plus. */
+export async function reopenOffer(form: FormData) {
+  await requireAdmin();
+  const query = String(form.get("q") || "").slice(0, 120);
+  const prospect = query ? await findProspectForReopen(query) : null;
+  if (!prospect) redirect(`/admin/relances?rouvrir=introuvable#deuxieme-chance`);
+  await reopenReservedOffer(prospect.id);
+  revalidatePath("/admin/relances");
+  redirect(`/admin/relances?rouvrir=${encodeURIComponent(prospect.id)}#deuxieme-chance`);
 }

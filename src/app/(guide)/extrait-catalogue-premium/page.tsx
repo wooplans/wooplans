@@ -6,7 +6,7 @@ import { StickyOfferBar } from "@/components/StickyOfferBar";
 import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_PATH, EXTRAIT_SLUGS, LEAD_OFFERS } from "@/lib/lead-offers";
 import { countPublishedPlans, formatFcfa, getPlanTeaser, getPublicPlan, listPublicPlans, type PublicPlan } from "@/lib/plans";
-import { cataloguePrice, cataloguePriceBefore } from "@/lib/site";
+import { cataloguePrice } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +103,6 @@ export default async function ExtraitPage() {
   const rank = (slug: string) => (SHOWCASE.includes(slug) ? SHOWCASE.indexOf(slug) : SHOWCASE.length);
   const rail = all.filter((p) => p.coverImage).sort((a, b) => rank(a.slug) - rank(b.slug)).slice(0, RAIL_SIZE).map(toModel);
   const modelsTotal = total ?? GUIDE.announcedModels;
-  const before = cataloguePriceBefore();
   const models = (plans.filter((p) => p?.coverImage) as PublicPlan[]).map(toModel);
   // Aperçu flouté d'un vrai plan coté (l'original n'est jamais transmis) : un duplex, pour montrer les deux niveaux.
   const previewSlug = EXTRAIT_SLUGS.find((s) => s.startsWith("duplex")) ?? EXTRAIT_SLUGS[0];
@@ -152,7 +151,6 @@ export default async function ExtraitPage() {
               <p className="text-sm font-semibold text-foreground/70">Le catalogue complet</p>
               <p className="mt-1 text-lg font-bold">{modelsTotal} maisons</p>
               <p className="text-sm text-foreground/70">
-                {before ? <s className="mr-1">{formatFcfa(before)}</s> : null}
                 {formatFcfa(cataloguePrice())}
               </p>
             </div>

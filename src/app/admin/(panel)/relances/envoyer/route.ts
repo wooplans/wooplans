@@ -1,13 +1,14 @@
 import { getCurrentAdmin, requireAdmin } from "@/lib/auth";
 import { countPublishedPlans } from "@/lib/plans";
-import { projectMessage, recordManualSend, recordProjectSent, relanceItem, relanceMessage, relanceWhatsappUrl } from "@/lib/relances";
+import { RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
+import { type RelanceStep, projectMessage, recordManualSend, recordProjectSent, relanceItem, relanceMessage, relanceWhatsappUrl } from "@/lib/relances";
 
 export const dynamic = "force-dynamic";
 
 function parse(url: URL) {
   const id = url.searchParams.get("id") || "";
   const step = Number(url.searchParams.get("etape"));
-  return { id, step, valid: Boolean(id) && Number.isInteger(step) && step >= 0 && step <= 2 };
+  return { id, step, valid: Boolean(id) && Number.isInteger(step) && step >= 0 && step < RELANCE_STEP_COUNT };
 }
 
 /**
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
   if (!item?.phone || !valid) return Response.redirect(new URL("/admin/relances", url), 303);
   const civ = url.searchParams.get("civ");
   const civilite = civ === "M." || civ === "Mme" ? civ : item.civilite;
-  const text = relanceMessage({ id, name: item.name, civilite, offer: item.offer, intentId: item.intentId, step: step as 0 | 1 | 2 }, models ?? 0);
+  const text = relanceMessage({ id, name: item.name, civilite, offer: item.offer, intentId: item.intentId, reservedUntil: item.reservedUntil, step: step as RelanceStep }, models ?? 0);
   await recordManualSend(id, step);
   return new Response(null, { status: 302, headers: { Location: relanceWhatsappUrl(item.phone, text), "Cache-Control": "no-store" } });
 }

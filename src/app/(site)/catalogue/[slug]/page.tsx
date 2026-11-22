@@ -31,7 +31,7 @@ import {
 } from "@/lib/plans";
 import { landingPagesFor, planFallbackDescription, planImageAlt, planSeoDescription, planSeoTitle } from "@/lib/plan-seo";
 import { SHARE_IMAGE, shareImagePath } from "@/lib/share-image";
-import { cataloguePrice, cataloguePriceBefore, SITE } from "@/lib/site";
+import { cataloguePrice, SITE } from "@/lib/site";
 import { cataloguePath } from "../view";
 
 export const dynamic = "force-dynamic";
@@ -173,7 +173,6 @@ export default async function PlanPage({ params, searchParams }: Props) {
                 {SITE.catalogueCta}
               </Link>
               <p className="mt-2 text-center text-xs text-muted">
-                {cataloguePriceBefore() ? <s className="mr-1">{formatFcfa(cataloguePriceBefore()!)}</s> : null}
                 <strong className="text-foreground">{formatFcfa(cataloguePrice())}</strong> · paiement unique · version numérique · accès à vie
               </p>
             </div>

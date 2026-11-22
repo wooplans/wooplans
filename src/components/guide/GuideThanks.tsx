@@ -5,7 +5,7 @@ import { pixelPurchase } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 import { StickyOfferBar } from "@/components/StickyOfferBar";
 
-type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean; waText?: string | null };
+type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" | "gift"; download?: string | null; track?: boolean; waText?: string | null; reserved?: { until: string; label: string } | null };
 
 /**
  * Page de remerciement du guide : deux choses seulement, livrer le guide puis présenter le Catalogue Premium
@@ -35,7 +35,10 @@ export function GuideThanks(props: {
   intentId?: string;
   pixelId?: string;
   guidePrice: number;
+  /** Prix public du catalogue (« 39 000 FCFA »). */
   cataloguePrice: string;
+  /** Prix réservé aux acheteurs (« 29 000 FCFA »), affiché avec sa date quand /api/guide/statut la donne. */
+  reservedPrice?: string;
   catalogueUrl: string;
   whatsappUrl: string;
   video: string;
@@ -218,9 +221,19 @@ export function GuideThanks(props: {
                 Voir le Catalogue Premium
               </a>
             )}
-            <p className="text-white/85">
-              <strong className="text-white">{props.cataloguePrice}</strong> · paiement unique · version numérique (espace en ligne + fiches PDF)
-            </p>
+            {data?.reserved && props.reservedPrice ? (
+              <p className="text-white/85">
+                Prix public : {props.cataloguePrice} ·{" "}
+                <strong className="text-white">
+                  Votre prix réservé : {props.reservedPrice} jusqu&apos;au {data.reserved.label}
+                </strong>{" "}
+                · paiement unique · version numérique (espace en ligne + fiches PDF)
+              </p>
+            ) : (
+              <p className="text-white/85">
+                <strong className="text-white">{props.cataloguePrice}</strong> · paiement unique · version numérique (espace en ligne + fiches PDF)
+              </p>
+            )}
           </div>
         </div>
       </section>

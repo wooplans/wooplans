@@ -4,7 +4,7 @@ import { offreById, relanceDiscount } from "@/lib/offres";
 import { catalogueProductIds } from "@/lib/chariow";
 import { randomId } from "@/lib/crypto";
 import { extraitSequenceEmail, giftReminderEmail, guideRelanceEmail, guideSequenceEmail, offreRelanceEmail, prospectEmail, sendEmail, welcomeEmail } from "@/lib/email";
-import { EXTRAIT_DELAYS_HOURS, extraitKindForStep, GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
+import { EXTRAIT_DELAYS_HOURS, EXTRAIT_PROJECT_STEP, extraitKindForStep, GUIDE, GUIDE_CTA_ID, GUIDE_DELAYS_HOURS, GUIDE_PATH, GUIDE_RELANCE_DELAYS_HOURS, guideKindForStep, guideProductId, guideRelanceKindForStep } from "@/lib/guide";
 import { getEnv, siteUrl } from "@/lib/env";
 import { EXTRAIT_MODELS, EXTRAIT_SUITE_PATH, LEAD_CTA_IDS, leadProductIds } from "@/lib/lead-offers";
 import { normalizeEmail } from "@/lib/members";
@@ -26,7 +26,9 @@ import {
   type ProspectSequenceSettings,
 } from "@/lib/prospect-sequence";
 import { getSetting, setSetting } from "@/lib/settings";
-import { cataloguePrice, cataloguePriceBefore, whatsappLink } from "@/lib/site";
+import { cataloguePrice, catalogueReservedPrice, whatsappLink } from "@/lib/site";
+import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
+import { endsText } from "@/lib/relance-schedule";
 import { optedOutEmails, unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
 
 const SETTINGS_KEY = "prospect_sequence";
@@ -497,25 +499,40 @@ export async function runProspectSequence(now = new Date()) {
       continue;
     }
 
-    // Séquence « extrait » : acheteur de l'extrait, phase de conversion (J1, J2, J5, J7), page réservée aux acheteurs.
+    // Séquence « extrait » : acheteur de l'extrait, phase de conversion (J1, J4, J7) puis formulaire (J10).
+    // Lien personnel /r/<fiche>.email : reconnaît la personne sur la page (son prix réservé et son compte à rebours).
     if (p.sequenceKind === "extrait") {
+      const kind = extraitKindForStep(step);
+      const until = p.sequenceStartedAt ? reservedUntil(p.sequenceStartedAt, p.offerReopenUntil, 7) : null;
+      const active = until && until.getTime() > now.getTime() ? until : null;
+      // Prix réservé terminé : plus de rappel d'offre, on passe directement au formulaire « Mon projet ».
+      if (!active && (kind === "rappel" || kind === "dernier")) {
+        const next = stepDueAt(p.sequenceStartedAt!, EXTRAIT_PROJECT_STEP, delays);
+        await db
+          .update(schema.prospects)
+          .set({ sequenceStep: EXTRAIT_PROJECT_STEP, nextEmailAt: next ? new Date(Math.max(next.getTime(), now.getTime())) : null, updatedAt: now })
+          .where(eq(schema.prospects.id, p.id));
+        continue;
+      }
       const lead = await guideIntent(p.email);
       const unsubscribe = await unsubscribeUrl(p.email, "prospects");
-      const before = cataloguePriceBefore();
+      const label = active ? deadlineLabel(active) : null;
       const mail = extraitSequenceEmail({
-        kind: extraitKindForStep(step),
+        kind,
         name: p.name,
         downloaded: (lead?.downloads ?? 0) > 0,
         downloadUrl: lead ? siteUrl(`/api/guide/${lead.id}`) : null,
-        catalogueUrl: siteUrl(`${EXTRAIT_SUITE_PATH}?utm_source=email&utm_medium=sequence&utm_campaign=extrait_${step + 1}`),
-        price,
-        priceBefore: before ? formatFcfa(before) : null,
+        catalogueUrl: siteUrl(`/r/${p.id}.email`),
+        publicPrice: price,
+        reservedPrice: formatFcfa(catalogueReservedPrice()),
+        until: label,
+        ends: active && label ? endsText(active, label, now) : undefined,
         models: planCount,
         extraitModels: EXTRAIT_MODELS,
         projectUrl: siteUrl(`/mon-projet/${p.id}?utm_source=email&utm_medium=sequence&utm_campaign=extrait_projet`),
         unsubscribe,
       });
-      const sentExtrait = await sendEmail({ to: p.email, ...mail, template: `extrait_${step + 1}`, headers: await unsubscribeHeaders(p.email, "prospects") });
+      const sentExtrait = await sendEmail({ to: p.email, ...mail, template: `extrait_${kind}`, headers: await unsubscribeHeaders(p.email, "prospects") });
       await afterSend(p, step, delays, sentExtrait.ok, now, result);
       await pause(400);
       continue;

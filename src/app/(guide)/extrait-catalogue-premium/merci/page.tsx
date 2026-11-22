@@ -4,7 +4,7 @@ import { siteUrl } from "@/lib/env";
 import { GUIDE } from "@/lib/guide";
 import { LEAD_OFFERS } from "@/lib/lead-offers";
 import { formatFcfa } from "@/lib/plans";
-import { cataloguePrice, whatsappLink } from "@/lib/site";
+import { cataloguePrice, catalogueReservedPrice, whatsappLink } from "@/lib/site";
 
 /** Numéro WhatsApp Business de WooPlans (celui des relances). */
 const WHATSAPP_BUSINESS = "237653769998";
@@ -21,6 +21,7 @@ export default async function ExtraitThanksPage({ searchParams }: { searchParams
         pixelId={process.env.FB_PIXEL_ID || undefined}
         guidePrice={LEAD_OFFERS.extrait.price}
         cataloguePrice={formatFcfa(cataloguePrice())}
+        reservedPrice={formatFcfa(catalogueReservedPrice())}
         catalogueUrl={siteUrl("/catalogue-premium?utm_source=extrait&utm_medium=merci&utm_campaign=extrait_catalogue")}
         whatsappUrl={whatsappLink("Bonjour Tao, j'ai acheté l'Extrait du Catalogue Premium et je n'ai pas reçu mon PDF.")}
         video={GUIDE.catalogueVideo}

@@ -3,7 +3,7 @@ import { GuideThanks } from "@/components/guide/GuideThanks";
 import { siteUrl } from "@/lib/env";
 import { GUIDE } from "@/lib/guide";
 import { formatFcfa } from "@/lib/plans";
-import { cataloguePrice, whatsappLink } from "@/lib/site";
+import { cataloguePrice, catalogueReservedPrice, whatsappLink } from "@/lib/site";
 
 /** Numéro WhatsApp Business de WooPlans (celui des relances). */
 const WHATSAPP_BUSINESS = "237653769998";
@@ -19,6 +19,7 @@ export default async function GuideThanksPage({ searchParams }: { searchParams: 
         pixelId={process.env.FB_PIXEL_ID || undefined}
         guidePrice={GUIDE.price}
         cataloguePrice={formatFcfa(cataloguePrice())}
+        reservedPrice={formatFcfa(catalogueReservedPrice())}
         catalogueUrl={siteUrl("/catalogue-premium?utm_source=guide&utm_medium=merci&utm_campaign=guide_maisons")}
         whatsappUrl={whatsappLink("Bonjour Tao, j'ai le Guide WooPlans des maisons. J'ai un terrain et je veux démarrer mon projet.")}
         video={GUIDE.catalogueVideo}

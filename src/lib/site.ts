@@ -21,15 +21,19 @@ export function whatsappLink(message: string, number: string = process.env.WHATS
 }
 
 /**
- * Prix du Catalogue Premium en FCFA. Source unique : src/config/catalogue.json, lue aussi par
+ * Prix public du Catalogue Premium en FCFA. Source unique : src/config/catalogue.json, lue aussi par
  * scripts/build-sales-page.py (pages de vente) et video/vsl (VSL). Le prix Chariow se change à part.
  */
 export function cataloguePrice(): number {
   return catalogue.price;
 }
 
-/** Prix d'ancrage barré du Catalogue Premium (src/config/catalogue.json « priceBefore »), déjà affiché sur la page de vente. */
-export function cataloguePriceBefore(): number | null {
-  const v = (catalogue as { priceBefore?: unknown }).priceBefore;
-  return typeof v === "number" && v > cataloguePrice() ? v : null;
+/** Les trois prix du catalogue (public, réservé aux acheteurs de l'extrait ou du guide, promo datée). */
+export function catalogueOfferPrices(): number[] {
+  return [catalogue.price, catalogue.reserved.price, catalogue.promo.price];
+}
+
+/** Prix réservé aux acheteurs de l'extrait ou du guide (7 jours après leur achat). */
+export function catalogueReservedPrice(): number {
+  return catalogue.reserved.price;
 }
