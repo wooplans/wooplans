@@ -41,6 +41,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { href: "/admin", label: "Tableau de bord", short: "Accueil", icon: "home" },
       { href: "/admin/relances", label: "Relances WhatsApp", short: "Relances", icon: "whatsapp" },
       { href: "/admin/ventes", label: "Ventes", short: "Ventes", icon: "sales" },
+      { href: "/admin/gains", label: "Gain réel", icon: "sales" },
       { href: "/admin/crm", label: "CRM plans complets", short: "CRM", icon: "crm" },
     ],
   },

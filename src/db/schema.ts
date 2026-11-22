@@ -292,6 +292,8 @@ export const sales = sqliteTable(
     utmCampaign: text("utm_campaign"),
     source: text("source"),
     occurredAt: integer("occurred_at", { mode: "timestamp_ms" }).notNull().default(now),
+    /** Fiche prospect (acheteur de l'extrait ou du guide) reconnue au paiement : lien personnel, email ou téléphone. */
+    prospectId: text("prospect_id"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -563,4 +565,37 @@ export const videoEvents = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index("video_events_prospect_idx").on(t.prospectId)],
+);
+
+/**
+ * Dépenses publicitaires Meta par jour et par campagne (USD), relevées chaque dimanche à 00:00 par une tâche planifiée
+ * (connecteur Meta Ads) ; product : catalogue, extrait, guide, plan_devis ou autre (tableau « Gain réel »).
+ */
+export const adSpend = sqliteTable(
+  "ad_spend",
+  {
+    date: text("date").notNull(),
+    campaignId: text("campaign_id").notNull(),
+    campaignName: text("campaign_name").notNull(),
+    spendUsd: real("spend_usd").notNull(),
+    product: text("product").notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.date, t.campaignId] })],
+);
+
+/** Dépenses ponctuelles saisies (crédits ElevenLabs, Poyo…) en FCFA ; les abonnements fixes sont dans src/config/couts.json. */
+export const expenses = sqliteTable(
+  "expenses",
+  {
+    id: text("id").primaryKey(),
+    date: text("date").notNull(),
+    category: text("category").notNull(),
+    label: text("label").notNull(),
+    amount: integer("amount").notNull(),
+    currency: text("currency").notNull().default("XAF"),
+    originalAmount: real("original_amount"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("expenses_date_idx").on(t.date)],
 );

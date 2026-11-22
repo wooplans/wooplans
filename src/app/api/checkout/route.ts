@@ -65,11 +65,13 @@ export async function POST(request: NextRequest) {
 
   // Prix décidé par le serveur : réservé (acheteur de l'extrait ou du guide reconnu par son lien, son cookie ou cet email),
   // promo datée, sinon public. Le produit Chariow correspondant est payé (jamais un prix envoyé par le navigateur).
-  const { offer } = await offerFor({ token: request.cookies.get(RESERVED_COOKIE)?.value, email, promo: body.promo });
+  const { offer, prospect } = await offerFor({ token: request.cookies.get(RESERVED_COOKIE)?.value, email, promo: body.promo });
 
   const [firstName, ...rest] = name.split(" ");
   const visitor = visitorId ? await db.query.visitors.findFirst({ where: (v, { eq }) => eq(v.id, visitorId) }) : null;
   const metadata: Record<string, string> = { cta_id: ctaId, tier: offer.tier };
+  // Lien personnel reconnu (cookie) : la vente sera rattachée à cette fiche même si l'email ou le numéro diffèrent.
+  if (prospect) metadata.prospect_id = prospect.id;
   if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
   if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
 
