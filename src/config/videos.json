@@ -1,0 +1,15 @@
+{
+  "catalogue": {
+    "title": "Le Catalogue Premium en vidéo",
+    "intro": "Tao vous montre le catalogue : le rendu 3D, le plan coté et le devis poste par poste de chaque maison, sur papier et sur votre téléphone.",
+    "src": "/assets/catalogue/catalogue-premium.mp4",
+    "poster": "/assets/catalogue/catalogue-premium-poster.jpg",
+    "og": "/assets/videos/og-catalogue.jpg"
+  },
+  "temoignages": {
+    "title": "Ils ont choisi leur maison avec le Catalogue Premium",
+    "intro": "Des clients du Sénégal, du Mali, du Cameroun et de Côte d'Ivoire racontent ce que le catalogue leur a apporté.",
+    "testimonials": true,
+    "og": "/assets/videos/og-temoignages.jpg"
+  }
+}

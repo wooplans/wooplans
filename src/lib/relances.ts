@@ -15,6 +15,7 @@ import { EXTRAIT_MODELS, LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
 import { formatFcfa } from "@/lib/plans";
 import { customerLookup } from "@/lib/prospects";
 import { extraitActivityByEmail } from "@/lib/extrait-web";
+import { videoActivityByProspect } from "@/lib/videos";
 import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
 import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
@@ -25,7 +26,7 @@ const HOUR = 3_600_000;
 
 export const RELANCE_STEPS = [
   { title: "Message 1 · Livraison", when: "dès l'achat", file: "Le PDF" },
-  { title: "Message 2 · Vidéo + offre", when: "J1", file: "La vidéo du catalogue" },
+  { title: "Message 2 · Vidéo + offre", when: "J1", file: null },
   { title: "Message 3 · Rappel de l'offre", when: "J4", file: null },
   { title: "Message 4 · Dernier jour", when: "J7 au matin", file: null },
   { title: "Message 5 · Dernières heures", when: "J7 vers 20 h", file: null },
@@ -53,6 +54,8 @@ export type RelanceItem = {
   clicked: boolean;
   replied: boolean;
   lastSentAt: Date | null;
+  /** Page vidéo : ce qu'il a regardé (fin > moitié > lecture > ouverture), null s'il ne l'a pas ouverte. */
+  video: { video: string; event: string } | null;
   /** Activité sur l'extrait en ligne (/mon-extrait) : score d'intérêt et détail, null s'il ne l'a pas ouvert. */
   extrait: { score: number; opens: number; viewed: number; lockedClicks: number; offerClick: boolean } | null;
 };
@@ -86,7 +89,10 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
     40,
   );
   intents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  const activity = await extraitActivityByEmail(withPhone.map((r) => r.email)).catch(() => new Map());
+  const [activity, videos] = await Promise.all([
+    extraitActivityByEmail(withPhone.map((r) => r.email)).catch(() => new Map()),
+    videoActivityByProspect(withPhone.map((r) => r.id)).catch(() => new Map()),
+  ]);
   const intentByEmail = new Map<string, (typeof intents)[number]>();
   for (const i of intents) if (i.email && !intentByEmail.has(i.email)) intentByEmail.set(i.email, i);
   const items = withPhone.map((r): RelanceItem => {
@@ -113,6 +119,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       replied: Boolean(r.waRepliedAt),
       lastSentAt: r.waLastSentAt,
       extrait: activity.get(r.email) ?? null,
+      video: videos.get(r.id) ?? null,
     };
   });
   // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
@@ -173,7 +180,8 @@ export function relanceMessage(
     const intro = extrait
       ? `Vous avez vu les ${EXTRAIT_MODELS} maisons de votre extrait. Le Catalogue Premium vous donne les ${Math.max(models - EXTRAIT_MODELS, 0)} autres, au même format : plan de distribution coté et devis poste par poste pour chaque maison.`
       : `Dans votre guide, vous avez vu nos ${models} villas et duplex. Le Catalogue Premium vous donne, pour chacune, le plan de distribution coté et le devis poste par poste.`;
-    return `${hello}\n\n${intro}\n\n🎥 Regardez la vidéo : tout le catalogue en 90 secondes.\n\n🎁 *Votre prix réservé* : ${reserved} au lieu de ${publicPrice}${label ? `, jusqu'au ${label}` : ""}.\n\n👉 ${link}`;
+    // Lien de la page vidéo (à la place de la pièce jointe) : la vidéo puis l'offre, suivi des lectures.
+    return `${hello}\n\n${intro}\n\n🎁 *Votre prix réservé* : ${reserved} au lieu de ${publicPrice}${label ? `, jusqu'au ${label}` : ""}.\n\n🎥 Regardez la vidéo du catalogue : ${link}`;
   }
   if (item.step === 2) {
     return `${hello}\n\nPetit rappel : votre prix réservé pour le Catalogue Premium, ${reserved} au lieu de ${publicPrice}, est valable jusqu'au ${label}.\n\nCe que vous débloquez :\n✅ les ${models} villas et duplex\n✅ le plan coté de chaque niveau\n✅ le devis poste par poste, de la fondation aux finitions\n✅ les nouveaux modèles, inclus\n\nPaiement unique par Mobile Money, accès tout de suite.\n\n👉 ${link}`;
@@ -194,7 +202,6 @@ export function relanceAttachment(item: Pick<RelanceItem, "offer" | "intentId" |
       url: item.intentId ? `/api/guide/${item.intentId}` : null,
     };
   }
-  if (item.step === 1) return { label: "Vidéo du catalogue", url: "/assets/catalogue/catalogue-premium.mp4" };
   // Messages 3 à 5 : texte seul.
   return null;
 }

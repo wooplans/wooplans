@@ -134,6 +134,13 @@
       "when": 1795420000000,
       "tag": "0018_extrait_web",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1795430000000,
+      "tag": "0019_video_events",
+      "breakpoints": true
     }
   ]
 }
