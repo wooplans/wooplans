@@ -1,3 +1,4 @@
+import { recordWaMessage } from "@/lib/conversation-ai";
 import { getEnv } from "@/lib/env";
 import { linkWhatsappByOrderCode, recordWhatsappFailed, recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
 import { isStopRequest, verifyGenukaSignature } from "@/lib/whatsapp";
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
     // Message reçu : liste Meta « messages », ou un seul message.
     // Les copies des messages que Tao envoie lui-même depuis WhatsApp Business (« coexistence », champ « to ») ne sont pas des réponses.
     const echo = /echo/i.test(String((event as { event?: string })?.event ?? event?.type ?? "")) || Boolean(data.to);
+    // Conversation (étape 5) : les copies des messages de Tao sont gardées pour que l'IA lise toute la conversation.
+    if (echo && data.id) await recordWaMessage(data as Parameters<typeof recordWaMessage>[0], "out").catch((error) => console.error("Conversation : copie non enregistrée", error));
     const messages = (Array.isArray(data.messages) ? data.messages : data.from && !echo ? [data] : []) as Inbound[];
     for (const m of messages) {
       if (!m.from) continue;
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
       // Code de commande de la page merci : le numéro WhatsApp remplace celui de la fiche avant d'enregistrer la réponse.
       await linkWhatsappByOrderCode(from, text).catch((error) => console.error("Rattachement du numéro WhatsApp : échec", error));
       await recordWhatsappReply(from, isStopRequest(text));
+      await recordWaMessage(m as Parameters<typeof recordWaMessage>[0], "in").catch((error) => console.error("Conversation : message non enregistré", error));
     }
   } catch (error) {
     console.error("Webhook WhatsApp : traitement impossible", error);

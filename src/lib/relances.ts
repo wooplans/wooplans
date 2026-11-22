@@ -16,6 +16,7 @@ import { formatFcfa } from "@/lib/plans";
 import { customerLookup } from "@/lib/prospects";
 import { extraitActivityByEmail } from "@/lib/extrait-web";
 import { videoActivityByProspect } from "@/lib/videos";
+import { linkOrphanMessages } from "@/lib/conversation-ai";
 import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
 import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
@@ -56,6 +57,8 @@ export type RelanceItem = {
   lastSentAt: Date | null;
   /** Page vidéo : ce qu'il a regardé (fin > moitié > lecture > ouverture), null s'il ne l'a pas ouverte. */
   video: { video: string; event: string } | null;
+  /** Qualification de l'IA d'après la conversation WhatsApp (DeepSeek), null si pas encore de conversation analysée. */
+  ai: { stage: string; score: number | null; summary: string | null; nextAction: string | null } | null;
   /** Activité sur l'extrait en ligne (/mon-extrait) : score d'intérêt et détail, null s'il ne l'a pas ouvert. */
   extrait: { score: number; opens: number; viewed: number; lockedClicks: number; offerClick: boolean } | null;
 };
@@ -120,6 +123,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       lastSentAt: r.waLastSentAt,
       extrait: activity.get(r.email) ?? null,
       video: videos.get(r.id) ?? null,
+      ai: r.aiStage ? { stage: r.aiStage, score: r.aiScore, summary: r.aiSummary, nextAction: r.aiNextAction } : null,
     };
   });
   // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
@@ -316,6 +320,8 @@ export async function correctWhatsappNumber(id: string, input: string, now = new
     .update(schema.prospects)
     .set({ phone: digits, waInvalidAt: null, notes: p.notes ? `${p.notes}\n${line}` : line, updatedAt: now })
     .where(eq(schema.prospects.id, id));
+  // Messages déjà reçus de ce numéro : rattachés à la fiche (conversation lue par l'IA).
+  await linkOrphanMessages(id, digits).catch(() => {});
   return true;
 }
 

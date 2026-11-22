@@ -383,6 +383,16 @@ export const prospects = sqliteTable(
     waInvalidAt: integer("wa_invalid_at", { mode: "timestamp_ms" }),
     /** « Rouvrir l'offre 24 h » (admin) : prix réservé du catalogue valable jusqu'à cette date, même après J7. */
     offerReopenUntil: integer("offer_reopen_until", { mode: "timestamp_ms" }),
+    /**
+     * Qualification par l'IA (DeepSeek) d'après la conversation WhatsApp (23 nov. 2026) : étape (chaud, tiède, froid,
+     * client probable, perdu), score 0-100, résumé, prochaine action conseillée à Tao. last_inbound_at : dernier message reçu.
+     */
+    aiStage: text("ai_stage"),
+    aiScore: integer("ai_score"),
+    aiSummary: text("ai_summary"),
+    aiNextAction: text("ai_next_action"),
+    aiUpdatedAt: integer("ai_updated_at", { mode: "timestamp_ms" }),
+    lastInboundAt: integer("last_inbound_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -598,4 +608,25 @@ export const expenses = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index("expenses_date_idx").on(t.date)],
+);
+
+/**
+ * Conversation WhatsApp (webhook Genuka, 23 nov. 2026) : messages reçus et copies des messages que Tao envoie depuis
+ * WhatsApp Business. Notes vocales : transcrites par ElevenLabs (media_status pending → done / failed).
+ */
+export const waMessages = sqliteTable(
+  "wa_messages",
+  {
+    id: text("id").primaryKey(),
+    prospectId: text("prospect_id"),
+    phone: text("phone").notNull(),
+    direction: text("direction", { enum: ["in", "out"] }).notNull(),
+    type: text("type").notNull(),
+    body: text("body"),
+    transcript: text("transcript"),
+    mediaStatus: text("media_status", { enum: ["pending", "done", "failed"] }),
+    sentAt: integer("sent_at", { mode: "timestamp_ms" }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("wa_messages_prospect_idx").on(t.prospectId, t.sentAt), index("wa_messages_media_idx").on(t.mediaStatus)],
 );

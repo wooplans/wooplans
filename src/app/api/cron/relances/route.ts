@@ -1,4 +1,5 @@
 import { runAfterSale } from "@/lib/after-sale";
+import { qualifyPending, transcribePending } from "@/lib/conversation-ai";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
@@ -37,5 +38,14 @@ export async function POST(request: Request) {
     console.error("Codes anciens abonnés : échec", error);
     return null;
   });
-  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes });
+  // Conversations WhatsApp : notes vocales transcrites (ElevenLabs), puis qualification par l'IA (DeepSeek).
+  const voice = await transcribePending().catch((error) => {
+    console.error("Transcription des notes vocales : échec", error);
+    return null;
+  });
+  const ai = await qualifyPending().catch((error) => {
+    console.error("Qualification IA : échec", error);
+    return null;
+  });
+  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai });
 }

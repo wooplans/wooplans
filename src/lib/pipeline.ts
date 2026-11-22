@@ -174,7 +174,7 @@ export async function recordWhatsappClick(prospectId: string) {
  * Numéro renvoyé par WhatsApp (« recipient_id », « from ») : souvent l'ancien format, sans le 0 ajouté en Côte d'Ivoire
  * en 2021 (22544089680 pour 2250544089680). On compare l'indicatif (3 chiffres) et les 8 derniers chiffres.
  */
-function phoneMatch(digits: string) {
+export function phoneMatch(digits: string) {
   const d = digits.replace(/\D/g, "");
   if (d.length < 11) return or(eq(schema.prospects.phone, d), eq(schema.prospects.phone, `+${d}`));
   const plain = sql`replace(${schema.prospects.phone}, '+', '')`;

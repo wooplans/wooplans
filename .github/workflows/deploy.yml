@@ -51,7 +51,7 @@ jobs:
       - name: Secrets du Worker (depuis les secrets GitHub)
         run: |
           node -e '
-            const names = ["AUTH_SECRET","CHARIOW_PULSE_SECRET","CHARIOW_API_KEY","RESEND_API_KEY","MCP_TOKEN","CRON_SECRET","WAJUB_SECRET_KEY","WAJUB_WEBHOOK_SECRET","FB_ACCESS_TOKEN","GENUKA_API_KEY","GENUKA_WEBHOOK_SECRET"];
+            const names = ["AUTH_SECRET","CHARIOW_PULSE_SECRET","CHARIOW_API_KEY","RESEND_API_KEY","MCP_TOKEN","CRON_SECRET","WAJUB_SECRET_KEY","WAJUB_WEBHOOK_SECRET","FB_ACCESS_TOKEN","GENUKA_API_KEY","GENUKA_WEBHOOK_SECRET","DEEPSEEK_API_KEY","ELEVENLABS_API_KEY"];
             const out = Object.fromEntries(names.filter((n) => process.env[n]).map((n) => [n, process.env[n]]));
             require("fs").writeFileSync("/tmp/worker-secrets.json", JSON.stringify(out));
             console.log("Secrets transmis :", Object.keys(out).join(", ") || "aucun");
@@ -72,6 +72,8 @@ jobs:
           FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
           GENUKA_API_KEY: ${{ secrets.GENUKA_API_KEY }}
           GENUKA_WEBHOOK_SECRET: ${{ secrets.GENUKA_WEBHOOK_SECRET }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
 
   smoke:
     needs: deploy
