@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
+import { sendExtraitAnnounce } from "@/lib/extrait-web-announce";
 import { correctWhatsappNumber, findProspectForReopen, markNoWhatsapp, reopenReservedOffer, undoManualSend } from "@/lib/relances";
 
 /** « Pas envoyé » : le message revient dans la file du jour. */
@@ -39,4 +40,13 @@ export async function reopenOffer(form: FormData) {
   await reopenReservedOffer(prospect.id);
   revalidatePath("/admin/relances");
   redirect(`/admin/relances?rouvrir=${encodeURIComponent(prospect.id)}#deuxieme-chance`);
+}
+
+/** « Prévenir les acheteurs » : email du lien de l'extrait en ligne (une fois par acheteur, budget du jour respecté). */
+export async function announceExtraitWeb(form: FormData) {
+  await requireAdmin();
+  const max = Math.min(Math.max(Number(form.get("max") || 0), 0), 80);
+  const r = max ? await sendExtraitAnnounce(max) : null;
+  revalidatePath("/admin/relances");
+  redirect(`/admin/relances?annonce=${r ? `${r.sent}-${r.failed}` : "0-0"}#extrait-en-ligne`);
 }

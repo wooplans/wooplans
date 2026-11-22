@@ -1,4 +1,5 @@
 import { deadlineLabel } from "@/lib/catalogue-offer-rules";
+import { extraitLevel } from "@/lib/extrait-web-rules";
 import Link from "next/link";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
@@ -7,7 +8,9 @@ import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
 import { noWhatsappList, projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
-import { fixWhatsappNumber, noWhatsapp, reopenOffer, undoRelance } from "./actions";
+import { announceExtraitWeb, fixWhatsappNumber, noWhatsapp, reopenOffer, undoRelance } from "./actions";
+import { extraitAnnounceQueue } from "@/lib/extrait-web-announce";
+import { automatedEmailAllowance } from "@/lib/email-budget";
 import { siteUrl } from "@/lib/env";
 import { catalogueReservedPrice } from "@/lib/site";
 import { formatFcfa } from "@/lib/plans";
@@ -80,6 +83,13 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
         </div>
         <Badge tone={item.offer === "extrait" ? "good" : "info"}>{item.offer === "extrait" ? "Extrait" : "Guide"}</Badge>
       </div>
+      {item.extrait ? (
+        <p className="mt-1.5 rounded-md bg-sky-50 px-2 py-1 text-xs">
+          📱 Extrait en ligne : score <strong>{item.extrait.score}</strong> ({extraitLevel(item.extrait.score) === "chaud" ? "🔥 chaud" : extraitLevel(item.extrait.score) === "tiede" ? "tiède" : "froid"}) ·{" "}
+          {item.extrait.opens} j · {item.extrait.viewed} maison{item.extrait.viewed > 1 ? "s" : ""} · {item.extrait.lockedClicks} 🔒
+          {item.extrait.offerClick ? " · a cliqué sur l'offre" : ""}
+        </p>
+      ) : null}
       {item.read || item.clicked || item.replied ? (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {item.read ? <Badge>Lu</Badge> : null}
@@ -157,9 +167,12 @@ function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
  * CRM des relances WhatsApp à la main (provisoire) : 5 colonnes = les 5 messages (22 nov. 2026). Une carte n'apparaît que le jour
  * où son message est dû. Un clic ouvre WhatsApp avec le message écrit et passe la personne à l'étape suivante.
  */
-export default async function RelancesPage({ searchParams }: { searchParams: Promise<{ rouvrir?: string }> }) {
+export default async function RelancesPage({ searchParams }: { searchParams: Promise<{ rouvrir?: string; annonce?: string }> }) {
   const now = new Date();
-  const reopenedId = (await searchParams).rouvrir || null;
+  const sp = await searchParams;
+  const reopenedId = sp.rouvrir || null;
+  const [announceQueue, emailAllowance] = await Promise.all([extraitAnnounceQueue().catch(() => []), automatedEmailAllowance().catch(() => 0)]);
+  const announceMax = Math.min(announceQueue.length, emailAllowance, 80);
   const reopened =
     reopenedId && reopenedId !== "introuvable"
       ? await getDb().query.prospects.findFirst({ where: eq(schema.prospects.id, reopenedId), columns: { id: true, name: true, email: true, phone: true, offerReopenUntil: true } })
@@ -306,6 +319,24 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
           </p>
         </section>
       </div>
+
+      <section id="extrait-en-ligne" className="mt-6 rounded-2xl border border-sky-300 bg-sky-50 p-4">
+        <h2 className="font-semibold">Extrait en ligne · prévenir les acheteurs déjà livrés</h2>
+        <p className="mt-1 text-xs text-muted">
+          Un email avec leur lien personnel (/mon-extrait/…), une seule fois par acheteur. Les nouveaux acheteurs le reçoivent déjà dans l&apos;email de livraison et le
+          message WhatsApp 1. Clients du catalogue et désinscrits exclus.
+        </p>
+        <p className="mt-2 text-sm">
+          À prévenir : <strong>{announceQueue.length}</strong> · emails disponibles aujourd&apos;hui : {emailAllowance}
+        </p>
+        {sp.annonce ? <p className="mt-1 text-sm text-emerald-700">Envoyés : {sp.annonce.split("-")[0]} · échecs : {sp.annonce.split("-")[1]}</p> : null}
+        {announceMax > 0 ? (
+          <form action={announceExtraitWeb} className="mt-2">
+            <input type="hidden" name="max" value={announceMax} />
+            <button className="rounded bg-primary px-3 py-1.5 text-sm font-semibold text-white">Envoyer à {announceMax} acheteur{announceMax > 1 ? "s" : ""}</button>
+          </form>
+        ) : null}
+      </section>
 
       <section id="deuxieme-chance" className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4">
         <h2 className="font-semibold">Deuxième chance · Rouvrir l&apos;offre 24 h</h2>
