@@ -12,6 +12,7 @@ import { announceExtraitWeb, fixWhatsappNumber, noWhatsapp, reopenOffer, undoRel
 import { extraitAnnounceQueue } from "@/lib/extrait-web-announce";
 import { automatedEmailAllowance } from "@/lib/email-budget";
 import { siteUrl } from "@/lib/env";
+import { VIDEOS } from "@/lib/videos";
 import { catalogueReservedPrice } from "@/lib/site";
 import { formatFcfa } from "@/lib/plans";
 
@@ -90,6 +91,12 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           {item.extrait.offerClick ? " · a cliqué sur l'offre" : ""}
         </p>
       ) : null}
+      {item.video ? (
+        <p className="mt-1 rounded-md bg-violet-50 px-2 py-1 text-xs">
+          🎥 Vidéo {item.video.video} :{" "}
+          {{ open: "page ouverte", play: "lancée", half: "vue à moitié", end: "vue jusqu'au bout", cta: "a cliqué vers l'offre" }[item.video.event] ?? item.video.event}
+        </p>
+      ) : null}
       {item.read || item.clicked || item.replied ? (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {item.read ? <Badge>Lu</Badge> : null}
@@ -129,6 +136,16 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
       ) : (
         <p className="mt-2 text-center text-xs text-muted">Texte seul, sans pièce jointe</p>
       )}
+      <details className="mt-2 text-xs">
+        <summary className="cursor-pointer text-center text-muted">Liens vidéo à partager (personnels, suivis)</summary>
+        <ul className="mt-1 space-y-1 break-all">
+          {Object.entries(VIDEOS).map(([key, v]) => (
+            <li key={key}>
+              {v.title} : <span className="font-mono">{siteUrl(`/r/${item.id}.v-${key}`)}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
       <PhoneFix id={item.id} />
     </article>
   );
@@ -237,14 +254,7 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
               <p className="mb-3 px-1 text-xs text-muted">
                 À envoyer {s.when}
                 {s.file ? ` · 📎 ${s.file}` : " · texte seul"}
-                {step === 1 ? (
-                  <>
-                    {" "}·{" "}
-                    <a href="/assets/catalogue/catalogue-premium.mp4" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary">
-                      télécharger
-                    </a>
-                  </>
-                ) : null}
+
               </p>
               <div className="space-y-2">
                 {cards.length === 0 ? <p className="rounded-xl bg-white/70 p-3 text-center text-sm text-muted">Rien à envoyer pour l&apos;instant ✅</p> : null}

@@ -548,3 +548,19 @@ export const extraitEvents = sqliteTable(
   },
   (t) => [index("extrait_events_intent_idx").on(t.intentId), index("extrait_events_email_idx").on(t.email)],
 );
+
+/**
+ * Pages vidéo envoyées sur WhatsApp à la place des pièces jointes (/video/<clé>, 23 nov. 2026) : ouverture, lecture,
+ * moitié, fin. prospect_id : fiche reconnue par le lien personnel (cookie wp_res), sinon null (visiteur anonyme).
+ */
+export const videoEvents = sqliteTable(
+  "video_events",
+  {
+    id: text("id").primaryKey(),
+    prospectId: text("prospect_id"),
+    video: text("video").notNull(),
+    event: text("event", { enum: ["open", "play", "half", "end", "cta"] }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("video_events_prospect_idx").on(t.prospectId)],
+);

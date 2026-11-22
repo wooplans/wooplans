@@ -3,10 +3,13 @@ import { siteUrl } from "@/lib/env";
 import { EXTRAIT_SUITE_PATH } from "@/lib/lead-offers";
 import { relanceItem } from "@/lib/relances";
 import campaigns from "@/config/wa-campaigns.json";
+import { videoPage } from "@/lib/videos";
 import { prospectByToken, RESERVED_COOKIE, RESERVED_COOKIE_MAX_AGE } from "@/lib/catalogue-offer";
 
 /** Étapes dont le lien mène à la page du prix réservé (relances WhatsApp et emails de la phase de conversion). */
-const SUITE_STEPS = new Set(["j1", "j3", "j4", "j7", "j7s", "offre", "email"]);
+const SUITE_STEPS = new Set(["j3", "j4", "j7", "j7s", "offre", "email"]);
+/** Message 2 (J1) : la page vidéo du catalogue (lien au lieu d'une pièce jointe, 23 nov. 2026). */
+const VIDEO_STEPS: Record<string, string> = { j1: "catalogue" };
 
 /**
  * Lien des boutons WhatsApp et des emails : /r/<prospect>.<étape> (j1, j4, j7, j7s, email, ou c<campagne>). Enregistre le clic dans le pipeline
@@ -27,7 +30,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
       ? "utm_source=email&utm_medium=sequence&utm_campaign=offre_reservee"
       : `utm_source=whatsapp&utm_medium=${medium}&utm_campaign=guide_${campaign}`;
   let target = siteUrl(`/catalogue-premium?${utm}${offer ? `&code=${encodeURIComponent(offer.code)}` : ""}`);
-  if (id && SUITE_STEPS.has(campaign)) {
+  // Pages vidéo : /r/<fiche>.j1 ou /r/<fiche>.v-<clé> (lien personnel : le cookie reconnaît la personne sur la page).
+  const video = VIDEO_STEPS[campaign] ?? (campaign.startsWith("v-") ? campaign.slice(2) : null);
+  if (video && videoPage(video)) {
+    target = siteUrl(`/video/${video}?${utm}`);
+  } else if (id && SUITE_STEPS.has(campaign)) {
     const buyer = await relanceItem(id).catch(() => null);
     target = siteUrl(`${EXTRAIT_SUITE_PATH}?${buyer?.offer === "guide" ? "de=guide&" : ""}${utm}`);
   }
