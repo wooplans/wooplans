@@ -34,10 +34,3 @@ test("réduction de relance : offres 39k et 29k seulement, jamais 19k", () => {
   assert.equal(relanceDiscount(cfg, null), null);
 });
 
-test("configuration réelle : RELANCE10 pour 39k et 29k, pas pour 19k", async () => {
-  const { default: real } = await import("../src/config/offres.json", { with: { type: "json" } });
-  const cfg = real as OffresConfig;
-  assert.ok(relanceDiscount(cfg, "39k"));
-  assert.ok(relanceDiscount(cfg, "29k"));
-  assert.equal(relanceDiscount(cfg, "19k"), null);
-});

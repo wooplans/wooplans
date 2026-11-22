@@ -1,15 +1,35 @@
 {
   "default": "39k",
-  "relance": { "code": "RELANCE10", "discount": 10000, "offres": ["39k", "29k"] },
+  "relance": {
+    "code": "RELANCE10",
+    "discount": 10000,
+    "offres": [
+      "39k",
+      "29k"
+    ]
+  },
   "offres": [
-    { "id": "39k", "price": 39000, "anchor": null, "chariowProductId": "prd_rhaso5i5", "countries": ["GN", "CI", "SN"] },
+    {
+      "id": "39k",
+      "price": 39000,
+      "anchor": null,
+      "chariowProductId": "",
+      "countries": []
+    },
     {
       "id": "29k",
       "price": 29000,
       "anchor": null,
-      "chariowProductId": "prd_uso1ketx",
-      "countries": ["BJ", "BF", "CV", "GM", "GH", "GW", "LR", "ML", "MR", "NE", "NG", "SL", "TG", "CM", "GA", "CG", "CD", "CF", "TD", "GQ", "ST", "BI", "RW", "AO"]
+      "chariowProductId": "",
+      "countries": []
     },
-    { "id": "19k", "price": 19000, "anchor": null, "chariowProductId": "prd_ytnf02e2", "countries": [] }
-  ]
+    {
+      "id": "19k",
+      "price": 19000,
+      "anchor": null,
+      "chariowProductId": "",
+      "countries": []
+    }
+  ],
+  "_note": "Offres « plan et devis + catalogue offert » arrêtées (décision de Tao, 22 nov. 2026) : CP 39K et CP 19K servent au Catalogue Premium seul (src/config/catalogue.json)."
 }

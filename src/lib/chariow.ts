@@ -145,13 +145,9 @@ export async function processSaleEvent(payload: ChariowSalePayload, provider: Sa
   if (planProductId() && productId === planProductId()) return processPlanSale(payload, status, provider);
   const leadOffer = leadOfferByProduct(productId);
   if (leadOffer) return processGuideSale(payload, status, leadOffer);
-  let offre = offreProductIds().get(productId) ?? null;
-  // CP 39K et CP 19K servent aux deux : offre « plan et devis » (fiche modèle, intention avec un modèle) et catalogue
-  // seul (prix public et promo, depuis le 22 nov. 2026). Sans intention de fiche modèle, c'est le catalogue seul.
-  if (offre && catalogueProductIds().has(productId)) {
-    const email = payload.customer?.email ? normalizeEmail(payload.customer.email) : null;
-    if (!(await findPlanIntent(sale.custom_metadata?.intent_id, email))) offre = null;
-  }
+  // Offres « plan et devis » arrêtées le 22 nov. 2026 (src/config/offres.json vide) : les anciennes ventes restent reconnues
+  // tant qu'une offre garde son produit ; CP 39K et CP 19K servent désormais au catalogue seul.
+  const offre = offreProductIds().get(productId) ?? null;
   if (!offre && !catalogueProductIds().has(productId)) return "ignored_product";
   return processCatalogueSale(payload, status, provider, offre);
 }
