@@ -45,7 +45,7 @@ ANNOUNCED_MODELS = 100  # nombre annoncé dans les publicités et la page de ven
 SITE = "wooplans.com"
 UTM = "utm_source=guide&utm_medium=pdf&utm_campaign=guide_maisons"
 CATALOGUE_URL = f"https://wooplans.com/catalogue-premium?{UTM}"
-CATALOGUE_PRICE = "29 000 FCFA"
+CATALOGUE_PRICE = "39 000 FCFA"  # prix public (22 nov. 2026)
 WHATSAPP = "237694327885"
 WHATSAPP_URL = (
     f"https://wa.me/{WHATSAPP}?text="

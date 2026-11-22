@@ -182,7 +182,7 @@ def others(c, category: str, first: bool):
 
 def cta(c):
     price = CATALOGUE["price"]
-    before = CATALOGUE.get("priceBefore")
+    reserved = CATALOGUE["reserved"]["price"]
     c.setFillColor(PRIMARY)
     c.rect(0, 0, W, H, fill=1, stroke=0)
     c.setFillColor(white)
@@ -192,18 +192,13 @@ def cta(c):
     c.drawCentredString(W / 2, H - 275, "Le Catalogue Premium : plan de distribution et devis poste par poste de chaque modèle,")
     c.drawCentredString(W / 2, H - 302, "fiches PDF à montrer à votre maçon, nouveaux modèles inclus.")
     y = H / 2 - 30
-    if isinstance(before, int) and before > price:
-        c.setFillColor(HexColor("#BFD6D5"))
-        c.setFont("Head7", 26)
-        s = fcfa(before)
-        c.drawCentredString(W / 2, y + 62, s)
-        sw = c.stringWidth(s, "Head7", 26)
-        c.setStrokeColor(HexColor("#BFD6D5"))
-        c.setLineWidth(2)
-        c.line(W / 2 - sw / 2, y + 71, W / 2 + sw / 2, y + 71)
     c.setFillColor(white)
     c.setFont("Head", 60)
     c.drawCentredString(W / 2, y, fcfa(price))
+    # Prix public (22 nov. 2026) ; prix réservé aux acheteurs de l'extrait pendant 7 jours, date exacte sur la page.
+    c.setFillColor(HexColor("#FFE1B8"))
+    c.setFont("Semi", 19)
+    c.drawCentredString(W / 2, y - 38, f"Vous avez acheté l'extrait : {fcfa(reserved)} pendant 7 jours après votre achat (date sur la page)")
     bw, bh = 520, 72
     bx, by = W / 2 - bw / 2, y - 130
     c.setFillColor(ACCENT)
