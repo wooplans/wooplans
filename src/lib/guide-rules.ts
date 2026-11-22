@@ -103,12 +103,18 @@ export const GUIDE_DELAYS_HOURS = [24, 48, 96, 144, 192, 216, 240];
  * Acheteurs de l'extrait (phase de conversion, J0 à J7) : 4 emails en plus de la livraison et des 3 messages WhatsApp
  * (décision de Tao, 20 nov.). Délais depuis l'achat (heures) : J1, J2, J5, J7, puis J10 (phase d'accompagnement : formulaire « Mon projet »).
  */
-export const EXTRAIT_DELAYS_HOURS = [24, 48, 120, 168, 240];
+export const EXTRAIT_DELAYS_HOURS = [24, 4 * 24, 7 * 24, 10 * 24];
 
-export type ExtraitEmailKind = "offre" | "devis" | "faq" | "recap" | "projet";
+/**
+ * Emails de l'extrait (22 nov. 2026), au rythme des WhatsApp : J1 l'offre (prix réservé et sa date), J4 le rappel,
+ * J7 le dernier jour, puis J10 le formulaire « Mon projet » (accompagnement).
+ */
+export type ExtraitEmailKind = "offre" | "rappel" | "dernier" | "projet";
+
+export const EXTRAIT_PROJECT_STEP = 3;
 
 export function extraitKindForStep(step: number): ExtraitEmailKind {
-  const kinds = ["offre", "devis", "faq", "recap", "projet"] as const;
+  const kinds = ["offre", "rappel", "dernier", "projet"] as const;
   return kinds[Math.min(Math.max(step, 0), kinds.length - 1)];
 }
 

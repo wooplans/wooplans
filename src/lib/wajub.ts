@@ -11,7 +11,7 @@ import {
 import { projectStartPrice } from "@/lib/custom-plans";
 import { getEnv } from "@/lib/env";
 import { parseBrowserContext, sendMetaEventInBackground } from "@/lib/meta-capi";
-import { cataloguePrice } from "@/lib/site";
+import { cataloguePrice, catalogueOfferPrices } from "@/lib/site";
 
 export { verifyWajubSignature } from "@/lib/wajub-signature";
 
@@ -97,6 +97,8 @@ export async function createWajubCheckout(params: {
   customer: { name: string; email: string; phone: string | null };
   callbackUrl: string;
   metadata: Record<string, string>;
+  /** Montant du catalogue choisi par le serveur (prix public, réservé ou promo) ; sinon le prix public. */
+  amount?: number;
 }): Promise<{ url: string; paymentId: string } | { error: string }> {
   try {
     const { ok, status, data } = await wajubFetch("/payments", {
@@ -104,7 +106,7 @@ export async function createWajubCheckout(params: {
       // Un double clic ou une nouvelle tentative du navigateur renvoie le même paiement.
       idempotencyKey: `intent-${params.intentId}`,
       body: JSON.stringify({
-        amount: expectedAmount(params.offer),
+        amount: params.amount ?? expectedAmount(params.offer),
         currency: "XAF",
         customer: {
           name: params.customer.name.slice(0, 100),
@@ -116,7 +118,7 @@ export async function createWajubCheckout(params: {
         callback: params.callbackUrl,
         // Page de paiement valable 2 h : au-delà, payment.expired relance le prospect comme un abandon Chariow.
         expires: { in: 120 },
-        metadata: { intent_id: params.intentId, offer: params.offer, ...params.metadata },
+        metadata: { intent_id: params.intentId, offer: params.offer, price: String(params.amount ?? expectedAmount(params.offer)), ...params.metadata },
       }),
     });
     const url = data?.authorization_url;
@@ -189,7 +191,11 @@ export async function processWajubPayment(payment: WajubPayment, saleEvent: stri
   const payload = toSalePayload(payment, saleEvent);
   if (!payload) return "ignored_product";
   if (saleEvent === "successful.sale") {
-    const expected = expectedAmount(payment.metadata?.offer === "plan_devis" ? "plan_devis" : "catalogue");
+    const offer = payment.metadata?.offer === "plan_devis" ? "plan_devis" : "catalogue";
+    // Catalogue : prix choisi par le serveur à la création du paiement (public, réservé ou promo), jamais sous le plus bas.
+    const chosen = Number(payment.metadata?.price);
+    const expected =
+      offer === "catalogue" && catalogueOfferPrices().includes(chosen) ? chosen : expectedAmount(offer);
     if ((payload.sale?.amount?.value ?? 0) < expected || (payload.sale?.amount?.currency || "XAF") !== "XAF") {
       console.error("Wajub : montant inattendu, accès non ouvert", payment.id, payload.sale?.amount, expected);
       return "invalid_payload";

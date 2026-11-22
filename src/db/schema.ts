@@ -379,6 +379,8 @@ export const prospects = sqliteTable(
     projectSentAt: integer("project_sent_at", { mode: "timestamp_ms" }),
     /** Numéro de la fiche sans WhatsApp (signalé par Tao) : plus de relance WhatsApp, les emails continuent. */
     waInvalidAt: integer("wa_invalid_at", { mode: "timestamp_ms" }),
+    /** « Rouvrir l'offre 24 h » (admin) : prix réservé du catalogue valable jusqu'à cette date, même après J7. */
+    offerReopenUntil: integer("offer_reopen_until", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

@@ -6,6 +6,7 @@ import { merciWhatsappText, orderCode } from "@/lib/order-code";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE } from "@/lib/session";
+import { deadlineLabel, RESERVED_COOKIE, RESERVED_COOKIE_MAX_AGE, reservedUntilForEmail } from "@/lib/catalogue-offer";
 
 /** Statut d'un achat du guide pour la page de remerciement : le lien de téléchargement apparaît dès le paiement confirmé. */
 export async function GET(request: NextRequest) {
@@ -37,22 +38,34 @@ export async function GET(request: NextRequest) {
   }
   // Message WhatsApp pré-rempli de la page merci : code de commande (rattache le numéro WhatsApp à la fiche) + nom.
   let waText: string | null = null;
+  // Prix réservé du Catalogue Premium (29 000 FCFA jusqu'à minuit de J7) : affiché sur la page merci, et ce navigateur
+  // est reconnu ensuite sur la page du catalogue (cookie wp_res = fiche prospect).
+  let reserved: { until: string; label: string } | null = null;
+  let prospectId: string | null = null;
   if (intent.status === "paid") {
     const prospect = intent.email
-      ? await getDb().query.prospects.findFirst({ where: eq(schema.prospects.email, intent.email), columns: { name: true } }).catch(() => null)
+      ? await getDb().query.prospects.findFirst({ where: eq(schema.prospects.email, intent.email), columns: { id: true, name: true } }).catch(() => null)
       : null;
+    prospectId = prospect?.id ?? null;
+    const until = intent.email ? await reservedUntilForEmail(intent.email).catch(() => null) : null;
+    if (until) reserved = { until: until.toISOString(), label: deadlineLabel(until) };
     const offer = leadOfferByCta(intent.ctaId);
     const product = offer?.key === "extrait" ? "l'Extrait du Catalogue Premium" : "le Guide WooPlans des maisons";
     waText = merciWhatsappText({ product, code: orderCode(intent.id), name: prospect?.name });
   }
-  return NextResponse.json(
+  const response = NextResponse.json(
     {
       status: intent.status,
       waText,
+      reserved,
       track,
       download: intent.status === "paid" ? `/api/guide/${intent.id}` : null,
       answered: Boolean(intent.qualification),
     },
     { headers: { "Cache-Control": "no-store" } },
   );
+  if (reserved && prospectId) {
+    response.cookies.set(RESERVED_COOKIE, prospectId, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: RESERVED_COOKIE_MAX_AGE });
+  }
+  return response;
 }

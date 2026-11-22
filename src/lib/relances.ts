@@ -1,30 +1,36 @@
 /**
  * Relances WhatsApp à la main (provisoire, tant que Meta bloque les envois par l'API) : chaque acheteur du guide
- * ou de l'extrait reçoit 3 messages, que Tao envoie en un clic depuis /admin/relances (lien wa.me pré-rempli).
- * Message 1 = livraison (tout de suite), message 2 = la page de l'offre réservée aux acheteurs (+24 h),
- * message 3 = témoignage + prix (+48 h). « M. » ou « Mme » devant le nom (src/lib/civilite.ts).
+ * ou de l'extrait reçoit 5 messages (22 nov. 2026), que Tao envoie en un clic depuis /admin/relances (lien wa.me
+ * pré-rempli), calés sur son achat et sur la fin de son prix réservé (29 000 FCFA jusqu'à minuit de J7) :
+ * J0 livraison, J1 vidéo + offre, J4 rappel, J7 matin dernier jour, J7 20 h message court (src/lib/relance-schedule.ts).
+ * Les messages 3 à 5 ne partent plus une fois la date passée. « M. » ou « Mme » devant le nom (src/lib/civilite.ts).
  * Un acheteur du Catalogue Premium sort de la file automatiquement (rapprochement toutes les 15 min, et ici).
  */
-import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, notInArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, isNull, like, lt, lte, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { guessCivilite, salutation, type Civilite } from "@/lib/civilite";
 import { siteUrl } from "@/lib/env";
 import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_MODELS, LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
-import { WA_DELAYS_HOURS } from "@/lib/pipeline";
 import { formatFcfa } from "@/lib/plans";
 import { customerLookup } from "@/lib/prospects";
 import { inChunks } from "@/lib/sql-chunks";
-import { cataloguePrice, cataloguePriceBefore } from "@/lib/site";
+import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
+import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
+import { endsText, offerMessagesOver, relanceDueAt, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
 import { waNumber } from "@/lib/whatsapp-rules";
 
 const HOUR = 3_600_000;
 
 export const RELANCE_STEPS = [
   { title: "Message 1 · Livraison", when: "dès l'achat", file: "Le PDF" },
-  { title: "Message 2 · Offre flash", when: "le lendemain", file: "La vidéo du catalogue" },
-  { title: "Message 3 · Témoignage + prix", when: "2 jours après", file: "La vidéo de Bassirou" },
+  { title: "Message 2 · Vidéo + offre", when: "J1", file: "La vidéo du catalogue" },
+  { title: "Message 3 · Rappel de l'offre", when: "J4", file: null },
+  { title: "Message 4 · Dernier jour", when: "J7 au matin", file: null },
+  { title: "Message 5 · Dernières heures", when: "J7 vers 20 h", file: null },
 ] as const;
+
+export type RelanceStep = 0 | 1 | 2 | 3 | 4;
 
 export type RelanceItem = {
   id: string;
@@ -36,8 +42,10 @@ export type RelanceItem = {
   country: string | null;
   offer: "guide" | "extrait";
   intentId: string | null;
-  step: 0 | 1 | 2;
+  step: RelanceStep;
   boughtAt: Date;
+  /** Fin du prix réservé (minuit de J7, ou réouverture de 24 h). */
+  reservedUntil: Date | null;
   dueAt: Date;
   due: boolean;
   read: boolean;
@@ -55,7 +63,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
   const db = getDb();
   const [rows, isClient] = await Promise.all([
     db.query.prospects.findMany({
-      where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, 3), isNull(schema.prospects.waOptOutAt), isNull(schema.prospects.waInvalidAt)),
+      where: and(eq(schema.prospects.pipelineStage, "sequence"), lt(schema.prospects.waStep, RELANCE_STEP_COUNT), isNull(schema.prospects.waOptOutAt), isNull(schema.prospects.waInvalidAt)),
       orderBy: [desc(schema.prospects.lastEventAt)],
       limit: 500,
     }),
@@ -77,9 +85,11 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
   intents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const intentByEmail = new Map<string, (typeof intents)[number]>();
   for (const i of intents) if (i.email && !intentByEmail.has(i.email)) intentByEmail.set(i.email, i);
-  return withPhone.map((r) => {
+  const items = withPhone.map((r): RelanceItem => {
     const intent = intentByEmail.get(r.email);
-    const dueAt = r.waNextAt ?? r.lastEventAt;
+    const boughtAt = intent?.createdAt ?? r.lastEventAt;
+    const step = Math.min(Math.max(r.waStep, 0), RELANCE_STEP_COUNT - 1) as RelanceStep;
+    const dueAt = relanceDueAt(boughtAt, step);
     return {
       id: r.id,
       name: r.name,
@@ -89,8 +99,9 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       country: r.country,
       offer: intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide",
       intentId: intent?.id ?? null,
-      step: Math.min(Math.max(r.waStep, 0), 2) as 0 | 1 | 2,
-      boughtAt: r.lastEventAt,
+      step,
+      boughtAt,
+      reservedUntil: reservedUntil(boughtAt, r.offerReopenUntil, 7),
       dueAt,
       due: dueAt.getTime() <= now.getTime(),
       read: Boolean(r.waReadAt),
@@ -99,19 +110,32 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       lastSentAt: r.waLastSentAt,
     };
   });
+  // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
+  return items.filter((i) => !offerMessagesOver(i.step, i.reservedUntil, now));
 }
 
 /** Une seule personne de la file (lien de secours /admin/relances/envoyer) : 2 petites requêtes, pas toute la file. */
 export async function relanceItem(id: string) {
   const db = getDb();
-  const p = await db.query.prospects.findFirst({ where: eq(schema.prospects.id, id), columns: { id: true, name: true, email: true, phone: true } });
+  const p = await db.query.prospects.findFirst({
+    where: eq(schema.prospects.id, id),
+    columns: { id: true, name: true, email: true, phone: true, lastEventAt: true, offerReopenUntil: true },
+  });
   if (!p) return null;
   const intent = await db.query.checkoutIntents.findFirst({
     where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
     orderBy: [desc(schema.checkoutIntents.createdAt)],
-    columns: { id: true, ctaId: true },
+    columns: { id: true, ctaId: true, createdAt: true },
   });
-  return { ...p, civilite: guessCivilite(p.name), offer: (intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide") as RelanceItem["offer"], intentId: intent?.id ?? null };
+  const boughtAt = intent?.createdAt ?? p.lastEventAt;
+  return {
+    ...p,
+    civilite: guessCivilite(p.name),
+    offer: (intent?.ctaId === LEAD_OFFERS.extrait.ctaId ? "extrait" : "guide") as RelanceItem["offer"],
+    intentId: intent?.id ?? null,
+    boughtAt,
+    reservedUntil: reservedUntil(boughtAt, p.offerReopenUntil, 7),
+  };
 }
 
 /**
@@ -119,8 +143,9 @@ export async function relanceItem(id: string) {
  * `civilite` : celle choisie sur la carte quand le prénom n'a pas suffi ; sinon celle déduite du prénom.
  */
 export function relanceMessage(
-  item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step"> & { civilite?: Civilite | null },
+  item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step" | "reservedUntil"> & { civilite?: Civilite | null },
   modelsCount: number,
+  now = new Date(),
 ) {
   const who = salutation(item.name, item.civilite === undefined ? guessCivilite(item.name) : item.civilite);
   const extrait = item.offer === "extrait";
@@ -133,19 +158,27 @@ export function relanceMessage(
       : `${merci}\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
   }
   const hello = who ? `Bonjour ${who} 👋` : "Bonjour 👋";
-  const price = cataloguePrice();
-  const before = cataloguePriceBefore();
-  const priceText = `${before ? `~${formatFcfa(before)}~ ` : ""}*${formatFcfa(price)}*`;
+  const reserved = `*${formatFcfa(catalogueReservedPrice())}*`;
+  const publicPrice = formatFcfa(cataloguePrice());
+  const until = item.reservedUntil;
+  const label = until ? deadlineLabel(until) : null;
+  // Lien personnel : reconnaît la personne sur la page (son prix et son compte à rebours), suivi des clics.
+  const link = siteUrl(`/r/${item.id}.${["", "j1", "j4", "j7", "j7s"][item.step]}`);
   if (item.step === 1) {
-    // Le lien mène à la page réservée aux acheteurs de l'extrait ou du guide (/extrait-catalogue-premium/catalogue).
-    const link = siteUrl(`/r/${item.id}.j1`);
-    const discount = before && before > price ? ` (-${Math.round((1 - price / before) * 100)} %)` : "";
-    return extrait
-      ? `${hello}\n\nVous avez vu les ${EXTRAIT_MODELS} maisons de votre extrait. Voici les ${Math.max(models - EXTRAIT_MODELS, 0)} autres, au même format : plan de distribution coté et devis poste par poste pour chaque maison.\n\n⚡ *Offre flash réservée aux acheteurs de l'extrait* : le Catalogue Premium complet à ${priceText}${discount}, paiement unique.\n\n👉 ${link}`
-      : `${hello}\n\nDans votre guide, vous avez vu nos ${models} villas et duplex. Le Catalogue Premium vous donne, pour chacune, le plan de distribution coté et le devis poste par poste.\n\n⚡ *Offre flash réservée aux acheteurs du guide* : ${priceText}${discount}, paiement unique.\n\n👉 ${link}`;
+    const intro = extrait
+      ? `Vous avez vu les ${EXTRAIT_MODELS} maisons de votre extrait. Le Catalogue Premium vous donne les ${Math.max(models - EXTRAIT_MODELS, 0)} autres, au même format : plan de distribution coté et devis poste par poste pour chaque maison.`
+      : `Dans votre guide, vous avez vu nos ${models} villas et duplex. Le Catalogue Premium vous donne, pour chacune, le plan de distribution coté et le devis poste par poste.`;
+    return `${hello}\n\n${intro}\n\n🎥 Regardez la vidéo : tout le catalogue en 90 secondes.\n\n🎁 *Votre prix réservé* : ${reserved} au lieu de ${publicPrice}${label ? `, jusqu'au ${label}` : ""}.\n\n👉 ${link}`;
   }
-  const link = siteUrl(`/r/${item.id}.j3`);
-  return `${who ? `${who}, voici` : "Voici"} ce que Mamadou Bassirou a fait avec le Catalogue Premium 🎥\nPrix actuel : ${priceText}, paiement unique, accès à vie.\n👉 ${link}\n(Répondez Stop pour ne plus recevoir de messages.)`;
+  if (item.step === 2) {
+    return `${hello}\n\nPetit rappel : votre prix réservé pour le Catalogue Premium, ${reserved} au lieu de ${publicPrice}, est valable jusqu'au ${label}.\n\nCe que vous débloquez :\n✅ les ${models} villas et duplex\n✅ le plan coté de chaque niveau\n✅ le devis poste par poste, de la fondation aux finitions\n✅ les nouveaux modèles, inclus\n\nPaiement unique par Mobile Money, accès tout de suite.\n\n👉 ${link}`;
+  }
+  const ends = until && label ? endsText(until, label, now) : "bientôt";
+  if (item.step === 3) {
+    return `${hello}\n\n⏳ C'est le dernier jour : votre prix réservé de ${reserved} pour le Catalogue Premium se termine ${ends}. Ensuite, ce sera ${publicPrice}.\n\n👉 ${link}`;
+  }
+  // Message 5 (idée de Tao) : court, sans lien ni image ; la réponse ouvre la conversation.
+  return `⏳ ${who ? `${who}, votre` : "Votre"} prix réservé de ${reserved} se termine ${ends}. Après, ce sera ${publicPrice}.\n\nVous voulez en profiter ? Répondez *OUI* et je vous envoie le lien tout de suite 👇`;
 }
 
 /** Fichier à joindre à la main dans WhatsApp (Tao le télécharge une fois sur son téléphone). */
@@ -157,7 +190,8 @@ export function relanceAttachment(item: Pick<RelanceItem, "offer" | "intentId" |
     };
   }
   if (item.step === 1) return { label: "Vidéo du catalogue", url: "/assets/catalogue/catalogue-premium.mp4" };
-  return { label: "Vidéo témoignage de Bassirou", url: "/assets/whatsapp/temoignage-bassirou.mp4" };
+  // Messages 3 à 5 : texte seul.
+  return null;
 }
 
 export function relanceWhatsappUrl(phone: string, text: string) {
@@ -167,10 +201,14 @@ export function relanceWhatsappUrl(phone: string, text: string) {
 
 /** Clic sur « Envoyer » : le message est noté envoyé et le suivant est programmé (verrou sur l'étape : pas de doublon). */
 export async function recordManualSend(id: string, step: number, now = new Date()) {
-  if (step < 0 || step > 2) return false;
+  if (!Number.isInteger(step) || step < 0 || step >= RELANCE_STEP_COUNT) return false;
+  const item = await relanceItem(id);
+  if (!item) return false;
+  // Prochain message à sa date (J1, J4, J7…) ; après le 5e, classement du pipeline à la fin du prix réservé.
+  const next = relanceDueAt(item.boughtAt, step + 1);
   const updated = await getDb()
     .update(schema.prospects)
-    .set({ waStep: step + 1, waLastSentAt: now, waNextAt: new Date(now.getTime() + WA_DELAYS_HOURS[step] * HOUR), updatedAt: now })
+    .set({ waStep: step + 1, waLastSentAt: now, waNextAt: next.getTime() > now.getTime() ? next : now, updatedAt: now })
     .where(and(eq(schema.prospects.id, id), eq(schema.prospects.waStep, step), eq(schema.prospects.pipelineStage, "sequence")))
     .returning({ id: schema.prospects.id });
   return updated.length > 0;
@@ -195,7 +233,7 @@ export const PROJECT_FORM_AFTER_DAYS = 10;
 export type ProjectItem = { id: string; name: string | null; civilite: Civilite | null; email: string; phone: string; country: string | null; boughtAt: Date };
 
 /**
- * Prospects dont les 3 messages de conversion sont faits, 10 jours après l'achat, à qui le lien du formulaire
+ * Prospects dont la phase de conversion est finie (message 2 envoyé et prix réservé terminé), 10 jours après l'achat, à qui le lien du formulaire
  * n'a pas encore été envoyé (ni rempli). Les clients du Catalogue Premium et les désinscrits sont exclus.
  */
 export async function projectQueue(now = new Date()): Promise<ProjectItem[]> {
@@ -203,7 +241,7 @@ export async function projectQueue(now = new Date()): Promise<ProjectItem[]> {
   const [rows, isClient] = await Promise.all([
     db.query.prospects.findMany({
       where: and(
-        gte(schema.prospects.waStep, 3),
+        gte(schema.prospects.waStep, 2),
         isNull(schema.prospects.projectSentAt),
         isNull(schema.prospects.projectAnsweredAt),
         isNull(schema.prospects.waOptOutAt),
@@ -277,4 +315,40 @@ export async function noWhatsappList() {
     limit: 100,
     columns: { id: true, name: true, email: true, phone: true },
   });
+}
+
+/* ─────────────── Deuxième chance : « Rouvrir l'offre 24 h » ─────────────── */
+
+/**
+ * Prospect retrouvé par son email ou son numéro WhatsApp (8 derniers chiffres), pour rouvrir son prix réservé.
+ * Renvoie null si aucune fiche ne correspond, ou si plusieurs numéros correspondent (il faut alors l'email).
+ */
+export async function findProspectForReopen(query: string) {
+  const db = getDb();
+  const q = query.trim().toLowerCase();
+  if (q.includes("@")) {
+    return (await db.query.prospects.findFirst({ where: eq(schema.prospects.email, q), columns: { id: true, name: true, email: true, phone: true } })) ?? null;
+  }
+  const digits = q.replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  const rows = await db.query.prospects.findMany({
+    where: like(schema.prospects.phone, `%${digits.slice(-8)}`),
+    columns: { id: true, name: true, email: true, phone: true },
+    limit: 2,
+  });
+  return rows.length === 1 ? rows[0] : null;
+}
+
+/** Prix réservé rouvert 24 h à partir de maintenant (noté sur la fiche). */
+export async function reopenReservedOffer(id: string, now = new Date()) {
+  const db = getDb();
+  const p = await db.query.prospects.findFirst({ where: eq(schema.prospects.id, id), columns: { notes: true } });
+  if (!p) return null;
+  const until = new Date(now.getTime() + 24 * HOUR);
+  const line = `${now.toISOString().slice(0, 16).replace("T", " ")} UTC : prix réservé du catalogue rouvert 24 h (jusqu'au ${deadlineLabel(until)}).`;
+  await db
+    .update(schema.prospects)
+    .set({ offerReopenUntil: until, notes: p.notes ? `${p.notes}\n${line}` : line, updatedAt: now })
+    .where(eq(schema.prospects.id, id));
+  return until;
 }

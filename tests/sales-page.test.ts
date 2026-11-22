@@ -94,13 +94,12 @@ test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans d�
   assert.doesNotMatch(b, /montrer à votre maçon|sur devis ; le prix du catalogue/);
   assert.doesNotMatch(b, /data-countdown|du jour/);
   assert.match(b, /id="contenu-plans"/);
-  // Pas de palier ni de compte à rebours : prix promotionnel avec le prix normal barré (src/config/catalogue.json).
+  // Pas de palier ni de compte à rebours, ni de prix barré : prix public du catalogue (décision du 22 nov. 2026).
   assert.doesNotMatch(b, /data-wp-threshold|data-wp-left|Prix avant 100/);
-  const before = catalogue.priceBefore.toLocaleString("fr-FR").replace(/\s/g, " ");
-  assert.ok(catalogue.priceBefore > CATALOGUE_PRICE);
-  assert.match(b, new RegExp(`class="promo"[^>]*>[^\\n]*<s>${before}</s>`)); // bandeau
-  assert.equal(b.match(new RegExp(`<s>${before} FCFA</s>`, "g"))?.length, 3); // héro, offre, barre collante
-  assert.match(b, new RegExp(`–${Math.round((1 - CATALOGUE_PRICE / catalogue.priceBefore) * 100)} %`));
+  assert.doesNotMatch(b, /<s>[\d  ]+(FCFA)?<\/s>|Prix promo|prix promotionnel/i);
+  const [thousands, units] = [Math.floor(CATALOGUE_PRICE / 1000), String(CATALOGUE_PRICE % 1000).padStart(3, "0")];
+  assert.equal(CATALOGUE_PRICE, catalogue.price);
+  assert.match(b, new RegExp(`class="promo"[^>]*>[^\\n]*${thousands}(&nbsp;| )${units}`)); // bandeau
 });
 
 test("page de vente : témoignages juste après le héro, puis le parcours", () => {

@@ -120,6 +120,13 @@
       "when": 1795250000000,
       "tag": "0016_whatsapp_invalide",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1795330000000,
+      "tag": "0017_offre_reservee",
+      "breakpoints": true
     }
   ]
 }

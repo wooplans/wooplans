@@ -808,19 +808,24 @@ export function guideSequenceEmail(p: {
 }
 
 /**
- * Les 4 emails de conversion après l'achat de l'extrait (src/lib/guide-rules.ts, EXTRAIT_DELAYS_HOURS : J1, J2, J5, J7),
- * en plus des 3 messages WhatsApp. Lien : la page réservée aux acheteurs de l'extrait. Aucune fausse urgence.
+ * Emails de l'extrait (src/lib/guide-rules.ts, EXTRAIT_DELAYS_HOURS : J1, J4, J7, puis J10), au rythme des messages
+ * WhatsApp. Prix réservé (29 000 FCFA) avec sa vraie date de fin ; une fois la date passée, plus de rappel d'offre.
  */
 export function extraitSequenceEmail(p: {
-  kind: "offre" | "devis" | "faq" | "recap" | "projet";
+  kind: "offre" | "rappel" | "dernier" | "projet";
   name?: string | null;
   downloaded: boolean;
   /** Lien personnel du formulaire « Mon projet » (email J10). */
   projectUrl?: string;
   downloadUrl: string | null;
   catalogueUrl: string;
-  price: string;
-  priceBefore: string | null;
+  /** Prix public (« 39 000 FCFA ») et prix réservé (« 29 000 FCFA »). */
+  publicPrice: string;
+  reservedPrice: string;
+  /** « dimanche 29 novembre à minuit » ; null si le prix réservé est terminé (prix public seul). */
+  until: string | null;
+  /** « ce soir à minuit » le dernier jour, sinon « le … ». */
+  ends?: string;
   models: number;
   extraitModels: number;
   unsubscribe: string;
@@ -828,7 +833,16 @@ export function extraitSequenceEmail(p: {
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const helloText = p.name ? `Bonjour ${p.name},` : "Bonjour,";
   const others = Math.max(p.models - p.extraitModels, 0);
-  const priceLine = `Catalogue Premium : ${p.priceBefore ? `${p.price} au lieu de ${p.priceBefore}` : p.price}, paiement unique, accès à vie.`;
+  const priceLine = p.until
+    ? `Prix public : ${p.publicPrice}. Votre prix réservé : ${p.reservedPrice}, jusqu'au ${p.until}. Paiement unique, accès à vie.`
+    : `Catalogue Premium : ${p.publicPrice}, paiement unique, accès à vie.`;
+  const contents = [
+    `Les ${p.models} villas et duplex, avec leur rendu 3D`,
+    "Le plan de distribution coté de chaque niveau",
+    "Le devis poste par poste, de la fondation au carrelage",
+    "La fiche PDF de chaque modèle, à montrer à votre famille ou à votre maçon",
+    "Les nouveaux modèles, ajoutés sans frais",
+  ];
   let subject: string;
   let paragraphs: string[];
   let items: string[] = [];
@@ -838,54 +852,43 @@ export function extraitSequenceEmail(p: {
       subject = `Vous avez vu ${p.extraitModels} maisons. Voici les ${others} autres.`;
       paragraphs = [
         `Votre extrait vous a montré ${p.extraitModels} maisons avec leur plan de distribution et leur devis poste par poste.`,
-        `Le Catalogue Premium contient nos ${p.models} villas et duplex, toutes au même format. Comme acheteur de l'extrait, vous avez accès à une page réservée :`,
+        `Le Catalogue Premium contient nos ${p.models} villas et duplex, toutes au même format.`,
+        p.until
+          ? `Comme acheteur de l'extrait, votre prix est réservé : ${p.reservedPrice} au lieu de ${p.publicPrice}, jusqu'au ${p.until}.`
+          : `Le catalogue complet est à ${p.publicPrice}, paiement unique.`,
       ];
       if (!p.downloaded && p.downloadUrl) paragraphs.push(`Vous n'avez pas encore ouvert votre extrait ? Le voici : ${p.downloadUrl}`);
       break;
-    case "devis":
-      subject = "Comment lire un devis poste par poste";
+    case "rappel":
+      subject = p.until ? `Votre prix réservé, jusqu'au ${p.until}` : "Ce que contient le Catalogue Premium";
       paragraphs = [
-        "Le budget total d'une maison ne suffit pas pour décider. Ce qui compte, c'est le coût de chaque étape : vous savez ce que vous pouvez payer tout de suite, et ce qui peut attendre.",
-        "Dans votre extrait, chaque devis suit l'ordre du chantier :",
+        p.until
+          ? `Petit rappel : votre prix réservé pour le Catalogue Premium, ${p.reservedPrice} au lieu de ${p.publicPrice}, est valable jusqu'au ${p.until}.`
+          : `Le Catalogue Premium est à ${p.publicPrice}, paiement unique.`,
+        "Ce que vous débloquez :",
       ];
-      items = ["Fondation", "Élévations", "Charpente et toiture", "Crépissage", "Portes et fenêtres", "Plomberie et électricité", "Plafond et peinture", "Carrelage"];
-      cta = { href: p.catalogueUrl, label: "Voir les devis des autres maisons" };
-      break;
-    case "faq":
-      subject = "Vos questions sur le Catalogue Premium";
-      paragraphs = ["Les questions que les acheteurs de l'extrait nous posent le plus souvent :"];
-      items = [
-        "Quand ai-je accès ? Juste après le paiement : votre code d'accès arrive par email.",
-        "Comment payer ? Par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire.",
-        "Les maisons de mon extrait sont-elles dedans ? Oui, avec toutes les autres.",
-        "Est-ce que je reçois un livre ? Vous recevez la version numérique : un espace en ligne et la fiche PDF de chaque modèle.",
-        "Les nouveaux modèles sont-ils inclus ? Oui, ils s'ajoutent à votre espace sans frais.",
-      ];
+      items = contents;
       cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
       break;
-    case "projet":
+    case "dernier":
+      subject = "Dernier jour pour votre prix réservé";
+      paragraphs = [
+        `Votre prix réservé de ${p.reservedPrice} pour le Catalogue Premium se termine ${p.ends ?? `le ${p.until}`}. Ensuite, ce sera le prix public : ${p.publicPrice}.`,
+        "Accès tout de suite après le paiement, par Mobile Money (Orange Money, MTN MoMo, Wave, Moov Money) ou carte bancaire.",
+      ];
+      cta = { href: p.catalogueUrl, label: `Profiter de mon prix de ${p.reservedPrice}` };
+      break;
+    default:
       subject = "Votre projet en 4 questions";
       paragraphs = [
         "Pour vous montrer les maisons qui correspondent vraiment à votre projet, j'ai 4 questions rapides : votre terrain, quand vous voulez commencer, votre budget et le type de maison.",
         "Il suffit de toucher vos réponses : 20 secondes, rien à écrire.",
       ];
       cta = { href: p.projectUrl ?? p.catalogueUrl, label: "Répondre aux 4 questions" };
-      break;
-    default:
-      subject = "Ce que contient le Catalogue Premium";
-      paragraphs = [`Pour chacune des ${p.models} villas et duplex :`];
-      items = [
-        "Le rendu 3D",
-        "Le plan de distribution coté de chaque niveau",
-        "Le devis poste par poste, de la fondation au carrelage",
-        "La fiche PDF du modèle, à montrer à votre famille ou à votre maçon",
-        "Le comparateur : 3 modèles côte à côte",
-        "Les nouveaux modèles, ajoutés sans frais",
-      ];
-      cta = { href: p.catalogueUrl, label: "Obtenir le Catalogue Premium" };
   }
-  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}${p.kind === "projet" ? "" : `<p>${escape(priceLine)}</p>`}<p>Tao, fondateur de WooPlans</p>`;
-  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, p.kind === "projet" ? "" : priceLine, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].filter(Boolean).join("\n\n");
+  const showPrice = p.kind !== "projet" && p.kind !== "dernier";
+  const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${items.length ? bulletList(items) : ""}${button(cta.href, cta.label)}${showPrice ? `<p>${escape(priceLine)}</p>` : ""}<p>Tao, fondateur de WooPlans</p>`;
+  const text = [helloText, ...paragraphs, ...items.map((i) => `- ${i}`), `${cta.label} : ${cta.href}`, showPrice ? priceLine : "", "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].filter(Boolean).join("\n\n");
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }
 
