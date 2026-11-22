@@ -18,6 +18,8 @@ import { formatFcfa } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
+const AI_STAGE: Record<string, string> = { chaud: "🔥 chaud", tiede: "tiède", froid: "froid", perdu: "perdu" };
+
 const COLUMN_STYLE = [
   "border-sky-300 bg-sky-50",
   "border-amber-300 bg-amber-50",
@@ -90,6 +92,19 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           {item.extrait.opens} j · {item.extrait.viewed} maison{item.extrait.viewed > 1 ? "s" : ""} · {item.extrait.lockedClicks} 🔒
           {item.extrait.offerClick ? " · a cliqué sur l'offre" : ""}
         </p>
+      ) : null}
+      {item.ai ? (
+        <div className="mt-1.5 rounded-md bg-emerald-50 px-2 py-1 text-xs">
+          <p>
+            🤖 IA : <strong>{AI_STAGE[item.ai.stage] ?? item.ai.stage}</strong>
+            {item.ai.score !== null ? ` (${item.ai.score}/100)` : ""} ·{" "}
+            <Link href={`/admin/conversation/${item.id}`} className="font-semibold text-primary">
+              conversation
+            </Link>
+          </p>
+          {item.ai.summary ? <p className="mt-0.5 text-foreground/80">{item.ai.summary}</p> : null}
+          {item.ai.nextAction ? <p className="mt-0.5 font-semibold">➡ {item.ai.nextAction}</p> : null}
+        </div>
       ) : null}
       {item.video ? (
         <p className="mt-1 rounded-md bg-violet-50 px-2 py-1 text-xs">
