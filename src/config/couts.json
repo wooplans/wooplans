@@ -1,0 +1,11 @@
+{
+  "usdToFcfa": 750,
+  "chariowRate": 0.1,
+  "fixed": [
+    { "id": "claude", "label": "Claude (abonnement)", "amount": 20, "currency": "USD", "per": "month" },
+    { "id": "genuka", "label": "Genuka (WhatsApp)", "amount": 10000, "currency": "XAF", "per": "month" },
+    { "id": "cloudflare", "label": "Cloudflare", "amount": 5, "currency": "USD", "per": "month" },
+    { "id": "domaine", "label": "Nom de domaine", "amount": 15, "currency": "USD", "per": "year" }
+  ],
+  "adExcludeNames": ["AQC", "MyM"]
+}

@@ -273,6 +273,11 @@ async function processCatalogueSale(
   const { member, code } = granted;
 
   await db.update(schema.sales).set({ memberId: member.id }).where(eq(schema.sales.id, saleRow.id));
+  // Attribution au tunnel extrait / guide (22 nov. 2026) : la fiche prospect du lien personnel (cookie du paiement),
+  // sinon celle du même email ou du même numéro ; elle passe en « client » tout de suite (sans attendre le rapprochement).
+  await attributeCatalogueSale(saleRow.id, metadata.prospect_id, email, normalizePhone(customer.phone)).catch((error) =>
+    console.error("Attribution de la vente au prospect impossible", error),
+  );
   // Offre : le modèle acheté attend le membre dans « Fiches PDF », hors quota de téléchargements.
   if (plan) await recordPurchasedPlan({ memberId: member.id, planSlug: plan.slug, planCode: plan.code, saleId: sale.id! });
 
@@ -833,4 +838,20 @@ export async function createChariowCheckout(params: {
     console.warn("Chariow checkout API erreur, repli boutique :", error);
   }
   return { url: storefrontCheckoutUrl(productId), mode: "storefront" };
+}
+
+/** Rattache une vente du catalogue à la fiche prospect de l'acheteur (lien personnel, email, puis téléphone). */
+async function attributeCatalogueSale(saleRowId: string, prospectId: string | undefined, email: string, phone: string | null) {
+  const db = getDb();
+  const byId = prospectId ? await db.query.prospects.findFirst({ where: eq(schema.prospects.id, String(prospectId).slice(0, 64)), columns: { id: true } }) : null;
+  const byEmail = byId ? null : await db.query.prospects.findFirst({ where: eq(schema.prospects.email, email), columns: { id: true } });
+  const byPhone = byId || byEmail || !phone ? null : await db.query.prospects.findFirst({ where: eq(schema.prospects.phone, phone), columns: { id: true } });
+  const prospect = byId ?? byEmail ?? byPhone;
+  if (!prospect) return;
+  const now = new Date();
+  await db.update(schema.sales).set({ prospectId: prospect.id }).where(eq(schema.sales.id, saleRowId));
+  await db
+    .update(schema.prospects)
+    .set({ status: "converted", convertedAt: now, nextEmailAt: null, waNextAt: null, pipelineStage: "client", pipelineUpdatedAt: now, updatedAt: now })
+    .where(eq(schema.prospects.id, prospect.id));
 }
