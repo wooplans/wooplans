@@ -14,6 +14,7 @@ import { GUIDE } from "@/lib/guide";
 import { EXTRAIT_MODELS, LEAD_CTA_IDS, LEAD_OFFERS } from "@/lib/lead-offers";
 import { formatFcfa } from "@/lib/plans";
 import { customerLookup } from "@/lib/prospects";
+import { extraitActivityByEmail } from "@/lib/extrait-web";
 import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
 import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
@@ -52,6 +53,8 @@ export type RelanceItem = {
   clicked: boolean;
   replied: boolean;
   lastSentAt: Date | null;
+  /** Activité sur l'extrait en ligne (/mon-extrait) : score d'intérêt et détail, null s'il ne l'a pas ouvert. */
+  extrait: { score: number; opens: number; viewed: number; lockedClicks: number; offerClick: boolean } | null;
 };
 
 /**
@@ -83,6 +86,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
     40,
   );
   intents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const activity = await extraitActivityByEmail(withPhone.map((r) => r.email)).catch(() => new Map());
   const intentByEmail = new Map<string, (typeof intents)[number]>();
   for (const i of intents) if (i.email && !intentByEmail.has(i.email)) intentByEmail.set(i.email, i);
   const items = withPhone.map((r): RelanceItem => {
@@ -108,6 +112,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       clicked: Boolean(r.waClickedAt),
       replied: Boolean(r.waRepliedAt),
       lastSentAt: r.waLastSentAt,
+      extrait: activity.get(r.email) ?? null,
     };
   });
   // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
@@ -154,7 +159,7 @@ export function relanceMessage(
     // Modèle de Tao (19 nov.) : le PDF est joint à la main dans WhatsApp, pas de lien.
     const merci = who ? `Merci ${who} pour votre achat 🙏` : "Merci pour votre achat 🙏";
     return extrait
-      ? `${merci}\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)`
+      ? `${merci}\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)${item.intentId ? `\n\n📱 Aussi en ligne, sur votre téléphone : ${siteUrl(`/mon-extrait/${item.intentId}`)}` : ""}`
       : `${merci}\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
   }
   const hello = who ? `Bonjour ${who} 👋` : "Bonjour 👋";

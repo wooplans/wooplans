@@ -680,20 +680,21 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
 }
 
 /** Livraison de l'Extrait du Catalogue Premium (1 900 FCFA) : 5 maisons complètes, plan et devis. */
-export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number; whatsappUrl?: string | null }) {
+export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number; whatsappUrl?: string | null; webUrl?: string | null }) {
   const subject = "Votre Extrait du Catalogue Premium est prêt";
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
   const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis poste par poste de chacune.</p>
-${button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
-<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.</p>
+${p.webUrl ? `${button(p.webUrl, "Voir mon extrait en ligne")}<p style="margin-top:-8px">Ou <a href="${p.downloadUrl}" style="color:#0F5B59;font-weight:600">téléchargez-le en PDF</a>.</p>` : button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ces liens sont personnels. Gardez cet email : il vous permet de revoir votre extrait.</p>
 ${p.whatsappUrl ? `<p><strong>Recevez aussi votre extrait sur WhatsApp</strong> : un clic, le message est déjà écrit, il vous suffit de l'envoyer.</p>${whatsappButton(p.whatsappUrl, "Recevoir aussi sur WhatsApp")}` : ""}
 <p>Le Catalogue Premium complet contient tous nos modèles au même format : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
     `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis poste par poste de chacune.`,
-    `Télécharger : ${p.downloadUrl}`,
-    "Ce lien est personnel. Gardez cet email : il vous permet de retélécharger l'extrait.",
+    p.webUrl ? `Voir mon extrait en ligne : ${p.webUrl}` : "",
+    `Télécharger (PDF) : ${p.downloadUrl}`,
+    "Ces liens sont personnels. Gardez cet email : il vous permet de revoir votre extrait.",
     p.whatsappUrl ? `Recevez aussi votre extrait sur WhatsApp : ${p.whatsappUrl}` : "",
     `Le Catalogue Premium complet : ${p.thanksUrl}`,
     "Tao, fondateur de WooPlans",
@@ -957,5 +958,21 @@ export function guideRelanceEmail(p: { kind: "help" | "last"; name?: string | nu
   const help = `Un souci pour payer ? <a href="${p.whatsappUrl}" style="color:#0F5B59;font-weight:600">Écrivez-moi sur WhatsApp</a>, je vous aide.`;
   const body = `<p>${hello}</p>${paragraphs.map((t) => `<p>${escape(t)}</p>`).join("")}${button(p.checkoutUrl, cta)}<p>${help}</p><p>Tao, fondateur de WooPlans</p>`;
   const text = [helloText, ...paragraphs, `${cta} : ${p.checkoutUrl}`, `Un souci pour payer ? WhatsApp : ${p.whatsappUrl}`, "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].join("\n\n");
+  return { subject, html: layout(subject, body, p.unsubscribe), text };
+}
+
+/**
+ * Annonce de l'extrait en ligne aux acheteurs déjà livrés (23 nov. 2026), envoyée une fois depuis l'admin :
+ * leur lien personnel, les 5 maisons débloquées et toutes les autres à parcourir.
+ */
+export function extraitWebAnnounceEmail(p: { name?: string | null; webUrl: string; models: number; total: number; unsubscribe: string }) {
+  const subject = "Votre extrait est maintenant en ligne";
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const lines = [
+    `Votre Extrait du Catalogue Premium est maintenant aussi en ligne, sur votre téléphone : vos ${p.models} maisons avec leurs rendus 3D, leurs plans cotés et leurs devis poste par poste, et la fiche PDF de chacune.`,
+    `Vous pouvez aussi parcourir les rendus des ${Math.max(p.total - p.models, 0)} autres maisons du catalogue.`,
+  ];
+  const body = `<p>${hello}</p>${lines.map((l) => `<p>${escape(l)}</p>`).join("")}${button(p.webUrl, "Ouvrir mon extrait")}<p style="color:#6B7280;font-size:13px">Ce lien est personnel.</p><p>Tao, fondateur de WooPlans</p>`;
+  const text = [p.name ? `Bonjour ${p.name},` : "Bonjour,", ...lines, `Ouvrir mon extrait : ${p.webUrl}`, "Ce lien est personnel.", "Tao, fondateur de WooPlans", `Ne plus recevoir ces emails : ${p.unsubscribe}`].join("\n\n");
   return { subject, html: layout(subject, body, p.unsubscribe), text };
 }

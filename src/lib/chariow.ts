@@ -657,6 +657,8 @@ async function processGuideSale(
             models: EXTRAIT_MODELS,
             // Bouton WhatsApp (code de commande : le numéro qui écrit est rattaché à la fiche), utile aux acheteurs sur ordinateur.
             whatsappUrl: whatsappLink(merciWhatsappText({ product: "l'Extrait du Catalogue Premium", code: orderCode(intentId), name }), WHATSAPP_BUSINESS_NUMBER),
+            // Extrait en page web (lien personnel, 23 nov. 2026).
+            webUrl: siteUrl(`/mon-extrait/${intentId}`),
           })
         : guideDeliveryEmail({ name, downloadUrl, thanksUrl, announcedModels: GUIDE.announcedModels });
     await sendEmail({ to, ...mail, template: `${offer.key}_livraison` });

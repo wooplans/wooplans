@@ -531,3 +531,20 @@ export const rateLimits = sqliteTable("rate_limits", {
   count: integer("count").notNull(),
   windowStart: integer("window_start", { mode: "timestamp_ms" }).notNull(),
 });
+
+/**
+ * Extrait du Catalogue Premium en page web (/mon-extrait/<achat>, 23 nov. 2026) : ouvertures, maisons regardées,
+ * clics sur un contenu verrouillé, fiches PDF téléchargées. Sert au score d'intérêt de l'acheteur (relances).
+ */
+export const extraitEvents = sqliteTable(
+  "extrait_events",
+  {
+    id: text("id").primaryKey(),
+    intentId: text("intent_id").notNull(),
+    email: text("email"),
+    type: text("type", { enum: ["open", "view", "locked", "pdf", "offer"] }).notNull(),
+    planSlug: text("plan_slug"),
+    createdAt: createdAt(),
+  },
+  (t) => [index("extrait_events_intent_idx").on(t.intentId), index("extrait_events_email_idx").on(t.email)],
+);
