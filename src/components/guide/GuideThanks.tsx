@@ -14,6 +14,7 @@ type Status = { status: "unknown" | "started" | "paid" | "failed" | "abandoned" 
  */
 /** Bouton vert WhatsApp (haut de page et barre fixe en bas) : le seul choix proposé après l'achat. */
 function WhatsappDeliveryButton({ href, cta, offer, className = "" }: { href: string; cta: string; offer: string; className?: string }) {
+  const label = offer === "extrait" ? "Recevoir mon extrait sur WhatsApp" : "Recevoir mon guide sur WhatsApp";
   return (
     <a
       href={href}
@@ -26,7 +27,7 @@ function WhatsappDeliveryButton({ href, cta, offer, className = "" }: { href: st
       <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6 shrink-0 fill-current">
         <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l2 .9c.3.2.5.2.5.4.1.1.1.7-.1 1.3Z" />
       </svg>
-      Recevoir aussi sur WhatsApp
+      {label}
     </a>
   );
 }
@@ -99,12 +100,14 @@ export function GuideThanks(props: {
         {paid ? (
           <>
             <p className="eyebrow">Paiement confirmé</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre {product} est prêt</h1>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Votre {product} {props.waDeliveryUrl ? "vous attend sur WhatsApp" : "est prêt"}</h1>
             {props.waDeliveryUrl ? (
               <>
                 {/* Un seul choix (décision de Tao, 20 nov.) : le client nous écrit en premier sur WhatsApp. Cela rend nos liens
                     cliquables dans la conversation et rattache son vrai numéro WhatsApp à sa fiche (code de commande). */}
-                <p className="mt-3 text-foreground/75">Nous l&apos;avons aussi envoyé dans votre boîte email.</p>
+                <p className="mt-3 text-foreground/75">
+                  Il vous attend sur WhatsApp : nous vous y envoyons votre {extrait ? "extrait" : "guide"}, votre prix réservé sur le Catalogue Premium et les conseils de nos architectes.
+                </p>
                 <div id="offre-bouton" className="cta-pulse-wa cta-flash mt-5 rounded-xl">
                   <WhatsappDeliveryButton href={waHref!} cta={extrait ? "extrait_merci_whatsapp" : "guide_merci_whatsapp"} offer={props.offer ?? "guide"} />
                 </div>

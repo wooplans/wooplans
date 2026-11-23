@@ -679,28 +679,58 @@ ${button(p.downloadUrl, "Télécharger mon guide (PDF)")}
   return { subject, html: layout(subject, body), text };
 }
 
-/** Livraison de l'Extrait du Catalogue Premium (1 900 FCFA) : 5 maisons complètes, plan et devis. */
+/**
+ * Livraison de l'Extrait du Catalogue Premium (1 900 FCFA). Depuis le 23 nov. 2026 (décision de Tao), l'extrait se reçoit
+ * sur WhatsApp : le bouton vert est le seul gros bouton, la page web de l'extrait reste en lien de secours (sans WhatsApp).
+ */
 export function extraitDeliveryEmail(p: { name?: string | null; downloadUrl: string; thanksUrl: string; models: number; whatsappUrl?: string | null; webUrl?: string | null }) {
-  const subject = "Votre Extrait du Catalogue Premium est prêt";
+  const subject = "Votre Extrait du Catalogue Premium vous attend sur WhatsApp";
   const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
-  const body = `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons présentées comme dans le catalogue, avec le plan de distribution et le devis poste par poste de chacune.</p>
-${p.webUrl ? `${button(p.webUrl, "Voir mon extrait en ligne")}<p style="margin-top:-8px">Ou <a href="${p.downloadUrl}" style="color:#0F5B59;font-weight:600">téléchargez-le en PDF</a>.</p>` : button(p.downloadUrl, "Télécharger mon extrait (PDF)")}
-<p style="color:#6B7280;font-size:13px;margin-top:-8px">Ces liens sont personnels. Gardez cet email : il vous permet de revoir votre extrait.</p>
-${p.whatsappUrl ? `<p><strong>Recevez aussi votre extrait sur WhatsApp</strong> : un clic, le message est déjà écrit, il vous suffit de l'envoyer.</p>${whatsappButton(p.whatsappUrl, "Recevoir aussi sur WhatsApp")}` : ""}
-<p>Le Catalogue Premium complet contient tous nos modèles au même format : tout est expliqué sur <a href="${p.thanksUrl}" style="color:#0F5B59;font-weight:600">votre page de confirmation</a>.</p>
+  const fallback = p.webUrl ?? p.downloadUrl;
+  const body = p.whatsappUrl
+    ? `<p>${hello}</p><p>Merci pour votre achat ! Votre <strong>Extrait du Catalogue Premium</strong> (${p.models} maisons, avec le plan de distribution et le devis poste par poste de chacune) vous attend sur WhatsApp.</p>
+<p>Un clic sur le bouton : WhatsApp s'ouvre avec le message déjà écrit (avec votre numéro de commande), il vous suffit de l'envoyer. C'est aussi sur WhatsApp que vous recevez votre prix réservé sur le Catalogue Premium et les conseils de nos architectes pour votre projet.</p>
+${whatsappButton(p.whatsappUrl, "Recevoir mon extrait sur WhatsApp")}
+<p style="color:#6B7280;font-size:13px">Pas de WhatsApp ? <a href="${fallback}" style="color:#0F5B59;font-weight:600">Voir mon extrait en ligne</a>. Ce lien est personnel.</p>
+<p>Tao, fondateur de WooPlans</p>`
+    : `<p>${hello}</p><p>Merci pour votre achat ! Voici votre <strong>Extrait du Catalogue Premium</strong> : ${p.models} maisons avec le plan de distribution et le devis poste par poste de chacune.</p>
+${button(fallback, "Voir mon extrait")}
 <p>Tao, fondateur de WooPlans</p>`;
   const text = [
     p.name ? `Bonjour ${p.name},` : "Bonjour,",
-    `Merci pour votre achat ! Voici votre Extrait du Catalogue Premium : ${p.models} maisons avec le plan de distribution et le devis poste par poste de chacune.`,
-    p.webUrl ? `Voir mon extrait en ligne : ${p.webUrl}` : "",
-    `Télécharger (PDF) : ${p.downloadUrl}`,
-    "Ces liens sont personnels. Gardez cet email : il vous permet de revoir votre extrait.",
-    p.whatsappUrl ? `Recevez aussi votre extrait sur WhatsApp : ${p.whatsappUrl}` : "",
-    `Le Catalogue Premium complet : ${p.thanksUrl}`,
+    `Merci pour votre achat ! Votre Extrait du Catalogue Premium (${p.models} maisons, plan de distribution et devis poste par poste) vous attend sur WhatsApp.`,
+    p.whatsappUrl ? `Recevoir mon extrait sur WhatsApp (le message est déjà écrit, il suffit de l'envoyer) : ${p.whatsappUrl}` : "",
+    `Pas de WhatsApp ? Voir mon extrait en ligne : ${fallback}`,
     "Tao, fondateur de WooPlans",
   ]
     .filter(Boolean)
     .join("\n\n");
+  return { subject, html: layout(subject, body), text };
+}
+
+/**
+ * Invitation à écrire sur WhatsApp (23 nov. 2026) : acheteurs de l'extrait ou du guide qui ne nous ont jamais écrit.
+ * Envoyée une seule fois, 45 min après l'achat (et une fois aux acheteurs d'avant). src/lib/wa-invite.ts.
+ */
+export function whatsappInviteEmail(p: { name?: string | null; offer: "extrait" | "guide"; whatsappUrl: string; fallbackUrl: string }) {
+  const extrait = p.offer === "extrait";
+  const what = extrait ? "votre Extrait du Catalogue Premium" : "votre Guide WooPlans des maisons";
+  const subject = extrait ? "Votre extrait vous attend sur WhatsApp" : "Votre guide vous attend sur WhatsApp";
+  const hello = p.name ? `Bonjour ${escape(p.name)},` : "Bonjour,";
+  const body = `<p>${hello}</p><p>Vous avez acheté ${what}, mais nous ne vous avons pas encore vu sur WhatsApp.</p>
+<p>C'est là que tout se passe : nous vous y envoyons ${extrait ? "votre extrait" : "votre guide"}, votre prix réservé sur le Catalogue Premium, et nos architectes y répondent à vos questions sur votre projet.</p>
+<p>Un clic : WhatsApp s'ouvre avec le message déjà écrit (avec votre numéro de commande), il vous suffit de l'envoyer.</p>
+${whatsappButton(p.whatsappUrl, extrait ? "Recevoir mon extrait sur WhatsApp" : "Recevoir mon guide sur WhatsApp")}
+<p style="color:#6B7280;font-size:13px">Pas de WhatsApp ? <a href="${p.fallbackUrl}" style="color:#0F5B59;font-weight:600">${extrait ? "Voir mon extrait en ligne" : "Télécharger mon guide"}</a>.</p>
+<p>À tout de suite,<br>Tao, fondateur de WooPlans</p>`;
+  const text = [
+    p.name ? `Bonjour ${p.name},` : "Bonjour,",
+    `Vous avez acheté ${what}, mais nous ne vous avons pas encore vu sur WhatsApp.`,
+    `C'est là que tout se passe : ${extrait ? "votre extrait" : "votre guide"}, votre prix réservé sur le Catalogue Premium et les conseils de nos architectes.`,
+    `Écrivez-nous sur WhatsApp (le message est déjà écrit) : ${p.whatsappUrl}`,
+    `Pas de WhatsApp ? ${p.fallbackUrl}`,
+    "Tao, fondateur de WooPlans",
+  ].join("\n\n");
   return { subject, html: layout(subject, body), text };
 }
 

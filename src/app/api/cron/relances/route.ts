@@ -1,5 +1,6 @@
 import { runAfterSale } from "@/lib/after-sale";
 import { qualifyPending, transcribePending } from "@/lib/conversation-ai";
+import { sendWaInvites } from "@/lib/wa-invite";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
@@ -47,5 +48,10 @@ export async function POST(request: Request) {
     console.error("Qualification IA : échec", error);
     return null;
   });
-  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai });
+  // Invitation par email à écrire sur WhatsApp (acheteurs qui ne nous ont jamais écrit, 45 min après l'achat).
+  const waInvites = await sendWaInvites().catch((error) => {
+    console.error("Invitations WhatsApp : échec", error);
+    return null;
+  });
+  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai, waInvites });
 }
