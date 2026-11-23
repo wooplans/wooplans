@@ -1,5 +1,5 @@
 import { reservedUntil } from "@/lib/catalogue-offer-rules";
-import { offerMessagesOver, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
+import { currentStep, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
 /**
  * Pipeline des acheteurs du guide (CRM) et séquence WhatsApp automatique (décision de Tao, 17 nov. 2026) :
  * J0 livraison du guide, J1 vidéo du catalogue, J3 témoignage + prix barré, puis classement à J4 :
@@ -96,15 +96,16 @@ export async function runWhatsappSequence(now = new Date(), limit = 40) {
   const due = await db.query.prospects.findMany({
     // Mode manuel (5 messages, 22 nov. 2026) : classement une fois le 5e message envoyé, ou dès la fin du prix réservé
     // (messages 3 à 5 devenus sans objet) ; le reste attend Tao dans /admin/relances.
-    where: and(eq(schema.prospects.pipelineStage, "sequence"), lte(schema.prospects.waNextAt, now), waManual() ? gte(schema.prospects.waStep, 2) : undefined),
+    where: and(eq(schema.prospects.pipelineStage, "sequence"), lte(schema.prospects.waNextAt, now), waManual() ? gte(schema.prospects.waStep, 1) : undefined),
     limit: waManual() ? Math.max(limit, 200) : limit,
   });
   const out = { sent: 0, failed: 0, classified: 0 };
   for (const p of due) {
-    if (waManual() && p.waStep < RELANCE_STEP_COUNT && !offerMessagesOver(p.waStep, reservedUntil(p.lastEventAt, p.offerReopenUntil, 7), now)) continue;
+    // Mode manuel : classement seulement quand la séquence est finie (5 messages, ou date de fin de promo passée).
+    if (waManual() && currentStep(p.waStep, p.lastEventAt, reservedUntil(p.lastEventAt, p.offerReopenUntil, 7), now) < RELANCE_STEP_COUNT) continue;
     const customer = await isCustomer(p.email, p.phone);
     const to = waNumber(p.phone);
-    if (customer || p.waOptOutAt || p.waStep >= (waManual() ? RELANCE_STEP_COUNT : 3) || (waManual() && p.waStep >= 2) || !to || (!waEnabled() && !waManual())) {
+    if (customer || p.waOptOutAt || p.waStep >= (waManual() ? RELANCE_STEP_COUNT : 3) || waManual() || !to || (!waEnabled() && !waManual())) {
       const stage = classify(p, customer);
       await db.update(schema.prospects).set({ pipelineStage: stage, pipelineUpdatedAt: now, waNextAt: null, updatedAt: now }).where(eq(schema.prospects.id, p.id));
       out.classified++;

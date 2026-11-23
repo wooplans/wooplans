@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   if (!item?.phone || !valid) return Response.redirect(new URL("/admin/relances", url), 303);
   const civ = url.searchParams.get("civ");
   const civilite = civ === "M." || civ === "Mme" ? civ : item.civilite;
-  const text = relanceMessage({ id, name: item.name, civilite, offer: item.offer, intentId: item.intentId, reservedUntil: item.reservedUntil, step: step as RelanceStep }, models ?? 0);
+  const text = relanceMessage({ id, name: item.name, civilite, offer: item.offer, intentId: item.intentId, reservedUntil: item.reservedUntil, country: item.country, step: step as RelanceStep }, models ?? 0);
   await recordManualSend(id, step);
   return new Response(null, { status: 302, headers: { Location: relanceWhatsappUrl(item.phone, text), "Cache-Control": "no-store" } });
 }
