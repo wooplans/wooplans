@@ -11,5 +11,12 @@
     "intro": "Des clients du Sénégal, du Mali, du Cameroun et de Côte d'Ivoire racontent ce que le catalogue leur a apporté.",
     "testimonials": true,
     "og": "/assets/videos/og-temoignages.jpg"
+  },
+  "vsl": {
+    "title": "Avant de construire, choisissez la bonne maison",
+    "intro": "En 5 minutes : pourquoi comparer des dizaines de maisons avant de construire, comment le Catalogue Premium vous aide à choisir, et ce qu'en disent nos clients.",
+    "src": "/assets/videos/vsl-catalogue-premium.mp4",
+    "poster": "/assets/videos/vsl-poster.jpg",
+    "og": "/assets/videos/og-vsl.jpg"
   }
 }
