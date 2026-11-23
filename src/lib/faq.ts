@@ -40,7 +40,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Combien coûtent les plans complets ?",
     answer:
-      `Les plans complets personnalisés ont un prix fixe, le même pour tous : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. C'est une prestation distincte du catalogue (qui sert à choisir votre modèle) : son prix n'est pas déduit.`,
+      `Les plans complets personnalisés ont un prix fixe, le même pour tous, Catalogue Premium inclus : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. La prestation se fait en 2 étapes : le Catalogue Premium (pour choisir votre modèle), puis la personnalisation. Si vous avez déjà le catalogue, vous ne payez que la personnalisation.`,
   },
   {
     question: "Les devis estimatifs sont-ils fiables ?",

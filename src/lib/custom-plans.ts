@@ -2,8 +2,9 @@ import type { PlanCategory } from "@/lib/plan-format";
 import projet from "@/config/projet.json";
 
 /**
- * Prix fixes des plans complets personnalisés (décision de Tao du 8 nov. 2026) : 99 000 FCFA pour une villa,
- * 199 000 FCFA pour un duplex. Aucune déduction : ni le Catalogue Premium ni le plan et devis ne sont déduits.
+ * Prix fixes des plans complets personnalisés (décision de Tao du 23 nov. 2026) : 239 000 FCFA pour une villa,
+ * 339 000 FCFA pour un duplex. La prestation se fait en 2 étapes : 1) le Catalogue Premium, inclus dans ce prix
+ * (son prix est déduit du solde) ; 2) la personnalisation du modèle choisi. Le plan et devis n'est pas déduit.
  */
 /** Les 10 plans livrés, pour une villa comme pour un duplex (repris dans la FAQ de la page de vente). */
 const COMPLETE_PLAN_DELIVERABLES = [
@@ -19,14 +20,14 @@ export const CUSTOM_PLAN_OFFERS = [
   {
     category: "villa",
     title: "Villa (plain-pied)",
-    price: 99000,
+    price: 239000,
     description: "Adaptation d'un modèle du catalogue à votre terrain et à vos besoins.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },
   {
     category: "duplex",
     title: "Duplex (R+1)",
-    price: 199000,
+    price: 339000,
     description: "Adaptation d'un duplex du catalogue, niveaux et escalier compris.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },

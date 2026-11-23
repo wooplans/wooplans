@@ -73,7 +73,7 @@ test("page de vente générée : une seule page (ancienne B), alignée sur le li
   assert.match(b, /name="discountCode"/);
 });
 
-test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans déduction", () => {
+test("page de vente : plans complets à prix fixe (catalogue inclus) dans la FAQ seulement", () => {
   const b = readFileSync(PAGE, "utf8").replace(/&nbsp;/g, " ");
   const offers = readFileSync(new URL("../src/lib/custom-plans.ts", import.meta.url), "utf8");
   const prices = [...offers.matchAll(/price: (\d+)/g)].map((m) => Number(m[1]));
@@ -82,7 +82,10 @@ test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans d�
   for (const price of prices) {
     assert.match(b, new RegExp(fcfa(price)));
   }
-  assert.doesNotMatch(b, /déduit|revient à 0|revient donc à 0/i);
+  // Le catalogue est inclus dans le prix des plans complets (décision de Tao du 23 nov. 2026), sans jamais
+  // présenter les plans comme gratuits.
+  assert.match(b, /Catalogue Premium inclus/);
+  assert.doesNotMatch(b, /revient à 0|revient donc à 0/i);
   assert.match(b, /id="parcours"/);
   // Plans complets : annoncés dans le parcours (accompagnement WhatsApp, décision de Tao du 16 nov. 2026) et la FAQ,
   // jamais dans la carte de l'offre.
