@@ -22,7 +22,7 @@ export default function CgvPage() {
       </p>
       <h2>4. Nature des documents</h2>
       <p>
-        Les distributions cotées et les devis estimatifs servent à comparer et à choisir un modèle. Ils ne constituent pas des plans d&apos;exécution. L&apos;adaptation au terrain et le dossier technique complet font l&apos;objet d&apos;une prestation distincte, à prix fixe (250 000 FCFA pour une villa, 350 000 FCFA pour un duplex). Ce prix inclut le Catalogue Premium : le prix payé pour le catalogue est déduit du solde. Le prix du plan et devis d&apos;un modèle n&apos;en est pas déduit.
+        Les distributions cotées et les devis estimatifs servent à comparer et à choisir un modèle. Ils ne constituent pas des plans d&apos;exécution. L&apos;adaptation au terrain et le dossier technique complet font l&apos;objet d&apos;une prestation distincte, à prix fixe (239 000 FCFA pour une villa, 339 000 FCFA pour un duplex). Ce prix inclut le Catalogue Premium : le prix payé pour le catalogue est déduit du solde. Le prix du plan et devis d&apos;un modèle n&apos;en est pas déduit.
       </p>
       <h2>5. Accès et usage</h2>
       <p>
