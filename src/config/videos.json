@@ -1,7 +1,7 @@
 {
   "catalogue": {
     "title": "Le Catalogue Premium en vidéo",
-    "intro": "Tao vous montre le catalogue : le rendu 3D, le plan coté et le devis poste par poste de chaque maison, sur papier et sur votre téléphone.",
+    "intro": "Le catalogue en vidéo : le rendu 3D, le plan coté et le devis poste par poste de chaque maison, sur papier et sur votre téléphone.",
     "src": "/assets/catalogue/catalogue-premium.mp4",
     "poster": "/assets/catalogue/catalogue-premium-poster.jpg",
     "og": "/assets/videos/og-catalogue.jpg"
