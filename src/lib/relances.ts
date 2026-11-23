@@ -188,7 +188,7 @@ export function relanceMessage(
       ? `Vous avez vu les ${EXTRAIT_MODELS} maisons de votre extrait. Le Catalogue Premium vous donne les ${Math.max(models - EXTRAIT_MODELS, 0)} autres, au même format : plan de distribution coté et devis poste par poste pour chaque maison.`
       : `Dans votre guide, vous avez vu nos ${models} villas et duplex. Le Catalogue Premium vous donne, pour chacune, le plan de distribution coté et le devis poste par poste.`;
     // Lien de la page vidéo (à la place de la pièce jointe) : la vidéo puis l'offre, suivi des lectures.
-    return `${hello}\n\n${intro}\n\n🎁 *Votre prix réservé* : ${reserved} au lieu de ${publicPrice}${label ? `, jusqu'au ${label}` : ""}.\n\n🎥 Regardez la vidéo du catalogue : ${link}`;
+    return `${hello}\n\n${intro}\n\n🎁 *Votre prix réservé* : ${reserved} au lieu de ${publicPrice}${label ? `, jusqu'au ${label}` : ""}.\n\n🎥 ${extrait ? "Regardez cette vidéo (5 min)" : "Regardez la vidéo du catalogue"} : ${link}`;
   }
   if (item.step === 2) {
     return `${hello}\n\nPetit rappel : votre prix réservé pour le Catalogue Premium, ${reserved} au lieu de ${publicPrice}, est valable jusqu'au ${label}.\n\nCe que vous débloquez :\n✅ les ${models} villas et duplex\n✅ le plan coté de chaque niveau\n✅ le devis poste par poste, de la fondation aux finitions\n✅ les nouveaux modèles, inclus\n\nPaiement unique par Mobile Money, accès tout de suite.\n\n👉 ${link}`;

@@ -8,8 +8,12 @@ import { prospectByToken, RESERVED_COOKIE, RESERVED_COOKIE_MAX_AGE } from "@/lib
 
 /** Étapes dont le lien mène à la page du prix réservé (relances WhatsApp et emails de la phase de conversion). */
 const SUITE_STEPS = new Set(["j3", "j4", "j7", "j7s", "offre", "email"]);
-/** Message 2 (J1) : la page vidéo du catalogue (lien au lieu d'une pièce jointe, 23 nov. 2026). */
-const VIDEO_STEPS: Record<string, string> = { j1: "catalogue" };
+/**
+ * Message 2 (J1) : une page vidéo (lien au lieu d'une pièce jointe, 23 nov. 2026). Acheteurs de l'extrait : la VSL validée
+ * par Tao le 23 nov. (elle parle de « l'extrait ») ; acheteurs du guide : la vidéo du catalogue.
+ */
+const VIDEO_STEPS: Record<string, string> = { j1: "vsl" };
+const J1_GUIDE_VIDEO = "catalogue";
 
 /**
  * Lien des boutons WhatsApp et des emails : /r/<prospect>.<étape> (j1, j4, j7, j7s, email, ou c<campagne>). Enregistre le clic dans le pipeline
@@ -31,7 +35,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
       : `utm_source=whatsapp&utm_medium=${medium}&utm_campaign=guide_${campaign}`;
   let target = siteUrl(`/catalogue-premium?${utm}${offer ? `&code=${encodeURIComponent(offer.code)}` : ""}`);
   // Pages vidéo : /r/<fiche>.j1 ou /r/<fiche>.v-<clé> (lien personnel : le cookie reconnaît la personne sur la page).
-  const video = VIDEO_STEPS[campaign] ?? (campaign.startsWith("v-") ? campaign.slice(2) : null);
+  let video = VIDEO_STEPS[campaign] ?? (campaign.startsWith("v-") ? campaign.slice(2) : null);
+  if (campaign === "j1" && id) {
+    const buyer = await relanceItem(id).catch(() => null);
+    if (buyer?.offer === "guide") video = J1_GUIDE_VIDEO;
+  }
   if (video && videoPage(video)) {
     target = siteUrl(`/video/${video}?${utm}`);
   } else if (id && SUITE_STEPS.has(campaign)) {
