@@ -20,7 +20,7 @@ import { linkOrphanMessages } from "@/lib/conversation-ai";
 import { inChunks } from "@/lib/sql-chunks";
 import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
 import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
-import { endsText, offerMessagesOver, relanceDueAt, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
+import { currentStep, endsText, greeting, offerMessagesOver, relanceDueAt, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
 import { waNumber } from "@/lib/whatsapp-rules";
 
 const HOUR = 3_600_000;
@@ -101,8 +101,10 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
   const items = withPhone.map((r): RelanceItem => {
     const intent = intentByEmail.get(r.email);
     const boughtAt = intent?.createdAt ?? r.lastEventAt;
-    const step = Math.min(Math.max(r.waStep, 0), RELANCE_STEP_COUNT - 1) as RelanceStep;
-    const dueAt = relanceDueAt(boughtAt, step);
+    const until = reservedUntil(boughtAt, r.offerReopenUntil, 7);
+    // Étape calée sur la date de fin de promo de la personne (leads arrivés avant les 5 messages : on avance).
+    const step = Math.min(currentStep(r.waStep, boughtAt, until, now), RELANCE_STEP_COUNT) as RelanceStep;
+    const dueAt = step >= 3 && until ? new Date(Math.min(relanceDueAt(boughtAt, step).getTime(), until.getTime() - (step === 3 ? 86_400_000 : 5 * 3_600_000))) : relanceDueAt(boughtAt, step);
     return {
       id: r.id,
       name: r.name,
@@ -114,7 +116,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       intentId: intent?.id ?? null,
       step,
       boughtAt,
-      reservedUntil: reservedUntil(boughtAt, r.offerReopenUntil, 7),
+      reservedUntil: until,
       dueAt,
       due: dueAt.getTime() <= now.getTime(),
       read: Boolean(r.waReadAt),
@@ -127,7 +129,7 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
     };
   });
   // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
-  return items.filter((i) => !offerMessagesOver(i.step, i.reservedUntil, now));
+  return items.filter((i) => i.step < RELANCE_STEP_COUNT && !offerMessagesOver(i.step, i.reservedUntil, now));
 }
 
 /** Une seule personne de la file (lien de secours /admin/relances/envoyer) : 2 petites requêtes, pas toute la file. */
@@ -135,7 +137,7 @@ export async function relanceItem(id: string) {
   const db = getDb();
   const p = await db.query.prospects.findFirst({
     where: eq(schema.prospects.id, id),
-    columns: { id: true, name: true, email: true, phone: true, lastEventAt: true, offerReopenUntil: true },
+    columns: { id: true, name: true, email: true, phone: true, country: true, lastEventAt: true, offerReopenUntil: true },
   });
   if (!p) return null;
   const intent = await db.query.checkoutIntents.findFirst({
@@ -159,7 +161,7 @@ export async function relanceItem(id: string) {
  * `civilite` : celle choisie sur la carte quand le prénom n'a pas suffi ; sinon celle déduite du prénom.
  */
 export function relanceMessage(
-  item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step" | "reservedUntil"> & { civilite?: Civilite | null },
+  item: Pick<RelanceItem, "id" | "name" | "offer" | "intentId" | "step" | "reservedUntil"> & { civilite?: Civilite | null; country?: string | null },
   modelsCount: number,
   now = new Date(),
 ) {
@@ -173,7 +175,8 @@ export function relanceMessage(
       ? `${merci}\n\nVoici votre *Extrait du Catalogue Premium* (${EXTRAIT_MODELS} maisons avec leur plan de distribution et leur devis poste par poste)${item.intentId ? `\n\n📱 Aussi en ligne, sur votre téléphone : ${siteUrl(`/mon-extrait/${item.intentId}`)}` : ""}`
       : `${merci}\n\nVoici votre *Guide WooPlans des maisons* (${models} villas et duplex avec leur budget de construction)`;
   }
-  const hello = who ? `Bonjour ${who} 👋` : "Bonjour 👋";
+  const salut = greeting(item.country, now);
+  const hello = who ? `${salut} ${who} 👋` : `${salut} 👋`;
   const reserved = `*${formatFcfa(catalogueReservedPrice())}*`;
   const publicPrice = formatFcfa(cataloguePrice());
   const until = item.reservedUntil;
@@ -225,7 +228,8 @@ export async function recordManualSend(id: string, step: number, now = new Date(
   const updated = await getDb()
     .update(schema.prospects)
     .set({ waStep: step + 1, waLastSentAt: now, waNextAt: next.getTime() > now.getTime() ? next : now, updatedAt: now })
-    .where(and(eq(schema.prospects.id, id), eq(schema.prospects.waStep, step), eq(schema.prospects.pipelineStage, "sequence")))
+    // Verrou : pas deux fois le même message ; une personne avancée à sa date peut avoir un waStep plus petit que l'étape envoyée.
+    .where(and(eq(schema.prospects.id, id), lte(schema.prospects.waStep, step), eq(schema.prospects.pipelineStage, "sequence")))
     .returning({ id: schema.prospects.id });
   return updated.length > 0;
 }

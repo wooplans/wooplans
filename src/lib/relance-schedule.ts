@@ -28,7 +28,8 @@ export function relanceDueAt(boughtAt: Date, step: number): Date {
     case 2:
       return new Date(j0 + 4 * DAY + 8 * HOUR);
     case 3:
-      return new Date(j0 + 7 * DAY + 7 * HOUR);
+      // Dernier jour : dès minuit de J7 (le message du jour de la fin, quelle que soit l'heure où Tao ouvre la page).
+      return new Date(j0 + 7 * DAY);
     case 4:
       return new Date(j0 + 7 * DAY + 19 * HOUR);
     default:
@@ -48,4 +49,34 @@ export function offerMessagesOver(step: number, reservedUntil: Date | null, now 
 export function endsText(until: Date, label: string, now = new Date()) {
   const tonight = dayStart(now) + DAY;
   return until.getTime() === tonight ? "ce soir à minuit" : `le ${label}`;
+}
+
+/**
+ * Étape à envoyer maintenant (correction du 23 nov. 2026) : on avance la personne jusqu'au message qui correspond à sa
+ * date de fin de promo, même si les messages précédents n'ont pas été envoyés (leads arrivés avant les 5 messages).
+ *  - message 3 (rappel) à partir de J4 ;
+ *  - message 4 (dernier jour) le jour de la fin (dès minuit) ;
+ *  - message 5 (dernières heures) 5 h avant la fin ;
+ *  - après la fin : 5 = séquence terminée.
+ * La livraison (message 1) n'est jamais sautée. `until` = vraie date de fin (réouverture de 24 h comprise).
+ */
+export function currentStep(waStep: number, boughtAt: Date, until: Date | null, now = new Date()): number {
+  if (waStep <= 0) return 0;
+  const end = until ?? relanceDueAt(boughtAt, 5);
+  const t = now.getTime();
+  let due = 1;
+  if (t >= relanceDueAt(boughtAt, 2).getTime()) due = 2;
+  if (t >= end.getTime() - DAY) due = 3;
+  if (t >= end.getTime() - 5 * HOUR) due = 4;
+  if (t >= end.getTime()) due = 5;
+  return Math.max(waStep, due);
+}
+
+/** Pays à l'heure UTC+1 (Afrique centrale, Bénin, Niger, Nigeria) ; les autres (Côte d'Ivoire, Guinée, Sénégal…) à UTC. */
+const UTC_PLUS_1 = new Set(["CM", "GA", "CG", "CD", "CF", "TD", "GQ", "BJ", "NE", "NG", "AO"]);
+
+/** « Bonsoir » à partir de 16 h (heure du pays de la personne), sinon « Bonjour ». */
+export function greeting(country: string | null | undefined, now = new Date()) {
+  const hour = (now.getUTCHours() + (UTC_PLUS_1.has((country || "").toUpperCase()) ? 1 : 0)) % 24;
+  return hour >= 16 ? "Bonsoir" : "Bonjour";
 }
