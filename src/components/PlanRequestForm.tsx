@@ -14,6 +14,7 @@ export function PlanRequestForm({ defaultPlan = "", priceNote }: { defaultPlan?:
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState<string | null>(null);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [ref, setRef] = useState<string | null>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,7 +26,7 @@ export function PlanRequestForm({ defaultPlan = "", priceNote }: { defaultPlan?:
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }).catch(() => null);
-    const body = (await response?.json().catch(() => null)) as { error?: string; whatsappUrl?: string } | null;
+    const body = (await response?.json().catch(() => null)) as { error?: string; whatsappUrl?: string; ref?: string } | null;
     if (!response?.ok || !body?.whatsappUrl) {
       setError(body?.error || "L'envoi a échoué. Réessayez ou écrivez-nous sur WhatsApp.");
       setState("idle");
@@ -35,6 +36,7 @@ export function PlanRequestForm({ defaultPlan = "", priceNote }: { defaultPlan?:
     // Aucune saisie transmise : seulement l'étape franchie et le modèle demandé.
     phCapture(FUNNEL_EVENTS.planRequest, { page_type: pageType(window.location.pathname), plan: defaultPlan || null });
     setWhatsappUrl(body.whatsappUrl);
+    setRef(body.ref ?? null);
     setState("sent");
     window.location.href = body.whatsappUrl;
   }
@@ -43,6 +45,7 @@ export function PlanRequestForm({ defaultPlan = "", priceNote }: { defaultPlan?:
     return (
       <div className="card p-6 text-center">
         <p className="text-lg font-semibold text-primary">Demande enregistrée ✓</p>
+        {ref ? <p className="mt-1 text-sm text-muted">Votre référence : {ref}</p> : null}
         <p className="mt-2 text-foreground/70">Dernière étape : envoyez le message préparé à notre architecte sur WhatsApp.</p>
         <a href={whatsappUrl} data-cta="plan_request_whatsapp" className="btn-cta mt-5 w-full py-3.5">
           Discuter avec un architecte sur WhatsApp
