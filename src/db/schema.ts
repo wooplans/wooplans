@@ -662,6 +662,18 @@ export const chantierRequests = sqliteTable(
     country: text("country"),
     linkedAt: integer("linked_at", { mode: "timestamp_ms" }),
     leadId: text("lead_id"),
+    /* Suivi par l'IA (src/lib/chantier-ai.ts) : étape du protocole, preuve du terrain, relance, message conseillé. */
+    aiStep: text("ai_step"),
+    aiLand: text("ai_land"),
+    aiLandDetails: text("ai_land_details"),
+    aiRelief: text("ai_relief"),
+    aiSummary: text("ai_summary"),
+    aiNextAction: text("ai_next_action"),
+    aiMessageId: text("ai_message_id"),
+    /** Date de relance AAAA-MM-JJ */
+    aiFollowUp: text("ai_follow_up"),
+    aiLostReason: text("ai_lost_reason"),
+    aiUpdatedAt: integer("ai_updated_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("chantier_requests_code_idx").on(t.code), index("chantier_requests_created_idx").on(t.createdAt)],

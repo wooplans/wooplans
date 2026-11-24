@@ -5,6 +5,8 @@ import { getDb, schema } from "@/db";
 import { FollowUpEmailForm } from "@/components/admin/FollowUpEmailForm";
 import { Badge, fmtDate, fmtDateTime, PageTitle } from "@/components/admin/ui";
 import { adModelCode, chantierMessages } from "@/lib/chantier-rules";
+import { STEP_LABEL, type ChantierStep } from "@/lib/chantier-ai-rules";
+import { landLabel } from "@/lib/chantier-ai";
 import { CHANNEL_LABELS, FOLLOW_UP_TEMPLATES, STAGES } from "@/lib/crm";
 import { formatFcfa } from "@/lib/plans";
 import { whatsappLink } from "@/lib/site";
@@ -33,6 +35,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     start: chantier?.start,
   });
   const messageSteps = [...new Set(messages.map((m) => m.step))];
+  const suggested = chantier?.aiMessageId ? messages.find((m) => m.id === chantier.aiMessageId) : undefined;
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
   const due = Math.max(0, (lead.agreedPrice ?? 0) - lead.catalogueCredit - totalPaid);
   const phoneDigits = (lead.phone || "").replace(/\D/g, "");
@@ -146,12 +149,38 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             </form>
           </section>
 
+          {chantier ? (
+            <section className="card border-l-4 border-l-highlight p-5 text-sm">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="font-semibold">Suivi IA · {chantier.code}</h2>
+                {chantier.aiUpdatedAt ? <span className="text-xs text-muted">{fmtDateTime(chantier.aiUpdatedAt)}</span> : null}
+              </div>
+              {chantier.aiStep ? (
+                <dl className="mt-3 grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5">
+                  <dt className="text-muted">Étape</dt>
+                  <dd className="font-semibold">{STEP_LABEL[chantier.aiStep as ChantierStep] ?? chantier.aiStep}</dd>
+                  <dt className="text-muted">Terrain</dt>
+                  <dd>{landLabel(chantier.aiLand, chantier.aiLandDetails)}{chantier.aiRelief && chantier.aiRelief !== "inconnu" ? ` · ${chantier.aiRelief}` : ""}</dd>
+                  <dt className="text-muted">Relance</dt>
+                  <dd>{chantier.aiFollowUp ? new Date(`${chantier.aiFollowUp}T08:00:00Z`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) : "—"}</dd>
+                  <dt className="text-muted">Où il en est</dt>
+                  <dd>{chantier.aiSummary}</dd>
+                  <dt className="text-muted">À faire</dt>
+                  <dd className="font-medium text-primary">{chantier.aiNextAction}</dd>
+                  {chantier.aiLostReason ? (<><dt className="text-muted">Motif</dt><dd>{chantier.aiLostReason}</dd></>) : null}
+                </dl>
+              ) : (
+                <p className="mt-2 text-muted">L&apos;IA lira la conversation 10 minutes après le prochain message.</p>
+              )}
+            </section>
+          ) : null}
+
           <section className="card p-5">
             <h2 className="font-semibold">Messages WhatsApp</h2>
             <p className="mt-1 text-xs text-muted">Déjà personnalisés. Complétez les mots entre [crochets] dans WhatsApp avant d&apos;envoyer.</p>
             <div className="mt-3 space-y-2">
               {messageSteps.map((step, i) => (
-                <details key={step} open={i === 0} className="rounded-lg border border-outline">
+                <details key={step} open={suggested ? suggested.step === step : i === 0} className="rounded-lg border border-outline">
                   <summary className="cursor-pointer px-3 py-2 text-sm font-semibold">{step}</summary>
                   <ul className="divide-y divide-outline">
                     {messages
@@ -160,7 +189,10 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
                         <li key={m.id} className="px-3 py-2.5 text-sm">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium">{m.title}</p>
+                              <p className="font-medium">
+                                {m.title}
+                                {m.id === suggested?.id ? <span className="ml-2 rounded-full bg-highlight px-2 py-0.5 text-[10px] font-bold text-primary">conseillé par l&apos;IA</span> : null}
+                              </p>
                               <p className="text-xs text-muted">{m.when}</p>
                             </div>
                             {phoneDigits ? (
