@@ -44,6 +44,8 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
     }
     setWaUrl(json.waUrl);
     pixelTrack("Lead", { content_name: "Démarre ton chantier", content_category: json.profile }, json.eventId);
+    // Campagne « Ventes » : Meta n'y accepte pas Lead, elle s'optimise sur CompleteRegistration (même dossier validé).
+    pixelTrack("CompleteRegistration", { content_name: "Démarre ton chantier", status: json.profile }, json.eventId ? `cr-${json.eventId}` : null);
     phCapture("chantier_envoye", { profile: json.profile });
   }
 
