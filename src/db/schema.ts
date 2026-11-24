@@ -650,6 +650,10 @@ export const chantierRequests = sqliteTable(
     houseType: text("house_type").notNull(),
     bedrooms: text("bedrooms").notNull(),
     budget: text("budget").notNull(),
+    /** Relief du terrain : plat, pente, nsp, ou na (pas de terrain) */
+    relief: text("relief").notNull().default("na"),
+    /** Ville du chantier, saisie dans le formulaire */
+    city: text("city"),
     profile: text("profile").notNull(),
     utmSource: text("utm_source"),
     utmCampaign: text("utm_campaign"),

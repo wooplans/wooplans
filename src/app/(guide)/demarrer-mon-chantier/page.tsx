@@ -20,9 +20,16 @@ export default function DemarrerMonChantierPage() {
         <img src="/assets/wooplans-logo-white.png" alt="WOOPLANS" width={120} height={36} className="h-8 w-auto" />
         <h1 className="mt-6 text-2xl font-bold leading-tight md:text-3xl">Démarrez votre chantier avec les bons plans</h1>
         <p className="mt-2 text-white/80">
-          7 questions rapides sur votre projet, rien d&apos;autre à écrire que votre nom. Ensuite, un architecte WooPlans vous répond sur WhatsApp.
+          Quelques questions rapides sur votre projet, puis votre nom et la ville du chantier. Ensuite, un architecte WooPlans vous répond sur WhatsApp.
         </p>
-        <ChantierForm questions={CHANTIER_QUESTIONS.map((q) => ({ key: q.key, label: q.label, options: q.options.map(([value, label]) => ({ value, label })) }))} />
+        <ChantierForm
+          questions={CHANTIER_QUESTIONS.map((q) => ({
+            key: q.key,
+            label: q.label,
+            showIf: "showIf" in q ? q.showIf : undefined,
+            options: q.options.map(([value, label]) => ({ value, label })),
+          }))}
+        />
       </div>
     </div>
   );

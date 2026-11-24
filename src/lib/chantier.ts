@@ -21,16 +21,29 @@ import {
  * « Démarre ton chantier » : enregistre les réponses du formulaire (avant WhatsApp), puis les rattache au numéro qui
  * écrit avec le code (webhook WhatsApp) et crée la fiche CRM à la bonne étape. Règles : src/lib/chantier-rules.ts.
  */
-export async function createChantierRequest(answers: ChantierAnswers, name: string, utm: { source?: string | null; campaign?: string | null; content?: string | null }) {
-  const id = randomId();
-  const code = chantierCode(id);
+export async function createChantierRequest(
+  answers: ChantierAnswers,
+  name: string,
+  city: string,
+  utm: { source?: string | null; campaign?: string | null; content?: string | null },
+) {
+  const db = getDb();
+  // Le numéro du code n'a que 4 chiffres : on retire un identifiant tant que le code est déjà pris.
+  let id = randomId();
+  let code = chantierCode(id, answers);
+  for (let i = 0; i < 8 && (await db.query.chantierRequests.findFirst({ where: eq(schema.chantierRequests.code, code), columns: { id: true } })); i++) {
+    id = randomId();
+    code = chantierCode(id, answers);
+  }
   const { profile } = chantierProfile(answers);
-  await getDb()
+  await db
     .insert(schema.chantierRequests)
     .values({
       id,
       code,
       name,
+      city,
+      relief: answers.relief,
       terrain: answers.terrain,
       start: answers.start,
       plans: answers.plans,
@@ -71,6 +84,7 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
   });
   if (!req) return null;
   const answers: ChantierAnswers = {
+    relief: (req.relief ?? "na") as ChantierAnswers["relief"],
     terrain: req.terrain as ChantierAnswers["terrain"],
     start: req.start as ChantierAnswers["start"],
     plans: req.plans as ChantierAnswers["plans"],
@@ -88,22 +102,26 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
     .where(and(eq(schema.chantierRequests.id, req.id), isNull(schema.chantierRequests.linkedAt)))
     .returning({ id: schema.chantierRequests.id });
   if (!claimed.length) return null;
-  const summary = chantierSummary(answers);
+  const summary = chantierSummary(answers, req.city);
   // Modèle de la pub cliquée (utm_content) : affiché sur la fiche pour l'échange WhatsApp.
   const adCode = adModelCode(req.utmContent);
   const adPlan = adCode ? await db.query.plans.findFirst({ where: eq(schema.plans.code, adCode), columns: { id: true, name: true } }) : undefined;
-  const wish = answers.type === "indecis" ? null : `${answerLabel("type", answers.type)} · ${answerLabel("chambres", answers.chambres)}`;
+  const wish =
+    answers.type === "indecis" ? null : answers.chambres === "na" ? answerLabel("type", answers.type) : `${answerLabel("type", answers.type)} · ${answerLabel("chambres", answers.chambres)}`;
   await db.insert(schema.leads).values({
     id: leadId,
     name: req.name,
     phone: `+${from}`,
     country,
+    city: req.city,
     channel: "whatsapp",
     stage,
     planId: adPlan?.id ?? null,
     planLabel: adCode ? `Pub cliquée : ${adPlan?.name ?? adCode}${wish ? ` (souhait : ${wish})` : ""}` : wish,
     projectDetails: `Démarre ton chantier (${code}) · ${PROFILE_LABEL[profile]}.${adCode ? ` Modèle de la pub : ${adCode}.` : ""} ${summary}`,
-    landDetails: answerLabel("terrain", answers.terrain),
+    landDetails: [answerLabel("terrain", answers.terrain), answers.relief !== "na" ? `relief : ${answerLabel("relief", answers.relief).toLowerCase()}` : null, req.city ? `ville : ${req.city}` : null]
+      .filter(Boolean)
+      .join(" · "),
     catalogueCredit: 0,
     nextFollowUpAt: now,
     utmSource: req.utmSource ?? "facebook",
@@ -111,7 +129,7 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
   });
   await db.insert(schema.leadActivities).values([
     { id: randomId(), leadId, kind: "note", body: `${PROFILE_LABEL[profile]}. Offre conseillée : ${offer}`, author: "ia" },
-    { id: randomId(), leadId, kind: "note", body: `Premier message conseillé : ${chantierFirstMessage(req.name, answers)}`, author: "ia" },
+    { id: randomId(), leadId, kind: "note", body: `Premier message conseillé : ${chantierFirstMessage(req.name, answers, adCode)}`, author: "ia" },
   ]);
   return leadId;
 }

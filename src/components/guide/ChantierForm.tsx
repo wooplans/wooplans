@@ -4,7 +4,9 @@ import { useState } from "react";
 import { pixelTrack } from "@/lib/pixel";
 import { phCapture } from "@/lib/posthog-browser";
 
-type Question = { key: string; label: string; options: { value: string; label: string }[] };
+type Question = { key: string; label: string; showIf?: { key: string; in: readonly string[] }; options: { value: string; label: string }[] };
+
+const CITIES = ["Yaoundé", "Douala", "Bafoussam", "Kribi", "Limbé", "Buea", "Bamenda", "Garoua", "Ngaoundéré", "Bertoua", "Ebolowa"];
 
 /**
  * « Démarre ton chantier » : une question par écran (gros boutons), puis le nom et prénom, puis le bouton WhatsApp.
@@ -14,13 +16,17 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
+  const [city, setCity] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waUrl, setWaUrl] = useState<string | null>(null);
-  const total = questions.length + 1;
+  // Questions posées, selon les réponses déjà données (ex. pas de relief sans terrain, pas de chambres pour un immeuble).
+  const visible = questions.filter((q) => !q.showIf || q.showIf.in.includes(answers[q.showIf.key] ?? ""));
+  const total = visible.length + 1;
 
   function choose(key: string, value: string) {
-    setAnswers({ ...answers, [key]: value });
+    const next = { ...answers, [key]: value };
+    setAnswers(next);
     setStep(step + 1);
     phCapture("chantier_reponse", { question: key, value, step: step + 1 });
   }
@@ -31,11 +37,15 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
       setError("Indiquez votre nom et votre prénom.");
       return;
     }
+    if (city.trim().length < 2) {
+      setError("Indiquez la ville de votre chantier.");
+      return;
+    }
     setSending(true);
     setError(null);
     const p = new URLSearchParams(window.location.search);
     const utm = { source: p.get("utm_source"), campaign: p.get("utm_campaign"), content: p.get("utm_content") };
-    const res = await fetch("/api/chantier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...answers, name, utm }) }).catch(() => null);
+    const res = await fetch("/api/chantier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(visible.map((q) => [q.key, answers[q.key]])), name, city, utm }) }).catch(() => null);
     const json = (await res?.json().catch(() => null)) as { waUrl?: string; profile?: string; eventId?: string; error?: string } | null;
     setSending(false);
     if (!json?.waUrl) {
@@ -71,7 +81,7 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
     );
   }
 
-  const q = questions[step];
+  const q = visible[step];
   return (
     <div className="mt-8">
       <div className="flex gap-1.5" aria-hidden>
@@ -102,15 +112,37 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
         </>
       ) : (
         <form onSubmit={submit}>
-          <h2 className="mt-1 text-xl font-semibold">Votre nom et prénom</h2>
+          <h2 className="mt-1 text-xl font-semibold">Dernière étape</h2>
+          <label htmlFor="chantier-name" className="mt-5 block text-sm text-white/80">
+            Votre nom et prénom
+          </label>
           <input
+            id="chantier-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
             maxLength={80}
-            placeholder="Ex. Kouassi Jean"
-            className="mt-5 w-full rounded-xl border-2 border-white/30 bg-white px-4 py-4 text-lg text-primary placeholder:text-primary/40"
+            placeholder="Ex. Mbarga Paul"
+            className="mt-1 w-full rounded-xl border-2 border-white/30 bg-white px-4 py-4 text-lg text-primary placeholder:text-primary/40"
           />
+          <label htmlFor="chantier-city" className="mt-4 block text-sm text-white/80">
+            Ville du chantier
+          </label>
+          <input
+            id="chantier-city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            list="chantier-cities"
+            autoComplete="address-level2"
+            maxLength={60}
+            placeholder="Ex. Yaoundé"
+            className="mt-1 w-full rounded-xl border-2 border-white/30 bg-white px-4 py-4 text-lg text-primary placeholder:text-primary/40"
+          />
+          <datalist id="chantier-cities">
+            {CITIES.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
           <button type="submit" disabled={sending} className="mt-4 w-full rounded-xl bg-highlight px-4 py-4 text-lg font-bold text-primary disabled:opacity-60">
             {sending ? "Un instant…" : "Valider mon dossier"}
           </button>
