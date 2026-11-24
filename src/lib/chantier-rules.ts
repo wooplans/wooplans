@@ -135,6 +135,12 @@ export function findChantierCode(text: string | null | undefined) {
   return m ? `CH-${m[1]}` : null;
 }
 
+/** Référence du modèle de la pub cliquée (utm_content « D5-012 », « v3-017 »), normalisée, ou null. */
+export function adModelCode(utmContent: string | null | undefined) {
+  const m = /\b([VD])(\d)-(\d{3})\b/i.exec(utmContent || "");
+  return m ? `${m[1].toUpperCase()}${m[2]}-${m[3]}` : null;
+}
+
 /** Message pré-rempli dans WhatsApp. */
 export function chantierWhatsappText(code: string, name: string) {
   return `Bonjour WooPlans 👋 Je veux démarrer mon chantier (dossier ${code}). Je suis ${name}.`;

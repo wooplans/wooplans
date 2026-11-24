@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chantierCode, chantierProfile, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
+import { adModelCode, chantierCode, chantierProfile, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
 
 const base: ChantierAnswers = { terrain: "oui", start: "asap", plans: "non", type: "duplex", chambres: "4", budget: "40-60" };
 
@@ -46,4 +46,11 @@ test("code stable, retrouvé dans le message pré-rempli", () => {
   assert.equal(findChantierCode(chantierWhatsappText(code, "Jean")), code);
   assert.equal(findChantierCode("dossier ch 004512 merci"), "CH-004512");
   assert.equal(findChantierCode("commande WP-123456"), null);
+});
+
+test("adModelCode lit la référence du modèle dans utm_content", () => {
+  assert.equal(adModelCode("D5-012"), "D5-012");
+  assert.equal(adModelCode("v3-017"), "V3-017");
+  assert.equal(adModelCode("guide"), null);
+  assert.equal(adModelCode(null), null);
 });
