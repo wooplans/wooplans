@@ -1,6 +1,7 @@
 import { runAfterSale } from "@/lib/after-sale";
 import { qualifyPending, transcribePending } from "@/lib/conversation-ai";
 import { sendWaInvites } from "@/lib/wa-invite";
+import { qualifyLeadsBehavior } from "@/lib/lead-ai";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
@@ -44,6 +45,11 @@ export async function POST(request: Request) {
     console.error("Transcription des notes vocales : échec", error);
     return null;
   });
+  // Leads en séquence : l'IA réanalyse dès qu'ils font quelque chose (comportement + conversation).
+  const aiBehavior = await qualifyLeadsBehavior().catch((error) => {
+    console.error("Qualification IA (comportement) : échec", error);
+    return null;
+  });
   const ai = await qualifyPending().catch((error) => {
     console.error("Qualification IA : échec", error);
     return null;
@@ -53,5 +59,5 @@ export async function POST(request: Request) {
     console.error("Invitations WhatsApp : échec", error);
     return null;
   });
-  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai, waInvites });
+  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai, aiBehavior, waInvites });
 }

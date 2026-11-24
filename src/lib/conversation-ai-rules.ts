@@ -16,7 +16,8 @@ Réponds uniquement par un objet JSON : {"stage":"chaud|tiede|froid|perdu","scor
 - score : probabilité d'achat du catalogue, de 0 à 100.
 - summary : 1 ou 2 phrases en français : où en est la personne, son projet (terrain, budget, délai, type de maison) s'il est connu, ses objections.
 - next_action : une action concrète pour Tao, 25 mots au plus, en français (ex. « Lui renvoyer le lien de paiement et proposer de l'aider avec Wave »).
-N'invente rien qui ne soit pas dans la conversation.`;
+Le contexte peut aussi contenir son « Comportement » (ce qu'il a fait : vidéo regardée, liens cliqués, extrait en ligne, paiement commencé) : tiens-en compte. Quelqu'un qui a commencé à payer ou regardé toute la vidéo est chaud même s'il n'écrit pas ; quelqu'un qui lit sans jamais réagir est froid. S'il n'y a pas encore de conversation, juge sur le comportement seul.
+N'invente rien qui ne soit pas dans la conversation ou le comportement.`;
 
 function fmt(d: Date) {
   return d.toISOString().slice(0, 16).replace("T", " ");
@@ -35,7 +36,7 @@ export function conversationText(messages: ConvMessage[], max = 40) {
 }
 
 export function userPrompt(context: string, messages: ConvMessage[]) {
-  return `Contexte : ${context}\n\nConversation :\n${conversationText(messages)}`;
+  return `Contexte : ${context}\n\nConversation :\n${messages.length ? conversationText(messages) : "(aucun message pour l'instant)"}`;
 }
 
 /** Lit la réponse JSON de l'IA ; null si elle est inutilisable. */
