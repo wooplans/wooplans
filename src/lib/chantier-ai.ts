@@ -9,10 +9,10 @@ import { PROFILE_LABEL, adModelCode, chantierMessages, chantierSummary, type Cha
 /**
  * L'IA suit les dossiers « Démarre ton chantier » (règles : src/lib/chantier-ai-rules.ts). Tâche des 15 minutes :
  * les fiches dont la conversation a bougé depuis la dernière analyse, 10 minutes après le dernier message du prospect
- * (on le laisse finir d'écrire), quelques-unes à la fois. Elle met à jour l'étape CRM, la date de relance, et note
+ * (on le laisse finir d'écrire), 25 au plus par passage, 5 à la fois. Elle met à jour l'étape CRM, la date de relance, et note
  * dans l'historique chaque changement d'étape.
  */
-export async function followChantierLeads(limit = 8, now = new Date()) {
+export async function followChantierLeads(limit = 25, now = new Date()) {
   const db = getDb();
   const cr = schema.chantierRequests;
   const wa = schema.waMessages;
@@ -28,9 +28,13 @@ export async function followChantierLeads(limit = 8, now = new Date()) {
     .having(and(sql`${last} > coalesce(${cr.aiUpdatedAt}, 0)`, sql`coalesce(${lastIn}, 0) <= ${settled}`))
     .orderBy(desc(last))
     .limit(limit);
+  // 5 dossiers à la fois : l'attente de DeepSeek ne compte pas dans le temps de calcul du Worker.
   let done = 0;
-  for (const r of rows) {
-    if (await followOne(r.id, now).catch((error) => console.error("Suivi IA du dossier impossible", r.id, error))) done++;
+  for (let i = 0; i < rows.length; i += 5) {
+    const batch = await Promise.all(
+      rows.slice(i, i + 5).map((r) => followOne(r.id, now).catch((error) => (console.error("Suivi IA du dossier impossible", r.id, error), false))),
+    );
+    done += batch.filter(Boolean).length;
   }
   return { candidates: rows.length, done };
 }
