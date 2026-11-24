@@ -10,6 +10,7 @@ import {
   chantierProfile,
   chantierSummary,
   chantierWhatsappText,
+  adModelCode,
   findChantierCode,
   PROFILE_LABEL,
   answerLabel,
@@ -88,6 +89,10 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
     .returning({ id: schema.chantierRequests.id });
   if (!claimed.length) return null;
   const summary = chantierSummary(answers);
+  // Modèle de la pub cliquée (utm_content) : affiché sur la fiche pour l'échange WhatsApp.
+  const adCode = adModelCode(req.utmContent);
+  const adPlan = adCode ? await db.query.plans.findFirst({ where: eq(schema.plans.code, adCode), columns: { id: true, name: true } }) : undefined;
+  const wish = answers.type === "indecis" ? null : `${answerLabel("type", answers.type)} · ${answerLabel("chambres", answers.chambres)}`;
   await db.insert(schema.leads).values({
     id: leadId,
     name: req.name,
@@ -95,8 +100,9 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
     country,
     channel: "whatsapp",
     stage,
-    planLabel: answers.type === "indecis" ? null : `${answerLabel("type", answers.type)} · ${answerLabel("chambres", answers.chambres)}`,
-    projectDetails: `Démarre ton chantier (${code}) · ${PROFILE_LABEL[profile]}. ${summary}`,
+    planId: adPlan?.id ?? null,
+    planLabel: adCode ? `Pub cliquée : ${adPlan?.name ?? adCode}${wish ? ` (souhait : ${wish})` : ""}` : wish,
+    projectDetails: `Démarre ton chantier (${code}) · ${PROFILE_LABEL[profile]}.${adCode ? ` Modèle de la pub : ${adCode}.` : ""} ${summary}`,
     landDetails: answerLabel("terrain", answers.terrain),
     catalogueCredit: 0,
     nextFollowUpAt: now,
