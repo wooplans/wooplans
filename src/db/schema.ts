@@ -137,6 +137,9 @@ export const members = sqliteTable(
     /** Séquence après l'achat (demande d'avis puis rappels espacés) : emails envoyés et prochain envoi (null = aucun). */
     afterSaleStep: integer("after_sale_step").notNull().default(0),
     afterSaleNextAt: integer("after_sale_next_at", { mode: "timestamp_ms" }),
+    /** Relances WhatsApp Premium → plans complets (23 nov. 2026) : messages envoyés (0 à 3) et date du dernier. */
+    premiumWaStep: integer("premium_wa_step").notNull().default(0),
+    premiumWaLastAt: integer("premium_wa_last_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

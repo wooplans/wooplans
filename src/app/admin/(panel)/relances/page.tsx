@@ -8,6 +8,7 @@ import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
 import { noWhatsappList, projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
+import { PREMIUM_STEPS, premiumMessage, premiumQueue, type PremiumItem } from "@/lib/premium-relances";
 import { announceExtraitWeb, fixWhatsappNumber, noWhatsapp, reopenOffer, undoRelance } from "./actions";
 import { extraitAnnounceQueue } from "@/lib/extrait-web-announce";
 import { automatedEmailAllowance } from "@/lib/email-budget";
@@ -195,6 +196,42 @@ function ProjectCard({ item, now }: { item: ProjectItem; now: Date }) {
   );
 }
 
+function PremiumCard({ item, now }: { item: PremiumItem; now: Date }) {
+  const recordUrl = `/admin/relances/envoyer?id=${encodeURIComponent(item.id)}&etape=premium-${item.step}`;
+  const login = item.lastLoginAt ? `connecté ${ago(item.lastLoginAt, now)}` : "jamais connecté";
+  return (
+    <article className="rounded-xl border border-outline bg-white p-3 text-sm shadow-sm">
+      <p className="flex items-center justify-between gap-2">
+        <span className="truncate font-semibold">{item.name || item.email}</span>
+        <Badge tone={item.heat >= 60 ? "good" : item.heat >= 30 ? "warn" : "neutral"}>{item.heat >= 60 ? "🔥 actif" : item.heat >= 30 ? "tiède" : "froid"}</Badge>
+      </p>
+      <p className="text-xs text-muted">
+        {item.country || "—"} · membre {ago(item.joinedAt, now)} · +{item.phone.replace(/\D/g, "")}
+      </p>
+      <p className="text-xs text-muted">
+        {login} · {item.models} modèle{item.models > 1 ? "s" : ""} ouvert{item.models > 1 ? "s" : ""}
+        {item.lastModel ? ` · dernier : ${item.lastModel}` : ""}
+      </p>
+      {item.civilite ? (
+        <WhatsappSendButton waUrl={relanceWhatsappUrl(item.phone, premiumMessage(item, item.step, now))} recordUrl={recordUrl}>
+          Envoyer sur WhatsApp
+        </WhatsappSendButton>
+      ) : (
+        <>
+          <p className="mt-2 text-center text-xs text-muted">Prénom non reconnu : choisissez</p>
+          <div className="grid grid-cols-2 gap-2">
+            {(["M.", "Mme"] as const).map((civilite) => (
+              <WhatsappSendButton key={civilite} waUrl={relanceWhatsappUrl(item.phone, premiumMessage({ ...item, civilite }, item.step, now))} recordUrl={recordUrl}>
+                {civilite === "M." ? "Monsieur" : "Madame"}
+              </WhatsappSendButton>
+            ))}
+          </div>
+        </>
+      )}
+    </article>
+  );
+}
+
 /**
  * CRM des relances WhatsApp à la main (provisoire) : 5 colonnes = les 5 messages (22 nov. 2026). Une carte n'apparaît que le jour
  * où son message est dû. Un clic ouvre WhatsApp avec le message écrit et passe la personne à l'étape suivante.
@@ -222,6 +259,11 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
     projectQueue(now),
     noWhatsappList(),
   ]);
+  const premium = await premiumQueue(now).catch((error) => {
+    console.error("Relances Premium : file indisponible", error);
+    return [] as PremiumItem[];
+  });
+  const premiumDue = premium.filter((i) => i.due);
   const due = queue.filter((i) => i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   const upcoming = queue.filter((i) => !i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   const sentToday = queue
@@ -310,6 +352,35 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
           {projects.map((item) => (
             <ProjectCard key={item.id} item={item} now={now} />
           ))}
+        </div>
+      </section>
+
+      <section id="premium" className="mt-6 rounded-2xl border border-violet-300 bg-violet-50 p-3">
+        <h2 className="px-1 font-semibold">Membres Premium → plans complets ({premiumDue.length} à envoyer)</h2>
+        <p className="mb-3 px-1 text-xs text-muted">
+          3 messages pour amener les membres vers les plans complets. Les plus actifs (connexion récente, modèles ouverts) sont en haut. Quand un membre répond avec un code de
+          modèle, créez sa demande dans le CRM.
+        </p>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {PREMIUM_STEPS.map((s, step) => {
+            const cards = premiumDue.filter((i) => i.step === step);
+            return (
+              <div key={s.title} className="rounded-xl bg-white/60 p-2">
+                <p className="flex items-center justify-between px-1 text-sm font-semibold">
+                  {s.title}
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs">{cards.length}</span>
+                </p>
+                <p className="mb-2 px-1 text-xs text-muted">{s.when}</p>
+                <div className="space-y-2">
+                  {cards.length === 0 ? <p className="rounded-xl bg-white/70 p-3 text-center text-sm text-muted">Rien à envoyer ✅</p> : null}
+                  {cards.slice(0, 40).map((item) => (
+                    <PremiumCard key={item.id} item={item} now={now} />
+                  ))}
+                  {cards.length > 40 ? <p className="px-1 text-xs text-muted">+ {cards.length - 40} autres, à la suite.</p> : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
