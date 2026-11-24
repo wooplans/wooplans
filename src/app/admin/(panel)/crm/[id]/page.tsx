@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { FollowUpEmailForm } from "@/components/admin/FollowUpEmailForm";
 import { Badge, fmtDate, fmtDateTime, PageTitle } from "@/components/admin/ui";
+import { adModelCode, chantierMessages } from "@/lib/chantier-rules";
 import { CHANNEL_LABELS, FOLLOW_UP_TEMPLATES, STAGES } from "@/lib/crm";
 import { formatFcfa } from "@/lib/plans";
 import { whatsappLink } from "@/lib/site";
@@ -23,6 +24,15 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   ]);
   const chantier = await db.query.chantierRequests.findFirst({ where: eq(schema.chantierRequests.leadId, id) });
   const pfType = chantier && ["villa", "duplex", "immeuble"].includes(chantier.houseType) ? chantier.houseType : "villa";
+  const messages = chantierMessages({
+    name: lead.name,
+    code: chantier?.code,
+    type: chantier?.houseType,
+    model: adModelCode(chantier?.utmContent) ?? adModelCode(lead.planLabel),
+    city: lead.city ?? chantier?.city,
+    start: chantier?.start,
+  });
+  const messageSteps = [...new Set(messages.map((m) => m.step))];
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
   const due = Math.max(0, (lead.agreedPrice ?? 0) - lead.catalogueCredit - totalPaid);
   const phoneDigits = (lead.phone || "").replace(/\D/g, "");
@@ -134,6 +144,43 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               <label><span className="label">Modèle de référence</span><input name="modele" placeholder="ex. D4-034" className="input" /></label>
               <button className="btn-primary col-span-2">Générer la proforma (PDF)</button>
             </form>
+          </section>
+
+          <section className="card p-5">
+            <h2 className="font-semibold">Messages WhatsApp</h2>
+            <p className="mt-1 text-xs text-muted">Déjà personnalisés. Complétez les mots entre [crochets] dans WhatsApp avant d&apos;envoyer.</p>
+            <div className="mt-3 space-y-2">
+              {messageSteps.map((step, i) => (
+                <details key={step} open={i === 0} className="rounded-lg border border-outline">
+                  <summary className="cursor-pointer px-3 py-2 text-sm font-semibold">{step}</summary>
+                  <ul className="divide-y divide-outline">
+                    {messages
+                      .filter((m) => m.step === step)
+                      .map((m) => (
+                        <li key={m.id} className="px-3 py-2.5 text-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium">{m.title}</p>
+                              <p className="text-xs text-muted">{m.when}</p>
+                            </div>
+                            {phoneDigits ? (
+                              <a
+                                href={whatsappLink(m.text, phoneDigits)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 rounded-md bg-[#25D366] px-2.5 py-1 text-xs font-semibold text-white"
+                              >
+                                Ouvrir
+                              </a>
+                            ) : null}
+                          </div>
+                          <p className="mt-1.5 whitespace-pre-line text-xs text-foreground/75">{m.text}</p>
+                        </li>
+                      ))}
+                  </ul>
+                </details>
+              ))}
+            </div>
           </section>
 
           {member ? (

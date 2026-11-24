@@ -240,3 +240,204 @@ export function chantierFirstMessage(name: string, a: ChantierAnswers, adCode?: 
     return `Bonjour ${first} 👋 Merci pour vos réponses. Pour préparer ${house}, commencez par choisir votre modèle et voir son coût : wooplans.com/catalogue. Je reviens vers vous quand votre chantier approche.`;
   return `Bonjour ${first} 👋 Merci pour vos réponses. Vous avez déjà vos plans : dites-moi si je peux vous aider pour autre chose.`;
 }
+
+/* ---------------------------------------------------------------------------------------------------------------- */
+
+/**
+ * Modèles de messages WhatsApp du protocole « Démarre ton chantier » (décisions de Tao du 25 nov. 2026), affichés sur
+ * la fiche CRM avec un bouton qui ouvre WhatsApp, message déjà écrit. Les mots entre crochets [ ] sont à compléter
+ * avant l'envoi. Jamais de fausse urgence. Testé dans tests/chantier-messages.test.ts.
+ */
+
+export type MessageContext = {
+  name: string;
+  code?: string | null;
+  /** villa, duplex, immeuble, indecis */
+  type?: string | null;
+  /** Modèle de la pub cliquée (D4-034). */
+  model?: string | null;
+  city?: string | null;
+  /** asap, 6mois, 1-3ans */
+  start?: string | null;
+};
+
+export type ChantierMessage = { id: string; step: string; title: string; when: string; text: string };
+
+export const ORANGE_MONEY = "656 71 35 03 (Tawokam Romuald)";
+export const CATALOGUE = "wooplans.com/catalogue";
+
+function firstName(name: string) {
+  const n = name.trim().split(/\s+/)[0] || "";
+  return n ? n.charAt(0).toUpperCase() + n.slice(1).toLowerCase() : "";
+}
+
+export function chantierMessages(c: MessageContext): ChantierMessage[] {
+  const p = firstName(c.name);
+  const hi = p ? `Bonjour ${p} 👋` : "Bonjour 👋";
+  const dossier = c.code ? ` (dossier ${c.code})` : "";
+  const house = c.type === "villa" ? "votre villa" : c.type === "duplex" ? "votre duplex" : c.type === "immeuble" ? "votre immeuble" : "votre maison";
+  const price =
+    c.type === "villa" ? fcfa(CHANTIER_PRICES.villa) : c.type === "duplex" ? fcfa(CHANTIER_PRICES.duplex) : c.type === "immeuble" ? "[prix convenu] FCFA" : `${fcfa(CHANTIER_PRICES.villa)} (villa) ou ${fcfa(CHANTIER_PRICES.duplex)} (duplex)`;
+  const city = c.city || "[ville]";
+  const deposit = fcfa(CHANTIER_DEPOSIT);
+  const when = c.start === "6mois" ? "dans les 6 mois" : "rapidement";
+  const seen = c.model ? ` Vous avez regardé notre modèle ${c.model}.` : "";
+  const livrables = "fondation, distributions, 4 façades, 2 coupes, toiture, fosse septique et devis de construction du gros œuvre";
+
+  return [
+    // 1. Accueil (prospect chaud)
+    {
+      id: "accueil",
+      step: "1. Accueil",
+      title: "Premier message (chaud)",
+      when: "Dans les 15 minutes après son message",
+      text: `${hi} C'est Tao, de WooPlans. Merci pour vos réponses${dossier}. Vous avez votre terrain et vous voulez démarrer ${when} : parfait.${seen}\n\nPour préparer la proposition de ${house}, envoyez-moi le dossier technique du terrain (une photo suffit).\n\nSi vous ne l'avez pas sous la main : la longueur, la largeur, et le côté où passe la route.`,
+    },
+    {
+      id: "accueil-relance",
+      step: "1. Accueil",
+      title: "Relance J+1 sans réponse",
+      when: "Le lendemain, s'il n'a pas répondu",
+      text: `Bonjour ${p}, avez-vous pu retrouver le dossier technique de votre terrain ?\n\nÀ défaut, la longueur et la largeur me suffisent pour commencer, avec le côté où passe la route.`,
+    },
+    {
+      id: "pas-de-dossier",
+      step: "1. Accueil",
+      title: "Il n'a pas le dossier sur lui",
+      when: "« Je suis en voyage », « au village », « plus tard »",
+      text: `Pas de souci ${p}. Quand pensez-vous l'avoir ? Je note la date et je reviens vers vous ce jour-là.\n\nEn attendant, si vous connaissez à peu près la longueur et la largeur, envoyez-les : je vérifie déjà quels modèles tiennent sur votre terrain.`,
+    },
+    // 2. Terrain connu
+    {
+      id: "terrain-recu",
+      step: "2. Terrain connu",
+      title: "Dimensions ou dossier reçus",
+      when: "Dès qu'il envoie le dossier ou les dimensions",
+      text: `Merci ${p} 👍 C'est noté. Je vérifie que ${house} tient bien sur votre terrain et je vous envoie votre proforma aujourd'hui.`,
+    },
+    {
+      id: "visite",
+      step: "2. Terrain connu",
+      title: "Terrain en pente : visite",
+      when: "Si le terrain n'est pas plat",
+      text: `${p}, votre terrain est en pente : pour des fondations et des niveaux justes, nous faisons une visite du terrain avant de dessiner les plans.\n\nÀ ${city}, la visite coûte [prix de la visite] FCFA. Je l'ajoute à votre proforma ?`,
+    },
+    // 3. Proforma
+    {
+      id: "proforma",
+      step: "3. Proforma",
+      title: "Envoi de la proforma",
+      when: "Avec le PDF de la proforma",
+      text: `Voici votre proforma 📄${dossier}.\n\nPlans complets de ${house} : ${price}, livrés en 7 jours ouvrables : ${livrables}.\n\nPour démarrer : une avance de ${deposit}, déduite du prix. Elle vous ouvre tout de suite l'accès au Catalogue Premium, et je crée le groupe WhatsApp de votre projet.\n\nPaiement Orange Money : ${ORANGE_MONEY}.\n\nPour vous inspirer : ${CATALOGUE}`,
+    },
+    {
+      id: "proforma-j1",
+      step: "3. Proforma",
+      title: "Relance J+1",
+      when: "Le lendemain de la proforma",
+      text: `Bonjour ${p}, avez-vous pu regarder votre proforma ? Je reste disponible pour toute question sur les plans ou sur le paiement.`,
+    },
+    {
+      id: "proforma-j3",
+      step: "3. Proforma",
+      title: "Relance J+3",
+      when: "3 jours après la proforma",
+      text: `${p}, pour lancer vos plans, il suffit de l'avance de ${deposit}, déduite du prix. Dès réception, vous accédez au Catalogue Premium et nous préparons ensemble les détails de ${house}.\n\nOrange Money : ${ORANGE_MONEY}.`,
+    },
+    {
+      id: "proforma-j7",
+      step: "3. Proforma",
+      title: "Relance J+7 (dernière)",
+      when: "7 jours après la proforma",
+      text: `Bonjour ${p}, je ne veux pas vous déranger : votre dossier${c.code ? ` ${c.code}` : ""} reste ouvert. Dites-moi simplement si le projet est toujours d'actualité, ou s'il faut le décaler.`,
+    },
+    // Objections
+    {
+      id: "obj-cher",
+      step: "Objections",
+      title: "« C'est cher »",
+      when: "Il trouve le prix élevé (remise de 50 000 FCFA au plus)",
+      text: `Je comprends ${p}. Ce prix comprend les plans pour construire et le devis du gros œuvre : vous savez exactement quoi acheter et combien, ce qui évite les erreurs coûteuses sur le chantier. Et vous ne versez que ${deposit} pour démarrer.\n\nQuel montant aviez-vous prévu pour les plans ?`,
+    },
+    {
+      id: "obj-estimation",
+      step: "Objections",
+      title: "« Je veux juste une estimation »",
+      when: "Il demande un devis ou une « quotation »",
+      text: `Le devis du gros œuvre de ${house} est justement inclus dans les plans complets, calculé sur vos plans.\n\nPour un premier ordre de grandeur, chaque modèle de notre catalogue a déjà son devis : ${CATALOGUE}`,
+    },
+    {
+      id: "obj-ou",
+      step: "Objections",
+      title: "« Vous êtes où ? »",
+      when: "Il demande où vous êtes, ou n'est pas à Yaoundé",
+      text: `Nous sommes à Yaoundé, et nous travaillons à distance partout au Cameroun : tout se fait sur WhatsApp et les plans sont livrés en PDF. Pour un terrain en pente, nous nous déplaçons pour la visite.`,
+    },
+    {
+      id: "obj-famille",
+      step: "Objections",
+      title: "« J'en parle à ma famille »",
+      when: "Il doit consulter quelqu'un",
+      text: `Bien sûr ${p}. Vous pouvez leur montrer la proforma. Quand pensez-vous en avoir parlé ? Je reviens vers vous ce jour-là.`,
+    },
+    {
+      id: "obj-reflechir",
+      step: "Objections",
+      title: "« Je vais réfléchir »",
+      when: "Il hésite sans dire pourquoi",
+      text: `Pas de souci ${p}. Qu'est-ce qui vous fait hésiter : le prix, le modèle, ou le moment de démarrer ? Je peux vous aider sur chacun.`,
+    },
+    // 4. Engagé
+    {
+      id: "avance-recue",
+      step: "4. Engagé",
+      title: "Avance reçue",
+      when: "Dès réception des 39 000 FCFA",
+      text: `Merci ${p}, avance de ${deposit} bien reçue ✅\n\nPour activer votre accès au Catalogue Premium, envoyez-moi votre adresse e-mail.\n\nJe crée maintenant le groupe WhatsApp de votre projet${c.code ? ` ${c.code}` : ""} : nous y choisirons ensemble le modèle et les adaptations.`,
+    },
+    {
+      id: "groupe",
+      step: "4. Engagé",
+      title: "Ouverture du groupe WhatsApp",
+      when: "Premier message dans le groupe du projet",
+      text: `Bienvenue dans le groupe de votre projet${c.code ? ` ${c.code}` : ""} 🏗️\n\nIci, nous préparons vos plans complets de ${house} à ${city}. Prochaines étapes :\n1. Vous choisissez votre modèle dans le Catalogue Premium (ou vous gardez celui qui vous a plu).\n2. Vous nous dites les adaptations voulues.\n3. Après le solde, vos plans sont livrés en 7 jours ouvrables.`,
+    },
+    // 5. Livraison
+    {
+      id: "livraison",
+      step: "5. Livraison",
+      title: "Plans livrés",
+      when: "Avec l'envoi des plans",
+      text: `Voici vos plans complets ${p} 🎉 Bonne construction !\n\nSi vous êtes satisfait, un petit message ou une courte vidéo sur votre expérience nous aiderait beaucoup.\n\nEt si quelqu'un autour de vous prépare aussi son chantier, envoyez-lui notre numéro. Nous pouvons aussi vous accompagner pour la construction.`,
+    },
+    // Autres profils et clôture
+    {
+      id: "tiede",
+      step: "Autres profils",
+      title: "Tiède (chantier dans 1 à 3 ans)",
+      when: "Premier et seul message manuel",
+      text: `${hi} Merci pour vos réponses${dossier}. Votre chantier est prévu dans 1 à 3 ans : c'est le bon moment pour choisir votre modèle et connaître son coût.\n\nTous nos modèles avec leur devis : ${CATALOGUE}\n\nJe reviens vers vous dans quelques mois.`,
+    },
+    {
+      id: "froid",
+      step: "Autres profils",
+      title: "Froid (pas encore de terrain)",
+      when: "Premier et seul message manuel",
+      text: `${hi} Merci pour vos réponses${dossier}. Pour préparer ${house}, le mieux est de choisir le modèle et de connaître son coût avant d'acheter le terrain : ${CATALOGUE}\n\nQuand vous aurez votre terrain, écrivez-moi avec votre code de dossier.`,
+    },
+    {
+      id: "hors-cible",
+      step: "Autres profils",
+      title: "Hors cible (a déjà ses plans)",
+      when: "Message de clôture",
+      text: `${hi} Merci pour vos réponses${dossier}. Vous avez déjà vos plans : très bien. Si vous voulez comparer avec d'autres modèles, ou être accompagné pour la construction, je reste disponible.`,
+    },
+    {
+      id: "perdu",
+      step: "Autres profils",
+      title: "Clôture après 3 relances",
+      when: "Après 3 relances sans réponse",
+      text: `Bonjour ${p}, je mets votre dossier${c.code ? ` ${c.code}` : ""} en pause pour l'instant. Le jour où votre projet redémarre, écrivez-moi simplement, je reprends tout de suite.`,
+    },
+  ];
+}
