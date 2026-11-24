@@ -2,6 +2,7 @@ import { runAfterSale } from "@/lib/after-sale";
 import { qualifyPending, transcribePending } from "@/lib/conversation-ai";
 import { sendWaInvites } from "@/lib/wa-invite";
 import { qualifyLeadsBehavior } from "@/lib/lead-ai";
+import { followChantierLeads } from "@/lib/chantier-ai";
 import { syncLeadSales } from "@/lib/lead-sync";
 import { timingSafeEqual } from "@/lib/crypto";
 import { getEnv } from "@/lib/env";
@@ -45,6 +46,11 @@ export async function POST(request: Request) {
     console.error("Transcription des notes vocales : échec", error);
     return null;
   });
+  // Dossiers « Démarre ton chantier » : l'IA lit la conversation, avance l'étape, fixe la relance, choisit le message.
+  const chantier = await followChantierLeads().catch((error) => {
+    console.error("Suivi IA des dossiers chantier : échec", error);
+    return null;
+  });
   // Leads en séquence : l'IA réanalyse dès qu'ils font quelque chose (comportement + conversation).
   const aiBehavior = await qualifyLeadsBehavior().catch((error) => {
     console.error("Qualification IA (comportement) : échec", error);
@@ -59,5 +65,5 @@ export async function POST(request: Request) {
     console.error("Invitations WhatsApp : échec", error);
     return null;
   });
-  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, ai, aiBehavior, waInvites });
+  return Response.json({ ok: true, leadSync, enrolled, ...relances, whatsapp, afterSale, codes, voice, chantier, ai, aiBehavior, waInvites });
 }

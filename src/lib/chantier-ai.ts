@@ -1,0 +1,117 @@
+import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { getDb, schema } from "@/db";
+import { randomId } from "@/lib/crypto";
+import { deepseekJson } from "@/lib/conversation-ai";
+import type { ConvMessage } from "@/lib/conversation-ai-rules";
+import { CHANTIER_AI_PROMPT, LAND_PROOFS, STEP_LABEL, chantierAiUserPrompt, leadStageFor, parseChantierAi, type ChantierStep } from "@/lib/chantier-ai-rules";
+import { adModelCode, chantierMessages, chantierSummary, type ChantierAnswers } from "@/lib/chantier-rules";
+
+/**
+ * L'IA suit les dossiers « Démarre ton chantier » (règles : src/lib/chantier-ai-rules.ts). Tâche des 15 minutes :
+ * les fiches dont la conversation a bougé depuis la dernière analyse, 10 minutes après le dernier message du prospect
+ * (on le laisse finir d'écrire), quelques-unes à la fois. Elle met à jour l'étape CRM, la date de relance, et note
+ * dans l'historique chaque changement d'étape.
+ */
+export async function followChantierLeads(limit = 8, now = new Date()) {
+  const db = getDb();
+  const cr = schema.chantierRequests;
+  const wa = schema.waMessages;
+  const settled = now.getTime() - 10 * 60_000;
+  const last = sql<number>`max(${wa.sentAt})`;
+  const lastIn = sql<number | null>`max(case when ${wa.direction} = 'in' then ${wa.sentAt} end)`;
+  const rows = await db
+    .select({ id: cr.id, last, lastIn })
+    .from(cr)
+    .innerJoin(wa, sql`'+' || ${wa.phone} = ${cr.phone}`)
+    .where(isNotNull(cr.leadId))
+    .groupBy(cr.id)
+    .having(and(sql`${last} > coalesce(${cr.aiUpdatedAt}, 0)`, sql`coalesce(${lastIn}, 0) <= ${settled}`))
+    .orderBy(desc(last))
+    .limit(limit);
+  let done = 0;
+  for (const r of rows) {
+    if (await followOne(r.id, now).catch((error) => console.error("Suivi IA du dossier impossible", r.id, error))) done++;
+  }
+  return { candidates: rows.length, done };
+}
+
+export async function followOne(requestId: string, now = new Date()): Promise<boolean> {
+  const db = getDb();
+  const req = await db.query.chantierRequests.findFirst({ where: eq(schema.chantierRequests.id, requestId) });
+  if (!req?.leadId || !req.phone) return false;
+  const lead = await db.query.leads.findFirst({ where: eq(schema.leads.id, req.leadId) });
+  if (!lead) return false;
+  const messages = await db.query.waMessages.findMany({
+    where: eq(schema.waMessages.phone, req.phone.replace(/\D/g, "")),
+    orderBy: asc(schema.waMessages.sentAt),
+    columns: { direction: true, type: true, body: true, transcript: true, sentAt: true, mediaStatus: true },
+  });
+  if (messages.some((m) => m.mediaStatus === "pending")) return false; // notes vocales pas encore transcrites
+
+  const answers: ChantierAnswers = {
+    type: req.houseType as ChantierAnswers["type"],
+    chambres: req.bedrooms as ChantierAnswers["chambres"],
+    terrain: req.terrain as ChantierAnswers["terrain"],
+    relief: (req.relief ?? "na") as ChantierAnswers["relief"],
+    plans: req.plans as ChantierAnswers["plans"],
+    start: req.start as ChantierAnswers["start"],
+    budget: req.budget as ChantierAnswers["budget"],
+  };
+  const model = adModelCode(req.utmContent);
+  const dossier = `${req.code} · ${req.name}${req.city ? ` · ${req.city}` : ""}. ${chantierSummary(answers)}${model ? ` Pub cliquée : modèle ${model}.` : ""} Étape CRM actuelle : ${lead.stage}.`;
+  const catalog = chantierMessages({ name: req.name, type: req.houseType }).map((m) => ({ id: m.id, title: m.title }));
+  const raw = await deepseekJson(CHANTIER_AI_PROMPT, chantierAiUserPrompt(dossier, messages as ConvMessage[], catalog, now));
+  const ai = parseChantierAi(raw, catalog.map((c) => c.id), now);
+  if (!ai) {
+    // Réponse inutilisable : on note la date pour ne pas reposer la question à chaque passage.
+    await db.update(schema.chantierRequests).set({ aiUpdatedAt: now }).where(eq(schema.chantierRequests.id, req.id));
+    return false;
+  }
+  // La preuve du terrain ne recule jamais (un dossier reçu reste reçu).
+  const land = LAND_PROOFS.indexOf(ai.land) >= LAND_PROOFS.indexOf((req.aiLand as (typeof LAND_PROOFS)[number]) ?? "aucun") ? ai.land : req.aiLand;
+  await db
+    .update(schema.chantierRequests)
+    .set({
+      aiStep: ai.step,
+      aiLand: land,
+      aiLandDetails: ai.landDetails || req.aiLandDetails,
+      aiRelief: ai.relief !== "inconnu" ? ai.relief : req.aiRelief ?? (answers.relief === "plat" || answers.relief === "pente" ? answers.relief : "inconnu"),
+      aiSummary: ai.summary,
+      aiNextAction: ai.nextAction,
+      aiMessageId: ai.messageId,
+      aiFollowUp: ai.followUp,
+      aiLostReason: ai.lostReason || null,
+      aiUpdatedAt: now,
+    })
+    .where(eq(schema.chantierRequests.id, req.id));
+
+  const stage = leadStageFor(ai.step, lead.stage) as typeof lead.stage;
+  await db
+    .update(schema.leads)
+    .set({
+      stage,
+      nextFollowUpAt: ai.followUp ? new Date(`${ai.followUp}T08:00:00Z`) : stage === "perdu" ? null : lead.nextFollowUpAt,
+      lostReason: stage === "perdu" ? ai.lostReason || lead.lostReason : lead.lostReason,
+      updatedAt: now,
+    })
+    .where(eq(schema.leads.id, lead.id));
+
+  if (ai.step !== req.aiStep) {
+    const terrain = land !== "aucun" ? ` Terrain : ${land}${ai.landDetails ? ` (${ai.landDetails})` : ""}.` : "";
+    await db.insert(schema.leadActivities).values({
+      id: randomId(),
+      leadId: lead.id,
+      kind: "stage",
+      body: `IA : ${STEP_LABEL[ai.step as ChantierStep]}.${terrain}${ai.lostReason ? ` Motif : ${ai.lostReason}.` : ""} ${ai.nextAction}`.trim(),
+      author: "ia",
+    });
+  }
+  return true;
+}
+
+/** Libellés pour la fiche CRM. */
+export function landLabel(land: string | null, details: string | null) {
+  const base = land === "dossier" ? "Dossier technique reçu" : land === "dimensions" ? "Dimensions connues" : "Pas encore de dossier ni de dimensions";
+  return details ? `${base} · ${details}` : base;
+}
+

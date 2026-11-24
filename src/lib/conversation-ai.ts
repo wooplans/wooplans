@@ -120,6 +120,11 @@ export async function transcribePending(limit = 5) {
 /* ─────────────── Qualification (DeepSeek) ─────────────── */
 
 async function askDeepseek(user: string) {
+  return parseQualification(await deepseekJson(SYSTEM_PROMPT, user));
+}
+
+/** Appel à DeepSeek en mode JSON : contenu brut de la réponse, ou null (pas de clé, erreur). */
+export async function deepseekJson(system: string, user: string): Promise<string | null> {
   const key = getEnv().DEEPSEEK_API_KEY;
   if (!key) return null;
   const res = await fetch("https://api.deepseek.com/chat/completions", {
@@ -130,7 +135,7 @@ async function askDeepseek(user: string) {
       temperature: 0.2,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: system },
         { role: "user", content: user },
       ],
     }),
@@ -141,7 +146,7 @@ async function askDeepseek(user: string) {
     return null;
   }
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  return parseQualification(data.choices?.[0]?.message?.content);
+  return data.choices?.[0]?.message?.content ?? null;
 }
 
 /**
