@@ -633,3 +633,32 @@ export const waMessages = sqliteTable(
   },
   (t) => [index("wa_messages_prospect_idx").on(t.prospectId, t.sentAt), index("wa_messages_media_idx").on(t.mediaStatus)],
 );
+
+/**
+ * Formulaire « Démarre ton chantier » (24 nov. 2026) : réponses de qualification, rattachées au numéro WhatsApp quand la
+ * personne envoie le message pré-rempli avec son code (CH-123456). Fiche CRM créée à ce moment-là (leadId).
+ */
+export const chantierRequests = sqliteTable(
+  "chantier_requests",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    terrain: text("terrain").notNull(),
+    start: text("start").notNull(),
+    plans: text("plans").notNull(),
+    houseType: text("house_type").notNull(),
+    bedrooms: text("bedrooms").notNull(),
+    budget: text("budget").notNull(),
+    profile: text("profile").notNull(),
+    utmSource: text("utm_source"),
+    utmCampaign: text("utm_campaign"),
+    utmContent: text("utm_content"),
+    phone: text("phone"),
+    country: text("country"),
+    linkedAt: integer("linked_at", { mode: "timestamp_ms" }),
+    leadId: text("lead_id"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("chantier_requests_code_idx").on(t.code), index("chantier_requests_created_idx").on(t.createdAt)],
+);
