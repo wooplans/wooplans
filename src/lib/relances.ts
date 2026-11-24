@@ -22,6 +22,8 @@ import { cataloguePrice, catalogueReservedPrice } from "@/lib/site";
 import { deadlineLabel, reservedUntil } from "@/lib/catalogue-offer-rules";
 import { currentStep, endsText, greeting, offerMessagesOver, relanceDueAt, RELANCE_STEP_COUNT } from "@/lib/relance-schedule";
 import { waNumber } from "@/lib/whatsapp-rules";
+import { leadHeat, type HeatLevel } from "@/lib/lead-heat-rules";
+import { sql } from "drizzle-orm";
 
 const HOUR = 3_600_000;
 
@@ -61,6 +63,13 @@ export type RelanceItem = {
   ai: { stage: string; score: number | null; summary: string | null; nextAction: string | null } | null;
   /** Activité sur l'extrait en ligne (/mon-extrait) : score d'intérêt et détail, null s'il ne l'a pas ouvert. */
   extrait: { score: number; opens: number; viewed: number; lockedClicks: number; offerClick: boolean } | null;
+  /** A commencé à payer le Catalogue Premium (paiement lancé, échoué ou abandonné). */
+  checkout: boolean;
+  /** Chaleur en temps réel (src/lib/lead-heat-rules.ts) : note, niveau et ce qu'il a fait. */
+  heat: { score: number; level: HeatLevel; reasons: string[] };
+  /** Dernière action connue (clic, message, extrait, paiement commencé) et dernière analyse de l'IA. */
+  lastActionAt: Date | null;
+  aiUpdatedAt: Date | null;
 };
 
 /**
@@ -92,9 +101,11 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
     40,
   );
   intents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  const [activity, videos] = await Promise.all([
+  const [activity, videos, checkouts, inbound] = await Promise.all([
     extraitActivityByEmail(withPhone.map((r) => r.email)).catch(() => new Map()),
     videoActivityByProspect(withPhone.map((r) => r.id)).catch(() => new Map()),
+    catalogueCheckoutsByEmail(withPhone.map((r) => r.email)).catch(() => new Map<string, Date>()),
+    inboundCountByProspect(withPhone.map((r) => r.id)).catch(() => new Map<string, number>()),
   ]);
   const intentByEmail = new Map<string, (typeof intents)[number]>();
   for (const i of intents) if (i.email && !intentByEmail.has(i.email)) intentByEmail.set(i.email, i);
@@ -126,10 +137,70 @@ export async function relanceQueue(now = new Date()): Promise<RelanceItem[]> {
       extrait: activity.get(r.email) ?? null,
       video: videos.get(r.id) ?? null,
       ai: r.aiStage ? { stage: r.aiStage, score: r.aiScore, summary: r.aiSummary, nextAction: r.aiNextAction } : null,
+      checkout: checkouts.has(r.email.toLowerCase()),
+      lastActionAt: latest([r.waClickedAt, r.lastInboundAt, r.waRepliedAt, activity.get(r.email)?.lastAt ?? null, checkouts.get(r.email.toLowerCase()) ?? null]),
+      aiUpdatedAt: r.aiUpdatedAt,
+      heat: leadHeat(
+        {
+          wrote: Boolean(r.waRepliedAt || r.lastInboundAt),
+          inbound: inbound.get(r.id) ?? (r.waRepliedAt ? 1 : 0),
+          read: Boolean(r.waReadAt),
+          clicked: Boolean(r.waClickedAt),
+          video: videos.get(r.id)?.event ?? null,
+          extrait: activity.get(r.email)?.score ?? null,
+          checkout: checkouts.has(r.email.toLowerCase()),
+          ai: r.aiScore ?? null,
+          lastActionAt: latest([r.waClickedAt, r.lastInboundAt, r.waRepliedAt, activity.get(r.email)?.lastAt ?? null, checkouts.get(r.email.toLowerCase()) ?? null]),
+        },
+        now,
+      ),
     };
   });
   // Messages 3 à 5 : plus rien à dire une fois le prix réservé terminé (le classement du pipeline les sort ensuite).
   return items.filter((i) => i.step < RELANCE_STEP_COUNT && !offerMessagesOver(i.step, i.reservedUntil, now));
+}
+
+function latest(dates: (Date | null | undefined)[]) {
+  const t = Math.max(...dates.map((d) => d?.getTime() ?? 0));
+  return t > 0 ? new Date(t) : null;
+}
+
+/** Paiements du Catalogue Premium commencés (lancé, échoué ou abandonné) : dernière tentative par email. */
+export async function catalogueCheckoutsByEmail(emails: string[]) {
+  const unique = [...new Set(emails.filter(Boolean).map((e) => e.toLowerCase()))];
+  const rows = unique.length
+    ? await inChunks(unique, (chunk) =>
+        getDb().query.checkoutIntents.findMany({
+          where: and(
+            inArray(sql`lower(${schema.checkoutIntents.email})`, chunk),
+            notInArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS),
+            isNull(schema.checkoutIntents.planSlug),
+            inArray(schema.checkoutIntents.status, ["started", "failed", "abandoned", "paid"]),
+          ),
+          columns: { email: true, createdAt: true },
+        }),
+      )
+    : [];
+  const out = new Map<string, Date>();
+  for (const r of rows) {
+    const e = (r.email || "").toLowerCase();
+    if (e && (!out.get(e) || out.get(e)!.getTime() < r.createdAt.getTime())) out.set(e, r.createdAt);
+  }
+  return out;
+}
+
+/** Nombre de messages WhatsApp reçus par fiche. */
+export async function inboundCountByProspect(ids: string[]) {
+  const rows = ids.length
+    ? await inChunks(ids, (chunk) =>
+        getDb()
+          .select({ id: schema.waMessages.prospectId, n: sql<number>`count(*)` })
+          .from(schema.waMessages)
+          .where(and(inArray(schema.waMessages.prospectId, chunk), eq(schema.waMessages.direction, "in")))
+          .groupBy(schema.waMessages.prospectId),
+      )
+    : [];
+  return new Map(rows.filter((r) => r.id).map((r) => [r.id!, Number(r.n)]));
 }
 
 /** Une seule personne de la file (lien de secours /admin/relances/envoyer) : 2 petites requêtes, pas toute la file. */

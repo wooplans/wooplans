@@ -159,31 +159,42 @@ export async function qualifyPending(limit = 5, now = new Date()) {
   });
   let qualified = 0;
   for (const p of rows) {
-    const messages = await db.query.waMessages.findMany({
-      where: eq(schema.waMessages.prospectId, p.id),
-      orderBy: asc(schema.waMessages.sentAt),
-      columns: { direction: true, type: true, body: true, transcript: true, sentAt: true, mediaStatus: true },
-    });
-    if (messages.some((m) => m.mediaStatus === "pending")) continue;
-    const lead = await db.query.checkoutIntents.findFirst({
-      where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
-      orderBy: desc(schema.checkoutIntents.createdAt),
-      columns: { ctaId: true, createdAt: true },
-    });
-    const product = lead?.ctaId === LEAD_OFFERS.extrait.ctaId ? "l'Extrait du Catalogue Premium" : lead ? "le Guide des maisons" : "rien encore";
-    const context = `${p.name || "Client"}${p.country ? `, ${p.country}` : ""}. A acheté ${product}${lead ? ` le ${lead.createdAt.toISOString().slice(0, 10)}` : ""}. Étape actuelle dans le suivi : ${p.pipelineStage || "inconnue"}. Date du jour : ${now.toISOString().slice(0, 10)}.`;
-    const q = await askDeepseek(userPrompt(context, messages as ConvMessage[])).catch((error) => {
-      console.error("Qualification IA impossible", error);
-      return null;
-    });
-    // Réponse inutilisable : on note quand même la date, pour ne pas reposer la question à chaque passage.
-    await db
-      .update(schema.prospects)
-      .set(q ? { aiStage: q.stage, aiScore: q.score, aiSummary: q.summary, aiNextAction: q.nextAction, aiUpdatedAt: now } : { aiUpdatedAt: now })
-      .where(eq(schema.prospects.id, p.id));
-    if (q) qualified++;
+    if (await qualifyOne(p, now)) qualified++;
   }
   return { candidates: rows.length, qualified };
+}
+
+type ProspectForAi = { id: string; email: string; name: string | null; country: string | null; pipelineStage: string | null };
+
+/**
+ * Qualifie une fiche : conversation WhatsApp + contexte d'achat + comportement (src/lib/lead-ai.ts). Renvoie true si
+ * l'IA a répondu. Les notes vocales en attente de transcription font patienter (false, rien d'écrit).
+ */
+export async function qualifyOne(p: ProspectForAi, now = new Date(), behavior?: string): Promise<boolean> {
+  const db = getDb();
+  const messages = await db.query.waMessages.findMany({
+    where: eq(schema.waMessages.prospectId, p.id),
+    orderBy: asc(schema.waMessages.sentAt),
+    columns: { direction: true, type: true, body: true, transcript: true, sentAt: true, mediaStatus: true },
+  });
+  if (messages.some((m) => m.mediaStatus === "pending")) return false;
+  const lead = await db.query.checkoutIntents.findFirst({
+    where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
+    orderBy: desc(schema.checkoutIntents.createdAt),
+    columns: { ctaId: true, createdAt: true },
+  });
+  const product = lead?.ctaId === LEAD_OFFERS.extrait.ctaId ? "l'Extrait du Catalogue Premium" : lead ? "le Guide des maisons" : "rien encore";
+  const context = `${p.name || "Client"}${p.country ? `, ${p.country}` : ""}. A acheté ${product}${lead ? ` le ${lead.createdAt.toISOString().slice(0, 10)}` : ""}. Étape actuelle dans le suivi : ${p.pipelineStage || "inconnue"}. Date du jour : ${now.toISOString().slice(0, 10)}.${behavior ? ` Comportement : ${behavior}.` : ""}`;
+  const q = await askDeepseek(userPrompt(context, messages as ConvMessage[])).catch((error) => {
+    console.error("Qualification IA impossible", error);
+    return null;
+  });
+  // Réponse inutilisable : on note quand même la date, pour ne pas reposer la question à chaque passage.
+  await db
+    .update(schema.prospects)
+    .set(q ? { aiStage: q.stage, aiScore: q.score, aiSummary: q.summary, aiNextAction: q.nextAction, aiUpdatedAt: now } : { aiUpdatedAt: now })
+    .where(eq(schema.prospects.id, p.id));
+  return Boolean(q);
 }
 
 /** Rattache les messages arrivés avant que la fiche ait ce numéro (correction du numéro, code de commande). */

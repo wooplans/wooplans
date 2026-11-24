@@ -8,6 +8,8 @@ import { WhatsappSendButton } from "@/components/admin/WhatsappSendButton";
 import { countPublishedPlans } from "@/lib/plans";
 import { noWhatsappList, projectMessage, projectQueue, RELANCE_STEPS, relanceAttachment, relanceMessage, relanceQueue, relanceWhatsappUrl, type ProjectItem, type RelanceItem } from "@/lib/relances";
 import { waManual } from "@/lib/whatsapp";
+import { HEAT_LABEL } from "@/lib/lead-heat-rules";
+import { phaseOneStats } from "@/lib/phase-one-stats";
 import { PREMIUM_STEPS, premiumMessage, premiumQueue, type PremiumItem } from "@/lib/premium-relances";
 import { announceExtraitWeb, fixWhatsappNumber, noWhatsapp, reopenOffer, undoRelance } from "./actions";
 import { extraitAnnounceQueue } from "@/lib/extrait-web-announce";
@@ -20,6 +22,13 @@ import { formatFcfa } from "@/lib/plans";
 export const dynamic = "force-dynamic";
 
 const AI_STAGE: Record<string, string> = { chaud: "🔥 chaud", tiede: "tiède", froid: "froid", perdu: "perdu" };
+
+const HEAT_STYLE: Record<string, string> = {
+  brulant: "bg-red-100 text-red-900",
+  chaud: "bg-orange-100 text-orange-900",
+  tiede: "bg-amber-50",
+  froid: "bg-gray-100 text-foreground/70",
+};
 
 const COLUMN_STYLE = [
   "border-sky-300 bg-sky-50",
@@ -86,6 +95,12 @@ function Card({ item, models, now }: { item: RelanceItem; models: number; now: D
           ) : null}
         </div>
         <Badge tone={item.offer === "extrait" ? "good" : "info"}>{item.offer === "extrait" ? "Extrait" : "Guide"}</Badge>
+      </div>
+      <div className={`mt-1.5 rounded-md px-2 py-1 text-xs ${HEAT_STYLE[item.heat.level]}`}>
+        <p>
+          <strong>{HEAT_LABEL[item.heat.level]}</strong> · {item.heat.score}/100
+        </p>
+        <p className="text-foreground/80">{item.heat.reasons.join(" · ")}</p>
       </div>
       {item.extrait ? (
         <p className="mt-1.5 rounded-md bg-sky-50 px-2 py-1 text-xs">
@@ -264,7 +279,14 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
     return [] as PremiumItem[];
   });
   const premiumDue = premium.filter((i) => i.due);
-  const due = queue.filter((i) => i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
+  const phase1 = await phaseOneStats(30, now).catch((error) => {
+    console.error("Passage au catalogue : calcul impossible", error);
+    return null;
+  });
+  const heatCount = (["brulant", "chaud", "tiede", "froid"] as const).map((l) => ({ level: l, n: queue.filter((i) => i.heat.level === l).length }));
+  const pct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)} %`);
+  // Les plus chauds en haut de chaque colonne (demande de Tao, 24 nov.).
+  const due = queue.filter((i) => i.due).sort((a, b) => b.heat.score - a.heat.score || a.dueAt.getTime() - b.dueAt.getTime());
   const upcoming = queue.filter((i) => !i.due).sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());
   const sentToday = queue
     .concat()
@@ -284,6 +306,42 @@ export default async function RelancesPage({ searchParams }: { searchParams: Pro
           Les envois automatiques sont actifs : cette page sert seulement de secours.
         </p>
       ) : null}
+
+      <section className="mb-5 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-xl border border-outline bg-white p-4 text-sm">
+          <p className="font-semibold">Chaleur des leads en séquence (temps réel)</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {heatCount.map((h) => (
+              <span key={h.level} className={`rounded-full px-3 py-1 text-xs font-semibold ${HEAT_STYLE[h.level]}`}>
+                {HEAT_LABEL[h.level]} : {h.n}
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Calculée sur ce que la personne fait : paiement du catalogue commencé, vidéo regardée, messages écrits, liens cliqués, extrait en ligne, note de l&apos;IA. Une
+            action de plus d&apos;une semaine compte moitié.
+          </p>
+        </div>
+        {phase1 ? (
+          <div className="rounded-xl border border-outline bg-white p-4 text-sm">
+            <p className="font-semibold">
+              Passage au catalogue en fin de 1re séquence (30 j) : {pct(phase1.total.rate)}{" "}
+              <span className="font-normal text-muted">
+                ({phase1.total.converted}/{phase1.total.ended} séquences terminées · objectif 10 % · {phase1.total.running} en cours)
+              </span>
+            </p>
+            <p className="mt-1 text-xs">
+              {phase1.byOffer.map((g) => `${g.key === "extrait" ? "Extrait" : "Guide"} : ${pct(g.rate)} (${g.converted}/${g.ended})`).join(" · ")}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              {phase1.byCountry
+                .filter((g) => g.ended + g.running > 0)
+                .map((g) => `${g.key} ${pct(g.rate)} (${g.converted}/${g.ended}${g.running ? `, ${g.running} en cours` : ""})`)
+                .join(" · ")}
+            </p>
+          </div>
+        ) : null}
+      </section>
 
       <details className="mb-5 rounded-xl border border-outline bg-white p-4 text-sm">
         <summary className="cursor-pointer font-semibold">Mode d&apos;emploi (30 secondes)</summary>
