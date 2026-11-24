@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { guessCivilite, salutation, type Civilite } from "@/lib/civilite";
-import { CUSTOM_PLAN_OFFERS } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_DELIVERY, CUSTOM_PLAN_DEPOSIT, CUSTOM_PLAN_OFFERS } from "@/lib/custom-plans";
 import { siteUrl } from "@/lib/env";
 import { formatFcfa } from "@/lib/plans";
 import { greeting } from "@/lib/relance-schedule";
@@ -11,10 +11,10 @@ import { waNumber } from "@/lib/whatsapp-rules";
 /**
  * Relances WhatsApp Premium → plans complets (décision de Tao, 23 nov. 2026). Les relances de la phase de conversion
  * mènent les acheteurs de l'extrait vers le Catalogue Premium ; celles-ci mènent les membres Premium vers les plans
- * complets (99 000 FCFA villa, 199 000 FCFA duplex, src/lib/custom-plans.ts). Envoi à la main depuis /admin/relances,
+ * complets (200 000 FCFA villa, 300 000 FCFA duplex, src/lib/custom-plans.ts). Envoi à la main depuis /admin/relances,
  * comme les autres : 3 messages.
  *  1. 2 jours après l'achat : « Avez-vous repéré votre modèle ? » (réponse = le code du modèle) ;
- *  2. 7 jours après : l'offre des plans complets (ce qui est livré, prix fixe) ;
+ *  2. 7 jours après : l'offre des plans complets (ce qui est livré, prix, avance) ;
  *  3. 10 jours après : « Avez-vous votre terrain ? » (dimensions → modèles qui y entrent).
  * Les membres les plus actifs (connexion récente, modèles ouverts) passent en premier. Exclus : membres révoqués, sans
  * WhatsApp, désinscrits des relances, et ceux qui ont déjà commandé des plans complets.
@@ -139,7 +139,7 @@ export function premiumMessage(item: Pick<PremiumItem, "name" | "email" | "count
     const [villa, duplex] = CUSTOM_PLAN_OFFERS;
     const items = villa.deliverables.map((d) => `✅ ${d}`).join("\n");
     const link = siteUrl(`/plans-personnalises?${utm("premium_2")}`);
-    return `${hello}\n\nQuand vous avez choisi votre modèle, nos architectes l'adaptent à votre terrain et à vos besoins, et réalisent le dossier complet pour construire :\n${items}\n\nPrix fixe : *${formatFcfa(villa.price)}* pour une villa, *${formatFcfa(duplex.price)}* pour un duplex.\n\n👉 ${link}\n\nVous pouvez aussi me répondre ici avec le code du modèle.`;
+    return `${hello}\n\nQuand vous avez choisi votre modèle, nos architectes l'adaptent à votre terrain et à vos besoins, et réalisent le dossier complet pour construire :\n${items}\n\nPrix : *${formatFcfa(villa.price)}* pour une villa, *${formatFcfa(duplex.price)}* pour un duplex, livrés en ${CUSTOM_PLAN_DELIVERY}. Avance de ${formatFcfa(CUSTOM_PLAN_DEPOSIT)} à la commande, déduite du prix.\n\n👉 ${link}\n\nVous pouvez aussi me répondre ici avec le code du modèle.`;
   }
   return `${hello}\n\nUne question rapide : avez-vous déjà votre terrain ?\n\nSi oui, envoyez-moi ses dimensions (ou une photo du plan du terrain) : je vous dis quels modèles du catalogue y entrent, et comment nos architectes adaptent celui que vous préférez.`;
 }
