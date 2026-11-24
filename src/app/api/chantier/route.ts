@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
   }
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const parsed = parseChantier(body);
-  if (!parsed) return NextResponse.json({ error: "Merci de répondre à toutes les questions et d'indiquer votre nom." }, { status: 400 });
+  if (!parsed) return NextResponse.json({ error: "Merci de répondre à toutes les questions et d'indiquer votre nom et votre ville." }, { status: 400 });
   const utm = (body.utm ?? {}) as Record<string, string | undefined>;
-  const r = await createChantierRequest(parsed.answers, parsed.name, { source: utm.source, campaign: utm.campaign, content: utm.content });
+  const r = await createChantierRequest(parsed.answers, parsed.name, parsed.city, { source: utm.source, campaign: utm.campaign, content: utm.content });
   return NextResponse.json({ code: r.code, profile: r.profile, waUrl: r.waUrl, eventId: r.id });
 }
