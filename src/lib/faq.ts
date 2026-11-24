@@ -1,6 +1,6 @@
 import type { FaqItem } from "@/components/Faq";
 import { formatFcfa } from "@/lib/plans";
-import { CUSTOM_PLAN_OFFERS, planGiftEnabled } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_DELIVERY, CUSTOM_PLAN_DEPOSIT, CUSTOM_PLAN_OFFERS, planGiftEnabled } from "@/lib/custom-plans";
 import { cataloguePrice } from "@/lib/site";
 
 const [villa, duplex] = CUSTOM_PLAN_OFFERS;
@@ -40,7 +40,7 @@ export const CATALOGUE_FAQ: FaqItem[] = [
   {
     question: "Combien coûtent les plans complets ?",
     answer:
-      `Les plans complets personnalisés ont un prix fixe, le même pour tous : ${formatFcfa(villa.price)} pour une villa, ${formatFcfa(duplex.price)} pour un duplex. C'est une prestation distincte du catalogue (qui sert à choisir votre modèle) : son prix n'est pas déduit.`,
+      `Les plans complets personnalisés coûtent ${formatFcfa(villa.price)} pour une villa et ${formatFcfa(duplex.price)} pour un duplex, devis du gros œuvre compris, livrés en ${CUSTOM_PLAN_DELIVERY}. À la commande, vous versez une avance de ${formatFcfa(CUSTOM_PLAN_DEPOSIT)}, déduite du prix, qui vous ouvre aussi l'accès au Catalogue Premium.`,
   },
   {
     question: "Les devis estimatifs sont-ils fiables ?",

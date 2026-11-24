@@ -2,9 +2,16 @@ import type { PlanCategory } from "@/lib/plan-format";
 import projet from "@/config/projet.json";
 
 /**
- * Prix fixes des plans complets personnalisés (décision de Tao du 8 nov. 2026) : 99 000 FCFA pour une villa,
- * 199 000 FCFA pour un duplex. Aucune déduction : ni le Catalogue Premium ni le plan et devis ne sont déduits.
+ * Prix des plans complets personnalisés (décision de Tao du 25 nov. 2026, remplace celle du 8 nov.) : 200 000 FCFA
+ * pour une villa, 300 000 FCFA pour un duplex. Avance de 39 000 FCFA à la commande, déduite du prix ; elle ouvre
+ * l'accès au Catalogue Premium. Livraison en 7 jours ouvrables. Remise de 50 000 FCFA au plus, négociée par Tao
+ * (jamais affichée). Immeuble : prix négocié avec Tao sur WhatsApp.
  */
+export const CUSTOM_PLAN_DEPOSIT = 39_000;
+export const CUSTOM_PLAN_DELIVERY = "7 jours ouvrables";
+/** Paiement des proformas (Orange Money). */
+export const CUSTOM_PLAN_PAYMENT = { method: "Orange Money", number: "656 71 35 03", holder: "Tawokam Romuald" } as const;
+
 /** Les 10 plans livrés, pour une villa comme pour un duplex (repris dans la FAQ de la page de vente). */
 const COMPLETE_PLAN_DELIVERABLES = [
   "Plans de fondation",
@@ -13,20 +20,21 @@ const COMPLETE_PLAN_DELIVERABLES = [
   "Coupes AA et BB",
   "Plan de toiture",
   "Plan de fosse septique",
+  "Devis de construction du gros œuvre",
 ] as const;
 
 export const CUSTOM_PLAN_OFFERS = [
   {
     category: "villa",
     title: "Villa (plain-pied)",
-    price: 99000,
+    price: 200000,
     description: "Adaptation d'un modèle du catalogue à votre terrain et à vos besoins.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },
   {
     category: "duplex",
     title: "Duplex (R+1)",
-    price: 199000,
+    price: 300000,
     description: "Adaptation d'un duplex du catalogue, niveaux et escalier compris.",
     deliverables: COMPLETE_PLAN_DELIVERABLES,
   },

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LeadForm } from "@/components/LeadForm";
-import { CUSTOM_PLAN_OFFERS } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_DELIVERY, CUSTOM_PLAN_DEPOSIT, CUSTOM_PLAN_OFFERS } from "@/lib/custom-plans";
 import { countPublishedPlans, formatFcfa, withPlanCount } from "@/lib/plans";
 import { SITE } from "@/lib/site";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Plans de maison complets et personnalisés",
   description:
-    "Faites adapter un modèle WOOPLANS à votre terrain : plans architecturaux complets, façades, coupes et fondations. Prix fixe : 99 000 FCFA pour une villa, 199 000 FCFA pour un duplex.",
+    "Faites adapter un modèle WOOPLANS à votre terrain : plans architecturaux complets, façades, coupes et fondations. 200 000 FCFA pour une villa, 300 000 FCFA pour un duplex, livrés en 7 jours ouvrables.",
   alternates: { canonical: "/plans-personnalises" },
 };
 
@@ -20,7 +20,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
   return (
     <div className="container-page py-12">
       <p className="eyebrow">Plans complets</p>
-      <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight md:text-4xl">Vos plans complets personnalisés, à prix fixe</h1>
+      <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight md:text-4xl">Vos plans complets personnalisés, livrés en 7 jours ouvrables</h1>
       <p className="mt-4 max-w-2xl text-foreground/75">
         Une fois votre modèle choisi, nos architectes l&apos;adaptent à votre terrain et à vos souhaits, puis réalisent le dossier complet pour
         construire.
@@ -31,7 +31,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
           <div key={offer.category} className="card flex flex-col p-6">
             <h2 className="text-lg font-semibold">{offer.title}</h2>
             <p className="mt-2 text-3xl font-bold text-primary">{formatFcfa(offer.price)}</p>
-            <p className="text-sm text-muted">prix fixe</p>
+            <p className="text-sm text-muted">livrés en {CUSTOM_PLAN_DELIVERY}</p>
             <p className="mt-3 text-sm text-foreground/75">{offer.description}</p>
             <ul className="mt-4 space-y-1.5 text-sm">
               {offer.deliverables.map((d) => (
@@ -43,7 +43,8 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
             </ul>
             <div className="mt-auto pt-5">
               <p className="rounded-xl bg-highlight/15 px-4 py-3 text-sm">
-                Prix fixe, le même pour tous : <strong className="text-primary">{formatFcfa(offer.price)}</strong>.
+                Avance de <strong className="text-primary">{formatFcfa(CUSTOM_PLAN_DEPOSIT)}</strong> à la commande, déduite du prix. Elle vous ouvre
+                aussi l&apos;accès au Catalogue Premium.
               </p>
             </div>
           </div>
@@ -69,7 +70,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
           </div>
           <div>
             <p className="text-sm font-semibold text-primary">Étape 2</p>
-            <p className="mt-1 font-semibold">Vous commandez vos plans complets, à prix fixe</p>
+            <p className="mt-1 font-semibold">Vous commandez vos plans complets</p>
             <ul className="mt-1 space-y-0.5 text-sm text-foreground/70">
               {CUSTOM_PLAN_OFFERS.map((offer) => (
                 <li key={offer.category}>
@@ -80,7 +81,7 @@ export default async function CustomPlansPage({ searchParams }: { searchParams: 
           </div>
         </div>
         <p className="mt-6 text-sm text-foreground/70">
-          Ce prix couvre notre travail d&apos;architecte (les plans). Il est distinct du budget de construction de la maison, estimé pour chaque
+          Avance de {formatFcfa(CUSTOM_PLAN_DEPOSIT)} à la commande, déduite du prix ; livraison en {CUSTOM_PLAN_DELIVERY}. Ce prix couvre notre travail d&apos;architecte (les plans). Il est distinct du budget de construction de la maison, estimé pour chaque
           modèle dans le Catalogue Premium.
         </p>
       </section>

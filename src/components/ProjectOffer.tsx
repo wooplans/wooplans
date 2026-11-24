@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LocalAnchor, LocalPriceText } from "@/components/LocalPrice";
-import { planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
+import { CUSTOM_PLAN_DELIVERY, CUSTOM_PLAN_DEPOSIT, planGiftEnabled, type CustomPlanOffer } from "@/lib/custom-plans";
 import { formatFcfa, withPlanCount } from "@/lib/plans";
 import type { FaqItem } from "@/components/Faq";
 import { GiftPlanButton } from "@/components/GiftPlanButton";
@@ -225,7 +225,7 @@ export function projectFaq({ plan, offer, planCount }: Omit<Props, "online">): F
       },
       {
         question: "Combien coûtent les plans complets de ce modèle ?",
-        answer: `${formatFcfa(offer.price)}, prix fixe : nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…). Le même prix pour tous, sans supplément.`,
+        answer: `${formatFcfa(offer.price)} : nos architectes adaptent le modèle à votre terrain et à vos besoins (une chambre en plus ou en moins, un garage…), avec le devis du gros œuvre. Avance de ${formatFcfa(CUSTOM_PLAN_DEPOSIT)} à la commande, déduite du prix ; livraison en ${CUSTOM_PLAN_DELIVERY}.`,
       },
     ];
   }

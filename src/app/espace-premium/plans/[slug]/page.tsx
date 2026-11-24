@@ -153,8 +153,8 @@ export default async function PremiumPlanPage({ params }: { params: Promise<{ sl
         <p className="mt-2 max-w-2xl text-white/75">
           Nos architectes l&apos;adaptent à votre terrain et réalisent vos plans complets.{" "}
           {offer
-            ? <>Prix fixe : <strong className="text-white">{formatFcfa(offer.price)}</strong>.</>
-            : "Prix fixe."}
+            ? <>Prix : <strong className="text-white">{formatFcfa(offer.price)}</strong>, livrés en 7 jours ouvrables.</>
+            : "Livrés en 7 jours ouvrables."}
         </p>
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <a href={whatsappLink(orderMessage)} target="_blank" rel="noopener noreferrer" data-whatsapp={`premium_order_${plan.slug}`} className="btn bg-[#25D366] text-white hover:bg-[#1eb457]">

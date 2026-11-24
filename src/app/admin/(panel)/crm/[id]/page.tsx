@@ -21,6 +21,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     db.query.leadPayments.findMany({ where: eq(schema.leadPayments.leadId, id), orderBy: desc(schema.leadPayments.paidAt) }),
     lead.memberId ? db.query.members.findFirst({ where: eq(schema.members.id, lead.memberId) }) : null,
   ]);
+  const chantier = await db.query.chantierRequests.findFirst({ where: eq(schema.chantierRequests.leadId, id) });
+  const pfType = chantier && ["villa", "duplex", "immeuble"].includes(chantier.houseType) ? chantier.houseType : "villa";
   const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
   const due = Math.max(0, (lead.agreedPrice ?? 0) - lead.catalogueCredit - totalPaid);
   const phoneDigits = (lead.phone || "").replace(/\D/g, "");
@@ -102,6 +104,38 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <div className="space-y-6">
+          <section className="card p-5">
+            <h2 className="font-semibold">Proforma</h2>
+            <p className="mt-1 text-xs text-muted">
+              {chantier ? <>Dossier <strong>{chantier.code}</strong>. </> : null}
+              Villa 200 000, duplex 300 000 FCFA (prix vide = prix de base). Remise 50 000 au plus. Immeuble : saisir le prix négocié.
+            </p>
+            <form action={`/admin/crm/${id}/proforma`} method="get" target="_blank" className="mt-3 grid grid-cols-2 gap-3">
+              <label>
+                <span className="label">Type</span>
+                <select name="type" defaultValue={pfType} className="input">
+                  <option value="villa">Villa</option>
+                  <option value="duplex">Duplex</option>
+                  <option value="immeuble">Immeuble</option>
+                </select>
+              </label>
+              <label>
+                <span className="label">Chambres</span>
+                <select name="chambres" defaultValue={chantier && chantier.bedrooms !== "na" ? chantier.bedrooms : ""} className="input">
+                  <option value="">—</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5+">5 et plus</option>
+                </select>
+              </label>
+              <label><span className="label">Prix (FCFA)</span><input name="prix" inputMode="numeric" placeholder="prix de base" className="input" /></label>
+              <label><span className="label">Remise (FCFA)</span><input name="remise" inputMode="numeric" placeholder="0" className="input" /></label>
+              <label><span className="label">Visite de terrain (FCFA)</span><input name="visite" inputMode="numeric" placeholder="0" className="input" /></label>
+              <label><span className="label">Modèle de référence</span><input name="modele" placeholder="ex. D4-034" className="input" /></label>
+              <button className="btn-primary col-span-2">Générer la proforma (PDF)</button>
+            </form>
+          </section>
+
           {member ? (
             <section className="card p-5 text-sm">
               <p className="font-semibold">Membre Premium</p>

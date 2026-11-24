@@ -816,7 +816,7 @@ export function guideSequenceEmail(p: {
       subject = "Du modèle choisi à la construction";
       paragraphs = [
         "Quand votre modèle est choisi, il reste une étape avant le chantier : les plans complets, adaptés à votre terrain.",
-        `Nos architectes les réalisent à prix fixe : ${formatFcfa(CUSTOM_PLAN_OFFERS[0].price)} pour une villa, ${formatFcfa(CUSTOM_PLAN_OFFERS[1].price)} pour un duplex.`,
+        `Nos architectes les réalisent en 7 jours ouvrables : ${formatFcfa(CUSTOM_PLAN_OFFERS[0].price)} pour une villa, ${formatFcfa(CUSTOM_PLAN_OFFERS[1].price)} pour un duplex.`,
         "Vous avez un terrain et vous voulez démarrer dans les prochains mois ? Écrivez-moi sur WhatsApp avec la taille de votre terrain et le modèle qui vous plaît.",
       ];
       cta = { href: p.whatsappUrl, label: "Écrire à Tao sur WhatsApp" };

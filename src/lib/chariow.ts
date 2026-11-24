@@ -383,7 +383,7 @@ export function planProductId() {
 }
 
 /** Note inscrite dans le CRM avec l'achat (plus aucune déduction sur les plans complets depuis le 8 nov. 2026). */
-const PLAN_PAID_NOTE = "Plan et devis payé. Plans complets à prix fixe, sans déduction.";
+const PLAN_PAID_NOTE = "Plan et devis payé (non déduit des plans complets).";
 
 /**
  * Vente du produit « Plan et devis » (un seul modèle). Le modèle vient de l'intention créée
