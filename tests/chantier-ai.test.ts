@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chantierAiUserPrompt, leadStageFor, parseChantierAi } from "../src/lib/chantier-ai-rules.ts";
+import { applyProtocol, chantierAiUserPrompt, leadStageFor, parseChantierAi } from "../src/lib/chantier-ai-rules.ts";
 
 const now = new Date("2026-11-25T10:00:00Z");
 const ids = ["accueil", "proforma", "pas-de-dossier"];
@@ -39,4 +39,16 @@ test("prompt : date du jour avec le jour de la semaine, conversation lisible", (
   assert.match(p, /2026-11-25 \(mercredi\)/);
   assert.match(p, /Client : \[note vocale\] Je suis au village/);
   assert.match(p, /accueil \(Premier message\)/);
+});
+
+test("tièdes et froids : en attente 60 jours, un seul message, sauf si la conversation a changé la donne", () => {
+  const base = parseChantierAi('{"step":"accueil","message_id":"accueil","follow_up":"2026-11-26"}', ["accueil", "tiede", "froid"], now)!;
+  const t = applyProtocol(base, "bientot", now);
+  assert.equal(t.step, "attente");
+  assert.equal(t.messageId, "tiede");
+  assert.equal(t.followUp, "2027-01-24");
+  assert.equal(t.nurture, true);
+  assert.equal(applyProtocol(base, "projet", now).messageId, "froid");
+  assert.equal(applyProtocol(base, "pret", now).step, "accueil");
+  assert.equal(applyProtocol({ ...base, step: "terrain" }, "bientot", now).step, "terrain");
 });

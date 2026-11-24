@@ -39,7 +39,7 @@ export const CHANTIER_AI_PROMPT = `Tu aides Tao, fondateur de WooPlans (Yaoundé
 Offre : plans complets d'une villa 200 000 FCFA, d'un duplex 300 000 FCFA (remise possible jusqu'à 50 000 FCFA), immeuble à négocier avec Tao ; livrés en 7 jours ouvrables ; avance de 39 000 FCFA à la commande, déduite du prix, qui ouvre le Catalogue Premium et un groupe WhatsApp du projet. Paiement Orange Money.
 
 Protocole de Tao :
-- Un prospect sérieux a son terrain et veut démarrer au plus tôt ou dans 6 mois.
+- Un prospect sérieux a son terrain et veut démarrer au plus tôt ou dans 6 mois. Les autres (chantier dans 1 à 3 ans, pas de terrain) ne sont pas suivis à la main, sauf si la conversation montre que leur situation a changé.
 - Il prouve son terrain avec le dossier technique du terrain (le mieux), à défaut avec la longueur, la largeur et le côté où passe la route.
 - Un terrain en pente demande une visite de terrain payante.
 - Ensuite Tao envoie une proforma ; le prospect paie l'avance ; il est alors engagé.
@@ -141,4 +141,22 @@ export function leadStageFor(step: ChantierStep, current: string): string {
   if (ADVANCED.includes(current)) return current;
   if (step === "attente") return current === "demande" ? "qualification" : current;
   return { accueil: "qualification", terrain: "qualification", proforma: "devis", engage: "commande", perdu: "perdu" }[step];
+}
+
+/**
+ * Règle de Tao : les prospects tièdes (chantier dans 1 à 3 ans) et froids (pas de terrain) ne sont pas suivis à la
+ * main. Tant que la conversation ne montre pas le contraire (l'IA les place alors en terrain, proforma, engagé ou
+ * perdu), ils passent « en attente » : un seul message (tiède ou froid), puis relance dans 60 jours.
+ */
+export function applyProtocol(ai: ChantierAiResult, profile: string, now: Date): ChantierAiResult & { nurture: boolean } {
+  const nurture = (profile === "bientot" || profile === "projet") && (ai.step === "accueil" || ai.step === "attente");
+  if (!nurture) return { ...ai, nurture: false };
+  return {
+    ...ai,
+    step: "attente",
+    followUp: new Date(now.getTime() + 60 * 86_400_000).toISOString().slice(0, 10),
+    messageId: profile === "bientot" ? "tiede" : "froid",
+    nextAction: `Prospect ${profile === "bientot" ? "tiède (chantier dans 1 à 3 ans)" : "froid (pas encore de terrain)"} : un seul message avec le lien du catalogue, puis rien jusqu'à la relance dans 2 mois.`,
+    nurture: true,
+  };
 }

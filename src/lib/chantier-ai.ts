@@ -3,8 +3,8 @@ import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
 import { deepseekJson } from "@/lib/conversation-ai";
 import type { ConvMessage } from "@/lib/conversation-ai-rules";
-import { CHANTIER_AI_PROMPT, LAND_PROOFS, STEP_LABEL, chantierAiUserPrompt, leadStageFor, parseChantierAi, type ChantierStep } from "@/lib/chantier-ai-rules";
-import { adModelCode, chantierMessages, chantierSummary, type ChantierAnswers } from "@/lib/chantier-rules";
+import { CHANTIER_AI_PROMPT, LAND_PROOFS, STEP_LABEL, applyProtocol, chantierAiUserPrompt, leadStageFor, parseChantierAi, type ChantierStep } from "@/lib/chantier-ai-rules";
+import { PROFILE_LABEL, adModelCode, chantierMessages, chantierSummary, type ChantierAnswers, type ChantierProfile } from "@/lib/chantier-rules";
 
 /**
  * L'IA suit les dossiers « Démarre ton chantier » (règles : src/lib/chantier-ai-rules.ts). Tâche des 15 minutes :
@@ -58,10 +58,11 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
     budget: req.budget as ChantierAnswers["budget"],
   };
   const model = adModelCode(req.utmContent);
-  const dossier = `${req.code} · ${req.name}${req.city ? ` · ${req.city}` : ""}. ${chantierSummary(answers)}${model ? ` Pub cliquée : modèle ${model}.` : ""} Étape CRM actuelle : ${lead.stage}.`;
+  const dossier = `${req.code} · ${PROFILE_LABEL[req.profile as ChantierProfile] ?? req.profile} · ${req.name}${req.city ? ` · ${req.city}` : ""}. ${chantierSummary(answers)}${model ? ` Pub cliquée : modèle ${model}.` : ""} Étape CRM actuelle : ${lead.stage}.`;
   const catalog = chantierMessages({ name: req.name, type: req.houseType }).map((m) => ({ id: m.id, title: m.title }));
   const raw = await deepseekJson(CHANTIER_AI_PROMPT, chantierAiUserPrompt(dossier, messages as ConvMessage[], catalog, now));
-  const ai = parseChantierAi(raw, catalog.map((c) => c.id), now);
+  const parsed = parseChantierAi(raw, catalog.map((c) => c.id), now);
+  const ai = parsed ? applyProtocol(parsed, req.profile, now) : null;
   if (!ai) {
     // Réponse inutilisable : on note la date pour ne pas reposer la question à chaque passage.
     await db.update(schema.chantierRequests).set({ aiUpdatedAt: now }).where(eq(schema.chantierRequests.id, req.id));
@@ -85,7 +86,8 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
     })
     .where(eq(schema.chantierRequests.id, req.id));
 
-  const stage = leadStageFor(ai.step, lead.stage) as typeof lead.stage;
+  // Tièdes et froids en attente : l'étape CRM ne bouge pas (ils restent en « Demande »).
+  const stage = (ai.nurture ? lead.stage : leadStageFor(ai.step, lead.stage)) as typeof lead.stage;
   await db
     .update(schema.leads)
     .set({
