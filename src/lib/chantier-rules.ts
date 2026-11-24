@@ -5,35 +5,12 @@
  * Pas d'email ni de numéro demandés : le numéro arrive avec le message WhatsApp. Règles pures, testées dans
  * tests/chantier-rules.test.ts.
  */
+/**
+ * Ordre pensé pour des réponses justes (décision de Tao, 24 nov.) : d'abord la maison rêvée (facile, sans enjeu, la
+ * personne s'engage), puis les faits vérifiables (terrain, plans), puis le délai, qui se juge mieux une fois le terrain
+ * et les plans posés, et le budget en dernier (question la plus sensible, posée quand la personne a déjà tout donné).
+ */
 export const CHANTIER_QUESTIONS = [
-  {
-    key: "terrain",
-    label: "Avez-vous déjà un terrain ?",
-    options: [
-      ["oui", "Oui, j'ai un terrain"],
-      ["cherche", "Pas encore, je cherche"],
-      ["non", "Pas encore"],
-    ],
-  },
-  {
-    key: "start",
-    label: "Quand voulez-vous démarrer les travaux ?",
-    options: [
-      ["asap", "Le plus tôt possible"],
-      ["6mois", "Dans 6 mois"],
-      ["1-3ans", "Dans 1 à 3 ans"],
-    ],
-  },
-  {
-    key: "plans",
-    label: "Avez-vous déjà les plans pour lancer le chantier ?",
-    options: [
-      ["non", "Pas encore"],
-      ["idee", "J'ai une idée, un modèle en tête"],
-      ["a_revoir", "J'ai des plans, mais à revoir"],
-      ["complets", "Oui, j'ai mes plans complets"],
-    ],
-  },
   {
     key: "type",
     label: "Quel type de maison ?",
@@ -50,6 +27,34 @@ export const CHANTIER_QUESTIONS = [
       ["3", "3 chambres"],
       ["4", "4 chambres"],
       ["5+", "5 chambres et plus"],
+    ],
+  },
+  {
+    key: "terrain",
+    label: "Avez-vous déjà un terrain ?",
+    options: [
+      ["oui", "Oui, j'ai un terrain"],
+      ["cherche", "Pas encore, je cherche"],
+      ["non", "Pas encore"],
+    ],
+  },
+  {
+    key: "plans",
+    label: "Avez-vous déjà les plans pour lancer le chantier ?",
+    options: [
+      ["non", "Pas encore"],
+      ["idee", "J'ai une idée, un modèle en tête"],
+      ["a_revoir", "J'ai des plans, mais à revoir"],
+      ["complets", "Oui, j'ai mes plans complets"],
+    ],
+  },
+  {
+    key: "start",
+    label: "Quand voulez-vous démarrer les travaux ?",
+    options: [
+      ["asap", "Le plus tôt possible"],
+      ["6mois", "Dans 6 mois"],
+      ["1-3ans", "Dans 1 à 3 ans"],
     ],
   },
   {
