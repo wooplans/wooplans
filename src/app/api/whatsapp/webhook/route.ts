@@ -1,4 +1,5 @@
 import { recordWaMessage } from "@/lib/conversation-ai";
+import { linkChantierByCode } from "@/lib/chantier";
 import { getEnv } from "@/lib/env";
 import { linkWhatsappByOrderCode, recordWhatsappFailed, recordWhatsappRead, recordWhatsappReply } from "@/lib/pipeline";
 import { isStopRequest, verifyGenukaSignature } from "@/lib/whatsapp";
@@ -43,6 +44,8 @@ export async function POST(request: Request) {
       const from = String(m.from).replace(/\D/g, "");
       // Code de commande de la page merci : le numéro WhatsApp remplace celui de la fiche avant d'enregistrer la réponse.
       await linkWhatsappByOrderCode(from, text).catch((error) => console.error("Rattachement du numéro WhatsApp : échec", error));
+      // Dossier « Démarre ton chantier » (code CH-…) : réponses du formulaire rattachées au numéro, fiche CRM créée.
+      await linkChantierByCode(from, text).catch((error) => console.error("Dossier chantier : rattachement impossible", error));
       await recordWhatsappReply(from, isStopRequest(text));
       await recordWaMessage(m as Parameters<typeof recordWaMessage>[0], "in").catch((error) => console.error("Conversation : message non enregistré", error));
     }
