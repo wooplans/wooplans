@@ -65,10 +65,12 @@ section{padding:56px 0}
 /* Plein écran : vidéo entière, sans recadrage (l'écran du téléphone est plus allongé que le 4:5). */
 .vsl video:fullscreen{object-fit:contain;background:#000}
 .vsl video:-webkit-full-screen{object-fit:contain;background:#000}
-.vsl.previewing .play{display:none}
+.vsl #vslPreview{opacity:0;transition:opacity .4s}
+.vsl.previewing #vslPreview{opacity:1}
 .vsl-count{font-size:12.5px;color:rgba(255,255,255,.85);text-align:center;margin:-4px 0 clamp(8px,1.6svh,14px)}
 .vsl-count b{color:var(--gold);font-variant-numeric:tabular-nums}
-.vsl .play{position:absolute;inset:0;z-index:1;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:12px;padding-bottom:18px;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.6));color:#fff;font-weight:800;font-size:15px}
+.vsl .play{position:absolute;inset:0;z-index:1;border:0;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0;background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 26%,rgba(0,0,0,0) 100%);color:#fff;font-weight:800;font-size:15px}
+.vsl .play span{position:absolute;top:12px;left:50%;transform:translateX(-50%);white-space:nowrap}
 .vsl .play span{background:rgba(0,0,0,.62);padding:8px 14px;border-radius:99px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
 .vsl .play i{animation:playPulse 1.6s ease-out infinite}
 @keyframes playPulse{0%{box-shadow:0 0 0 0 rgba(240,138,46,.75)}70%{box-shadow:0 0 0 22px rgba(240,138,46,0)}100%{box-shadow:0 0 0 0 rgba(240,138,46,0)}}
@@ -298,6 +300,9 @@ footer a{color:rgba(255,255,255,.7)}
 .vbox{width:100%;max-width:420px;margin:auto;padding:16px;position:relative}
 .vbox video{width:100%;max-height:80vh;border-radius:14px;background:#000}
 .vbox .close{top:-6px;right:10px;background:#fff}
+.vsl-end{display:none;position:absolute;left:28px;right:28px;bottom:90px;text-align:center}
+.vsl-end.on{display:block}
+.vsl-end p{color:#fff;font-weight:800;font-size:17px;margin:0 0 10px;text-shadow:0 2px 8px rgba(0,0,0,.8)}
 
 @media(min-width:900px){
   body{padding-bottom:0}
@@ -436,7 +441,8 @@ footer a{color:rgba(255,255,255,.7)}
       <div>
         <div class="vsl" id="vsl">
           <img src="/assets/videos/vsl-hero-4x5.webp" alt="Vidéo : avant de construire, choisissez la bonne maison" width="540" height="675" fetchpriority="high">
-          <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><i></i><span>Regardez avant de construire · 5 min</span></button>
+          <video id="vslPreview" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+          <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><span>🔊 Regardez avec le son · 5 min</span><i></i></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><span class="now">39 000<small>FCFA</small></span></div>
@@ -631,7 +637,8 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="mbox"><button class="close" onclick="closeModel()" aria-label="Fermer">✕</button><img id="mmImg" alt=""><div class="mb"><span class="type" id="mmType"></span><h3 id="mmName"></h3><p id="mmFacts"></p><p class="budget" id="mmBudget"></p><p class="note">Son plan coté et son devis poste par poste sont dans le Catalogue Premium, avec tous les autres modèles.</p><button class="cta" data-cta="gallery_model" onclick="closeModel();buy(this)">Obtenir le catalogue</button></div></div>
 </div>
 <div class="ov" id="videoModal" onclick="if(event.target===this)closeVideo()">
-  <div class="vbox"><button class="close" onclick="closeVideo()" aria-label="Fermer">✕</button><video id="modalVideo" controls playsinline preload="none"></video></div>
+  <div class="vbox"><button class="close" onclick="closeVideo()" aria-label="Fermer">✕</button><video id="modalVideo" controls playsinline preload="none"></video>
+    <div class="vsl-end" id="vslEnd"><p>Choisissez votre maison parmi nos modèles</p><button class="cta" data-cta="vsl_fin" onclick="vslEndBuy(this)">Obtenir le catalogue · 39&nbsp;000&nbsp;FCFA</button></div></div>
 </div>
 
 <script>
@@ -695,15 +702,46 @@ function trackVideo(v,name){
 function openVideo(name,label,poster){
   var v=document.getElementById('modalVideo');
   if(poster)v.poster=poster;else v.removeAttribute('poster');
+  document.getElementById('vslEnd').classList.remove('on');
   v.src='/videos/testimonials/'+name+'.mp4';v.play().catch(function(){});wpCapture('video_play',{video:name});
   document.getElementById('videoModal').classList.add('on');
 }
 /* Vidéo du catalogue (Tao : catalogue imprimé, version numérique, témoignages, prix). Chargée seulement au clic. */
-function openVsl(){
+/* VSL publique (39 000 FCFA). Mesure : PostHog (vsl_open, vsl_play, vsl_progress 10/25/50/75/95, vsl_end, vsl_close
+   avec les secondes regardées), base du site (/api/video/suivi, vidéo « vsl-public ») et Pixel Meta (VSL_50, VSL_95)
+   pour les audiences de reciblage. */
+var VSL={on:false,watched:0,last:0,max:0,marks:{},from:''};
+function vslServer(ev){try{fetch('/api/video/suivi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:'vsl-public',event:ev}),keepalive:true});}catch(_){}}
+function openVsl(from){
   var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-poster.jpg';
-  v.src='/assets/videos/vsl-catalogue-premium-public.mp4';v.play().catch(function(){});wpCapture('video_play',{video:'vsl'});
+  VSL={on:true,watched:0,last:0,max:0,marks:{},from:from||'hero',played:false};
+  document.getElementById('vslEnd').classList.remove('on');
+  v.src='/assets/videos/vsl-catalogue-premium-public.mp4';v.currentTime=0;v.play().catch(function(){});
+  wpCapture('vsl_open',{from:VSL.from});vslServer('open');
   document.getElementById('videoModal').classList.add('on');
 }
+function vslEndBuy(btn){wpCapture('vsl_cta',{max_pct:VSL.max});vslServer('cta');closeVideo();buy(btn);}
+(function(){
+  var v=document.getElementById('modalVideo');
+  v.addEventListener('playing',function(){if(VSL.on&&!VSL.played){VSL.played=true;wpCapture('vsl_play',{from:VSL.from});vslServer('play');}});
+  v.addEventListener('timeupdate',function(){
+    if(!VSL.on||!v.duration)return;
+    var t=v.currentTime,d=t-VSL.last;if(d>0&&d<1.5)VSL.watched+=d;VSL.last=t;
+    var pct=Math.floor(t/v.duration*100);if(pct>VSL.max)VSL.max=pct;
+    [10,25,50,75,95].forEach(function(m){if(pct>=m&&!VSL.marks[m]){VSL.marks[m]=1;wpCapture('vsl_progress',{pct:m,seconds:Math.round(VSL.watched)});
+      if(m===50){vslServer('half');try{fbq('trackCustom','VSL_50');}catch(_){}}
+      if(m===95){vslServer('end');try{fbq('trackCustom','VSL_95');}catch(_){}document.getElementById('vslEnd').classList.add('on');}}});
+  });
+  v.addEventListener('ended',function(){if(VSL.on){wpCapture('vsl_end',{seconds:Math.round(VSL.watched)});document.getElementById('vslEnd').classList.add('on');}});
+})();
+/* Aperçu muet en boucle dans le héro (8 s, 0,5 Mo), seulement si l'appareil n'économise pas les données
+   et que l'animation est permise ; mesure de son affichage. */
+(function(){
+  var box=document.getElementById('vsl'),pv=document.getElementById('vslPreview');if(!box||!pv)return;
+  var c=navigator.connection||{};if(c.saveData||/(^|-)2g$/.test(c.effectiveType||'')||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  function go(){pv.src='/assets/videos/vsl-hero-apercu.mp4';pv.play().then(function(){box.classList.add('previewing');wpCapture('vsl_preview_play',{});}).catch(function(){});}
+  if(document.readyState==='complete')setTimeout(go,300);else window.addEventListener('load',function(){setTimeout(go,300);},{once:true});
+})();
 /* Galerie : une maison s'ouvre en grand au toucher ; la dernière carte mène à l'achat. */
 function openModel(el){
   var g=function(k){return el.getAttribute('data-'+k)||'';};
@@ -723,7 +761,9 @@ document.addEventListener('keydown',function(e){
   if(e.key!=='Enter')return;var m=e.target.closest&&e.target.closest('[data-wp-gallery] [data-model],[data-wp-gallery] [data-more]');if(m)m.click();
 });
 function closeVideo(){
-  var v=document.getElementById('modalVideo');v.pause();v.removeAttribute('src');v.load();
+  var v=document.getElementById('modalVideo');
+  if(VSL.on){wpCapture('vsl_close',{seconds:Math.round(VSL.watched),max_pct:VSL.max});VSL.on=false;}
+  v.pause();v.removeAttribute('src');v.load();
   document.getElementById('videoModal').classList.remove('on');
 }
 
