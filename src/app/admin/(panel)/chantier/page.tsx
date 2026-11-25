@@ -6,8 +6,7 @@ import { chantierRelances } from "@/lib/chantier-relances";
 import { GROUP_LABEL, ago, cameroonDay, suggestedMessageId, type RelanceGroup } from "@/lib/chantier-relances-rules";
 import { adModelCode, chantierMessages } from "@/lib/chantier-rules";
 import { whatsappLink } from "@/lib/site";
-import { ProformaOneClick } from "@/components/admin/ProformaOneClick";
-import { depositReceived, markLost, postpone, sendProformaOneClick } from "./actions";
+import { depositReceived, markLost, postpone } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +17,14 @@ const PILL: Record<RelanceGroup, string> = {
   terrain: "bg-primary text-white",
   chaud: "bg-orange-100 text-orange-800",
   attente: "bg-slate-200 text-slate-700",
+};
+const DOT: Record<RelanceGroup, string> = {
+  repondre: "bg-red-600",
+  engage: "bg-emerald-600",
+  proforma: "bg-amber-500",
+  terrain: "bg-primary",
+  chaud: "bg-orange-400",
+  attente: "bg-slate-400",
 };
 const SHORT: Record<RelanceGroup, string> = {
   repondre: "Répondre",
@@ -46,93 +53,116 @@ export default async function ChantierRelancesPage() {
   const counts = new Map<RelanceGroup, number>();
   for (const c of todo) counts.set(c.group, (counts.get(c.group) ?? 0) + 1);
   const tomorrow = cameroonDay(now.getTime() + 86_400_000);
+  // Par groupe, dans l'ordre de priorité ; les cartes déjà ouvertes à la fin de leur groupe.
+  const groups: [RelanceGroup, typeof cards][] = [];
+  for (const c of [...todo, ...cards.filter((x) => x.clicked)]) {
+    const found = groups.find(([g]) => g === c.group);
+    if (found) found[1].push(c);
+    else groups.push([c.group, [c]]);
+  }
 
   return (
     <>
-      <PageTitle title="Plans complets" subtitle={todo.length ? `${todo.length} relance${todo.length > 1 ? "s" : ""} à faire, la plus urgente en premier` : "Aucune relance à faire pour l'instant 🎉"} />
+      <PageTitle title="Plans complets" subtitle={todo.length ? `${todo.length} relance${todo.length > 1 ? "s" : ""} à faire, la plus urgente en haut` : "Aucune relance à faire pour l'instant 🎉"} />
       {counts.size ? (
-        <div className="-mt-2 mb-4 flex flex-wrap gap-1.5 text-xs">
+        <div className="-mx-4 -mt-2 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 text-xs md:mx-0 md:flex-wrap md:px-0">
           {[...counts].map(([g, n]) => (
-            <span key={g} className={`rounded-full px-2.5 py-1 font-semibold ${PILL[g]}`}>
+            <a key={g} href={`#g-${g}`} className={`shrink-0 rounded-full px-3 py-1.5 font-semibold ${PILL[g]}`}>
               {n} · {SHORT[g]}
-            </span>
+            </a>
           ))}
         </div>
       ) : null}
 
-      <div className="mx-auto grid max-w-2xl gap-3">
-        {cards.map((c) => {
-          const digits = (c.phone || "").replace(/\D/g, "");
-          const messages = chantierMessages({ name: c.name, code: c.code, type: c.houseType, model: adModelCode(c.utmContent), city: c.city, start: c.start });
-          const mid = suggestedMessageId(c);
-          const msg = mid ? messages.find((m) => m.id === mid) : undefined;
-          const place = [c.city, c.country && c.country !== "CM" ? COUNTRY[c.country] ?? c.country : null].filter(Boolean).join(", ");
-          const house = `${TYPE[c.houseType] ?? c.houseType}${c.bedrooms !== "na" && c.houseType !== "immeuble" ? ` ${c.bedrooms === "5+" ? "5+" : c.bedrooms} ch.` : ""}`;
-          const model = adModelCode(c.utmContent);
-          const last =
-            c.waiting && c.lastIn
-              ? `Lui, ${ago(c.lastIn, now.getTime())} : « ${(lastTexts.get(c.id) ?? "").slice(0, 140)} »`
-              : c.lastOut
-                ? `Vous, ${ago(c.lastOut, now.getTime())}${c.lastIn ? ` · lui, ${ago(c.lastIn, now.getTime())}` : ""}`
-                : "Pas encore de réponse de votre part";
-          return (
-            <article key={c.id} className={`card p-4 ${c.clicked ? "opacity-50" : ""}`}>
-              <header className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h2 className="truncate text-[17px] font-bold">{c.name}</h2>
-                  <p className="text-xs text-muted">
-                    {place || "Ville inconnue"} · <span className="font-mono">{c.code}</span>
-                  </p>
-                </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${PILL[c.group]}`}>
-                  {c.clicked ? "Ouvert" : SHORT[c.group]}
-                  {c.overdue && !c.clicked ? " · en retard" : ""}
-                </span>
-              </header>
+      <div className="mx-auto max-w-xl space-y-5">
+        {groups.map(([g, list]) => (
+          <section key={g} id={`g-${g}`} className="scroll-mt-16">
+            <h2 className="mb-2 flex items-center gap-2 text-[13px] font-bold uppercase tracking-wide text-muted">
+              <span className={`h-2.5 w-2.5 rounded-full ${DOT[g]}`} aria-hidden />
+              {GROUP_LABEL[g]} · {list.length}
+            </h2>
+            <div className="space-y-3">
+              {list.map((c) => {
+                const digits = (c.phone || "").replace(/\D/g, "");
+                const messages = chantierMessages({ name: c.name, code: c.code, type: c.houseType, model: adModelCode(c.utmContent), city: c.city, start: c.start });
+                const mid = suggestedMessageId(c);
+                const msg = mid ? messages.find((m) => m.id === mid) : undefined;
+                const place = [c.city, c.country && c.country !== "CM" ? COUNTRY[c.country] ?? c.country : null].filter(Boolean).join(", ");
+                const house = `${TYPE[c.houseType] ?? c.houseType}${c.bedrooms !== "na" && c.houseType !== "immeuble" ? ` ${c.bedrooms === "5+" ? "5+" : c.bedrooms} ch.` : ""}`;
+                const model = adModelCode(c.utmContent);
+                const last =
+                  c.waiting && c.lastIn
+                    ? `Lui, ${ago(c.lastIn, now.getTime())} : « ${(lastTexts.get(c.id) ?? "").slice(0, 160)} »`
+                    : c.lastOut
+                      ? `Vous, ${ago(c.lastOut, now.getTime())}${c.lastIn ? ` · lui, ${ago(c.lastIn, now.getTime())}` : ""}`
+                      : "Pas encore de réponse de votre part";
+                const proforma = c.leadId && c.group !== "attente" ? `/admin/crm/${c.leadId}/proforma` : null;
+                return (
+                  <article key={c.id} className={`overflow-hidden rounded-2xl border border-outline bg-white shadow-sm ${c.clicked ? "opacity-50" : ""}`}>
+                    <div className={`h-1 ${DOT[c.group]}`} aria-hidden />
+                    <div className="p-4">
+                      <header className="flex items-start justify-between gap-2">
+                        <h3 className="min-w-0 truncate text-[17px] font-bold leading-tight">{c.name}</h3>
+                        {c.clicked ? (
+                          <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-700">Ouvert</span>
+                        ) : c.overdue ? (
+                          <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">En retard</span>
+                        ) : null}
+                      </header>
+                      <p className="mt-0.5 text-[13px] text-muted">
+                        📍 {place || "Ville inconnue"} · 🏠 {house}
+                        {model ? ` · pub ${model}` : ""}
+                      </p>
 
-              <ul className="mt-3 space-y-1.5 text-sm">
-                <li>🏠 {house}{model ? ` · pub ${model}` : ""}</li>
-                {c.projectNote ? <li className="italic text-foreground/80">📝 « {c.projectNote} »</li> : null}
-                <li>{landText(c.aiLand, c.aiLandDetails, c.aiRelief)}</li>
-                <li className={c.waiting ? "font-semibold text-red-700" : "text-foreground/80"}>💬 {last}</li>
-                {c.aiNextAction ? <li className="text-primary">👉 {c.aiNextAction}</li> : null}
-              </ul>
+                      <div className="mt-3 space-y-1.5 text-[14px] leading-snug">
+                        <p>{landText(c.aiLand, c.aiLandDetails, c.aiRelief)}</p>
+                        {c.projectNote ? <p className="line-clamp-2 italic text-foreground/75">📝 « {c.projectNote} »</p> : null}
+                        <p className={`line-clamp-3 ${c.waiting ? "font-semibold text-red-700" : "text-foreground/75"}`}>💬 {last}</p>
+                        {c.aiNextAction ? <p className="line-clamp-3 font-medium text-primary">👉 {c.aiNextAction}</p> : null}
+                      </div>
 
-              {msg ? (
-                <details className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-                  <summary className="cursor-pointer font-medium">Message proposé : {msg.title}</summary>
-                  <p className="mt-1.5 whitespace-pre-line text-foreground/80">{msg.text}</p>
-                </details>
-              ) : c.waiting ? (
-                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">L&apos;IA n&apos;a pas encore lu son dernier message : répondez librement ou par audio.</p>
-              ) : null}
+                      {digits ? <ChantierCardButtons id={c.id} withText={msg ? whatsappLink(msg.text, digits) : null} withoutText={`https://wa.me/${digits}`} proformaUrl={proforma} /> : null}
 
-              {digits ? <ChantierCardButtons id={c.id} withText={msg ? whatsappLink(msg.text, digits) : null} withoutText={`https://wa.me/${digits}`} /> : null}
-              {c.leadId && c.houseType !== "immeuble" && c.group !== "attente" ? (
-                <ProformaOneClick action={sendProformaOneClick.bind(null, c.id)} pdfUrl={`/admin/crm/${c.leadId}/proforma`} primary={c.group === "terrain"} />
-              ) : null}
-
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-outline pt-3 text-xs">
-                <form action={depositReceived.bind(null, c.id)}>
-                  <button className="rounded-lg bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700">💰 Avance reçue</button>
-                </form>
-                <form action={postpone.bind(null, c.id)} className="flex items-center gap-1">
-                  <input type="date" name="date" defaultValue={tomorrow} min={tomorrow} aria-label="Nouvelle date de relance" className="rounded-lg border border-outline px-1.5 py-1" />
-                  <button className="rounded-lg bg-slate-100 px-2.5 py-1.5 font-semibold">Reporter</button>
-                </form>
-                <form action={markLost.bind(null, c.id)}>
-                  <button className="rounded-lg bg-red-50 px-2.5 py-1.5 font-semibold text-red-700">Perdu</button>
-                </form>
-                {c.leadId ? (
-                  <Link href={`/admin/crm/${c.leadId}`} className="ml-auto font-semibold text-primary">
-                    Fiche →
-                  </Link>
-                ) : null}
-              </div>
-              {c.aiStep && STEP_LABEL[c.aiStep as ChantierStep] ? <p className="mt-2 text-[11px] text-muted">{GROUP_LABEL[c.group]} · étape IA : {STEP_LABEL[c.aiStep as ChantierStep]}</p> : null}
-            </article>
-          );
-        })}
+                      <details className="group mt-3 rounded-xl bg-slate-50">
+                        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-[13px] font-semibold text-foreground/70">
+                          <span>{msg ? `Message proposé · ${msg.title}` : "Plus d'options"}</span>
+                          <span className="transition group-open:rotate-180" aria-hidden>
+                            ▾
+                          </span>
+                        </summary>
+                        <div className="space-y-3 border-t border-outline px-3 pb-3 pt-2">
+                          {msg ? <p className="whitespace-pre-line text-[13px] text-foreground/80">{msg.text}</p> : null}
+                          {!msg && c.waiting ? <p className="text-[13px] text-amber-800">L&apos;IA n&apos;a pas encore lu son dernier message : répondez librement ou par audio.</p> : null}
+                          <div className="grid grid-cols-2 gap-2 text-[13px]">
+                            <form action={depositReceived.bind(null, c.id)}>
+                              <button className="w-full rounded-xl bg-emerald-100 px-3 py-2.5 font-semibold text-emerald-800">💰 Avance reçue</button>
+                            </form>
+                            <form action={markLost.bind(null, c.id)}>
+                              <button className="w-full rounded-xl bg-red-50 px-3 py-2.5 font-semibold text-red-700">✕ Perdu</button>
+                            </form>
+                          </div>
+                          <form action={postpone.bind(null, c.id)} className="flex gap-2 text-[13px]">
+                            <input type="date" name="date" defaultValue={tomorrow} min={tomorrow} aria-label="Nouvelle date de relance" className="min-w-0 flex-1 rounded-xl border border-outline bg-white px-3 py-2" />
+                            <button className="shrink-0 rounded-xl bg-slate-200 px-3 py-2.5 font-semibold">Reporter</button>
+                          </form>
+                          <p className="flex items-center justify-between text-[12px] text-muted">
+                            <span className="font-mono">{c.code}</span>
+                            {c.leadId ? (
+                              <Link href={`/admin/crm/${c.leadId}`} className="font-semibold text-primary">
+                                Ouvrir la fiche →
+                              </Link>
+                            ) : null}
+                          </p>
+                          {c.aiStep && STEP_LABEL[c.aiStep as ChantierStep] ? <p className="text-[11px] text-muted">Étape IA : {STEP_LABEL[c.aiStep as ChantierStep]}</p> : null}
+                        </div>
+                      </details>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </>
   );
