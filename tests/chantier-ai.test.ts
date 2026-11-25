@@ -58,3 +58,13 @@ test("audio envoyé par Tao (non transcrit) : l'IA sait qu'il attend une répons
   const p = chantierAiUserPrompt("C-V3-AP-0001", [{ direction: "out", type: "audio", body: null, transcript: null, sentAt: now }], [], now);
   assert.match(p, /WooPlans : \[note vocale de Tao, non transcrite : .*attend la réponse du client\]/);
 });
+
+test("question du prospect : attend une réponse, jamais perdu", () => {
+  const lost = parseChantierAi('{"step":"perdu","lost_reason":"a déjà ses plans","awaiting_reply":false}', [], now)!;
+  const r = applyProtocol(lost, "projet", now, "Mais rendre la maison comme sur l'autre photo c'est un petit problème nor?");
+  assert.equal(r.awaitingReply, true);
+  assert.equal(r.step, "attente");
+  assert.equal(r.lostReason, "");
+  assert.equal(applyProtocol(lost, "pret", now, "Vous êtes où ?").step, "accueil");
+  assert.equal(applyProtocol(lost, "projet", now, "Ok").step, "perdu");
+});

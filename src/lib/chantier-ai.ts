@@ -67,7 +67,9 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
   const catalog = chantierMessages({ name: req.name, type: req.houseType }).map((m) => ({ id: m.id, title: m.title }));
   const raw = await deepseekJson(CHANTIER_AI_PROMPT, chantierAiUserPrompt(dossier, messages as ConvMessage[], catalog, now));
   const parsed = parseChantierAi(raw, catalog.map((c) => c.id), now);
-  const ai = parsed ? applyProtocol(parsed, req.profile, now) : null;
+  const lastClient = [...messages].reverse().find((m) => m.direction === "in");
+  const lastIsClient = messages.length > 0 && messages[messages.length - 1].direction === "in";
+  const ai = parsed ? applyProtocol(parsed, req.profile, now, lastIsClient ? (lastClient?.transcript ?? lastClient?.body) : null) : null;
   if (!ai) {
     // Réponse inutilisable : on note la date pour ne pas reposer la question à chaque passage.
     await db.update(schema.chantierRequests).set({ aiUpdatedAt: now }).where(eq(schema.chantierRequests.id, req.id));
