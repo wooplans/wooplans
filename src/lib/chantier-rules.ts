@@ -453,3 +453,25 @@ export function chantierMessages(c: MessageContext): ChantierMessage[] {
     },
   ];
 }
+
+/**
+ * Campagne « J'ai un terrain » (Côte d'Ivoire et Guinée, décision de Tao du 25 nov. 2026) : la pub parle aux
+ * propriétaires de terrain qui veulent des propositions de plans pour leur terrain. Ses liens portent
+ * utm_campaign = « terrain_ci » ou « terrain_gn » ; la page d'entrée reprend alors la promesse de la pub.
+ */
+export const TERRAIN_CAMPAIGN_PREFIX = "terrain_";
+
+export function chantierHeadline(utmCampaign?: string | null): { title: string; intro: string } {
+  if (utmCampaign?.toLowerCase().startsWith(TERRAIN_CAMPAIGN_PREFIX)) {
+    return {
+      title: "Vous avez un terrain ? Recevez des propositions de plans pour votre terrain",
+      intro:
+        "Répondez à quelques questions sur votre terrain et votre projet, puis donnez votre nom et la ville du terrain. Un architecte WooPlans vous répond sur WhatsApp avec des maisons adaptées à votre terrain et à votre budget.",
+    };
+  }
+  return {
+    title: "Démarrez votre chantier avec les bons plans",
+    intro:
+      "Quelques questions rapides sur votre projet, puis votre nom et la ville du chantier. Ensuite, un architecte WooPlans vous répond sur WhatsApp.",
+  };
+}
