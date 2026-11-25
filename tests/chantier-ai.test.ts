@@ -11,7 +11,7 @@ test("réponse valide : étape, terrain, relance, message", () => {
     ids,
     now,
   );
-  assert.deepEqual(r, { step: "attente", land: "dimensions", landDetails: "20 × 15 m", relief: "plat", summary: "En voyage.", nextAction: "Relancer vendredi.", messageId: "pas-de-dossier", followUp: "2026-11-28", lostReason: "" });
+  assert.deepEqual(r, { step: "attente", land: "dimensions", landDetails: "20 × 15 m", relief: "plat", summary: "En voyage.", nextAction: "Relancer vendredi.", messageId: "pas-de-dossier", followUp: "2026-11-28", lostReason: "", awaitingReply: true });
 });
 
 test("bornes et valeurs inconnues", () => {
@@ -23,6 +23,7 @@ test("bornes et valeurs inconnues", () => {
   assert.equal(parseChantierAi('{"step":"perdu","follow_up":"2026-11-30","lost_reason":"pas de terrain"}', ids, now)!.followUp, null);
   assert.equal(parseChantierAi('{"step":"inconnu"}', ids, now), null);
   assert.equal(parseChantierAi("pas de json", ids, now), null);
+  assert.equal(parseChantierAi('{"step":"accueil","awaiting_reply":false}', ids, now)!.awaitingReply, false);
 });
 
 test("étape CRM : jamais de recul après commande, attente garde l'étape", () => {

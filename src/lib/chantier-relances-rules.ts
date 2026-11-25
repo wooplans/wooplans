@@ -25,6 +25,9 @@ export type RelanceRow = {
   lastIn: number | null;
   lastOut: number | null;
   leadStage: string;
+  /** Avis de l'IA sur le dernier message du prospect (1 attend une réponse, 0 politesse), et ce message. */
+  aiAwaiting?: number | null;
+  lastInText?: string | null;
 };
 
 export type RelanceGroup = "repondre" | "engage" | "proforma" | "terrain" | "chaud" | "attente";
@@ -46,13 +49,33 @@ export function cameroonDay(t: number) {
   return new Date(t + HOUR).toISOString().slice(0, 10);
 }
 
+/** Message qui ne fait que clore poliment : « ok », « merci », « d'accord », « bonne journée », 👍… */
+export function isPoliteOnly(text: string | null | undefined) {
+  if (!text) return false;
+  const t = text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!t) return true; // émoji ou ponctuation seule (👍, 🙏, …)
+  if (t.length > 60) return false;
+  const polite = /^(ok+|okay|d accord|dac|bien|tres bien|merci( beaucoup| bien| infiniment)?|merci (a|a vous|pareil( a vous)?|bcp)|pareil a vous|bonne (journee|soiree|nuit|fin de journee)|a bientot|recu|bien recu|parfait|super|cool|top|ca marche|entendu|note|oui merci|ok merci|merci ok|amen|merci et bonne journee)( (a vous|aussi|egalement|pareillement|merci|monsieur|madame|boss|chef|frere|grand frere))*$/;
+  return polite.test(t);
+}
+
 export type RelanceCard = RelanceRow & { group: RelanceGroup; overdue: boolean; clicked: boolean; waiting: boolean };
 
 export function relanceCards(rows: RelanceRow[], now: number): RelanceCard[] {
   const today = cameroonDay(now);
   const cards: RelanceCard[] = [];
   for (const r of rows) {
-    const waiting = Boolean(r.lastIn && (!r.lastOut || r.lastIn > r.lastOut));
+    const lastWord = Boolean(r.lastIn && (!r.lastOut || r.lastIn > r.lastOut));
+        // L'IA a lu toute la conversation : sa décision compte (un « ok » peut répondre « oui » à une question de Tao).
+    // Tant qu'elle n'a pas lu le dernier message, une règle simple écarte les politesses.
+    const aiRead = r.aiAwaiting != null && Boolean(r.aiUpdatedAt && r.lastIn && r.aiUpdatedAt >= r.lastIn);
+    const waiting = lastWord && (aiRead ? r.aiAwaiting === 1 : !isPoliteOnly(r.lastInText));
     const contactedToday = Boolean(r.lastOut && cameroonDay(r.lastOut) === today && (!r.lastIn || r.lastOut > r.lastIn));
     const nurture = r.profile === "bientot" || r.profile === "projet" || r.profile === "a_ses_plans";
     const step = r.aiStep ?? (nurture ? "attente" : "accueil");

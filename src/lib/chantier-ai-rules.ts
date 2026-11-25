@@ -33,6 +33,8 @@ export type ChantierAiResult = {
   messageId: string | null;
   followUp: string | null;
   lostReason: string;
+  /** Le dernier message du prospect attend-il une réponse de Tao ? */
+  awaitingReply: boolean;
 };
 
 export const CHANTIER_AI_PROMPT = `Tu aides Tao, fondateur de WooPlans (Yaoundé, Cameroun), à suivre sur WhatsApp les prospects qui veulent des plans complets pour construire.
@@ -46,7 +48,7 @@ Protocole de Tao :
 
 On te donne le dossier (réponses au formulaire), puis la conversation entre Tao (« WooPlans ») et le prospect (« Client »), et la liste des modèles de messages.
 Réponds uniquement par un objet JSON :
-{"step":"accueil|terrain|proforma|attente|engage|perdu","land":"aucun|dimensions|dossier","land_details":"...","relief":"plat|pente|inconnu","summary":"...","next_action":"...","message_id":"...","follow_up":"AAAA-MM-JJ ou null","lost_reason":"..."}
+{"step":"accueil|terrain|proforma|attente|engage|perdu","land":"aucun|dimensions|dossier","land_details":"...","relief":"plat|pente|inconnu","summary":"...","next_action":"...","message_id":"...","follow_up":"AAAA-MM-JJ ou null","lost_reason":"...","awaiting_reply":true|false}
 - step :
   accueil = on attend encore le dossier technique ou les dimensions ;
   terrain = le dossier ou les dimensions ont été donnés, la proforma n'est pas encore partie ;
@@ -61,6 +63,7 @@ Réponds uniquement par un objet JSON :
 - next_action : une action concrète pour Tao, 25 mots au plus.
 - message_id : l'identifiant du modèle de message le plus utile à envoyer maintenant, choisi dans la liste ; null si aucun ne convient.
 - follow_up : date de la prochaine relance. Si le prospect a donné une date ou un délai, utilise-la (« lundi » = le prochain lundi après la date du jour). Sinon : accueil = lendemain du dernier message de Tao resté sans réponse ; proforma = 1, puis 3, puis 7 jours après l'envoi ; terrain = aujourd'hui (proforma à envoyer) ; engage = 2 jours ; perdu = null.
+- awaiting_reply : juge d'après toute la conversation. true si le dernier message du prospect appelle une suite de Tao (question, information ou document envoyé, accord à une proposition : un « ok » qui répond « oui » à « je vous prépare la proforma ? » appelle une suite) ; false s'il ne fait que clore poliment un échange terminé (« merci », « ok, à lundi », « bonne journée », un pouce) ou si le dernier message vient de Tao.
 - lost_reason : seulement si step = perdu (ex. « pas de terrain », « veut une estimation seulement »), vide sinon.
 N'invente rien qui ne soit pas dans le dossier ou la conversation. Les notes vocales transcrites peuvent contenir des erreurs ou des bruits hors sujet : ignore ce qui ne concerne pas le projet.`;
 
@@ -128,6 +131,7 @@ export function parseChantierAi(raw: string | null | undefined, messageIds: stri
     messageId: messageIds.includes(id) ? id : null,
     followUp,
     lostReason: step === "perdu" ? text(d.lost_reason, 160) : "",
+    awaitingReply: d.awaiting_reply !== false && String(d.awaiting_reply).toLowerCase() !== "false",
   };
 }
 

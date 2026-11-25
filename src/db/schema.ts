@@ -674,6 +674,8 @@ export const chantierRequests = sqliteTable(
     aiFollowUp: text("ai_follow_up"),
     aiLostReason: text("ai_lost_reason"),
     aiUpdatedAt: integer("ai_updated_at", { mode: "timestamp_ms" }),
+    /** 1 si le dernier message du prospect attend une réponse de Tao, 0 si c'est une simple politesse (« merci », « ok ») */
+    aiAwaiting: integer("ai_awaiting"),
     /** Dernier clic sur la carte de relance (onglet Plans complets) */
     relanceClickedAt: integer("relance_clicked_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),

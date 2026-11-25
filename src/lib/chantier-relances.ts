@@ -34,6 +34,7 @@ export async function chantierRelances(now = new Date()) {
       aiNextAction: cr.aiNextAction,
       aiMessageId: cr.aiMessageId,
       aiFollowUp: cr.aiFollowUp,
+      aiAwaiting: cr.aiAwaiting,
       aiUpdatedAt: sql<number | null>`${cr.aiUpdatedAt}`,
       clickedAt: sql<number | null>`${cr.relanceClickedAt}`,
       lastIn,
@@ -43,18 +44,20 @@ export async function chantierRelances(now = new Date()) {
     .from(cr)
     .innerJoin(schema.leads, eq(schema.leads.id, cr.leadId))
     .where(isNotNull(cr.phone));
-  const base = rows.map((r) => ({ ...r, lastIn: r.lastIn == null ? null : Number(r.lastIn), lastOut: r.lastOut == null ? null : Number(r.lastOut) }));
-  const cards = relanceCards(base as (RelanceRow & (typeof base)[number])[], now.getTime()) as ((typeof base)[number] & ReturnType<typeof relanceCards>[number])[];
-  // Dernier message reçu, pour le contexte des cartes « a écrit ».
+  const base = rows.map((r) => ({ ...r, lastIn: r.lastIn == null ? null : Number(r.lastIn), lastOut: r.lastOut == null ? null : Number(r.lastOut), lastInText: null as string | null }));
+  // Dernier message reçu des prospects qui ont écrit en dernier : contexte de la carte, et politesse (« merci ») écartée.
   const lastTexts = new Map<string, string>();
-  for (const c of cards.filter((x) => x.waiting).slice(0, 60)) {
+  for (const r of base.filter((x) => x.lastIn && (!x.lastOut || x.lastIn > x.lastOut)).slice(0, 80)) {
     const m = await db.query.waMessages.findFirst({
-      where: sql`'+' || ${wa.phone} = ${c.phone} and ${wa.direction} = 'in'`,
+      where: sql`'+' || ${wa.phone} = ${r.phone} and ${wa.direction} = 'in'`,
       orderBy: sql`${wa.sentAt} desc`,
       columns: { type: true, body: true, transcript: true },
     });
-    if (m) lastTexts.set(c.id, m.transcript ? `🎤 ${m.transcript}` : m.body ? m.body : `[${m.type}]`);
+    if (!m) continue;
+    r.lastInText = m.transcript ?? (m.type === "text" || m.type === "reaction" ? m.body ?? "" : null);
+    lastTexts.set(r.id, m.transcript ? `🎤 ${m.transcript}` : m.body ? m.body : `[${m.type}]`);
   }
+  const cards = relanceCards(base as (RelanceRow & (typeof base)[number])[], now.getTime()) as ((typeof base)[number] & ReturnType<typeof relanceCards>[number])[];
   return { cards, lastTexts };
 }
 

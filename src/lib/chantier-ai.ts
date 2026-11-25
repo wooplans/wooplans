@@ -87,6 +87,7 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
       aiMessageId: ai.messageId,
       aiFollowUp: ai.followUp,
       aiLostReason: ai.lostReason || null,
+      aiAwaiting: ai.awaitingReply ? 1 : 0,
       aiUpdatedAt: now,
     })
     .where(eq(schema.chantierRequests.id, req.id));
