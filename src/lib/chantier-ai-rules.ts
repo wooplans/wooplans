@@ -76,7 +76,15 @@ export function chantierConversation(messages: ConvMessage[], max = 60) {
     .slice(-max)
     .map((m) => {
       const who = m.direction === "in" ? "Client" : "WooPlans";
-      const content = m.transcript ? `[note vocale] ${m.transcript}` : m.body ? (m.type === "text" ? m.body : `[${m.type}] ${m.body}`) : `[${m.type}]`;
+      const content = m.transcript
+        ? `[note vocale] ${m.transcript}`
+        : m.direction === "out" && m.type === "audio"
+          ? "[note vocale de Tao, non transcrite : il a posé des questions ou fait une proposition, il attend la réponse du client]"
+          : m.body
+            ? m.type === "text"
+              ? m.body
+              : `[${m.type}] ${m.body}`
+            : `[${m.type}]`;
       return `${fmt(m.sentAt)} ${who} : ${content.replace(/\s+/g, " ").slice(0, 600)}`;
     })
     .join("\n");

@@ -53,3 +53,8 @@ test("tièdes et froids : en attente 60 jours, un seul message, sauf si la conve
   assert.equal(applyProtocol(base, "pret", now).step, "accueil");
   assert.equal(applyProtocol({ ...base, step: "terrain" }, "bientot", now).step, "terrain");
 });
+
+test("audio envoyé par Tao (non transcrit) : l'IA sait qu'il attend une réponse", () => {
+  const p = chantierAiUserPrompt("C-V3-AP-0001", [{ direction: "out", type: "audio", body: null, transcript: null, sentAt: now }], [], now);
+  assert.match(p, /WooPlans : \[note vocale de Tao, non transcrite : .*attend la réponse du client\]/);
+});
