@@ -654,6 +654,8 @@ export const chantierRequests = sqliteTable(
     relief: text("relief").notNull().default("na"),
     /** Ville du chantier, saisie dans le formulaire */
     city: text("city"),
+    /** Le projet décrit en une phrase par le prospect (champ à saisir, filtre de sérieux, 25 nov. 2026) */
+    projectNote: text("project_note"),
     profile: text("profile").notNull(),
     utmSource: text("utm_source"),
     utmCampaign: text("utm_campaign"),

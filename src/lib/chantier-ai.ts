@@ -63,7 +63,7 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
     budget: req.budget as ChantierAnswers["budget"],
   };
   const model = adModelCode(req.utmContent);
-  const dossier = `${req.code} · ${PROFILE_LABEL[req.profile as ChantierProfile] ?? req.profile} · ${req.name}${req.city ? ` · ${req.city}` : ""}. ${chantierSummary(answers)}${model ? ` Pub cliquée : modèle ${model}.` : ""} Étape CRM actuelle : ${lead.stage}.`;
+  const dossier = `${req.code} · ${PROFILE_LABEL[req.profile as ChantierProfile] ?? req.profile} · ${req.name}${req.city ? ` · ${req.city}` : ""}. ${chantierSummary(answers, null, req.projectNote)}${model ? ` Pub cliquée : modèle ${model}.` : ""} Étape CRM actuelle : ${lead.stage}.`;
   const catalog = chantierMessages({ name: req.name, type: req.houseType }).map((m) => ({ id: m.id, title: m.title }));
   const raw = await deepseekJson(CHANTIER_AI_PROMPT, chantierAiUserPrompt(dossier, messages as ConvMessage[], catalog, now));
   const parsed = parseChantierAi(raw, catalog.map((c) => c.id), now);

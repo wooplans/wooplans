@@ -20,6 +20,7 @@ export async function chantierRelances(now = new Date()) {
       phone: cr.phone,
       country: cr.country,
       city: cr.city,
+      projectNote: cr.projectNote,
       profile: cr.profile,
       houseType: cr.houseType,
       bedrooms: cr.bedrooms,

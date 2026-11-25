@@ -6,7 +6,8 @@ import { chantierRelances } from "@/lib/chantier-relances";
 import { GROUP_LABEL, ago, cameroonDay, suggestedMessageId, type RelanceGroup } from "@/lib/chantier-relances-rules";
 import { adModelCode, chantierMessages } from "@/lib/chantier-rules";
 import { whatsappLink } from "@/lib/site";
-import { depositReceived, markLost, postpone } from "./actions";
+import { ProformaOneClick } from "@/components/admin/ProformaOneClick";
+import { depositReceived, markLost, postpone, sendProformaOneClick } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -91,6 +92,7 @@ export default async function ChantierRelancesPage() {
 
               <ul className="mt-3 space-y-1.5 text-sm">
                 <li>🏠 {house}{model ? ` · pub ${model}` : ""}</li>
+                {c.projectNote ? <li className="italic text-foreground/80">📝 « {c.projectNote} »</li> : null}
                 <li>{landText(c.aiLand, c.aiLandDetails, c.aiRelief)}</li>
                 <li className={c.waiting ? "font-semibold text-red-700" : "text-foreground/80"}>💬 {last}</li>
                 {c.aiNextAction ? <li className="text-primary">👉 {c.aiNextAction}</li> : null}
@@ -106,6 +108,9 @@ export default async function ChantierRelancesPage() {
               ) : null}
 
               {digits ? <ChantierCardButtons id={c.id} withText={msg ? whatsappLink(msg.text, digits) : null} withoutText={`https://wa.me/${digits}`} /> : null}
+              {c.leadId && c.houseType !== "immeuble" && c.group !== "attente" ? (
+                <ProformaOneClick action={sendProformaOneClick.bind(null, c.id)} pdfUrl={`/admin/crm/${c.leadId}/proforma`} primary={c.group === "terrain"} />
+              ) : null}
 
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-outline pt-3 text-xs">
                 <form action={depositReceived.bind(null, c.id)}>

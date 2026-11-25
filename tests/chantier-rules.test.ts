@@ -1,27 +1,27 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { adModelCode, chantierCode, chantierFirstMessage, chantierProfile, chantierSummary, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
+import { adModelCode, projectNoteValid, chantierCode, chantierFirstMessage, chantierProfile, chantierSummary, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
 
 const base: ChantierAnswers = { type: "duplex", chambres: "4", terrain: "oui", relief: "plat", plans: "non", start: "asap", budget: "40-60" };
 
 test("réponses valides avec nom et ville", () => {
-  const r = parseChantier({ ...base, name: "  Mbarga   Paul ", city: " Yaoundé " });
-  assert.deepEqual(r, { answers: base, name: "Mbarga Paul", city: "Yaoundé" });
+  const r = parseChantier({ ...base, name: "  Mbarga   Paul ", city: " Yaoundé ", project: "Duplex de 4 chambres pour ma famille à Odza" });
+  assert.deepEqual(r, { answers: base, name: "Mbarga Paul", city: "Yaoundé", project: "Duplex de 4 chambres pour ma famille à Odza" });
 });
 
 test("réponse inconnue, nom ou ville manquants : refusé", () => {
-  assert.equal(parseChantier({ ...base, terrain: "peut-etre", name: "Paul", city: "Douala" }), null);
-  assert.equal(parseChantier({ ...base, name: "", city: "Douala" }), null);
-  assert.equal(parseChantier({ ...base, name: "Paul", city: "" }), null);
-  assert.equal(parseChantier({ ...base, chambres: "2", name: "Paul", city: "Douala" }), null);
+  assert.equal(parseChantier({ ...base, terrain: "peut-etre", name: "Paul", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" }), null);
+  assert.equal(parseChantier({ ...base, name: "", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" }), null);
+  assert.equal(parseChantier({ ...base, name: "Paul", city: "", project: "Duplex de 4 chambres pour ma famille à Odza" }), null);
+  assert.equal(parseChantier({ ...base, chambres: "2", name: "Paul", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" }), null);
 });
 
 test("questions conditionnelles : pas de chambres pour un immeuble, pas de relief sans terrain", () => {
-  const r = parseChantier({ ...base, type: "immeuble", chambres: undefined, name: "Paul", city: "Douala" });
+  const r = parseChantier({ ...base, type: "immeuble", chambres: undefined, name: "Paul", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" });
   assert.equal(r?.answers.chambres, "na");
-  const s = parseChantier({ ...base, terrain: "non", relief: undefined, name: "Paul", city: "Douala" });
+  const s = parseChantier({ ...base, terrain: "non", relief: undefined, name: "Paul", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" });
   assert.equal(s?.answers.relief, "na");
-  assert.equal(parseChantier({ ...base, relief: undefined, name: "Paul", city: "Douala" }), null);
+  assert.equal(parseChantier({ ...base, relief: undefined, name: "Paul", city: "Douala", project: "Duplex de 4 chambres pour ma famille à Odza" }), null);
 });
 
 test("chaud : terrain + démarrage sous 6 mois, nouveaux prix et avance", () => {
@@ -74,4 +74,12 @@ test("adModelCode lit la référence du modèle dans utm_content", () => {
   assert.equal(adModelCode("v3-017"), "V3-017");
   assert.equal(adModelCode("guide"), null);
   assert.equal(adModelCode(null), null);
+});
+
+test("projet en une phrase : au moins 20 caractères et 4 vrais mots", () => {
+  assert.equal(projectNoteValid("Duplex de 4 chambres pour ma famille à Odza"), true);
+  assert.equal(projectNoteValid("maison"), false);
+  assert.equal(projectNoteValid("test test test test test"), false);
+  assert.equal(projectNoteValid("aaaaaaaaaaaaaaaaaaaaaaaaa"), false);
+  assert.equal(parseChantier({ ...base, name: "Paul", city: "Douala", project: "maison" }), null);
 });

@@ -25,6 +25,7 @@ export async function createChantierRequest(
   answers: ChantierAnswers,
   name: string,
   city: string,
+  project: string,
   utm: { source?: string | null; campaign?: string | null; content?: string | null },
 ) {
   const db = getDb();
@@ -43,6 +44,7 @@ export async function createChantierRequest(
       code,
       name,
       city,
+      projectNote: project,
       relief: answers.relief,
       terrain: answers.terrain,
       start: answers.start,
@@ -102,7 +104,7 @@ export async function linkChantierByCode(phoneDigits: string, text: string, now 
     .where(and(eq(schema.chantierRequests.id, req.id), isNull(schema.chantierRequests.linkedAt)))
     .returning({ id: schema.chantierRequests.id });
   if (!claimed.length) return null;
-  const summary = chantierSummary(answers, req.city);
+  const summary = chantierSummary(answers, req.city, req.projectNote);
   // Modèle de la pub cliquée (utm_content) : affiché sur la fiche pour l'échange WhatsApp.
   const adCode = adModelCode(req.utmContent);
   const adPlan = adCode ? await db.query.plans.findFirst({ where: eq(schema.plans.code, adCode), columns: { id: true, name: true } }) : undefined;
