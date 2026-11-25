@@ -63,7 +63,7 @@ Réponds uniquement par un objet JSON :
 - next_action : une action concrète pour Tao, 25 mots au plus.
 - message_id : l'identifiant du modèle de message le plus utile à envoyer maintenant, choisi dans la liste ; null si aucun ne convient.
 - follow_up : date de la prochaine relance. Si le prospect a donné une date ou un délai, utilise-la (« lundi » = le prochain lundi après la date du jour). Sinon : accueil = lendemain du dernier message de Tao resté sans réponse ; proforma = 1, puis 3, puis 7 jours après l'envoi ; terrain = aujourd'hui (proforma à envoyer) ; engage = 2 jours ; perdu = null.
-- awaiting_reply : true si le dernier message du prospect demande une réponse de Tao (question, information envoyée, demande) ; false s'il ne fait que clore poliment (« ok », « merci », « d'accord », « bonne journée », un pouce) ou si le dernier message vient de Tao.
+- awaiting_reply : juge d'après toute la conversation. true si le dernier message du prospect appelle une suite de Tao (question, information ou document envoyé, accord à une proposition : un « ok » qui répond « oui » à « je vous prépare la proforma ? » appelle une suite) ; false s'il ne fait que clore poliment un échange terminé (« merci », « ok, à lundi », « bonne journée », un pouce) ou si le dernier message vient de Tao.
 - lost_reason : seulement si step = perdu (ex. « pas de terrain », « veut une estimation seulement »), vide sinon.
 N'invente rien qui ne soit pas dans le dossier ou la conversation. Les notes vocales transcrites peuvent contenir des erreurs ou des bruits hors sujet : ignore ce qui ne concerne pas le projet.`;
 

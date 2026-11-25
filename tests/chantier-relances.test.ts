@@ -79,6 +79,9 @@ test("politesse : « merci », « ok », 👍 n'attendent pas de réponse ; une 
   assert.equal(relanceCards([polite], now).length, 0);
   const aiPolite = row({ code: "ia", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Je vois", aiAwaiting: 0, aiUpdatedAt: now - 30 * 60_000, aiFollowUp: "2026-11-30" });
   assert.equal(relanceCards([aiPolite], now).length, 0);
+  // « Ok » en réponse à une question de Tao : l'IA, qui lit le contexte, dit qu'il attend une suite → la carte reste.
+  const okOui = row({ code: "ok", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Ok", aiAwaiting: 1, aiUpdatedAt: now - 30 * 60_000, aiFollowUp: "2026-11-30" });
+  assert.equal(relanceCards([okOui], now)[0].group, "repondre");
   const question = row({ code: "q", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Vous êtes où ?", aiFollowUp: "2026-11-30" });
   assert.equal(relanceCards([question], now)[0].group, "repondre");
 });

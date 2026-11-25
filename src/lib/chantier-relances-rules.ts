@@ -72,9 +72,10 @@ export function relanceCards(rows: RelanceRow[], now: number): RelanceCard[] {
   const cards: RelanceCard[] = [];
   for (const r of rows) {
     const lastWord = Boolean(r.lastIn && (!r.lastOut || r.lastIn > r.lastOut));
-    // Une simple politesse (« merci », « ok ») n'attend pas de réponse : avis de l'IA s'il est à jour, sinon la règle.
-    const aiSaysPolite = r.aiAwaiting === 0 && Boolean(r.aiUpdatedAt && r.lastIn && r.aiUpdatedAt >= r.lastIn);
-    const waiting = lastWord && !aiSaysPolite && !isPoliteOnly(r.lastInText);
+        // L'IA a lu toute la conversation : sa décision compte (un « ok » peut répondre « oui » à une question de Tao).
+    // Tant qu'elle n'a pas lu le dernier message, une règle simple écarte les politesses.
+    const aiRead = r.aiAwaiting != null && Boolean(r.aiUpdatedAt && r.lastIn && r.aiUpdatedAt >= r.lastIn);
+    const waiting = lastWord && (aiRead ? r.aiAwaiting === 1 : !isPoliteOnly(r.lastInText));
     const contactedToday = Boolean(r.lastOut && cameroonDay(r.lastOut) === today && (!r.lastIn || r.lastOut > r.lastIn));
     const nurture = r.profile === "bientot" || r.profile === "projet" || r.profile === "a_ses_plans";
     const step = r.aiStep ?? (nurture ? "attente" : "accueil");
