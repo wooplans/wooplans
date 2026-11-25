@@ -160,7 +160,12 @@ export function leadStageFor(step: ChantierStep, current: string): string {
  * main. Tant que la conversation ne montre pas le contraire (l'IA les place alors en terrain, proforma, engagé ou
  * perdu), ils passent « en attente » : un seul message (tiède ou froid), puis relance dans 60 jours.
  */
-export function applyProtocol(ai: ChantierAiResult, profile: string, now: Date): ChantierAiResult & { nurture: boolean } {
+export function applyProtocol(ai: ChantierAiResult, profile: string, now: Date, lastClientText?: string | null): ChantierAiResult & { nurture: boolean } {
+  // Une question du prospect attend toujours une réponse, et un prospect qui pose encore des questions n'est pas perdu.
+  if (lastClientText && lastClientText.includes("?")) {
+    ai = { ...ai, awaitingReply: true };
+    if (ai.step === "perdu") ai = { ...ai, step: profile === "pret" ? "accueil" : "attente", lostReason: "" };
+  }
   const nurture = (profile === "bientot" || profile === "projet") && (ai.step === "accueil" || ai.step === "attente");
   if (!nurture) return { ...ai, nurture: false };
   return {
