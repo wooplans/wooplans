@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ago, cameroonDay, relanceCards, suggestedMessageId, type RelanceRow } from "../src/lib/chantier-relances-rules.ts";
+import { ago, cameroonDay, isPoliteOnly, relanceCards, suggestedMessageId, type RelanceRow } from "../src/lib/chantier-relances-rules.ts";
 
 const now = Date.parse("2026-11-25T09:00:00Z"); // 10 h au Cameroun
 const H = 3_600_000;
@@ -70,4 +70,15 @@ test("ago", () => {
   assert.equal(ago(now - 3 * H, now), "il y a 3 h");
   assert.equal(ago(now - 26 * H, now), "hier");
   assert.equal(ago(now - 80 * H, now), "il y a 3 j");
+});
+
+test("politesse : « merci », « ok », 👍 n'attendent pas de réponse ; une question, si", () => {
+  for (const t of ["Merci", "Ok", "ok merci", "D'accord merci", "Merci pareil a vous", "Bien", "👍", "🙏🏾", "Bonne journée à vous aussi", "Merci beaucoup monsieur"]) assert.equal(isPoliteOnly(t), true, t);
+  for (const t of ["Vous êtes où ?", "300m", "Je n'ai pas le dossier", "Ok, combien pour le duplex ?", null, ""]) assert.equal(isPoliteOnly(t), false, String(t));
+  const polite = row({ code: "merci", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Merci pareil a vous", aiFollowUp: "2026-11-30" });
+  assert.equal(relanceCards([polite], now).length, 0);
+  const aiPolite = row({ code: "ia", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Je vois", aiAwaiting: 0, aiUpdatedAt: now - 30 * 60_000, aiFollowUp: "2026-11-30" });
+  assert.equal(relanceCards([aiPolite], now).length, 0);
+  const question = row({ code: "q", lastIn: now - H, lastOut: now - 2 * H, lastInText: "Vous êtes où ?", aiFollowUp: "2026-11-30" });
+  assert.equal(relanceCards([question], now)[0].group, "repondre");
 });
