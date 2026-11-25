@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { adModelCode, projectNoteValid, chantierCode, chantierFirstMessage, chantierProfile, chantierSummary, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
+import { adModelCode, chantierHeadline, projectNoteValid, chantierCode, chantierFirstMessage, chantierProfile, chantierSummary, chantierWhatsappText, findChantierCode, parseChantier, type ChantierAnswers } from "../src/lib/chantier-rules.ts";
 
 const base: ChantierAnswers = { type: "duplex", chambres: "4", terrain: "oui", relief: "plat", plans: "non", start: "asap", budget: "40-60" };
 
@@ -82,4 +82,14 @@ test("projet en une phrase : au moins 20 caractères et 4 vrais mots", () => {
   assert.equal(projectNoteValid("test test test test test"), false);
   assert.equal(projectNoteValid("aaaaaaaaaaaaaaaaaaaaaaaaa"), false);
   assert.equal(parseChantier({ ...base, name: "Paul", city: "Douala", project: "maison" }), null);
+});
+
+test("chantierHeadline : promesse de la campagne terrain (CI, GN)", () => {
+  assert.match(chantierHeadline("terrain_ci").title, /Vous avez un terrain/);
+  assert.match(chantierHeadline("TERRAIN_GN").title, /Vous avez un terrain/);
+});
+
+test("chantierHeadline : titre habituel pour les autres campagnes", () => {
+  assert.equal(chantierHeadline("demarrer_chantier").title, "Démarrez votre chantier avec les bons plans");
+  assert.equal(chantierHeadline(undefined).title, "Démarrez votre chantier avec les bons plans");
 });

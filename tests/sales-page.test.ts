@@ -109,12 +109,13 @@ test("page de vente : témoignages juste après le héro, puis le parcours", () 
   assert.doesNotMatch(b.slice(hero, temo).replace(/<section $/, ""), /<section/);
 });
 
-test("page de vente : visuel 4:5 du catalogue à la place de la vidéo, compteur juste dessous", () => {
+test("page de vente : VSL publique (39 000 FCFA) en héro, visuel 4:5, compteur juste dessous", () => {
   const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
-  assert.match(b, /\/assets\/digital\/catalogue-premium-mockup-540\.webp/);
-  // Plus de vidéo de présentation : elle annonçait l'ancien prix et la déduction sur les plans complets.
-  assert.doesNotMatch(b, /vsl-catalogue-premium|vsl-poster|playVsl/);
+  assert.match(b, /\/assets\/videos\/vsl-hero-4x5\.webp/);
+  // Version publique uniquement : la VSL des acheteurs de l'extrait annonce leur prix réservé (29 000 FCFA).
+  assert.match(b, /\/assets\/videos\/vsl-catalogue-premium-public\.mp4/);
+  assert.doesNotMatch(b, /vsl-catalogue-premium\.mp4/);
   assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);
 });
 
