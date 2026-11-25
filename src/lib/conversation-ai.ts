@@ -55,7 +55,8 @@ export async function recordWaMessage(m: Incoming, direction: "in" | "out") {
       direction,
       type,
       body: messageBody(m)?.slice(0, 4000) ?? null,
-      mediaStatus: type === "audio" ? "pending" : null,
+      // Genuka n'archive que les audios reçus : ceux que Tao envoie ne peuvent pas être transcrits.
+      mediaStatus: direction === "in" && type === "audio" ? "pending" : null,
       sentAt,
     })
     .onConflictDoNothing();
@@ -71,9 +72,9 @@ async function genukaAudio(messageId: string): Promise<Blob | null> {
   if (!key) return null;
   const headers = { Authorization: `Bearer ${key}` };
   const list = (await fetch(`${GENUKA}/media?kind=audio&limit=100`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null)) as {
-    data?: { inboundMessageId?: string; outboundMessageId?: string; messageId?: string; url?: string; mimeType?: string }[];
+    data?: { inboundMessageId?: string; url?: string; mimeType?: string }[];
   } | null;
-  const file = list?.data?.find((f) => f.inboundMessageId === messageId || f.outboundMessageId === messageId || f.messageId === messageId);
+  const file = list?.data?.find((f) => f.inboundMessageId === messageId);
   if (!file?.url) return null;
   const res = await fetch(file.url, { headers });
   return res.ok ? new Blob([await res.arrayBuffer()], { type: file.mimeType || "audio/ogg" }) : null;
