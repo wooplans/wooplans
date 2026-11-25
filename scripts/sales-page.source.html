@@ -338,8 +338,8 @@ footer a{color:rgba(255,255,255,.7)}
       </div>
       <div>
         <div class="vsl" id="vsl">
-          <img src="/assets/catalogue/catalogue-video-4x5-540.webp" srcset="/assets/catalogue/catalogue-video-4x5-540.webp 540w, /assets/catalogue/catalogue-video-4x5.webp 1024w" sizes="(min-width: 900px) 440px, 90vw" alt="Tao, de WOOPLANS, présente le Catalogue Premium imprimé, l'ordinateur à côté" width="540" height="675" fetchpriority="high">
-          <button type="button" class="play" data-cta="vsl_catalogue" onclick="openVsl()" aria-label="Voir le catalogue en vidéo"><i></i><span>Voir le catalogue en vidéo · 2 min</span></button>
+          <img src="/assets/videos/vsl-hero-4x5.webp" alt="Vidéo : avant de construire, choisissez la bonne maison" width="540" height="675" fetchpriority="high">
+          <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><i></i><span>Regardez avant de construire · 5 min</span></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><span class="now">{{PRIX}}<small>FCFA</small></span></div>
@@ -603,8 +603,8 @@ function openVideo(name,label,poster){
 }
 /* Vidéo du catalogue (Tao : catalogue imprimé, version numérique, témoignages, prix). Chargée seulement au clic. */
 function openVsl(){
-  var v=document.getElementById('modalVideo');v.poster='/assets/catalogue/catalogue-premium-poster.jpg';
-  v.src='/assets/catalogue/catalogue-premium.mp4';v.play().catch(function(){});wpCapture('video_play',{video:'catalogue'});
+  var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-poster.jpg';
+  v.src='/assets/videos/vsl-catalogue-premium-public.mp4';v.play().catch(function(){});wpCapture('video_play',{video:'vsl'});
   document.getElementById('videoModal').classList.add('on');
 }
 /* Galerie : une maison s'ouvre en grand au toucher ; la dernière carte mène à l'achat. */
