@@ -57,34 +57,6 @@ async function send(body: Record<string, unknown>): Promise<SendResult> {
   }
 }
 
-/**
- * Envoie un document PDF dans la conversation (message de session : seulement dans les 24 h qui suivent le dernier
- * message du client). Le fichier est d'abord déposé chez Genuka (assetId), puis envoyé avec sa légende. Renvoie
- * l'avertissement de Genuka si la fenêtre de 24 h est fermée (Meta jettera probablement le message).
- */
-export async function sendSessionDocument(to: string, file: Uint8Array, filename: string, caption: string): Promise<SendResult & { warning?: string }> {
-  const env = getEnv();
-  if (!env.GENUKA_API_KEY || !env.GENUKA_CONNECTION_ID) return { ok: false, error: "whatsapp_disabled" };
-  try {
-    const form = new FormData();
-    form.append("file", new Blob([file], { type: "application/pdf" }), filename);
-    form.append("filename", filename);
-    const up = await fetch(`${API}/media`, { method: "POST", headers: { Authorization: `Bearer ${env.GENUKA_API_KEY}`, "User-Agent": "wooplans-site/1.0 (+https://www.wooplans.com)" }, body: form });
-    const upJson = (await up.json().catch(() => null)) as { data?: { id?: string }; error?: string } | null;
-    if (!up.ok || !upJson?.data?.id) return { ok: false, error: `upload ${up.status} ${upJson?.error ?? ""}`.trim() };
-    const res = await fetch(`${API}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${env.GENUKA_API_KEY}`, "Content-Type": "application/json", "User-Agent": "wooplans-site/1.0 (+https://www.wooplans.com)" },
-      body: JSON.stringify({ connectionId: env.GENUKA_CONNECTION_ID, to, document: { assetId: upJson.data.id, filename, caption: caption.slice(0, 1024) } }),
-    });
-    const json = (await res.json().catch(() => null)) as { data?: { messageId?: string; warning?: { code?: string } }; error?: string; message?: string } | null;
-    if (!res.ok) return { ok: false, error: `${res.status} ${json?.error ?? ""} ${json?.message ?? ""}`.trim() };
-    return { ok: true, messageId: json?.data?.messageId ?? null, warning: json?.data?.warning?.code };
-  } catch (error) {
-    return { ok: false, error: String(error) };
-  }
-}
-
 /** J0 : le guide en pièce jointe + bouton « Télécharger le guide » (/api/guide/<achat>). */
 export function sendGuideDelivery(to: string, name: string | null, intentId: string, offer: "guide" | "extrait" = "guide") {
   const extrait = offer === "extrait";
