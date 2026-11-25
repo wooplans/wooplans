@@ -16,7 +16,7 @@
 <meta name="theme-color" content="#0F5B59">
 <link rel="icon" href="/favicon.png">
 <!-- JSONLD -->
-<link rel="preload" as="image" href="/assets/videos/vsl-hero-4x5.webp" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/videos/vsl-courte-hero-4x5.webp" fetchpriority="high">
 <style>
 :root{--teal:#0F5B59;--teal-dk:#0A3F3E;--teal-xdk:#072E2D;--orange:#F08A2E;--orange-dk:#D4731A;--red:#C75B3A;--gold:#E7C36C;--dark:#1E2933;--gray:#6B7280;--line:#E5E9EE;--bg:#F5F7F9;--white:#fff;--r:16px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -355,9 +355,9 @@ footer a{color:rgba(255,255,255,.7)}
       </div>
       <div>
         <div class="vsl" id="vsl">
-          <img src="/assets/videos/vsl-hero-4x5.webp" alt="Vidéo : avant de construire, choisissez la bonne maison" width="540" height="675" fetchpriority="high">
+          <img src="/assets/videos/vsl-courte-hero-4x5.webp" alt="Vidéo : avant de construire, choisissez la bonne maison" width="540" height="675" fetchpriority="high">
           <video id="vslPreview" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
-          <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><span>🔊 Regardez avec le son · 5 min</span><i></i></button>
+          <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><span>🔊 Regardez avec le son · 2 min</span><i></i></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
         <div class="price"><span class="now">{{PRIX}}<small>FCFA</small></span></div>
@@ -651,10 +651,10 @@ function openVideo(name,label,poster){
 var VSL={on:false,watched:0,last:0,max:0,marks:{},from:''};
 function vslServer(ev){try{fetch('/api/video/suivi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:'vsl-public',event:ev}),keepalive:true});}catch(_){}}
 function openVsl(from){
-  var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-poster.jpg';
+  var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-courte-poster.jpg';
   VSL={on:true,watched:0,last:0,max:0,marks:{},from:from||'hero',played:false};
   document.getElementById('vslEnd').classList.remove('on');
-  v.src='/assets/videos/vsl-catalogue-premium-public.mp4';v.currentTime=0;v.play().catch(function(){});
+  v.src='/assets/videos/vsl-courte.mp4';v.currentTime=0;v.play().catch(function(){});
   wpCapture('vsl_open',{from:VSL.from});vslServer('open');
   document.getElementById('videoModal').classList.add('on');
 }
@@ -677,7 +677,7 @@ function vslEndBuy(btn){wpCapture('vsl_cta',{max_pct:VSL.max});vslServer('cta');
 (function(){
   var box=document.getElementById('vsl'),pv=document.getElementById('vslPreview');if(!box||!pv)return;
   var c=navigator.connection||{};if(c.saveData||(c.effectiveType&&c.effectiveType!=='4g')||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  function go(){pv.src='/assets/videos/vsl-hero-apercu.mp4';pv.play().then(function(){box.classList.add('previewing');wpCapture('vsl_preview_play',{});}).catch(function(){});}
+  function go(){pv.src='/assets/videos/vsl-courte-apercu.mp4';pv.play().then(function(){box.classList.add('previewing');wpCapture('vsl_preview_play',{});}).catch(function(){});}
   if(document.readyState==='complete')setTimeout(go,1200);else window.addEventListener('load',function(){setTimeout(go,1200);},{once:true});
 })();
 /* Galerie : une maison s'ouvre en grand au toucher ; la dernière carte mène à l'achat. */
