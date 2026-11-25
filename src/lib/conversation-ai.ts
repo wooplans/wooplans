@@ -55,7 +55,7 @@ export async function recordWaMessage(m: Incoming, direction: "in" | "out") {
       direction,
       type,
       body: messageBody(m)?.slice(0, 4000) ?? null,
-      mediaStatus: direction === "in" && type === "audio" ? "pending" : null,
+      mediaStatus: type === "audio" ? "pending" : null,
       sentAt,
     })
     .onConflictDoNothing();
@@ -71,9 +71,9 @@ async function genukaAudio(messageId: string): Promise<Blob | null> {
   if (!key) return null;
   const headers = { Authorization: `Bearer ${key}` };
   const list = (await fetch(`${GENUKA}/media?kind=audio&limit=100`, { headers }).then((r) => (r.ok ? r.json() : null)).catch(() => null)) as {
-    data?: { inboundMessageId?: string; url?: string; mimeType?: string }[];
+    data?: { inboundMessageId?: string; outboundMessageId?: string; messageId?: string; url?: string; mimeType?: string }[];
   } | null;
-  const file = list?.data?.find((f) => f.inboundMessageId === messageId);
+  const file = list?.data?.find((f) => f.inboundMessageId === messageId || f.outboundMessageId === messageId || f.messageId === messageId);
   if (!file?.url) return null;
   const res = await fetch(file.url, { headers });
   return res.ok ? new Blob([await res.arrayBuffer()], { type: file.mimeType || "audio/ogg" }) : null;
@@ -182,7 +182,7 @@ export async function qualifyOne(p: ProspectForAi, now = new Date(), behavior?: 
     orderBy: asc(schema.waMessages.sentAt),
     columns: { direction: true, type: true, body: true, transcript: true, sentAt: true, mediaStatus: true },
   });
-  if (messages.some((m) => m.mediaStatus === "pending")) return false;
+  if (messages.some((m) => m.mediaStatus === "pending" && m.direction === "in")) return false;
   const lead = await db.query.checkoutIntents.findFirst({
     where: and(eq(schema.checkoutIntents.email, p.email), inArray(schema.checkoutIntents.ctaId, LEAD_CTA_IDS), eq(schema.checkoutIntents.status, "paid")),
     orderBy: desc(schema.checkoutIntents.createdAt),
