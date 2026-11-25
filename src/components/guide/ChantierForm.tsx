@@ -17,6 +17,7 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
+  const [project, setProject] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waUrl, setWaUrl] = useState<string | null>(null);
@@ -37,6 +38,11 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
       setError("Indiquez votre nom et votre prénom.");
       return;
     }
+    const words = project.trim().split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w));
+    if (project.trim().length < 20 || words.length < 4) {
+      setError("Décrivez votre projet en une phrase (au moins quelques mots).");
+      return;
+    }
     if (city.trim().length < 2) {
       setError("Indiquez la ville de votre chantier.");
       return;
@@ -45,7 +51,7 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
     setError(null);
     const p = new URLSearchParams(window.location.search);
     const utm = { source: p.get("utm_source"), campaign: p.get("utm_campaign"), content: p.get("utm_content") };
-    const res = await fetch("/api/chantier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(visible.map((q) => [q.key, answers[q.key]])), name, city, utm }) }).catch(() => null);
+    const res = await fetch("/api/chantier", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(visible.map((q) => [q.key, answers[q.key]])), name, city, project, utm }) }).catch(() => null);
     const json = (await res?.json().catch(() => null)) as { waUrl?: string; profile?: string; eventId?: string; error?: string } | null;
     setSending(false);
     if (!json?.waUrl) {
@@ -113,7 +119,19 @@ export function ChantierForm({ questions }: { questions: Question[] }) {
       ) : (
         <form onSubmit={submit}>
           <h2 className="mt-1 text-xl font-semibold">Dernière étape</h2>
-          <label htmlFor="chantier-name" className="mt-5 block text-sm text-white/80">
+          <label htmlFor="chantier-project" className="mt-5 block text-sm text-white/80">
+            Votre projet en une phrase
+          </label>
+          <textarea
+            id="chantier-project"
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
+            maxLength={300}
+            rows={3}
+            placeholder="Ex. Je veux construire un duplex de 4 chambres pour ma famille sur mon terrain à Odza."
+            className="mt-1 w-full rounded-xl border-2 border-white/30 bg-white px-4 py-3 text-base text-primary placeholder:text-primary/40"
+          />
+          <label htmlFor="chantier-name" className="mt-4 block text-sm text-white/80">
             Votre nom et prénom
           </label>
           <input

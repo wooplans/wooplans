@@ -104,7 +104,7 @@ export function isAsked(q: Q, answers: Partial<Record<ChantierKey, string>>) {
 }
 
 /** Réponses valides (questions posées, valeurs connues ; « na » pour les autres) + nom et ville, ou null. */
-export function parseChantier(body: Record<string, unknown>): { answers: ChantierAnswers; name: string; city: string } | null {
+export function parseChantier(body: Record<string, unknown>): { answers: ChantierAnswers; name: string; city: string; project: string } | null {
   const answers: Partial<Record<ChantierKey, string>> = {};
   for (const q of CHANTIER_QUESTIONS) {
     if (!isAsked(q, answers)) {
@@ -118,8 +118,19 @@ export function parseChantier(body: Record<string, unknown>): { answers: Chantie
   const clean = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
   const name = clean(body.name, 80);
   const city = clean(body.city, 60);
-  if (name.length < 2 || city.length < 2) return null;
-  return { answers: answers as ChantierAnswers, name, city };
+  const project = clean(body.project, 300);
+  if (name.length < 2 || city.length < 2 || !projectNoteValid(project)) return null;
+  return { answers: answers as ChantierAnswers, name, city, project };
+}
+
+/**
+ * Champ à saisir « Votre projet en une phrase » (décision de Tao, 25 nov. 2026) : il écarte ceux qui cliquent sans
+ * projet réel. Au moins 20 caractères et 4 mots, pas une répétition (« aaaa », « test test test »).
+ */
+export function projectNoteValid(text: string) {
+  const t = text.trim();
+  const words = t.split(/\s+/).filter((w) => /\p{L}{2,}/u.test(w));
+  return t.length >= 20 && words.length >= 4 && new Set(words.map((w) => w.toLowerCase())).size >= 3;
 }
 
 export function answerLabel(key: ChantierKey, value: string) {
@@ -221,9 +232,10 @@ export function chantierWhatsappText(code: string, name: string) {
 }
 
 /** Résumé lisible des réponses (fiche CRM, contexte de l'IA), sans les questions non posées. */
-export function chantierSummary(a: ChantierAnswers, city?: string | null) {
+export function chantierSummary(a: ChantierAnswers, city?: string | null, project?: string | null) {
   const parts = CHANTIER_QUESTIONS.filter((q) => a[q.key] !== "na").map((q) => `${q.label} ${answerLabel(q.key, a[q.key])}.`);
   if (city) parts.push(`Ville du chantier : ${city}.`);
+  if (project) parts.push(`Son projet, en ses mots : « ${project} ».`);
   return parts.join(" ");
 }
 
