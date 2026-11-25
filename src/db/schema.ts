@@ -674,6 +674,8 @@ export const chantierRequests = sqliteTable(
     aiFollowUp: text("ai_follow_up"),
     aiLostReason: text("ai_lost_reason"),
     aiUpdatedAt: integer("ai_updated_at", { mode: "timestamp_ms" }),
+    /** Dernier clic sur la carte de relance (onglet Plans complets) */
+    relanceClickedAt: integer("relance_clicked_at", { mode: "timestamp_ms" }),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("chantier_requests_code_idx").on(t.code), index("chantier_requests_created_idx").on(t.createdAt)],

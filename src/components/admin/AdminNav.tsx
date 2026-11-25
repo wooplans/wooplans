@@ -39,8 +39,9 @@ const GROUPS: { title: string; items: Item[] }[] = [
     title: "Au quotidien",
     items: [
       { href: "/admin", label: "Tableau de bord", short: "Accueil", icon: "home" },
+      { href: "/admin/chantier", label: "Plans complets (relances)", short: "Chantiers", icon: "plans" },
       { href: "/admin/relances", label: "Relances WhatsApp", short: "Relances", icon: "whatsapp" },
-      { href: "/admin/ventes", label: "Ventes", short: "Ventes", icon: "sales" },
+      { href: "/admin/ventes", label: "Ventes", icon: "sales" },
       { href: "/admin/gains", label: "Gain réel", icon: "sales" },
       { href: "/admin/crm", label: "CRM plans complets", short: "CRM", icon: "crm" },
     ],

@@ -50,7 +50,8 @@ export async function followOne(requestId: string, now = new Date()): Promise<bo
     orderBy: asc(schema.waMessages.sentAt),
     columns: { direction: true, type: true, body: true, transcript: true, sentAt: true, mediaStatus: true },
   });
-  if (messages.some((m) => m.mediaStatus === "pending")) return false; // notes vocales pas encore transcrites
+  // Notes vocales du prospect pas encore transcrites : on attend (celles de Tao ne bloquent pas).
+  if (messages.some((m) => m.mediaStatus === "pending" && m.direction === "in")) return false;
 
   const answers: ChantierAnswers = {
     type: req.houseType as ChantierAnswers["type"],
