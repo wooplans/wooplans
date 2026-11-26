@@ -1,7 +1,27 @@
 {
   "price": 39000,
   "productId": "prd_rhaso5i5",
-  "reserved": { "price": 29000, "productId": "prd_9cbatg", "days": 7 },
-  "promo": { "price": 19000, "productId": "prd_ytnf02e2" },
-  "promos": []
+  "reserved": {
+    "price": 29000,
+    "productId": "prd_9cbatg",
+    "days": 7
+  },
+  "promo": {
+    "price": 19000,
+    "productId": "prd_ytnf02e2"
+  },
+  "promos": [],
+  "uemoa": {
+    "productId": "",
+    "countries": [
+      "BJ",
+      "BF",
+      "CI",
+      "GW",
+      "ML",
+      "NE",
+      "SN",
+      "TG"
+    ]
+  }
 }

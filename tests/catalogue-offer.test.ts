@@ -82,3 +82,18 @@ test("Bonjour / Bonsoir à partir de 16 h, heure du pays", () => {
   assert.equal(greeting("CM", new Date("2026-11-23T15:10:00Z")), "Bonsoir");
   assert.equal(greeting(null, new Date("2026-11-23T08:00:00Z")), "Bonjour");
 });
+
+test("pays UEMOA : prix public payé via le produit à 37 864 (39 000 XOF affiché par Chariow)", async () => {
+  const { chooseOffer, productForCountry, offerProductIds } = await import("../src/lib/catalogue-offer-rules");
+  const cfg = {
+    price: 39000, productId: "prd_pub", reserved: { price: 29000, productId: "prd_res", days: 7 },
+    promo: { price: 19000, productId: "prd_promo" }, promos: [], uemoa: { productId: "prd_uemoa", countries: ["CI", "SN"] },
+  };
+  const pub = chooseOffer(cfg, {});
+  assert.equal(productForCountry(cfg, pub, "ci"), "prd_uemoa");
+  assert.equal(productForCountry(cfg, pub, "CM"), "prd_pub");
+  const res = chooseOffer(cfg, { reservedUntil: new Date(Date.now() + 86400000) });
+  assert.equal(productForCountry(cfg, res, "CI"), "prd_res");
+  assert.ok(offerProductIds(cfg).includes("prd_uemoa"));
+  assert.equal(productForCountry({ ...cfg, uemoa: { productId: "", countries: ["CI"] } }, pub, "CI"), "prd_pub");
+});

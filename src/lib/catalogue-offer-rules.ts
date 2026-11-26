@@ -17,6 +17,9 @@ export type CatalogueConfig = {
   reserved: { price: number; productId: string; days: number };
   promo: { price: number; productId: string };
   promos: PromoWindow[];
+  /** Pays du franc CFA d'Afrique de l'Ouest (XOF) : Chariow convertit le prix XAF avec ~3 % de marge
+   *  (39 000 → 40 170). Produit au prix public / 1,03 (37 864) pour qu'ils voient 39 000 au paiement (Tao, 26 nov. 2026). */
+  uemoa?: { productId: string; countries: string[] };
 };
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -58,9 +61,16 @@ export function chooseOffer(cfg: CatalogueConfig, input: { reservedUntil?: Date 
   return { tier: "public", price: cfg.price, productId: cfg.productId, until: null };
 }
 
+/** Produit Chariow à payer : le prix public d'un pays UEMOA passe par le produit « UEMOA » (39 000 affiché au paiement). */
+export function productForCountry(cfg: CatalogueConfig, offer: Offer, countryCode: string | null | undefined): string {
+  const code = (countryCode || "").toUpperCase();
+  if (offer.tier === "public" && cfg.uemoa?.productId && cfg.uemoa.countries.includes(code)) return cfg.uemoa.productId;
+  return offer.productId;
+}
+
 /** Tous les produits Chariow du catalogue (ventes reconnues par le Pulse). */
 export function offerProductIds(cfg: CatalogueConfig): string[] {
-  return [cfg.productId, cfg.reserved.productId, cfg.promo.productId].filter(Boolean);
+  return [cfg.productId, cfg.reserved.productId, cfg.promo.productId, cfg.uemoa?.productId || ""].filter(Boolean);
 }
 
 /** « dimanche 29 novembre à minuit » (date affichée aux acheteurs, heure d'Abidjan = UTC). */
