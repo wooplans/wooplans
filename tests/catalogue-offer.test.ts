@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { activePromo, chooseOffer, deadlineLabel, offerProductIds, reservedDeadline, reservedUntil, type CatalogueConfig } from "../src/lib/catalogue-offer-rules.ts";
+import { activePromo, chooseOffer, deadlineLabel, offerProductIds, productForCountry, reservedDeadline, reservedUntil, type CatalogueConfig } from "../src/lib/catalogue-offer-rules.ts";
 import { currentStep, endsText, greeting, offerMessagesOver, relanceDueAt } from "../src/lib/relance-schedule.ts";
 
 const cfg: CatalogueConfig = {
@@ -83,9 +83,8 @@ test("Bonjour / Bonsoir à partir de 16 h, heure du pays", () => {
   assert.equal(greeting(null, new Date("2026-11-23T08:00:00Z")), "Bonjour");
 });
 
-test("pays UEMOA : prix public payé via le produit à 37 864 (39 000 XOF affiché par Chariow)", async () => {
-  const { chooseOffer, productForCountry, offerProductIds } = await import("../src/lib/catalogue-offer-rules");
-  const cfg = {
+test("pays UEMOA : prix public payé via le produit à 37 864 (39 000 XOF affiché par Chariow)", () => {
+  const cfg: CatalogueConfig = {
     price: 39000, productId: "prd_pub", reserved: { price: 29000, productId: "prd_res", days: 7 },
     promo: { price: 19000, productId: "prd_promo" }, promos: [], uemoa: { productId: "prd_uemoa", countries: ["CI", "SN"] },
   };
