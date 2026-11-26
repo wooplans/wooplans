@@ -277,26 +277,23 @@ footer a{color:rgba(255,255,255,.7)}
 .sheet .eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
 .sheet h3{font-size:20px;font-weight:800;color:var(--dark);margin:2px 40px 0 0;line-height:1.25}
 /* Paiement : formulaire court (nom, email, numéro) puis page de paiement Chariow (ou Wajub en essai). */
-.ckform{display:grid;gap:14px;margin-top:14px}
-.ckprice{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(15,91,89,.06);border-radius:12px;padding:12px 14px}
-.ckprice p{font-size:13.5px;color:#4B5563;line-height:1.4}
-.ckprice b{font-size:18px;font-weight:800;color:var(--teal);white-space:nowrap}
-.ckform label{display:block;font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px}
+.ckhead{display:flex;align-items:baseline;gap:10px;margin-right:44px}
+.ckhead h3{margin:0!important;font-size:19px}
+.ckhead b{font-size:19px;font-weight:800;color:var(--teal);white-space:nowrap}
+.ckform{display:grid;gap:10px;margin-top:16px}
 .ckform input{width:100%;min-height:50px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:16px;background:#fff}
 .ckform input:focus,.ckform .dial:focus-within{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,91,89,.15)}
-.ckform .hint{font-size:12.5px;color:var(--gray);margin-top:4px}
 .ckform .row{display:flex;gap:8px}
 .ckform .row input{min-width:0}
-/* Indicatif seul à l'écran : la liste des pays (select transparent par-dessus) s'ouvre au toucher. */
-.ckform .dial{position:relative;flex-shrink:0;display:flex;align-items:center;gap:4px;min-height:50px;padding:0 12px 0 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;font-weight:600}
+.ckform .dial{position:relative;flex-shrink:0;display:flex;align-items:center;gap:4px;min-height:50px;padding:0 10px 0 12px;border:1px solid var(--line);border-radius:12px;font-size:16px;font-weight:600}
 .ckform .dial small{font-size:11px;color:var(--gray)}
 .ckform .dial select{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer;font-size:16px}
-.ckform .promo-link{justify-self:start;margin-top:-6px;font-size:13.5px;font-weight:600;color:var(--teal);text-decoration:underline;background:none;padding:0}
 .ckform .err{background:rgba(199,91,58,.1);color:var(--red);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600}
-.ckform .cta{min-height:54px;font-size:16.5px;margin-top:2px}
-.ckform .secure{text-align:center;font-size:12.5px;color:var(--gray);margin-top:-4px}
-.sheet .wahelp{text-align:center;font-size:13.5px;color:var(--gray);margin-top:12px}
-.sheet .wahelp a{color:var(--teal);font-weight:800}
+.ckform .cta{min-height:54px;font-size:16.5px;margin-top:4px}
+.ckform .secure{text-align:center;font-size:12.5px;color:var(--gray)}
+.ckform .promo-link{font:inherit;color:var(--gray);text-decoration:underline;background:none;padding:0}
+.sheet .wahelp{text-align:center;font-size:12.5px;color:var(--gray);margin-top:6px}
+.sheet .wahelp a{color:var(--teal);font-weight:700}
 .vbox{width:100%;max-width:420px;margin:auto;padding:16px;position:relative}
 .vbox video{width:100%;max-height:80vh;border-radius:14px;background:#000}
 .vbox .close{top:-6px;right:10px;background:#fff}
@@ -645,26 +642,21 @@ footer a{color:rgba(255,255,255,.7)}
 <div class="ov" id="checkout" onclick="if(event.target===this)closeCheckout()" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ckTitle">
     <button class="close" onclick="closeCheckout()" aria-label="Fermer">✕</button>
-    <p class="eyebrow">Catalogue Premium</p>
-    <h3 id="ckTitle">Accédez à tous les modèles</h3>
+    <div class="ckhead"><h3 id="ckTitle">Catalogue Premium</h3><b>39&nbsp;000&nbsp;FCFA</b></div>
     <form class="ckform ph-no-capture" id="ckForm" onsubmit="return pay(event)" novalidate>
-      <div class="ckprice"><p>Tous les plans et devis. Code d'accès envoyé par email.</p><b>39&nbsp;000&nbsp;FCFA</b></div>
-      <div><label for="ckName">Nom complet</label><input id="ckName" name="name" required minlength="2" autocomplete="name" placeholder="Jean Dupont"></div>
-      <div><label for="ckEmail">Email</label><input id="ckEmail" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="vous@exemple.com"><p class="hint">Votre code d'accès y est envoyé.</p></div>
-      <div><label for="ckPhone">Numéro Mobile Money / WhatsApp</label>
-        <div class="row">
-          <div class="dial"><span id="ckDial">+237</span><small aria-hidden="true">▾</small>
-          <select name="countryCode" aria-label="Pays" onchange="setCountry(this)"><option value="CM" data-dial="237" data-ex="6 71 23 45 67">Cameroun +237</option><option value="CI" data-dial="225" data-ex="07 01 23 45 67">Côte d'Ivoire +225</option><option value="SN" data-dial="221" data-ex="77 123 45 67">Sénégal +221</option><option value="GA" data-dial="241" data-ex="06 12 34 56">Gabon +241</option><option value="CG" data-dial="242" data-ex="06 612 34 56">Congo +242</option><option value="CD" data-dial="243" data-ex="81 234 5678">RD Congo +243</option><option value="BJ" data-dial="229" data-ex="01 97 12 34 56">Bénin +229</option><option value="TG" data-dial="228" data-ex="90 12 34 56">Togo +228</option><option value="BF" data-dial="226" data-ex="70 12 34 56">Burkina Faso +226</option><option value="ML" data-dial="223" data-ex="70 12 34 56">Mali +223</option><option value="GN" data-dial="224" data-ex="622 12 34 56">Guinée +224</option><option value="NE" data-dial="227" data-ex="90 12 34 56">Niger +227</option><option value="TD" data-dial="235">Tchad +235</option><option value="CF" data-dial="236">Centrafrique +236</option><option value="GQ" data-dial="240">Guinée équatoriale +240</option><option value="FR" data-dial="33">France +33</option><option value="BE" data-dial="32">Belgique +32</option><option value="CA" data-dial="1">Canada +1</option><option value="US" data-dial="1">États-Unis +1</option></select></div>
-          <input id="ckPhone" name="phone" type="tel" required inputmode="tel" autocomplete="tel-national" placeholder="6 71 23 45 67">
-        </div>
+      <input id="ckName" name="name" required minlength="2" autocomplete="name" placeholder="Votre nom" aria-label="Votre nom">
+      <div class="row">
+        <div class="dial"><span id="ckDial">+237</span><small aria-hidden="true">▾</small>
+        <select name="countryCode" aria-label="Pays" onchange="setCountry(this)"><option value="CM" data-dial="237" data-ex="6 71 23 45 67">Cameroun +237</option><option value="CI" data-dial="225" data-ex="07 01 23 45 67">Côte d'Ivoire +225</option><option value="SN" data-dial="221" data-ex="77 123 45 67">Sénégal +221</option><option value="GA" data-dial="241" data-ex="06 12 34 56">Gabon +241</option><option value="CG" data-dial="242" data-ex="06 612 34 56">Congo +242</option><option value="CD" data-dial="243" data-ex="81 234 5678">RD Congo +243</option><option value="BJ" data-dial="229" data-ex="01 97 12 34 56">Bénin +229</option><option value="TG" data-dial="228" data-ex="90 12 34 56">Togo +228</option><option value="BF" data-dial="226" data-ex="70 12 34 56">Burkina Faso +226</option><option value="ML" data-dial="223" data-ex="70 12 34 56">Mali +223</option><option value="GN" data-dial="224" data-ex="622 12 34 56">Guinée +224</option><option value="NE" data-dial="227" data-ex="90 12 34 56">Niger +227</option><option value="TD" data-dial="235">Tchad +235</option><option value="CF" data-dial="236">Centrafrique +236</option><option value="GQ" data-dial="240">Guinée équatoriale +240</option><option value="FR" data-dial="33">France +33</option><option value="BE" data-dial="32">Belgique +32</option><option value="CA" data-dial="1">Canada +1</option><option value="US" data-dial="1">États-Unis +1</option></select></div>
+        <input id="ckPhone" name="phone" type="tel" required inputmode="tel" autocomplete="tel-national" placeholder="Numéro Mobile Money" aria-label="Numéro Mobile Money">
       </div>
-      <button type="button" class="promo-link" id="ckPromoLink" onclick="showPromo()">Code promo</button>
-      <div id="ckPromo" hidden><label for="ckCode">Code promo</label><input id="ckCode" name="discountCode" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+      <input id="ckEmail" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="Email (pour recevoir votre code)" aria-label="Email">
+      <div id="ckPromo" hidden><input id="ckCode" name="discountCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Code promo" aria-label="Code promo"></div>
       <p class="err" id="ckErr" hidden></p>
       <button class="cta" type="submit" id="ckBtn">Payer 39&nbsp;000&nbsp;FCFA</button>
-      <p class="secure">🔒 Paiement sécurisé par Mobile Money ou carte bancaire</p>
+      <p class="secure">🔒 Mobile Money ou carte · <button type="button" class="promo-link" id="ckPromoLink" onclick="showPromo()">Code promo</button></p>
     </form>
-    <p class="wahelp">Un souci pour payer ? <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="payment_help" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a></p>
+    <p class="wahelp">Besoin d'aide ? <a href="https://wa.me/237694327885?text=Bonjour%20WOOPLANS%2C%20j%27ai%20un%20souci%20pour%20payer%20le%20Catalogue%20Premium." data-wa="payment_help" target="_blank" rel="noopener">WhatsApp</a></p>
   </div>
 </div>
 
