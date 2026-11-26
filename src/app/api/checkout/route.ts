@@ -28,19 +28,22 @@ type Body = {
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Email facultatif (décision de Tao, 26 nov. 2026) : sans email, l'achat est rattaché à la boîte de WOOPLANS
+ *  avec une adresse « + » propre à l'acheteur (un compte membre distinct par numéro) ; Tao envoie l'accès sur WhatsApp. */
+const FALLBACK_EMAIL = (phone: string) => `romualdtwk+wa${phone}@gmail.com`;
 
 /** Démarre un achat : enregistre l'intention (attribution) puis renvoie l'URL de paiement (Chariow ou Wajub). */
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => ({}))) as Body;
   if (body.mode === "widget") return recordWidgetIntent(request, body);
   const name = (body.name || "").trim().replace(/\s+/g, " ");
-  const email = normalizeEmail(body.email || "");
   const phone = (body.phone || "").replace(/\D/g, "");
   const countryCode = (body.countryCode || "CM").toUpperCase().slice(0, 2);
+  const email = normalizeEmail(body.email || "") || FALLBACK_EMAIL(phone);
   const discountCode = (body.discountCode || "").trim().slice(0, 100) || undefined;
 
   if (name.length < 2 || !EMAIL_RE.test(email) || phone.length < 6) {
-    return NextResponse.json({ error: "Merci de renseigner votre nom, un email valide et votre numéro." }, { status: 400 });
+    return NextResponse.json({ error: "Merci de renseigner votre nom et votre numéro WhatsApp (et un email valide si vous en donnez un)." }, { status: 400 });
   }
   if (!(await rateLimit(`checkout:${clientIp(request.headers)}`, 15, 60 * 60 * 1000))) {
     return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
