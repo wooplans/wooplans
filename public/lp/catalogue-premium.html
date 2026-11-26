@@ -283,6 +283,7 @@ footer a{color:rgba(255,255,255,.7)}
 .ckhead b{font-size:19px;font-weight:800;color:var(--teal);white-space:nowrap}
 .ckform label{display:block;font-size:14px;font-weight:600;color:var(--dark);margin-bottom:6px}
 .ckform label small{font-weight:500;color:var(--gray)}
+.cklocal{margin:6px 44px 0 0;font-size:13px;font-weight:600;color:var(--gray)}
 .ckform{display:grid;gap:12px;margin-top:16px}
 .ckform input{width:100%;min-height:50px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:16px;background:#fff}
 .ckform input:focus,.ckform .dial:focus-within{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,91,89,.15)}
@@ -643,12 +644,13 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ckTitle">
     <button class="close" onclick="closeCheckout()" aria-label="Fermer">✕</button>
     <div class="ckhead"><h3 id="ckTitle">Catalogue Premium <span>+ 2 bonus offerts</span></h3><b>39&nbsp;000&nbsp;FCFA</b></div>
+    <p class="cklocal" id="ckLocal" hidden></p>
     <form class="ckform ph-no-capture" id="ckForm" onsubmit="return pay(event)" novalidate>
       <div><label for="ckName">Nom complet</label><input id="ckName" name="name" required minlength="2" autocomplete="name" placeholder="Jean Dupont"></div>
       <div><label for="ckPhone">Numéro WhatsApp</label>
         <div class="row">
           <div class="dial"><span id="ckFlag" aria-hidden="true">🇨🇲</span><span id="ckDial">+237</span><small aria-hidden="true">▾</small>
-          <select name="countryCode" aria-label="Pays" onchange="setCountry(this)"><option value="CM" data-dial="237" data-ex="6 71 23 45 67">Cameroun +237</option><option value="CI" data-dial="225" data-ex="07 01 23 45 67">Côte d'Ivoire +225</option><option value="SN" data-dial="221" data-ex="77 123 45 67">Sénégal +221</option><option value="GA" data-dial="241" data-ex="06 12 34 56">Gabon +241</option><option value="CG" data-dial="242" data-ex="06 612 34 56">Congo +242</option><option value="CD" data-dial="243" data-ex="81 234 5678">RD Congo +243</option><option value="BJ" data-dial="229" data-ex="01 97 12 34 56">Bénin +229</option><option value="TG" data-dial="228" data-ex="90 12 34 56">Togo +228</option><option value="BF" data-dial="226" data-ex="70 12 34 56">Burkina Faso +226</option><option value="ML" data-dial="223" data-ex="70 12 34 56">Mali +223</option><option value="GN" data-dial="224" data-ex="622 12 34 56">Guinée +224</option><option value="NE" data-dial="227" data-ex="90 12 34 56">Niger +227</option><option value="TD" data-dial="235">Tchad +235</option><option value="CF" data-dial="236">Centrafrique +236</option><option value="GQ" data-dial="240">Guinée équatoriale +240</option><option value="FR" data-dial="33">France +33</option><option value="BE" data-dial="32">Belgique +32</option><option value="CA" data-dial="1">Canada +1</option><option value="US" data-dial="1">États-Unis +1</option></select></div>
+          <select name="countryCode" aria-label="Pays" onchange="setCountry(this)"><option value="CM" data-dial="237" data-ex="6 71 23 45 67">Cameroun +237</option><option value="CI" data-dial="225" data-ex="07 01 23 45 67">Côte d'Ivoire +225</option><option value="SN" data-dial="221" data-ex="77 123 45 67">Sénégal +221</option><option value="GA" data-dial="241" data-ex="06 12 34 56">Gabon +241</option><option value="CG" data-dial="242" data-ex="06 612 34 56">Congo +242</option><option value="CD" data-dial="243" data-ex="81 234 5678">RD Congo +243</option><option value="BJ" data-dial="229" data-ex="01 97 12 34 56">Bénin +229</option><option value="TG" data-dial="228" data-ex="90 12 34 56">Togo +228</option><option value="BF" data-dial="226" data-ex="70 12 34 56">Burkina Faso +226</option><option value="ML" data-dial="223" data-ex="70 12 34 56">Mali +223</option><option value="GN" data-dial="224" data-ex="622 12 34 56">Guinée +224</option><option value="NE" data-dial="227" data-ex="90 12 34 56">Niger +227</option><option value="MG" data-dial="261" data-ex="032 12 345 67">Madagascar +261</option><option value="TD" data-dial="235">Tchad +235</option><option value="CF" data-dial="236">Centrafrique +236</option><option value="GQ" data-dial="240">Guinée équatoriale +240</option><option value="FR" data-dial="33">France +33</option><option value="BE" data-dial="32">Belgique +32</option><option value="CA" data-dial="1">Canada +1</option><option value="US" data-dial="1">États-Unis +1</option></select></div>
           <input id="ckPhone" name="phone" type="tel" required inputmode="tel" autocomplete="tel-national" placeholder="6 71 23 45 67">
         </div>
       </div>
@@ -799,6 +801,7 @@ function closeVideo(){
    s'ouvre instantanément. */
 var WAJUB=document.documentElement.getAttribute('data-pay')==='wajub';
 var ckCta='sales_page@b',openedAt=0,countryChosen=false,countryAsked=false;
+var LOCAL_PRICE={GN:'607 344 GNF',MG:'306 935 MGA',CD:'158 906 CDF'};
 /* Drapeau emoji à partir du code pays (CM → 🇨🇲). */
 function flag(cc){return String.fromCodePoint.apply(null,cc.toUpperCase().split('').map(function(c){return 127397+c.charCodeAt(0)}))}
 function checkoutIsOpen(){return document.getElementById('checkout').classList.contains('on');}
@@ -806,6 +809,9 @@ function setCountry(sel,auto){
   var o=sel.options[sel.selectedIndex];
   document.getElementById('ckDial').textContent='+'+o.getAttribute('data-dial');
   document.getElementById('ckFlag').textContent=flag(o.value);
+  /* Pays hors franc CFA : montant que Chariow affichera au paiement (relevé par Tao le 26 nov. 2026, pour 39 000 FCFA). */
+  var loc=LOCAL_PRICE[o.value],lp=document.getElementById('ckLocal');
+  if(loc&&39000===39000){lp.textContent='Au paiement : environ '+loc+' (= 39\u00a0000 FCFA)';lp.hidden=false}else lp.hidden=true;
   document.getElementById('ckPhone').placeholder=o.getAttribute('data-ex')||'';
   if(!auto)countryChosen=true;
 }

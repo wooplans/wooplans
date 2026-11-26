@@ -9,6 +9,8 @@ import { internationalPhone } from "@/lib/phone";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { offerFor, RESERVED_COOKIE } from "@/lib/catalogue-offer";
+import { productForCountry, type CatalogueConfig } from "@/lib/catalogue-offer-rules";
+import catalogueConfig from "@/config/catalogue.json";
 import { recordServerEvent } from "@/lib/tracking";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
           redirectUrl: siteUrl(`/merci?i=${intentId}`),
           metadata,
           customerIp: clientIp(request.headers),
-          productId: offer.productId,
+          productId: productForCountry(catalogueConfig as CatalogueConfig, offer, countryCode),
           discountCode,
         });
 
