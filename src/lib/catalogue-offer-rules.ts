@@ -4,7 +4,8 @@
  *  - réservé : 29 000 FCFA pour les acheteurs de l'extrait ou du guide, pendant 7 jours après leur achat, jusqu'à
  *    minuit (UTC, heure d'Abidjan) de J7 ; Tao peut rouvrir l'offre 24 h à la main (« deuxième chance ») ;
  *  - promo : 19 000 FCFA, seulement pendant une promo datée de src/config/catalogue.json (« promos »).
- * Chaque prix est un produit Chariow déjà relié au Pulse (CP 39K, Catalogue Premium, CP 19K).
+ * Chaque prix est un produit Chariow relié au Pulse : CP 39K, CP 29K (réservé, depuis le 26 nov. 2026), CP 19K,
+ * et « Catalogue Premium » (prd_9cbatg, 37 864) pour les pays UEMOA.
  */
 
 export type Tier = "public" | "reserved" | "promo";
