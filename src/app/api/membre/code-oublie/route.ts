@@ -1,17 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import { accessCodeEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, accessCodeEmailEn, sendEmail } from "@/lib/email";
 import { normalizeEmail, rotateAccessCode } from "@/lib/members";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 /** Envoie un nouveau code par email. Réponse identique que l'email existe ou non. */
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as { email?: string };
+  const body = (await request.json().catch(() => ({}))) as { email?: string; lang?: string };
   const email = normalizeEmail(body.email || "");
   const generic = NextResponse.json({
     ok: true,
-    message: "Si cet email correspond à un accès Premium actif, un nouveau code vient d'être envoyé.",
+    message:
+      body.lang === "en"
+        ? "If this email has an active Premium access, a new code has just been sent."
+        : "Si cet email correspond à un accès Premium actif, un nouveau code vient d'être envoyé.",
   });
   if (!email) return generic;
 
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!member || member.status !== "active") return generic;
 
   const { code } = await rotateAccessCode(member.id);
-  const mail = accessCodeEmail({ name: member.name, email, code, kind: "new_code" });
+  const mail = member.lang === "en" ? accessCodeEmailEn({ name: member.name, email, code, newCode: true }) : accessCodeEmail({ name: member.name, email, code, kind: "new_code" });
   await sendEmail({ to: email, ...mail, template: "access_code_reset", memberId: member.id });
   return generic;
 }

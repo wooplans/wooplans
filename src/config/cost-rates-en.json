@@ -1,0 +1,15 @@
+{
+  "_note": "Prix au m² publiés par des tiers (option B, décision de Tao du 28 nov. 2026). Estimations à confirmer par l'entrepreneur ; source et date affichées. Aucune valeur inventée : un niveau sans source reste vide (le client saisit son prix).",
+  "KE": {
+    "source": "AALIS Studios, “Construction Cost Per m² in Kenya — 2026 Rates” (March 2026)",
+    "url": "https://aalisstudios.com/blog/construction-cost-per-square-metre-kenya.html",
+    "bungalow": { "basic": [50000, 65000], "standard": [65000, 82000], "luxury": [90000, 120000] },
+    "twoStory": { "basic": [45000, 58000], "standard": [60000, 80000], "luxury": [85000, 120000] }
+  },
+  "GH": {
+    "source": "Sisal Engineering, “How Much Does It Cost to Build a House in Ghana in 2026?” (August 2026, Greater Accra)",
+    "url": "https://sisalengineeringgh.com/2026/08/11/cost-to-build-a-house-in-ghana-2026/",
+    "bungalow": { "standard": [4200, 5500], "luxury": [7500, null] },
+    "twoStory": { "standard": [4200, 5500], "luxury": [7500, null] }
+  }
+}

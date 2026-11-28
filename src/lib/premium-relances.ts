@@ -68,7 +68,8 @@ export function premiumHeat(p: { lastLoginAt: Date | null; models: number }, now
 export async function premiumQueue(now = new Date()): Promise<PremiumItem[]> {
   const db = getDb();
   const members = await db.query.members.findMany({
-    where: and(eq(schema.members.status, "active"), isNotNull(schema.members.phone)),
+    // Membres anglophones exclus : messages en français.
+    where: and(eq(schema.members.status, "active"), isNotNull(schema.members.phone), eq(schema.members.lang, "fr")),
     columns: { id: true, email: true, name: true, phone: true, country: true, createdAt: true, lastLoginAt: true, premiumWaStep: true, premiumWaLastAt: true },
   });
   const active = members.filter((m) => m.premiumWaStep < PREMIUM_STEP_COUNT && waNumber(m.phone));

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { requireMember } from "@/lib/auth";
 import { whatsappLink } from "@/lib/site";
@@ -16,6 +17,8 @@ const NAV = [
 
 export default async function PremiumLayout({ children }: { children: React.ReactNode }) {
   const member = await requireMember();
+  // Membre anglophone (achat de la page anglaise) : son espace est /en/premium.
+  if (member.lang === "en") redirect("/en/premium");
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 bg-primary text-white">

@@ -147,6 +147,7 @@ export function enPricing(cfg: EnConfig, country: string | null | undefined, ful
     priceExact: moneyEn(c.amount, c.currency),
     villa: approx(fullPlansXaf.villa),
     duplex: approx(fullPlansXaf.duplex),
-    pay: cc === "KE" ? ["M-Pesa", "Card"] : cc === "GH" ? ["MTN MoMo", "Telecel Cash", "Card"] : ["Mobile Money", "Card"],
+    // Moyens vus par Tao sur le paiement Chariow le 28 nov. 2026 (Kenya : M-Pesa, Airtel Money ; Ghana : MTN, Vodafone, carte).
+    pay: cc === "KE" ? ["M-Pesa", "Airtel Money"] : cc === "GH" ? ["MTN MoMo", "Vodafone Cash", "Card"] : ["Mobile Money", "Card"],
   };
 }

@@ -56,3 +56,24 @@ test("page anglaise générée : pas de FCFA, paiement en anglais", () => {
   assert.match(html, /lang:'en'/);
   assert.match(html, /<html lang="en"/);
 });
+
+import { defaultRate, planTextEn, publishedRates } from "../src/lib/premium-en.ts";
+import costRates from "../src/config/cost-rates-en.json" with { type: "json" };
+
+test("prix au m² publiés : Kenya par type de maison, Ghana sans niveau Basic, autre pays sans source", () => {
+  const ke = publishedRates(costRates, "KE", 1)!;
+  assert.deepEqual(ke.ranges.standard, [65000, 82000]);
+  assert.equal(publishedRates(costRates, "KE", 2)!.ranges.basic![0], 45000);
+  assert.equal(defaultRate(ke.ranges.standard), 73500);
+  const gh = publishedRates(costRates, "gh", 1)!;
+  assert.equal(gh.ranges.basic, undefined);
+  assert.equal(defaultRate(gh.ranges.standard), 4850);
+  assert.equal(defaultRate(gh.ranges.luxury), 7500);
+  assert.equal(publishedRates(costRates, "NG", 1), null);
+  assert.match(ke.url, /^https:\/\//);
+});
+
+test("textes anglais des fiches : lot traduit ou rien", () => {
+  assert.match(planTextEn(plansEn, "V4-005")!.description, /201 square meters/);
+  assert.equal(planTextEn(plansEn, "V9-999"), null);
+});

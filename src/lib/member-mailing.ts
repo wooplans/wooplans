@@ -92,7 +92,8 @@ export async function runMemberDigest(now = new Date()) {
 
   const template = `member_digest:${campaign.month}`;
   const [members, codes, logs, plans] = await Promise.all([
-    db.query.members.findMany({ where: eq(schema.members.status, "active") }),
+    // Membres anglophones exclus : lettre en français.
+    db.query.members.findMany({ where: and(eq(schema.members.status, "active"), eq(schema.members.lang, "fr")) }),
     codeStatusByMember(),
     db.query.emailLog.findMany({ where: eq(schema.emailLog.template, template), columns: { memberId: true, status: true } }),
     db.query.plans.findMany({ where: and(inArray(schema.plans.id, campaign.planIds), eq(schema.plans.status, "published")) }),

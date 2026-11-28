@@ -74,8 +74,8 @@ export async function sendEmail(input: SendInput) {
 const escape = (value: string) =>
   value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-function layout(title: string, bodyHtml: string, unsubscribe?: string) {
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#F5F7F9;font-family:Segoe UI,Arial,sans-serif;color:#1E2933">
+function layout(title: string, bodyHtml: string, unsubscribe?: string, lang: "fr" | "en" = "fr") {
+  return `<!doctype html><html lang="${lang}"><body style="margin:0;background:#F5F7F9;font-family:Segoe UI,Arial,sans-serif;color:#1E2933">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden">
 <tr><td style="background:#0F5B59;padding:20px 28px;color:#fff;font-size:20px;font-weight:700">WOOPLANS</td></tr>
@@ -83,8 +83,8 @@ function layout(title: string, bodyHtml: string, unsubscribe?: string) {
 <h1 style="font-size:20px;margin:0 0 16px">${escape(title)}</h1>
 ${bodyHtml}
 </td></tr>
-<tr><td style="padding:16px 28px;background:#F5F7F9;color:#6B7280;font-size:12px">WOOPLANS · Plans de villas et duplex pour l'Afrique · <a href="${siteUrl()}" style="color:#0F5B59">wooplans.com</a>${
-    unsubscribe ? `<br><a href="${unsubscribe}" style="color:#6B7280">Ne plus recevoir ces emails</a>` : ""
+<tr><td style="padding:16px 28px;background:#F5F7F9;color:#6B7280;font-size:12px">${lang === "en" ? "WOOPLANS · House plans for Africa" : "WOOPLANS · Plans de villas et duplex pour l'Afrique"} · <a href="${siteUrl()}" style="color:#0F5B59">wooplans.com</a>${
+    unsubscribe ? `<br><a href="${unsubscribe}" style="color:#6B7280">${lang === "en" ? "Unsubscribe" : "Ne plus recevoir ces emails"}</a>` : ""
   }</td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -169,6 +169,48 @@ ${button(loginUrl, params.plan ? "Télécharger mon plan et devis" : "Ouvrir mon
     `Identifiant : ${params.email}\nCode d'accès : ${params.code}`,
     `Dans votre espace Premium :\n${PREMIUM_FEATURES.map((f) => `- ${f}`).join("\n")}`,
     "Ce code est personnel. Perdu ? Demandez-en un nouveau depuis la page de connexion.",
+  ].join("\n\n");
+  return { subject, html, text };
+}
+
+/**
+ * Email des accès Premium en anglais (achat de la page /en/premium-catalogue, ou nouveau code d'un membre anglophone).
+ * Même principe que la version française : le bouton ouvre /en/login, email dans l'adresse, code dans le fragment.
+ */
+export function accessCodeEmailEn(params: { name?: string | null; email: string; code: string; newCode?: boolean }) {
+  const subject = params.newCode ? "Your new WOOPLANS access code" : "Your WOOPLANS Premium Catalogue access";
+  const intro = params.newCode
+    ? "Here is your new access code for your Premium space. Your previous code no longer works."
+    : "Thank you for your purchase! Your Premium Catalogue is ready: every house plan with its 3D renders, floor plans and construction cost calculator.";
+  const hello = params.name ? `Hello ${escape(params.name)},` : "Hello,";
+  const loginUrl = siteUrl(`/en/login?email=${encodeURIComponent(params.email)}#code=${encodeURIComponent(params.code)}`);
+  const features = [
+    "Every house plan, with its 3D renders and floor plans",
+    "The construction cost calculator (Basic, Standard, Luxury)",
+    "New house plans, added automatically, free for life",
+    "An architect on WhatsApp to adapt your design",
+  ];
+  const html = layout(
+    subject,
+    `<p>${hello}</p><p>${escape(intro)}</p>
+${button(loginUrl, "Open my Premium space")}
+<p style="color:#6B7280;font-size:13px;margin-top:-8px">The button opens the login page with your details already filled in: just tap “Log in”.</p>
+<p style="margin:20px 0 6px;color:#6B7280">Your login</p><p style="margin:0;font-weight:700">${escape(params.email)}</p>
+<p style="margin:16px 0 6px;color:#6B7280">Your access code</p>
+<p style="margin:0;font-size:28px;letter-spacing:6px;font-weight:800;color:#0F5B59">${escape(params.code)}</p>
+<p style="margin:24px 0 8px;font-weight:700">In your Premium space</p>
+<ul style="margin:0;padding-left:20px">${features.map((f) => `<li style="margin:0 0 6px">${escape(f)}</li>`).join("")}</ul>
+<p style="color:#6B7280;font-size:13px;margin-top:24px">This code is personal, keep it to yourself. Lost it? Request a new one from the login page.</p>`,
+    undefined,
+    "en",
+  );
+  const text = [
+    hello,
+    intro,
+    `Open my Premium space (details already filled in): ${loginUrl}`,
+    `Login: ${params.email}\nAccess code: ${params.code}`,
+    `In your Premium space:\n${features.map((f) => `- ${f}`).join("\n")}`,
+    "This code is personal. Lost it? Request a new one from the login page.",
   ].join("\n\n");
   return { subject, html, text };
 }

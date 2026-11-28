@@ -180,7 +180,7 @@ async function startEnglishCheckout(
   const checkout = await createChariowCheckout({
     customer: { email: p.email, firstName, lastName: rest.join(" "), phoneNumber: p.phone, countryCode: p.countryCode },
     intentId,
-    redirectUrl: siteUrl(`/merci?i=${intentId}&lang=en`),
+    redirectUrl: siteUrl(`/en/thank-you?i=${intentId}`),
     metadata,
     customerIp: clientIp(request.headers),
     productId: catalogueEn.productId,

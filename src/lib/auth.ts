@@ -29,6 +29,14 @@ export async function requireMember(): Promise<CurrentMember> {
   return member;
 }
 
+/** Espace Premium anglais : connexion en anglais ; un membre francophone retourne à son espace. */
+export async function requireMemberEn(): Promise<CurrentMember> {
+  const member = await getCurrentMember();
+  if (!member) redirect("/en/login");
+  if (member.lang !== "en") redirect("/espace-premium");
+  return member;
+}
+
 export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
   const token = await verifyToken<AdminToken>((await cookies()).get(ADMIN_COOKIE)?.value, "admin");
   if (!token) return null;

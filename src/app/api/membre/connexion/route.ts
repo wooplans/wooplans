@@ -6,11 +6,12 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { cookieOptions, MEMBER_COOKIE, MEMBER_SESSION_DAYS, signToken } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => ({}))) as { email?: string; code?: string };
+  const body = (await request.json().catch(() => ({}))) as { email?: string; code?: string; lang?: string };
+  const en = body.lang === "en";
   const email = normalizeEmail(body.email || "");
   const code = (body.code || "").trim();
   if (!email || !code) {
-    return NextResponse.json({ error: "Indiquez votre email et votre code d'accès." }, { status: 400 });
+    return NextResponse.json({ error: en ? "Please enter your email and access code." : "Indiquez votre email et votre code d'accès." }, { status: 400 });
   }
 
   const ip = clientIp(request.headers);
@@ -20,12 +21,12 @@ export async function POST(request: NextRequest) {
     // Codes à 4 caractères : plafond quotidien par email contre les essais répartis sur plusieurs adresses IP.
     (await rateLimit(`login-email-day:${email}`, 20, 24 * 60 * 60 * 1000));
   if (!allowed) {
-    return NextResponse.json({ error: "Trop de tentatives. Patientez 15 minutes avant de réessayer." }, { status: 429 });
+    return NextResponse.json({ error: en ? "Too many attempts. Please wait 15 minutes and try again." : "Trop de tentatives. Patientez 15 minutes avant de réessayer." }, { status: 429 });
   }
 
   const member = await verifyMemberCredentials(email, code);
   if (!member) {
-    return NextResponse.json({ error: "Email ou code incorrect, ou accès inactif." }, { status: 401 });
+    return NextResponse.json({ error: en ? "Wrong email or code, or inactive access." : "Email ou code incorrect, ou accès inactif." }, { status: 401 });
   }
 
   await getDb().update(schema.members).set({ lastLoginAt: new Date() }).where(eq(schema.members.id, member.id));

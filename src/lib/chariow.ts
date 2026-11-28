@@ -5,7 +5,7 @@ import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne, notInArray, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { randomId } from "@/lib/crypto";
-import { accessCodeEmail, extraitDeliveryEmail, guideDeliveryEmail, planDevisEmail, sendEmail } from "@/lib/email";
+import { accessCodeEmail, accessCodeEmailEn, extraitDeliveryEmail, guideDeliveryEmail, planDevisEmail, sendEmail } from "@/lib/email";
 import { whatsappLink } from "@/lib/site";
 import { getEnv, siteUrl } from "@/lib/env";
 import { grantAccess, normalizeEmail } from "@/lib/members";
@@ -266,6 +266,8 @@ async function processCatalogueSale(
       country: customerCountry(customer),
       source: provider,
       chariowCustomerId: provider === "chariow" ? customer.id : null,
+      // Achat de la page anglaise (/en/premium-catalogue) : espace Premium et emails en anglais.
+      lang: metadata.lang === "en" ? "en" : "fr",
     });
   } catch (error) {
     await db.update(schema.sales).set({ memberId: null }).where(eq(schema.sales.id, saleRow.id));
@@ -332,7 +334,10 @@ async function processCatalogueSale(
     }
   }
 
-  const mail = accessCodeEmail(plan ? { name, email, code, kind: "offre", plan: { code: plan.code, name: plan.name } } : { name, email, code });
+  const mail =
+    member.lang === "en" && !plan
+      ? accessCodeEmailEn({ name, email, code })
+      : accessCodeEmail(plan ? { name, email, code, kind: "offre", plan: { code: plan.code, name: plan.name } } : { name, email, code });
   await sendEmail({ to: email, ...mail, template: "access_code", memberId: member.id });
 
   // Offre : fiche CRM du modèle, comme un achat de plan et devis (suivi vers les plans complets).

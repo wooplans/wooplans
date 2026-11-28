@@ -125,6 +125,8 @@ export const members = sqliteTable(
     /** Incrémenté à chaque révocation / nouveau code : invalide les sessions ouvertes. */
     sessionVersion: integer("session_version").notNull().default(1),
     source: text("source", { enum: ["chariow", "wajub", "legacy_import", "manual"] }).notNull(),
+    /** Langue de l'espace Premium : « en » pour les achats de la page anglaise (Ghana, Kenya ; 28 nov. 2026). */
+    lang: text("lang", { enum: ["fr", "en"] }).notNull().default("fr"),
     chariowCustomerId: text("chariow_customer_id"),
     revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
     revokedReason: text("revoked_reason"),

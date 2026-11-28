@@ -19,6 +19,8 @@ type GrantInput = {
   country?: string | null;
   source: "chariow" | "wajub" | "legacy_import" | "manual";
   chariowCustomerId?: string | null;
+  /** « en » : achat de la page anglaise. Fixée à la création du membre (un membre existant garde sa langue). */
+  lang?: "fr" | "en";
 };
 
 /**
@@ -68,8 +70,10 @@ export async function grantAccess(input: GrantInput) {
       source: input.source,
       chariowCustomerId: input.chariowCustomerId || null,
       codeHash,
+      lang: input.lang ?? "fr",
       // Achat payé : séquence après l'achat (demande d'avis en priorité), voir after-sale.ts.
-      afterSaleNextAt: input.source === "chariow" || input.source === "wajub" ? afterSaleDueAt(new Date(), 0) : null,
+      // Membres anglophones : pas de séquence (emails en français), en attendant leur version anglaise.
+      afterSaleNextAt: input.lang !== "en" && (input.source === "chariow" || input.source === "wajub") ? afterSaleDueAt(new Date(), 0) : null,
     })
     .returning();
   return { member, code, created: true };
