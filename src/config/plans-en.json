@@ -1,0 +1,45 @@
+{
+  "_note": "Fiches en anglais (vocabulaire Maramani, décision de Tao du 28 nov. 2026). Lot 1 : 10 modèles à faire relire par Tao. Traduites depuis les fiches françaises (get_plan) ; aucun chiffre ajouté : surfaces, chambres et dimensions viennent de la base.",
+  "plans": {
+    "V4-005": {
+      "summary": "A contemporary 4 bedroom bungalow with a master bedroom en-suite, 3 bathrooms and a guest toilet.",
+      "description": "This contemporary bungalow offers 201 square meters of living space. It has 2 entrance halls, a large living room, a dining room, a kitchen, a store, 4 bedrooms, 3 bathrooms and a guest toilet. The master bedroom comes with 2 closets and a spacious en-suite."
+    },
+    "V3-017": {
+      "summary": "A family bungalow with 3 bedrooms, including a master bedroom with a walk-in closet.",
+      "description": "A family bungalow with 3 bedrooms. It has 2 living rooms, a dining room, a kitchen, a store, a master bedroom with a walk-in closet, 2 more bedrooms and 2 bathrooms."
+    },
+    "D5-012": {
+      "summary": "A two-story house of 234 square meters with a master bedroom en-suite, an office and a garage.",
+      "description": "A two-story house of 234 square meters. The ground floor has 2 living rooms, a dining room, a kitchen, an office, a store, a garage, a guest toilet and a guest bedroom. The first floor has 3 bedrooms, including the master bedroom en-suite, and 3 terraces."
+    },
+    "V4-036": {
+      "summary": "A contemporary tropical bungalow with large glass windows and a stone and wood façade.",
+      "description": "A contemporary bungalow that combines elegance and practicality in a tropical setting. It offers generous living spaces, large glass windows and a refined façade mixing natural stone and wood, for a comfortable lifestyle."
+    },
+    "V4-032": {
+      "summary": "A family bungalow with 4 bedrooms, including a master bedroom en-suite, 3 bathrooms and a large living room.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a large living room and 3 bathrooms."
+    },
+    "D4-034": {
+      "summary": "A modern two-story house of 143 square meters, designed for a narrow plot.",
+      "description": "A modern two-story house with 4 comfortable bedrooms and 3 bathrooms. The practical layout includes terraces and generous living spaces for a family. The ground floor has an entrance hall, a living room, a dining room, a kitchen, a guest bedroom and a bathroom. The first floor has 3 bedrooms, a walk-in closet, 2 bathrooms and a terrace."
+    },
+    "D4-006": {
+      "summary": "A contemporary two-story house of 195 square meters with a guest bedroom on the ground floor.",
+      "description": "A contemporary two-story house of 195 square meters. Ground floor: a living and dining room, a guest bedroom with its own shower and closet, a laundry, a kitchen and a guest toilet. First floor: 3 bedrooms and 2 bathrooms. The master suite has a walk-in closet and an en-suite."
+    },
+    "V3-001": {
+      "summary": "A modern 3 bedroom bungalow of 92 square meters with two terraces.",
+      "description": "This modern bungalow offers 3 bedrooms and 2 bathrooms. Its practical layout centres on a large open living and dining area, with two terraces to enjoy the outdoors."
+    },
+    "V5-002": {
+      "summary": "A family bungalow with 5 bedrooms, 2 living rooms and a veranda.",
+      "description": "A family bungalow with 5 bedrooms, including a master bedroom en-suite. It has 2 living rooms, a dining room, a kitchen, 3 bathrooms, a store, a guest toilet and a veranda."
+    },
+    "D5-001": {
+      "summary": "A modern two-story house of 325 square meters with an L-shaped terrace and a garage for 3 cars.",
+      "description": "A modern two-story house designed for a large family. Ground floor: 2 spacious living rooms and a dining room opening onto an L-shaped terrace, a large guest bedroom with a closet and an en-suite, a second bedroom with a shared shower room, a guest toilet, a kitchen and a garage for 3 cars. First floor: a family lounge, 3 bedrooms including the master bedroom, and 2 bathrooms."
+    }
+  }
+}

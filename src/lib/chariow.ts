@@ -1,5 +1,6 @@
 import catalogueConfig from "@/config/catalogue.json";
 import { offerProductIds, type CatalogueConfig } from "@/lib/catalogue-offer-rules";
+import catalogueEn from "@/config/catalogue-en.json";
 import { normalizePhone, phoneCountry, type ChariowPhone } from "@/lib/phone";
 import { and, desc, eq, gte, isNotNull, isNull, ne, notInArray, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
@@ -62,7 +63,7 @@ export { verifyChariowSignature } from "@/lib/chariow-signature";
 export function catalogueProductIds() {
   const env = getEnv();
   return new Set(
-    [env.CHARIOW_CATALOGUE_PRODUCT_ID, ...offerProductIds(catalogueConfig as CatalogueConfig), ...(env.CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS || "").split(",")]
+    [env.CHARIOW_CATALOGUE_PRODUCT_ID, ...offerProductIds(catalogueConfig as CatalogueConfig), catalogueEn.productId, ...(env.CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS || "").split(",")]
       .map((id) => id.trim())
       .filter(Boolean),
   );

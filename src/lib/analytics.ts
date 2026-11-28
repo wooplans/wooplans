@@ -7,6 +7,7 @@ import { getEnv } from "@/lib/env";
 import { OWNER_EMAILS } from "@/lib/owner-emails";
 import { OFFRES, offreProductIds } from "@/lib/offres";
 import { guideProductId } from "@/lib/guide";
+import catalogueEn from "@/config/catalogue-en.json";
 import { LEAD_OFFERS } from "@/lib/lead-offers";
 
 /** Produit Chariow du Guide des maisons (1 900 FCFA) : compté à part, jamais comme une vente du catalogue. */
@@ -561,7 +562,7 @@ export async function getLeadOffersStats(range: Range) {
 function catalogueSaleProductIds() {
   const env = getEnv();
   return new Set(
-    [env.CHARIOW_CATALOGUE_PRODUCT_ID, ...(env.CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS || "").split(","), ...offreProductIds().keys()]
+    [env.CHARIOW_CATALOGUE_PRODUCT_ID, catalogueEn.productId, ...(env.CHARIOW_LEGACY_CATALOGUE_PRODUCT_IDS || "").split(","), ...offreProductIds().keys()]
       .map((id) => id.trim())
       .filter(Boolean),
   );

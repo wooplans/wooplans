@@ -1,0 +1,10 @@
+{
+  "_note": "Catalogue Premium anglophone (décision de Tao, 28 nov. 2026) : Ghana et Kenya d'abord, produit Chariow existant « Catalogue Premium 39K ». Montants relevés par Tao au paiement Chariow le 28 nov. 2026.",
+  "productId": "prd_rhaso5i5",
+  "priceXaf": 39000,
+  "countries": {
+    "KE": { "amount": 8892.42, "currency": "KES", "dial": "254", "example": "712 345 678" },
+    "GH": { "amount": 796.01, "currency": "GHS", "dial": "233", "example": "24 123 4567" }
+  },
+  "defaultCountry": "KE"
+}

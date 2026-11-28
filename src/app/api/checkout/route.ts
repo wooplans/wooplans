@@ -11,6 +11,7 @@ import { INTENT_COOKIE, VISITOR_COOKIE } from "@/lib/session";
 import { offerFor, RESERVED_COOKIE } from "@/lib/catalogue-offer";
 import { productForCountry, type CatalogueConfig } from "@/lib/catalogue-offer-rules";
 import catalogueConfig from "@/config/catalogue.json";
+import catalogueEn from "@/config/catalogue-en.json";
 import { recordServerEvent } from "@/lib/tracking";
 import { PAY_COOKIE, createWajubCheckout, paymentProvider } from "@/lib/wajub";
 
@@ -27,6 +28,8 @@ type Body = {
   provider?: string;
   /** Promo datée (?promo= du lien) : 19 000 FCFA seulement pendant ses dates (src/config/catalogue.json). */
   promo?: string;
+  /** « en » : page anglaise /en/premium-catalogue (Ghana, Kenya) : produit Chariow de src/config/catalogue-en.json, sans offre réservée ni promo. */
+  lang?: string;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,17 +45,23 @@ export async function POST(request: NextRequest) {
   const phone = (body.phone || "").replace(/\D/g, "");
   const countryCode = (body.countryCode || "CM").toUpperCase().slice(0, 2);
   const email = normalizeEmail(body.email || "") || FALLBACK_EMAIL(phone);
+  const english = body.lang === "en";
   const discountCode = (body.discountCode || "").trim().slice(0, 100) || undefined;
 
   if (name.length < 2 || !EMAIL_RE.test(email) || phone.length < 6) {
-    return NextResponse.json({ error: "Merci de renseigner votre nom et votre numéro WhatsApp (et un email valide si vous en donnez un)." }, { status: 400 });
+    return NextResponse.json({
+      error: english
+        ? "Please enter your name and WhatsApp number (and a valid email if you give one)."
+        : "Merci de renseigner votre nom et votre numéro WhatsApp (et un email valide si vous en donnez un).",
+    }, { status: 400 });
   }
   if (!(await rateLimit(`checkout:${clientIp(request.headers)}`, 15, 60 * 60 * 1000))) {
-    return NextResponse.json({ error: "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
+    return NextResponse.json({ error: english ? "Too many attempts. Please try again in a few minutes." : "Trop de tentatives. Réessayez dans quelques minutes." }, { status: 429 });
   }
 
   const visitorId = request.cookies.get(VISITOR_COOKIE)?.value || null;
   const ctaId = (body.ctaId || "sales_page").slice(0, 80);
+  if (english) return startEnglishCheckout(request, { name, phone, countryCode, email, ctaId, visitorId });
   const intentId = randomId();
   const db = getDb();
   const metaAllowed = metaAllowedForRequest(request);
@@ -146,4 +155,49 @@ async function recordWidgetIntent(request: NextRequest, body: Body) {
   await getDb().insert(schema.checkoutIntents).values({ id: randomId(), visitorId, ctaId });
   await recordServerEvent({ visitorId, type: "checkout_start", path: "/catalogue-premium", ctaId }).catch(() => {});
   return NextResponse.json({ ok: true });
+}
+
+/**
+ * Achat depuis la page anglaise (décision de Tao, 28 nov. 2026) : produit « Catalogue Premium 39K » au prix public,
+ * payé dans la devise du pays (Chariow convertit : montants relevés dans src/config/catalogue-en.json). Les métadonnées
+ * portent lang=en pour ouvrir ensuite l'espace Premium anglais.
+ */
+async function startEnglishCheckout(
+  request: NextRequest,
+  p: { name: string; phone: string; countryCode: string; email: string; ctaId: string; visitorId: string | null },
+) {
+  const intentId = randomId();
+  const db = getDb();
+  const metaAllowed = metaAllowedForRequest(request);
+  const metaBrowser = metaAllowed ? browserContext(request) : null;
+  await db.insert(schema.checkoutIntents).values({ id: intentId, visitorId: p.visitorId, email: p.email, ctaId: p.ctaId, metaContext: metaBrowser ? JSON.stringify(metaBrowser) : null });
+  if (p.visitorId) await recordServerEvent({ visitorId: p.visitorId, type: "checkout_start", path: "/en/premium-catalogue", ctaId: p.ctaId }).catch(() => {});
+  const visitor = p.visitorId ? await db.query.visitors.findFirst({ where: (v, { eq }) => eq(v.id, p.visitorId!) }) : null;
+  const metadata: Record<string, string> = { cta_id: p.ctaId, tier: "public", lang: "en" };
+  if (visitor?.utmSource) metadata.utm_source = visitor.utmSource;
+  if (visitor?.utmCampaign) metadata.utm_campaign = visitor.utmCampaign;
+  const [firstName, ...rest] = p.name.split(" ");
+  const checkout = await createChariowCheckout({
+    customer: { email: p.email, firstName, lastName: rest.join(" "), phoneNumber: p.phone, countryCode: p.countryCode },
+    intentId,
+    redirectUrl: siteUrl(`/merci?i=${intentId}&lang=en`),
+    metadata,
+    customerIp: clientIp(request.headers),
+    productId: catalogueEn.productId,
+  });
+  if ("error" in checkout) return NextResponse.json({ error: checkout.error }, { status: 400 });
+  const metaEventIdValue = metaBrowser ? metaEventId("ic") : null;
+  if (metaBrowser && metaEventIdValue) {
+    sendMetaEventInBackground({
+      eventName: "InitiateCheckout",
+      eventId: metaEventIdValue,
+      eventSourceUrl: siteUrl("/en/premium-catalogue"),
+      user: { email: p.email, phone: internationalPhone(p.phone, p.countryCode), name: p.name, country: p.countryCode, externalId: p.visitorId },
+      browser: metaBrowser,
+      customData: { content_name: "Premium Catalogue EN", content_ids: ["cpbook-premium-2026"], content_type: "product", value: catalogueEn.priceXaf, currency: "XAF" },
+    });
+  }
+  const response = NextResponse.json({ url: checkout.url, mode: checkout.mode, intentId, metaEventId: metaEventIdValue, price: catalogueEn.priceXaf, tier: "public" });
+  response.cookies.set(INTENT_COOKIE, intentId, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 48 });
+  return response;
 }
