@@ -6,7 +6,8 @@ Page pensée pour l'acheteur mobile. Structure : promesse, VSL et prix public (3
 src/config/catalogue.json) → témoignages → parcours en 3 étapes → modèles avec leur budget
 → aperçu réel d'un modèle → pour qui / valeur
 → offre → FAQ → appel final, avec barre collante, WhatsApp et paiement en formulaire court
-(nom, email, numéro) puis page Chariow. Pas de prix barré (décision du propriétaire, 22 nov. 2026).
+(nom, email, numéro) puis page Chariow. Depuis le 28 nov. 2026 (décision de Tao) : prix 29 000 FCFA, prix barré 50 000 FCFA,
+compte à rebours jusqu'à minuit (heure du visiteur) et jauge d'offre qui descend de 20 % à 5 % au fil de la journée.
 
 Zones dynamiques remplies par src/app/catalogue-premium/route.ts (HTMLRewriter, données D1) :
 - [data-wp-count] : nombre de modèles publiés ;
@@ -67,6 +68,7 @@ for forbidden in ("50+", "237653769998", "Télécharger le Catalogue", "clarity.
 # (lue aussi par le site et la VSL) ; prix des plans complets : src/lib/custom-plans.ts.
 CATALOGUE = json.loads((ROOT / "src" / "config" / "catalogue.json").read_text(encoding="utf-8"))
 PRICE = int(CATALOGUE["price"])
+ANCHOR = int(CATALOGUE.get("anchorPrice") or 0)  # prix barré (décision de Tao, 28 nov. 2026)
 VALUE = 500000  # valeur affichée du catalogue (tableau de valeur)
 plan_prices = [int(x) for x in re.findall(r"price: (\d+)", (ROOT / "src" / "lib" / "custom-plans.ts").read_text(encoding="utf-8"))]
 if len(plan_prices) != 2 or not 0 < PRICE:
@@ -80,6 +82,8 @@ PRICE_TOKENS = {
     "{{PRIX}}": fcfa(PRICE),
     "{{PRIX_NBSP}}": fcfa(PRICE, "&nbsp;"),
     "{{PRIX_XAF}}": str(PRICE),
+    "{{PRIX_BARRE}}": fcfa(ANCHOR),
+    "{{PRIX_BARRE_NBSP}}": fcfa(ANCHOR, "&nbsp;"),
     # Plans complets : prix fixe, sans déduction du catalogue (décision du 8 nov. 2026).
     "{{PRIX_VILLA_NBSP}}": fcfa(villa, "&nbsp;"),
     "{{PRIX_DUPLEX_NBSP}}": fcfa(duplex, "&nbsp;"),

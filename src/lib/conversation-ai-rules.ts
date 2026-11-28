@@ -9,7 +9,7 @@ export type Qualification = { stage: AiStage; score: number; summary: string; ne
 const STAGES: AiStage[] = ["chaud", "tiede", "froid", "perdu"];
 
 export const SYSTEM_PROMPT = `Tu aides Tao, fondateur de WooPlans (plans de villas et duplex pour l'Afrique francophone), à suivre ses prospects sur WhatsApp.
-Produit vendu : le Catalogue Premium (100 villas et duplex avec rendu 3D, plan coté et devis poste par poste). Prix public 39 000 FCFA ; les acheteurs de l'extrait ou du guide ont un prix réservé de 29 000 FCFA pendant 7 jours.
+Produit vendu : le Catalogue Premium (100 villas et duplex avec rendu 3D, plan coté et devis poste par poste). Prix actuel 29 000 FCFA (prix barré 50 000 FCFA sur la page de vente) ; les acheteurs de l'extrait ou du guide paient aussi 29 000 FCFA.
 On te donne la conversation entre Tao (« WooPlans ») et un prospect (« Client »), avec le contexte de son achat.
 Réponds uniquement par un objet JSON : {"stage":"chaud|tiede|froid|perdu","score":0-100,"summary":"...","next_action":"..."}
 - stage : chaud = veut acheter ou pose des questions d'achat (paiement, prix, contenu) ; tiede = intéressé mais hésite ou pas maintenant ; froid = ne répond pas ou peu d'intérêt ; perdu = refuse clairement, n'a pas les moyens, ou demande d'arrêter.

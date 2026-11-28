@@ -1,6 +1,6 @@
 /**
  * Prix du Catalogue Premium (décision de Tao, 22 nov. 2026), règles pures testées dans tests/catalogue-offer.test.ts :
- *  - public : 39 000 FCFA (prix officiel, partout, sans prix barré) ;
+ *  - public : 29 000 FCFA depuis le 28 nov. 2026 (39 000 avant), prix barré 50 000 sur la page de vente (décision de Tao) ;
  *  - réservé : 29 000 FCFA pour les acheteurs de l'extrait ou du guide, pendant 7 jours après leur achat, jusqu'à
  *    minuit (UTC, heure d'Abidjan) de J7 ; Tao peut rouvrir l'offre 24 h à la main (« deuxième chance ») ;
  *  - promo : 19 000 FCFA, seulement pendant une promo datée de src/config/catalogue.json (« promos »).

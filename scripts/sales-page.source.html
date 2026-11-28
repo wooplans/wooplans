@@ -276,6 +276,19 @@ footer a{color:rgba(255,255,255,.7)}
 .sheet .eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
 .sheet h3{font-size:20px;font-weight:800;color:var(--dark);margin:2px 40px 0 0;line-height:1.25}
 /* Paiement : formulaire court (nom, email, numéro) puis page de paiement Chariow (ou Wajub en essai). */
+.promo s{opacity:.75;font-weight:600}
+.promo .cd{font-variant-numeric:tabular-nums}
+.gauge{max-width:420px;margin:2px auto 14px;font-size:13px;font-weight:700}
+.gauge .gtop{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+.gauge b{font-variant-numeric:tabular-nums}
+.gauge .gbar{height:12px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.gauge .gbar i{display:block;height:100%;width:20%;border-radius:99px;background:linear-gradient(90deg,#E8532F,#F08A2E)}
+.hero .gauge{color:#FFE1B8}
+.offer-card .gauge,.gauge.ck{color:var(--dark)}
+.offer-card .gauge .gbar,.gauge.ck .gbar{background:#EEE7DF}
+.gauge.ck{margin:10px 0 0}
+.sticky .p s{opacity:.6;font-weight:600;font-size:.85em}
+.ckhead b s{color:var(--gray);font-size:.7em;font-weight:600}
 .ckhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-right:44px}
 .ckhead h3{margin:0!important;font-size:18px;line-height:1.25}
 .ckhead h3 span{display:block;font-size:14px;font-weight:700;color:var(--orange-dk)}
@@ -340,7 +353,7 @@ footer a{color:rgba(255,255,255,.7)}
 </head>
 <body>
 
-<div class="promo" role="status">Catalogue Premium&nbsp;: <b>{{PRIX_NBSP}}&nbsp;FCFA</b> · paiement unique, accès à vie</div>
+<div class="promo" role="status">Offre du jour&nbsp;: <s>{{PRIX_BARRE_NBSP}}</s> <b>{{PRIX_NBSP}}&nbsp;FCFA</b> · se termine dans <b class="cd" data-cd>--:--:--</b></div>
 
 <header class="hero">
   <div class="wrap wide">
@@ -358,7 +371,8 @@ footer a{color:rgba(255,255,255,.7)}
           <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><span>🔊 Regardez avec le son · 2 min</span><i></i></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
-        <div class="price"><span class="now">{{PRIX}}<small>FCFA</small></span></div>
+        <div class="price"><s>{{PRIX_BARRE}} FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span></div>
+        <div class="gauge" data-gauge><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
         <p class="price-note">Paiement unique · accès à vie</p>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
         <div class="pay"><span>Orange Money</span><span>MTN MoMo</span><span>Wave</span><span>Moov</span></div>
@@ -457,7 +471,8 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap">
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
-      <div class="price"><span class="now">{{PRIX}}<small>FCFA</small></span></div>
+      <div class="price"><s>{{PRIX_BARRE}} FCFA</s><span class="now">{{PRIX}}<small>FCFA</small></span></div>
+        <div class="gauge" data-gauge><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
       <ul class="incl">
         <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex, nouveaux modèles inclus</span></li>
         <li>Rendus 3D, plans cotés et devis poste par poste</li>
@@ -537,7 +552,7 @@ footer a{color:rgba(255,255,255,.7)}
 </footer>
 
 <div class="sticky" id="sticky">
-  <div class="p"><b>{{PRIX}} FCFA</b><small>Paiement unique · accès à vie</small></div>
+  <div class="p"><b><s>{{PRIX_BARRE}}</s> {{PRIX}} FCFA</b><small>Fin dans <span data-cd>--:--:--</span></small></div>
   <button class="cta" data-cta="sticky" onclick="buy(this)">Obtenir</button>
 </div>
 
@@ -546,7 +561,8 @@ footer a{color:rgba(255,255,255,.7)}
 <div class="ov" id="checkout" onclick="if(event.target===this)closeCheckout()" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ckTitle">
     <button class="close" onclick="closeCheckout()" aria-label="Fermer">✕</button>
-    <div class="ckhead"><h3 id="ckTitle">Catalogue Premium <span>+ 2 bonus offerts</span></h3><b>{{PRIX_NBSP}}&nbsp;FCFA</b></div>
+    <div class="ckhead"><h3 id="ckTitle">Catalogue Premium <span>+ 2 bonus offerts</span></h3><b><s>{{PRIX_BARRE_NBSP}}</s> {{PRIX_NBSP}}&nbsp;FCFA</b></div>
+    <div data-gauge class="gauge ck"><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
     <p class="cklocal" id="ckLocal" hidden></p>
     <form class="ckform ph-no-capture" id="ckForm" onsubmit="return pay(event)" novalidate>
       <div><label for="ckName">Nom complet</label><input id="ckName" name="name" required minlength="2" autocomplete="name" placeholder="Jean Dupont"></div>
@@ -702,9 +718,24 @@ function closeVideo(){
 /* Paiement : formulaire court sur la page (nom, email, numéro), puis page de paiement Chariow
    (Wajub en essai si <html data-pay="wajub">, posé par le serveur). Rien à précharger : la fenêtre
    s'ouvre instantanément. */
+/* Offre du jour (décision de Tao, 28 nov. 2026) : compte à rebours jusqu'à minuit (heure du téléphone du visiteur)
+   et jauge qui descend de 20 % à 0 h à 5 % à 23 h 59. */
+(function(){
+  function tick(){
+    var n=new Date(),m=new Date(n);m.setHours(24,0,0,0);
+    var s=Math.max(0,Math.floor((m-n)/1000)),p=function(x){return(x<10?'0':'')+x};
+    var t=p(Math.floor(s/3600))+':'+p(Math.floor(s%3600/60))+':'+p(s%60);
+    var cd=document.querySelectorAll('[data-cd]');for(var i=0;i<cd.length;i++)cd[i].textContent=t;
+    var pct=5+15*s/86400,g=document.querySelectorAll('[data-gfill]'),q=document.querySelectorAll('[data-gpct]');
+    for(i=0;i<g.length;i++)g[i].style.width=pct.toFixed(1)+'%';
+    for(i=0;i<q.length;i++)q[i].textContent=Math.ceil(pct);
+  }
+  tick();setInterval(tick,1000);
+})();
 var WAJUB=document.documentElement.getAttribute('data-pay')==='wajub';
 var ckCta='sales_page@b',openedAt=0,countryChosen=false,countryAsked=false;
-var LOCAL_PRICE={GN:'607 344 GNF',MG:'306 935 MGA',CD:'158 906 CDF'};
+/* Montants relevés par Tao sur Chariow pour 39 000 FCFA (26 nov. 2026), ramenés au prix affiché. */
+var LOCAL_RATE={GN:[607344,'GNF'],MG:[306935,'MGA'],CD:[158906,'CDF']};
 /* Drapeau emoji à partir du code pays (CM → 🇨🇲). */
 function flag(cc){return String.fromCodePoint.apply(null,cc.toUpperCase().split('').map(function(c){return 127397+c.charCodeAt(0)}))}
 function checkoutIsOpen(){return document.getElementById('checkout').classList.contains('on');}
@@ -713,8 +744,8 @@ function setCountry(sel,auto){
   document.getElementById('ckDial').textContent='+'+o.getAttribute('data-dial');
   document.getElementById('ckFlag').textContent=flag(o.value);
   /* Pays hors franc CFA : montant que Chariow affichera au paiement (relevé par Tao le 26 nov. 2026, pour 39 000 FCFA). */
-  var loc=LOCAL_PRICE[o.value],lp=document.getElementById('ckLocal');
-  if(loc&&{{PRIX_XAF}}===39000){lp.textContent='Au paiement : environ '+loc+' (= 39\u00a0000 FCFA)';lp.hidden=false}else lp.hidden=true;
+  var r=LOCAL_RATE[o.value],lp=document.getElementById('ckLocal');
+  if(r){var v=Math.round(r[0]*{{PRIX_XAF}}/39000/100)*100;lp.textContent='Au paiement : environ '+v.toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g,' ')+' '+r[1]+' (= {{PRIX}} FCFA)';lp.hidden=false}else lp.hidden=true;
   document.getElementById('ckPhone').placeholder=o.getAttribute('data-ex')||'';
   if(!auto)countryChosen=true;
 }
