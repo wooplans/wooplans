@@ -1,6 +1,6 @@
 {
-  "price": 39000,
-  "productId": "prd_rhaso5i5",
+  "price": 29000,
+  "productId": "prd_uso1ketx",
   "reserved": {
     "price": 29000,
     "productId": "prd_uso1ketx",
@@ -23,5 +23,6 @@
       "SN",
       "TG"
     ]
-  }
+  },
+  "anchorPrice": 39000
 }
