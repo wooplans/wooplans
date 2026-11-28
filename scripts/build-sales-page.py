@@ -6,7 +6,7 @@ Page pensée pour l'acheteur mobile. Structure : promesse, VSL et prix public (3
 src/config/catalogue.json) → témoignages → parcours en 3 étapes → modèles avec leur budget
 → aperçu réel d'un modèle → pour qui / valeur
 → offre → FAQ → appel final, avec barre collante, WhatsApp et paiement en formulaire court
-(nom, email, numéro) puis page Chariow. Depuis le 28 nov. 2026 (décision de Tao) : prix 29 000 FCFA, prix barré 50 000 FCFA,
+(nom, email, numéro) puis page Chariow. Depuis le 28 nov. 2026 (décision de Tao) : prix 29 000 FCFA, prix barré 39 000 FCFA (ancien prix, comme dans les pubs),
 compte à rebours jusqu'à minuit (heure du visiteur) et jauge d'offre qui descend de 20 % à 5 % au fil de la journée.
 
 Zones dynamiques remplies par src/app/catalogue-premium/route.ts (HTMLRewriter, données D1) :

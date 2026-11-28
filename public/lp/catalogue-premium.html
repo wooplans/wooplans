@@ -450,7 +450,7 @@ footer a{color:rgba(255,255,255,.7)}
 </head>
 <body>
 
-<div class="promo" role="status">Offre du jour&nbsp;: <s>50&nbsp;000</s> <b>29&nbsp;000&nbsp;FCFA</b> · se termine dans <b class="cd" data-cd>--:--:--</b></div>
+<div class="promo" role="status">Offre du jour&nbsp;: <s>39&nbsp;000</s> <b>29&nbsp;000&nbsp;FCFA</b> · se termine dans <b class="cd" data-cd>--:--:--</b></div>
 
 <header class="hero">
   <div class="wrap wide">
@@ -468,7 +468,7 @@ footer a{color:rgba(255,255,255,.7)}
           <button type="button" class="play" data-cta="vsl" onclick="openVsl()" aria-label="Regarder la vidéo : avant de construire, choisissez la bonne maison"><span>🔊 Regardez avec le son · 2 min</span><i></i></button>
         </div>
         <p class="vsl-count"><b><span data-wp-count>Près de 100</span> modèles</b> · de nouveaux modèles chaque mois, inclus</p>
-        <div class="price"><s>50 000 FCFA</s><span class="now">29 000<small>FCFA</small></span></div>
+        <div class="price"><s>39 000 FCFA</s><span class="now">29 000<small>FCFA</small></span></div>
         <div class="gauge" data-gauge><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
         <p class="price-note">Paiement unique · accès à vie</p>
         <button class="cta" data-cta="hero" onclick="buy(this)"><svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V11a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>Obtenir le catalogue</button>
@@ -568,7 +568,7 @@ footer a{color:rgba(255,255,255,.7)}
   <div class="wrap">
     <div class="offer-card">
       <span class="label">Catalogue Premium · Édition 2026</span>
-      <div class="price"><s>50 000 FCFA</s><span class="now">29 000<small>FCFA</small></span></div>
+      <div class="price"><s>39 000 FCFA</s><span class="now">29 000<small>FCFA</small></span></div>
         <div class="gauge" data-gauge><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
       <ul class="incl">
         <li><span><b><span data-wp-count>Tous les</span> modèles</b> de villas et duplex, nouveaux modèles inclus</span></li>
@@ -649,7 +649,7 @@ footer a{color:rgba(255,255,255,.7)}
 </footer>
 
 <div class="sticky" id="sticky">
-  <div class="p"><b><s>50 000</s> 29 000 FCFA</b><small>Fin dans <span data-cd>--:--:--</span></small></div>
+  <div class="p"><b><s>39 000</s> 29 000 FCFA</b><small>Fin dans <span data-cd>--:--:--</span></small></div>
   <button class="cta" data-cta="sticky" onclick="buy(this)">Obtenir</button>
 </div>
 
@@ -658,7 +658,7 @@ footer a{color:rgba(255,255,255,.7)}
 <div class="ov" id="checkout" onclick="if(event.target===this)closeCheckout()" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ckTitle">
     <button class="close" onclick="closeCheckout()" aria-label="Fermer">✕</button>
-    <div class="ckhead"><h3 id="ckTitle">Catalogue Premium <span>+ 2 bonus offerts</span></h3><b><s>50&nbsp;000</s> 29&nbsp;000&nbsp;FCFA</b></div>
+    <div class="ckhead"><h3 id="ckTitle">Catalogue Premium <span>+ 2 bonus offerts</span></h3><b><s>39&nbsp;000</s> 29&nbsp;000&nbsp;FCFA</b></div>
     <div data-gauge class="gauge ck"><div class="gtop"><span>⏳ Fin de l'offre dans <b data-cd>--:--:--</b></span><span><b data-gpct>--</b>&nbsp;% restant</span></div><div class="gbar"><i data-gfill></i></div></div>
     <p class="cklocal" id="ckLocal" hidden></p>
     <form class="ckform ph-no-capture" id="ckForm" onsubmit="return pay(event)" novalidate>
@@ -761,7 +761,7 @@ function openVsl(from){
   var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-courte-poster.jpg';
   VSL={on:true,watched:0,last:0,max:0,marks:{},from:from||'hero',played:false};
   document.getElementById('vslEnd').classList.remove('on');
-  v.src='/assets/videos/vsl-courte.mp4';v.currentTime=0;v.play().catch(function(){});
+  v.src='/assets/videos/vsl-courte-29k.mp4';v.currentTime=0;v.play().catch(function(){});
   wpCapture('vsl_open',{from:VSL.from});vslServer('open');
   document.getElementById('videoModal').classList.add('on');
 }

@@ -95,7 +95,7 @@ test("page de vente : plans complets à prix fixe dans la FAQ seulement, sans d�
   assert.match(b, /id="contenu-plans"/);
   // Offre du jour (décision de Tao, 28 nov. 2026) : prix barré, compte à rebours jusqu'à minuit et jauge 20 % → 5 %.
   assert.doesNotMatch(b, /data-wp-threshold|data-wp-left|Prix avant 100/);
-  assert.match(b, /<s>50(&nbsp;| )000/);
+  assert.match(b, /<s>39(&nbsp;| )000/);
   assert.match(b, /data-cd/);
   assert.match(b, /data-gfill/);
   assert.match(b, /5\+15\*s\/86400/);
@@ -111,12 +111,12 @@ test("page de vente : témoignages juste après le héro, puis le parcours", () 
   assert.doesNotMatch(b.slice(hero, temo).replace(/<section $/, ""), /<section/);
 });
 
-test("page de vente : VSL courte publique (39 000 FCFA, 2 min) en héro, visuel 4:5, compteur juste dessous", () => {
+test("page de vente : VSL courte publique (29 000 FCFA, 2 min) en héro, visuel 4:5, compteur juste dessous", () => {
   const b = readFileSync(PAGE, "utf8");
   assert.match(b, /\.vsl\{[^}]*aspect-ratio:4\/5/);
   assert.match(b, /\/assets\/videos\/vsl-courte-hero-4x5\.webp/);
   // Version publique uniquement : la VSL des acheteurs de l'extrait annonce leur prix réservé (29 000 FCFA).
-  assert.match(b, /\/assets\/videos\/vsl-courte\.mp4/);
+  assert.match(b, /\/assets\/videos\/vsl-courte-29k\.mp4/);
   assert.doesNotMatch(b, /vsl-catalogue-premium\.mp4/);
   assert.match(b, /<\/div>\s*<p class="vsl-count">.*data-wp-count/);
 });

@@ -664,7 +664,7 @@ function openVsl(from){
   var v=document.getElementById('modalVideo');v.poster='/assets/videos/vsl-courte-poster.jpg';
   VSL={on:true,watched:0,last:0,max:0,marks:{},from:from||'hero',played:false};
   document.getElementById('vslEnd').classList.remove('on');
-  v.src='/assets/videos/vsl-courte.mp4';v.currentTime=0;v.play().catch(function(){});
+  v.src='/assets/videos/vsl-courte-29k.mp4';v.currentTime=0;v.play().catch(function(){});
   wpCapture('vsl_open',{from:VSL.from});vslServer('open');
   document.getElementById('videoModal').classList.add('on');
 }
