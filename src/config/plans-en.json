@@ -1,5 +1,5 @@
 {
-  "_note": "Fiches en anglais (vocabulaire Maramani, décision de Tao du 28 nov. 2026). Lot 1 : 10 modèles à faire relire par Tao. Traduites depuis les fiches françaises (get_plan) ; aucun chiffre ajouté : surfaces, chambres et dimensions viennent de la base.",
+  "_note": "Fiches en anglais (vocabulaire Maramani, décision de Tao du 28 nov. 2026). Lot 1 (10 modèles) relu par Tao ; lot 2 (tous les autres) traduit le 28 nov. 2026. Traduites depuis les fiches françaises ; surfaces et chiffres FCFA des descriptions françaises non repris (surface : champ de la fiche).",
   "plans": {
     "V4-005": {
       "summary": "A contemporary 4 bedroom bungalow with a master bedroom en-suite, 3 bathrooms and a guest toilet.",
@@ -40,6 +40,366 @@
     "D5-001": {
       "summary": "A modern two-story house of 325 square meters with an L-shaped terrace and a garage for 3 cars.",
       "description": "A modern two-story house designed for a large family. Ground floor: 2 spacious living rooms and a dining room opening onto an L-shaped terrace, a large guest bedroom with a closet and an en-suite, a second bedroom with a shared shower room, a guest toilet, a kitchen and a garage for 3 cars. First floor: a family lounge, 3 bedrooms including the master bedroom, and 2 bathrooms."
+    },
+    "D4-001": {
+      "summary": "A spacious contemporary two-story house with 4 bedrooms, 3 living rooms and an office.",
+      "description": "A functional and spacious contemporary two-story house. Ground floor: a large living room, 2 dining areas, a guest bedroom with a closet and an en-suite, a laundry, an office and a kitchen. First floor: 2 living rooms, 3 bedrooms and 2 shower rooms. The master suite has a large walk-in closet and an en-suite."
+    },
+    "D4-002": {
+      "summary": "A contemporary two-story house with a guest bedroom, a garage and a study room.",
+      "description": "A spacious contemporary two-story house. Ground floor: a living room, a dining room, a guest bedroom with a closet and an en-suite, a kitchen, a guest toilet and a garage. First floor: a living room, 3 bedrooms, 2 shower rooms and a study room. The master suite has a large walk-in closet and a bathroom with space for a bathtub."
+    },
+    "D4-003": {
+      "summary": "A modern two-story house with 3 living rooms, an office and a garage.",
+      "description": "A modern and functional two-story house with 3 living rooms, for family time and for receiving friends. Ground floor: 2 living rooms, a dining room, a garage, a kitchen and a guest bedroom. First floor: the master suite, 2 more bedrooms, a living room and an office."
+    },
+    "D4-004": {
+      "summary": "An elegant contemporary two-story house with a home cinema and a garage for 2 cars.",
+      "description": "An elegant contemporary house designed for a large family. Ground floor: a large living room with a bar corner, a dining room, a home cinema area, a guest bedroom, a kitchen, a guest toilet and a garage for 2 cars. First floor: a living room, an office opening onto a large terrace, 3 bedrooms and 2 shower rooms. The master bedroom has an en-suite and a large walk-in closet."
+    },
+    "D4-005": {
+      "summary": "An ultra-contemporary two-story house with an office and a garage for 2 cars.",
+      "description": "A two-story house with ultra-contemporary architecture. Ground floor: a living and dining room, a guest bedroom with a closet and an en-suite, a kitchen, a store, an office and a garage for 2 cars. First floor: a living room, 3 bedrooms, 3 walk-in closets and 3 shower rooms. The master bedroom opens onto a large terrace and has an en-suite and a walk-in closet."
+    },
+    "D4-007": {
+      "summary": "A contemporary two-story house with 3 living rooms and a laundry.",
+      "description": "A beautiful contemporary two-story house where every space is clearly defined. Ground floor: 2 large living rooms, a dining room, a guest bedroom with an en-suite and a walk-in closet, a laundry, a guest toilet and a kitchen. First floor: a living room, 3 bedrooms and 2 shower rooms. The master suite has a closet and an en-suite."
+    },
+    "D4-008": {
+      "summary": "A contemporary two-story house with a large guest bedroom and a laundry.",
+      "description": "A carefully designed contemporary two-story house. Ground floor: a large living and dining room, a large guest bedroom with an en-suite, a kitchen and a laundry. First floor: a living room, 3 bedrooms and 3 bathrooms, including a comfortable master bedroom."
+    },
+    "D4-009": {
+      "summary": "An imposing contemporary two-story house with 3 living rooms, an office and a store.",
+      "description": "An imposing contemporary two-story house. Ground floor: 2 living rooms and a dining room, a guest bedroom with a closet and a walk-in closet, a laundry, a guest toilet, a store and a kitchen. First floor: a living room, 3 bedrooms, an office and 2 shower rooms. The master suite has an en-suite and a walk-in closet."
+    },
+    "D4-010": {
+      "summary": "An attractive two-story house with a guest bedroom on the ground floor.",
+      "description": "An attractive two-story house. Ground floor: a large living and dining room with a kitchenette, a guest bedroom with a closet and an en-suite, and a guest toilet. First floor: a large living room, 3 bedrooms and 2 shower rooms. The master bedroom has a walk-in closet and an en-suite."
+    },
+    "D4-011": {
+      "summary": "An impressive two-story house with a gym, a study room and a garage for 2 cars.",
+      "description": "An impressive architectural design. Ground floor: 2 living rooms and a dining room, a laundry, a utility room with a gym (space for a generator), a guest bedroom, a guest toilet, a kitchen, a store and a garage for 2 cars. First floor: a living room, 3 bedrooms, 3 shower rooms, 2 walk-in closets and a study room for the children."
+    },
+    "D4-012": {
+      "summary": "A high-end contemporary two-story house with an office on the ground floor.",
+      "description": "A chic, high-end contemporary two-story house. Ground floor: a large living and dining room, a guest bedroom with a bathroom and a closet, an office and a kitchen. First floor: a living room, 3 bedrooms and a kitchenette. The master suite has a closet and an en-suite."
+    },
+    "D4-013": {
+      "summary": "A family two-story house with a master bedroom en-suite, 3 living rooms, an office and terraces.",
+      "description": "A family two-story house. It has 3 living rooms, a kitchen, a master bedroom, 3 more bedrooms, 4 bathrooms, an office, a walk-in closet, an entrance lobby, a corridor and terraces. Building footprint: 15.20 m × 13.00 m."
+    },
+    "D4-015": {
+      "summary": "An impressive contemporary two-story house with a guest bedroom and a store.",
+      "description": "An impressive contemporary two-story house, carefully designed. Ground floor: a large living room, 2 dining areas, a guest bedroom with a walk-in closet and an en-suite, a guest toilet, a store and a kitchen. First floor: a living room, 3 bedrooms and 2 shower rooms. The master suite is set apart for privacy."
+    },
+    "D4-016": {
+      "summary": "A modern luxury two-story house with an office, verandas and a family lounge upstairs.",
+      "description": "A modern and spacious two-story house. Ground floor: a large living room (30 m²), a spacious kitchen (18.6 m²), a guest bedroom with its own bathroom, verandas and terraces, an entrance hall, a dining room, an office and a guest toilet. First floor: a master suite with a walk-in closet and a large private bathroom (separate shower and toilet), 2 large bedrooms, a family lounge and terraces."
+    },
+    "D4-017": {
+      "summary": "A contemporary two-story house with 3 living rooms, an office and a study room.",
+      "description": "A contemporary two-story house. Ground floor: 2 spacious living rooms, a dining room, a guest bedroom, an office, a guest toilet, a shower room and a kitchen. First floor: a living room, 3 bedrooms, 2 shower rooms and a study room where the children can work in peace."
+    },
+    "D4-018": {
+      "summary": "A contemporary two-story house with 5 bedrooms, including 2 master suites, terraces and a garage.",
+      "description": "A contemporary two-story house designed around bright living spaces, with 2 master suites, 3 more bedrooms, terraces and a garage."
+    },
+    "D4-019": {
+      "summary": "A contemporary two-story house with 2 offices and a garage for 2 cars.",
+      "description": "A contemporary two-story house designed for comfort. Ground floor: a large living and dining room, a guest bedroom with a closet and an en-suite, an office, a store, a kitchen and a garage for 2 cars. First floor: a large living room, 3 bedrooms, 2 shower rooms, a guest toilet and an office. The master suite has a large walk-in closet and a bathroom with space for a bathtub."
+    },
+    "D4-020": {
+      "summary": "A two-story house of 266 square meters with 4 bedrooms, 4 bathrooms and terraces.",
+      "description": "A two-story house with a building footprint of 13.35 m × 12.15 m. The ground floor has a living room, a dining room, a kitchen, a bedroom, a pantry, a store, an entrance lobby, toilets and terraces. The first floor has the master suite with a walk-in closet, 2 bedrooms, 3 shower rooms, a hall and terraces."
+    },
+    "D4-024": {
+      "summary": "A family two-story house with 2 master suites, 2 living rooms and a garage.",
+      "description": "A family two-story house. It has 2 living rooms, a kitchen, 2 master bedrooms, 2 more bedrooms, 4 bathrooms, a guest toilet, a walk-in closet, a garage and terraces. Building footprint: 22.82 m × 13.83 m."
+    },
+    "D4-026": {
+      "summary": "A modern two-story house with a large terrace upstairs, a veranda and a garage.",
+      "description": "A modern two-story house with a unique design for families. Ground floor: a living room (22.9 m²), a kitchen (10.5 m²), a guest bedroom (14 m²) with its own bathroom, a covered veranda (14.1 m²), an entrance hall, a garage (17 m²), a dining room and a store. First floor: the master suite (15.8 m²) with a walk-in closet and a bathroom, 2 bedrooms sharing a bathroom, a family lounge (14.5 m²) and a large terrace."
+    },
+    "D4-032": {
+      "summary": "A family two-story house with a master bedroom en-suite, 2 living rooms and an entrance lobby.",
+      "description": "A family two-story house. It has 2 living rooms, a dining room, a kitchen, a master bedroom, 3 more bedrooms, 3 bathrooms, an entrance lobby and terraces. Building footprint: 14.20 m × 12.18 m."
+    },
+    "D4-033": {
+      "summary": "A modern two-story house with a large terrace upstairs and 2 bedrooms on the ground floor.",
+      "description": "A modern and spacious two-story house. Ground floor: a large living and dining room, a kitchen, 2 bedrooms with a shared shower room, 2 covered terraces, a store, an entrance lobby and a guest toilet. First floor: the master suite with a walk-in closet and a large private bathroom, a large bedroom, a family lounge, a bathroom and a large terrace."
+    },
+    "D4-035": {
+      "summary": "A compact two-story house of 140 square meters, for a small plot and a small budget.",
+      "description": "A comfortable two-story house, ideal if you have a small plot and a small budget. It has 2 living rooms, a dining room, 4 bedrooms, 3 bathrooms, a kitchen and a guest toilet."
+    },
+    "D4-036": {
+      "summary": "A compact modern two-story house of 127 square meters with 4 bedrooms.",
+      "description": "An ultra-modern and versatile house. Ground floor: a large living and dining room, a kitchen, a guest bedroom and a shared shower room. First floor: 2 bedrooms with a shared shower room, and the master suite with its own bathroom."
+    },
+    "D4-037": {
+      "summary": "A compact modern two-story house of 127 square meters with 4 bedrooms.",
+      "description": "An ultra-modern and versatile house. Ground floor: a large living and dining room, a kitchen, a guest bedroom and a shared shower room. First floor: 2 bedrooms with a shared shower room, and the master suite with its own bathroom."
+    },
+    "D4-040": {
+      "summary": "A modern two-story house of 155 square meters with 4 bedrooms, 3 bathrooms and terraces.",
+      "description": "A modern two-story house with a good balance between generous living spaces and family privacy. It has 4 bedrooms, 3 bathrooms and terraces, making the most of every square meter."
+    },
+    "D4-043": {
+      "summary": "A modern two-story house with a large terrace upstairs and a family lounge.",
+      "description": "A modern and spacious two-story house with a contemporary design. Ground floor: a large living room, a spacious kitchen, a guest bedroom with its own bathroom, a covered veranda, an entrance hall, an entrance lobby, toilets and a store. First floor: the master suite with a walk-in closet and a large bathroom, 2 large bedrooms sharing a bathroom, a family lounge and a large terrace."
+    },
+    "D5-002": {
+      "summary": "A large contemporary two-story house with 5 bedrooms, including 2 guest bedrooms.",
+      "description": "A contemporary two-story house with 5 bedrooms. Ground floor: 2 large separate living rooms and a dining room, 2 large guest bedrooms, a shower room, a guest toilet, a store that can be used as a laundry, and a kitchen. First floor: 3 bedrooms and 2 bathrooms. The master bedroom has an en-suite and a large walk-in closet."
+    },
+    "D5-003": {
+      "summary": "A contemporary two-story house with 5 bedrooms, an office, a garage and a laundry.",
+      "description": "A contemporary two-story house designed for privacy. Ground floor: a large living and dining room opening onto a terrace, 2 large bedrooms, a shower room, a guest toilet, a kitchen, a garage and a laundry. First floor: a large living room, 3 bedrooms, 3 bathrooms and an office. The master bedroom has a large walk-in closet and a bathroom with space for a bathtub."
+    },
+    "D5-005": {
+      "summary": "A large contemporary two-story house with 5 bedrooms, an office and a garage for 2 cars.",
+      "description": "A large and comfortable contemporary two-story house. Ground floor: 2 large living rooms and a dining room, 2 large bedrooms, 2 shower rooms, a guest toilet, a kitchen, an office and a garage for 2 cars. First floor: a large living room, 3 bedrooms and 3 bathrooms. The master bedroom is spacious, with a walk-in closet and a bathroom with space for a bathtub."
+    },
+    "D5-011": {
+      "summary": "A two-story house of 326 square meters with 5 bedrooms, a garage and a store.",
+      "description": "A two-story house with a building footprint of 16.30 m × 14.00 m. The ground floor has a large living room, a dining room, a kitchen, a bedroom with a bathroom, a guest toilet, a garage, a store and a terrace. The first floor has the other bedrooms, a walk-in closet, a living room and a terrace."
+    },
+    "D5-013": {
+      "summary": "A family two-story house with 5 bedrooms, 5 bathrooms and 2 living rooms.",
+      "description": "A family two-story house. It has 2 living rooms, a dining room, a kitchen, a store, a guest toilet, a master bedroom, 4 more bedrooms, 5 bathrooms, a walk-in closet and terraces. Building footprint: 16.15 m × 15.85 m."
+    },
+    "D5-014": {
+      "summary": "A family two-story house with 5 bedrooms, 5 bathrooms and 3 living rooms.",
+      "description": "A family two-story house. It has 3 living rooms, a dining room, a kitchen, a store, a guest toilet, a master bedroom, 4 more bedrooms, 5 bathrooms and a walk-in closet. Building footprint: 18.10 m × 13.84 m."
+    },
+    "D5-015": {
+      "summary": "A narrow two-story house with 5 bedrooms, an office and a double-height living room.",
+      "description": "A family two-story house for a narrow plot. It has 2 living rooms, a dining room, a kitchen, a master bedroom, 4 more bedrooms, 5 bathrooms, an office and a double-height living room. Building footprint: 9.00 m × 15.00 m."
+    },
+    "D5-016": {
+      "summary": "A two-story house of 219 square meters with 5 bedrooms, an office and a walk-in closet.",
+      "description": "A two-story house with a building footprint of 13.55 m × 11.11 m. The ground floor has a living room, a dining room, a kitchen, a guest bedroom with a bathroom, an office and a terrace. The first floor has the master suite, the other bedrooms, a walk-in closet, a living room and terraces."
+    },
+    "D5-018": {
+      "summary": "A luxury two-story house with 5 bedrooms, an office and a study room.",
+      "description": "A luxury two-story house for families who want a contemporary design and generous living spaces. Ground floor: 2 living rooms, a dining room, a guest bedroom, a kitchen, a store, 2 bathrooms and a guest toilet. First floor: a luxury master suite, 3 more bedrooms, an office and a study room."
+    },
+    "D5-019": {
+      "summary": "A family two-story house with 5 bedrooms, 5 bathrooms and terraces.",
+      "description": "A family two-story house. It has 2 living rooms, a dining room, a kitchen, 2 guest toilets, a master bedroom, 4 more bedrooms, 5 bathrooms, a walk-in closet and terraces. Building footprint: 18.00 m × 11.58 m."
+    },
+    "D5-020": {
+      "summary": "A contemporary two-story house with 5 bedrooms, a large terrace and an office.",
+      "description": "A contemporary two-story house with plenty of space for everyone. Ground floor: a large living and dining room opening onto a wide terrace, 2 large bedrooms, each with a closet and an en-suite, a guest toilet, a store and a kitchen. First floor: a living room, an office, 3 bedrooms and 3 bathrooms. The master suite has a large walk-in closet and a bathroom with space for a bathtub."
+    },
+    "V2-001": {
+      "summary": "A family bungalow with 2 bedrooms, a living room, a dining room and a store.",
+      "description": "A family bungalow with 2 bedrooms. It has a living room, a dining room, a kitchen, a store, 2 bedrooms and 2 bathrooms. Building footprint: 11.00 m × 10.00 m."
+    },
+    "V3-002": {
+      "summary": "A modern 3 bedroom bungalow with an open living and dining area and terraces.",
+      "description": "A modern bungalow with a generous open living and dining area, 3 comfortable bedrooms including a master bedroom en-suite, and 2 bathrooms. Terraces let you enjoy the outdoors."
+    },
+    "V3-003": {
+      "summary": "A modern 3 bedroom bungalow with an open living area and covered terraces.",
+      "description": "A modern bungalow with a practical layout: 3 bedrooms including a master bedroom en-suite, and a large open living area. Contemporary design with covered terraces to enjoy the outdoors."
+    },
+    "V3-004": {
+      "summary": "A modern 3 bedroom bungalow with an open living and dining area and two terraces.",
+      "description": "A modern bungalow with a generous open living and dining area, 3 comfortable bedrooms including a master bedroom en-suite, and two terraces. A practical, well-organised layout for a family."
+    },
+    "V3-005": {
+      "summary": "A modern 3 bedroom bungalow with a master bedroom en-suite and terraces.",
+      "description": "A modern bungalow with a great family layout: 3 bedrooms including a master bedroom en-suite, 2 bathrooms and a large open living area. Elegant architecture with terraces."
+    },
+    "V3-006": {
+      "summary": "A family bungalow with 3 bedrooms, including a master bedroom, and a store.",
+      "description": "A family bungalow with 3 bedrooms. It has a living room, a dining room, a kitchen, a store, a master bedroom, 2 more bedrooms and 2 bathrooms. Building footprint: 12.35 m × 11.00 m."
+    },
+    "V3-007": {
+      "summary": "A 3 bedroom bungalow with a walk-in closet and a living room of more than 32 m².",
+      "description": "A 3 bedroom bungalow designed for family life, with the bedrooms along a central corridor. Living room of 32.3 m² opening onto a large entrance terrace of 15.4 m²; dining room of 13.8 m² and kitchen of 9.5 m² with its own terrace; master bedroom of 13.5 m² with a walk-in closet of 9.2 m² and an en-suite; 2 bedrooms (12.7 m² each) with a shower room; a store of 4.9 m². Building footprint: 16.81 m × 13.04 m. The façade combines a hip roof, white columns and stone cladding."
+    },
+    "V3-008": {
+      "summary": "A 3 bedroom bungalow with 2 living rooms, a walk-in closet and a guest toilet.",
+      "description": "A bungalow with 3 bedrooms, including a master bedroom en-suite. It has 2 living rooms, a dining room, a kitchen, 2 bathrooms, a guest toilet, a walk-in closet and a store. Building footprint: 17.30 m × 14.33 m."
+    },
+    "V3-009": {
+      "summary": "A 3 bedroom bungalow with a master bedroom en-suite and a guest toilet.",
+      "description": "A bungalow with 3 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 2 bathrooms and a guest toilet. Building footprint: 14.45 m × 12.86 m."
+    },
+    "V3-014": {
+      "summary": "A 3 bedroom bungalow with a living room, a dining room, a store and 2 bathrooms.",
+      "description": "A bungalow with 3 bedrooms. It has a living room, a dining room, a kitchen, a store and 2 bathrooms. Building footprint: 16.50 m × 14.00 m."
+    },
+    "V3-015": {
+      "summary": "A family bungalow with 3 bedrooms, a walk-in closet and a store.",
+      "description": "A family bungalow with 3 bedrooms. It has a living and dining room, a kitchen, a store, a master bedroom, 2 more bedrooms, 2 bathrooms and a walk-in closet. Building footprint: 14.10 m × 10.55 m."
+    },
+    "V3-018": {
+      "summary": "A modern 3 bedroom bungalow of 127 square meters with a walk-in closet.",
+      "description": "A modern bungalow with a great family layout: 3 bedrooms including a master bedroom with a walk-in closet, 2 bathrooms, and open living spaces leading onto terraces."
+    },
+    "V3-021": {
+      "summary": "A family bungalow with 3 bedrooms, a large living room, a walk-in closet and a terrace.",
+      "description": "A family bungalow with 3 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 2 bathrooms, a walk-in closet and a terrace. Building footprint: 16.81 m × 13.04 m."
+    },
+    "V3-022": {
+      "summary": "A compact bungalow of 89 square meters with 3 bedrooms and 3 bathrooms.",
+      "description": "A bungalow with a building footprint of 12.21 m × 10.36 m. It has a living room, a dining room, a kitchen, a master bedroom en-suite, 2 more bedrooms, 2 more bathrooms, an entrance and terraces."
+    },
+    "V3-025": {
+      "summary": "A bungalow of 108 square meters with 3 bedrooms and two terraces.",
+      "description": "A bungalow with a building footprint of 12.50 m × 10.00 m. It has a living room, a dining room, a kitchen, 3 bedrooms, 2 bathrooms, a corridor and two terraces."
+    },
+    "V3-026": {
+      "summary": "A family bungalow with 3 bedrooms, an office, a walk-in closet and a veranda.",
+      "description": "A family bungalow with 3 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 2 bathrooms, an office, a walk-in closet, a store and a veranda. Building footprint: 17.00 m × 9.70 m."
+    },
+    "V3-027": {
+      "summary": "A compact bungalow of 69 square meters with 3 bedrooms and a terrace.",
+      "description": "A compact family bungalow with 3 bedrooms, including a master bedroom en-suite. It has a living and dining room, a kitchen, 2 bathrooms and a terrace. Building footprint: 9.35 m × 9.25 m."
+    },
+    "V3-028": {
+      "summary": "A family bungalow with 3 bedrooms, a living room, a dining room and a store.",
+      "description": "A family bungalow with 3 bedrooms. It has a living room, a dining room, a kitchen, a store and 2 bathrooms. Building footprint: 12.50 m × 13.00 m."
+    },
+    "V3-029": {
+      "summary": "A family bungalow with 3 bedrooms, a store and a garage.",
+      "description": "A family bungalow with 3 bedrooms. It has a living room, a dining room, a kitchen, a store, 2 bathrooms and a garage. The area includes the garage (29.3 m²). Building footprint: 16.00 m × 17.10 m."
+    },
+    "V3-030": {
+      "summary": "A 3 bedroom bungalow with a walk-in closet, a garage and two terraces.",
+      "description": "A bungalow with a building footprint of 16.50 m × 10.00 m. It has a living room, a dining room, a kitchen, 3 bedrooms, 2 bathrooms, a walk-in closet, a store, a garage and two terraces."
+    },
+    "V3-037": {
+      "summary": "A modern 3 bedroom bungalow with a built-in garage and two terraces.",
+      "description": "A modern bungalow with a practical layout: 3 bedrooms and attractive living spaces. A large living room opens onto a modern kitchen, with a built-in garage and two terraces."
+    },
+    "V3-038": {
+      "summary": "A simple, compact 3 bedroom bungalow with a master bedroom en-suite.",
+      "description": "A simple and compact bungalow for a pleasant, practical daily life. An open living area (living room of 26.1 m² and dining room of 12 m²), a kitchen, a master suite of 16.3 m² with its own bathroom, 2 bedrooms sharing a bathroom, a corridor and terraces."
+    },
+    "V3-039": {
+      "summary": "A simple, practical 3 bedroom bungalow with a store and two terraces.",
+      "description": "A simple and practical bungalow for families who want well-organised spaces. Living room of 26.5 m² and dining room of 11 m²; kitchen of 13.5 m² with a store of 5.2 m²; master bedroom of 15 m²; 2 bedrooms of about 13 m²; a corridor, 2 toilets and 2 terraces."
+    },
+    "V3-042": {
+      "summary": "A spacious 4 bedroom bungalow with a large living room and a walk-in closet.",
+      "description": "A spacious, well-organised bungalow for families who want room and comfort on one level. Living room of 32.7 m², dining room of 13.4 m² and an entrance lobby; kitchen of 12.4 m² with a store of 6 m²; master suite of 18.3 m² with a walk-in closet of 9.3 m² and an en-suite shower; 3 bedrooms of about 12 m² each along a corridor; 3 shower rooms, a guest toilet and terraces."
+    },
+    "V3-043": {
+      "summary": "A 3 bedroom bungalow with a separate dining room, a walk-in closet and parking.",
+      "description": "A bungalow with a building footprint of 17.00 m × 13.50 m. It has a living room, a dining room, a kitchen, a master bedroom, 2 more bedrooms, 2 shower rooms, a walk-in closet, a corridor, an entrance lobby, a store, a porch, four terraces and a parking space."
+    },
+    "V4-001": {
+      "summary": "A bright contemporary 4 bedroom bungalow with a store and a terrace.",
+      "description": "A spacious and bright contemporary bungalow. It has a living and dining room, 4 bedrooms including a master bedroom, a kitchen, a store for your tools and a large terrace to relax."
+    },
+    "V4-002": {
+      "summary": "An ultra-contemporary 4 bedroom bungalow with a master bedroom en-suite and a walk-in closet.",
+      "description": "A bungalow with ultra-contemporary architecture. It has a living and dining room, 4 spacious bedrooms, a kitchen and a store. The master bedroom has an en-suite and a walk-in closet."
+    },
+    "V4-003": {
+      "summary": "A charming contemporary 4 bedroom bungalow with a large terrace and a guest toilet.",
+      "description": "A charming contemporary bungalow. It has a large living and dining room with a wide terrace for family time, 4 bedrooms, 3 bathrooms, a kitchen, a walk-in closet and a guest toilet. The master bedroom has an en-suite, a closet and its own terrace."
+    },
+    "V4-004": {
+      "summary": "A contemporary 4 bedroom bungalow with a living room opening onto a large terrace.",
+      "description": "A contemporary bungalow with a beautiful living space opening onto a large terrace, 4 bedrooms, a guest toilet and a kitchen. The master suite has a walk-in closet and an en-suite."
+    },
+    "V4-006": {
+      "summary": "A contemporary 4 bedroom bungalow with 3 bathrooms and a guest toilet.",
+      "description": "A contemporary bungalow. It has a living and dining room, 4 bedrooms (the master bedroom has a closet and a walk-in closet), 3 bathrooms, a guest toilet and a kitchen."
+    },
+    "V4-007": {
+      "summary": "A contemporary 4 bedroom bungalow with an office and a store.",
+      "description": "A contemporary bungalow. It has a living and dining room, 4 bedrooms, an office, a kitchen and a store. The master suite has an en-suite and a closet."
+    },
+    "V4-008": {
+      "summary": "An ultra-contemporary 4 bedroom bungalow with 3 bathrooms and a guest toilet.",
+      "description": "A bungalow with ultra-contemporary architecture. It has a living and dining room, a kitchen, 4 bedrooms including a master bedroom, 3 bathrooms and a guest toilet."
+    },
+    "V4-009": {
+      "summary": "A 4 bedroom bungalow of 184 square meters with a store and a guest toilet.",
+      "description": "A bungalow built with contemporary materials. It has a living room, a dining room, a kitchen, 4 bedrooms including a master bedroom, 3 bathrooms, a store for your tools and a guest toilet."
+    },
+    "V4-010": {
+      "summary": "An affordable, practical 4 bedroom bungalow with a large store.",
+      "description": "An affordable and practical house for your family. It has a large store, a master bedroom with an en-suite and a walk-in closet, a large living and dining room for your guests, 3 more bedrooms, 3 bathrooms and a kitchen."
+    },
+    "V4-013": {
+      "summary": "A family bungalow with 4 bedrooms, 3 bathrooms and a large living room.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a large living room and 3 bathrooms."
+    },
+    "V4-014": {
+      "summary": "A family bungalow with 4 bedrooms, 3 bathrooms and an office.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a living room, 3 bathrooms and an office. Building footprint: 14.10 m × 13.28 m."
+    },
+    "V4-016": {
+      "summary": "A 4 bedroom bungalow with an office, a bar corner and a walk-in closet.",
+      "description": "A bungalow with a building footprint of 20.07 m × 14.44 m. It has a living room, a dining room, a kitchen, a master bedroom with a walk-in closet, 3 more bedrooms, 3 bathrooms, a guest toilet, an office, a bar corner, a pantry, a store, a hall and a porch."
+    },
+    "V4-019": {
+      "summary": "A family bungalow with 4 bedrooms, a large living room, a walk-in closet and a store.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 3 bathrooms, a walk-in closet, a store and a terrace. Building footprint: 17.67 m × 12.20 m."
+    },
+    "V4-022": {
+      "summary": "A family bungalow with 4 bedrooms, a walk-in closet and a veranda.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 3 bathrooms, a walk-in closet, a store and a veranda. Building footprint: 16.66 m × 12.97 m."
+    },
+    "V4-024": {
+      "summary": "A family bungalow with 4 bedrooms, a walk-in closet and a veranda.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 3 bathrooms, a walk-in closet, a store and a veranda. Building footprint: 17.00 m × 13.76 m."
+    },
+    "V4-025": {
+      "summary": "A 4 bedroom bungalow with 4 bathrooms, a parking space and two terraces.",
+      "description": "A bungalow with a building footprint of 17.00 m × 14.70 m. It has a living room, a dining room, a kitchen, a master bedroom with a walk-in closet, 3 more bedrooms, 4 bathrooms, a parking space and two terraces."
+    },
+    "V4-026": {
+      "summary": "A large 4 bedroom bungalow with 2 living rooms, an office and a garage.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has 2 living rooms, a dining room, a kitchen, 3 bathrooms, an office, a walk-in closet, an entrance lobby, a store, a garage and terraces. Building footprint: 20.50 m × 13.40 m."
+    },
+    "V4-028": {
+      "summary": "A family bungalow with 4 bedrooms, 3 bathrooms and a veranda.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 3 bathrooms, a store and a veranda. Building footprint: 16.00 m × 12.00 m."
+    },
+    "V4-029": {
+      "summary": "A family bungalow with 4 bedrooms, 2 bathrooms and a veranda.",
+      "description": "A family bungalow with 4 bedrooms. It has a living room, a dining room, a kitchen, 2 bathrooms and a veranda. Building footprint: 15.00 m × 9.00 m."
+    },
+    "V4-030": {
+      "summary": "A 4 bedroom bungalow with a walk-in closet and two terraces.",
+      "description": "A bungalow with a building footprint of 11.11 m × 13.55 m. It has a living room, a dining room, a kitchen, 4 bedrooms, 2 bathrooms, a walk-in closet, a corridor and two terraces."
+    },
+    "V4-034": {
+      "summary": "A family bungalow with 4 bedrooms, 3 bathrooms and a large living room.",
+      "description": "A family bungalow with 4 bedrooms, including a master bedroom en-suite. It has a large living room and 3 bathrooms. Building footprint: 16.00 m × 11.35 m."
+    },
+    "V4-042": {
+      "summary": "A spacious 4 bedroom bungalow with a large living room and a walk-in closet.",
+      "description": "A spacious, well-organised bungalow for families who want room and comfort on one level. Living room of 32.7 m², dining room of 13.4 m² and an entrance lobby; kitchen of 12.4 m² with a store of 6 m²; master suite of 18.3 m² with a walk-in closet of 9.3 m² and an en-suite shower; 3 bedrooms of about 12 m² each along a corridor; 3 shower rooms, a guest toilet and terraces."
+    },
+    "V5-005": {
+      "summary": "A family bungalow with 5 bedrooms, 4 bathrooms and a large living room.",
+      "description": "A family bungalow with 5 bedrooms, including a master bedroom en-suite. It has a large living room and 4 bathrooms."
+    },
+    "V5-006": {
+      "summary": "A large bungalow with 5 bedrooms, 4 bathrooms, a walk-in closet and a veranda.",
+      "description": "A family bungalow with 5 bedrooms, including a master bedroom en-suite. It has a living room, a dining room, a kitchen, 4 bathrooms, a walk-in closet, a guest toilet and a veranda. Building footprint: 19.59 m × 17.95 m."
+    },
+    "V5-007": {
+      "summary": "A family bungalow with 5 bedrooms, 3 bathrooms and a guest toilet.",
+      "description": "A family bungalow with 5 bedrooms and a clear split between day and night areas. It has a living room, a dining room, a kitchen, 5 bedrooms including a master bedroom en-suite, 3 bathrooms, a guest toilet and a veranda. Building footprint: 17.90 m × 13.93 m."
+    },
+    "V5-008": {
+      "summary": "A family bungalow with 5 bedrooms, 3 bathrooms and a store.",
+      "description": "A family bungalow with 5 bedrooms and a clear split between day and night areas. It has a living room, a dining room, a kitchen, 5 bedrooms including a master bedroom en-suite, 3 bathrooms, a store and a veranda. Building footprint: 17.80 m × 14.00 m."
+    },
+    "V5-009": {
+      "summary": "A 5 bedroom bungalow with a large living room and two terraces.",
+      "description": "A bungalow with a building footprint of 16.70 m × 12.43 m. It has a living room, a dining room, a kitchen, a master bedroom, 4 more bedrooms and 3 bathrooms, with a front terrace and a side terrace."
     }
   }
 }
