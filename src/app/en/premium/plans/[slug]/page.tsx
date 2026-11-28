@@ -40,7 +40,7 @@ export default async function PremiumEnPlanPage({ params }: { params: Promise<{ 
     <div className="container-page py-8">
       <Link href="/en/premium" className="text-sm text-muted hover:text-primary">← All house plans</Link>
       <div className="mt-4 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
-        <PlanGallery images={images} alt={name} />
+        <PlanGallery images={images} alt={name} lang="en" />
         <div>
           <p className="eyebrow">{plan.levels >= 2 ? "Two-story house" : "Bungalow"} · ID {plan.code}</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">{name}</h1>
@@ -70,7 +70,7 @@ export default async function PremiumEnPlanPage({ params }: { params: Promise<{ 
                   <span className="text-sm text-muted">Open</span>
                 </a>
               ) : (
-                <FloorPlanViewer key={key} src={privateFileUrl(key)} alt={`${name} — floor plan ${i + 1}`} />
+                <FloorPlanViewer key={key} src={privateFileUrl(key)} alt={`${name} — floor plan ${i + 1}`} lang="en" />
               ),
             )}
           </div>

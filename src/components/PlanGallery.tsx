@@ -13,7 +13,8 @@ import { phCapture } from "@/lib/posthog-browser";
  * côte : le doigt fait défiler directement, la flèche fait glisser la vue suivante immédiatement (l'image se
  * dessine pendant le glissement), et les vignettes défilent aussi.
  */
-export function PlanGallery({ images, alt }: { images: string[]; alt: string }) {
+export function PlanGallery({ images, alt, lang = "fr" }: { images: string[]; alt: string; lang?: "fr" | "en" }) {
+  const en = lang === "en";
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
   const count = images.length;
@@ -108,7 +109,7 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
               type="button"
               onClick={() => setZoom(true)}
               className="w-full shrink-0 snap-center snap-always"
-              aria-label={`Agrandir la vue ${i + 1} sur ${count}`}
+              aria-label={en ? `Enlarge view ${i + 1} of ${count}` : `Agrandir la vue ${i + 1} sur ${count}`}
             >
               {i >= 2 && !rest ? (
                 <div className="aspect-video w-full" />
@@ -116,7 +117,7 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 {...responsiveImage(src, [480, 640, 828], SIZES.gallery)}
-                alt={`${alt} — vue ${i + 1}`}
+                alt={`${alt} — ${en ? "view" : "vue"} ${i + 1}`}
                 className="aspect-video w-full object-cover"
                 // Les deux premières vues sont chargées tout de suite : la flèche « › » affiche la suivante sans attente.
                 // Version réduite à la largeur de l'écran (environ 640 px sur téléphone) au lieu de l'image entière.
@@ -131,14 +132,14 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
         </div>
         {count > 1 ? (
           <>
-            <button type="button" className={`${arrow} left-2`} aria-label="Image précédente" onClick={() => scrollTo(track.current, index - 1)}>‹</button>
-            <button type="button" className={`${arrow} right-2`} aria-label="Image suivante" onClick={() => scrollTo(track.current, index + 1)}>›</button>
+            <button type="button" className={`${arrow} left-2`} aria-label={en ? "Previous image" : "Image précédente"} onClick={() => scrollTo(track.current, index - 1)}>‹</button>
+            <button type="button" className={`${arrow} right-2`} aria-label={en ? "Next image" : "Image suivante"} onClick={() => scrollTo(track.current, index + 1)}>›</button>
             <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/60 px-2.5 py-0.5 text-xs font-medium text-white">
               {index + 1} / {count}
             </span>
             {index === 0 ? (
               <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-black/60 px-2.5 py-0.5 text-xs font-medium text-white sm:hidden">
-                Glissez pour voir les {count} vues
+                {en ? `Swipe to see all ${count} views` : `Glissez pour voir les ${count} vues`}
               </span>
             ) : null}
           </>
@@ -152,7 +153,7 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
               type="button"
               onClick={() => scrollTo(track.current, i)}
               className={`w-[18%] shrink-0 overflow-hidden rounded-lg border-2 transition ${i === index ? "border-primary" : "border-transparent opacity-80"}`}
-              aria-label={`Voir l'image ${i + 1}`}
+              aria-label={en ? `See image ${i + 1}` : `Voir l'image ${i + 1}`}
               aria-current={i === index ? "true" : undefined}
             >
               {/* Vignette : version de 160 px (quelques Ko) ; avant, chaque vignette chargeait l'image entière (100 Ko). */}
@@ -171,7 +172,7 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={src}
-                  alt={`${alt} — vue ${i + 1}`}
+                  alt={`${alt} — ${en ? "view" : "vue"} ${i + 1}`}
                   className="max-h-[85vh] max-w-full rounded-lg object-contain"
                   loading={Math.abs(i - index) <= 1 ? "eager" : "lazy"}
                   decoding="async"
@@ -187,15 +188,15 @@ export function PlanGallery({ images, alt }: { images: string[]; alt: string }) 
           <button
             type="button"
             className="absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-full bg-black/50 text-3xl leading-none text-white"
-            aria-label="Fermer"
+            aria-label={en ? "Close" : "Fermer"}
             onClick={() => setZoom(false)}
           >
             ×
           </button>
           {count > 1 ? (
             <>
-              <button type="button" className={`${arrow} left-2`} aria-label="Image précédente" onClick={() => scrollTo(zoomTrack.current, index - 1)}>‹</button>
-              <button type="button" className={`${arrow} right-2`} aria-label="Image suivante" onClick={() => scrollTo(zoomTrack.current, index + 1)}>›</button>
+              <button type="button" className={`${arrow} left-2`} aria-label={en ? "Previous image" : "Image précédente"} onClick={() => scrollTo(zoomTrack.current, index - 1)}>‹</button>
+              <button type="button" className={`${arrow} right-2`} aria-label={en ? "Next image" : "Image suivante"} onClick={() => scrollTo(zoomTrack.current, index + 1)}>›</button>
               <span className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-sm text-white">
                 {index + 1} / {count}
               </span>

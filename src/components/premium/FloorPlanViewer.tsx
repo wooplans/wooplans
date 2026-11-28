@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
  * (plutôt qu'un nouvel onglet où l'image s'enregistre d'un clic droit).
  * L'image est servie filigranée au nom du membre.
  */
-export function FloorPlanViewer({ src, alt }: { src: string; alt: string }) {
+export function FloorPlanViewer({ src, alt, lang = "fr" }: { src: string; alt: string; lang?: "fr" | "en" }) {
+  const en = lang === "en";
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -20,12 +21,12 @@ export function FloorPlanViewer({ src, alt }: { src: string; alt: string }) {
       <button type="button" onClick={() => setOpen(true)} className="card block w-full overflow-hidden text-left">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} loading="lazy" draggable={false} className="w-full bg-white object-contain" />
-        <p className="border-t border-outline px-4 py-2 text-sm text-muted">Toucher pour agrandir</p>
+        <p className="border-t border-outline px-4 py-2 text-sm text-muted">{en ? "Tap to enlarge" : "Toucher pour agrandir"}</p>
       </button>
       {open ? (
         <div role="dialog" aria-label={alt} className="fixed inset-0 z-50 flex flex-col bg-black/90" onClick={() => setOpen(false)}>
           <div className="flex justify-end p-3">
-            <button type="button" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white">Fermer</button>
+            <button type="button" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white">{en ? "Close" : "Fermer"}</button>
           </div>
           <div className="flex-1 overflow-auto p-2" onClick={(e) => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
